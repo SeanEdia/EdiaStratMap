@@ -1054,6 +1054,62 @@ input[type="range"]::-webkit-slider-thumb {
 }
 .merge-btn-confirm:hover { opacity: 0.9; }
 
+/* Meeting Prep Button */
+.meeting-prep-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  margin-top: 14px;
+  padding: 10px 14px;
+  background: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%);
+  border: none;
+  border-radius: var(--radius-sm);
+  color: #fff;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 2px 8px rgba(108,92,231,0.3);
+}
+.meeting-prep-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(108,92,231,0.4);
+}
+.meeting-prep-btn:active {
+  transform: translateY(0);
+}
+.meeting-prep-btn svg {
+  width: 16px;
+  height: 16px;
+}
+.meeting-prep-toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  background: var(--panel);
+  border: 1px solid var(--accent-cust);
+  border-radius: var(--radius);
+  padding: 12px 20px;
+  font-size: 13px;
+  color: var(--text);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+  z-index: 3000;
+  opacity: 0;
+  transition: all 0.3s ease-out;
+}
+.meeting-prep-toast.show {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+}
+.meeting-prep-toast .toast-icon {
+  color: var(--accent-cust);
+  margin-right: 8px;
+}
+
 </style>
 </head>
 <body>
@@ -1854,6 +1910,15 @@ function buildStratPopup(d) {
   html += `<div class="note-add-wrap"><textarea class="note-input" id="noteInput_${noteKey}" placeholder="Add a note..." onkeydown="handleNoteKey(event, '${noteKey}', this)"></textarea><button class="note-add-btn" onclick="addNote('${noteKey}', document.getElementById('noteInput_${noteKey}'))">Add</button></div>`;
   html += `</div>`;
 
+  // Meeting Prep Button
+  const dataJson = encodeURIComponent(JSON.stringify(d));
+  html += `<button class="meeting-prep-btn" onclick="generateMeetingPrep('${dataJson}')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/>
+    </svg>
+    Generate Meeting Prep
+  </button>`;
+
   html += `</div>`;
   return html;
 }
@@ -1932,6 +1997,178 @@ function updateLegend() {
   } else {
     legend.style.display = 'none';
   }
+}
+
+// ============ MEETING PREP ============
+const CHATGPT_PROJECT_URL = 'https://chatgpt.com/g/g-p-693258303cac81918c85198a52133fd9-district-research/project';
+
+function generateMeetingPrep(encodedData) {
+  try {
+    const d = JSON.parse(decodeURIComponent(encodedData));
+    const prompt = formatMeetingPrepPrompt(d);
+
+    // Copy to clipboard
+    navigator.clipboard.writeText(prompt).then(() => {
+      showMeetingPrepToast();
+      // Open ChatGPT project in new tab
+      setTimeout(() => {
+        window.open(CHATGPT_PROJECT_URL, '_blank');
+      }, 500);
+    }).catch(err => {
+      // Fallback for clipboard failure
+      console.error('Clipboard failed:', err);
+      fallbackCopy(prompt);
+      showMeetingPrepToast();
+      setTimeout(() => {
+        window.open(CHATGPT_PROJECT_URL, '_blank');
+      }, 500);
+    });
+  } catch (e) {
+    console.error('Meeting prep error:', e);
+    alert('Error generating meeting prep. Please try again.');
+  }
+}
+
+function formatMeetingPrepPrompt(d) {
+  // Get notes for this account
+  const noteKey = 'edia_notes_' + d.name.replace(/[^a-zA-Z0-9]/g, '_');
+  let notes = [];
+  try {
+    notes = JSON.parse(localStorage.getItem(noteKey) || '[]');
+  } catch(e) {}
+
+  // Check if also a customer and get that data
+  let customerData = null;
+  if (d.is_customer) {
+    customerData = CUSTOMER_DATA.find(c => c.name === d.customer_name);
+  }
+
+  let prompt = `Please generate detailed meeting prep for the following district:\n\n`;
+  prompt += `=== DISTRICT INFORMATION ===\n`;
+  prompt += `Name: ${d.name}\n`;
+  prompt += `State: ${d.state || 'Unknown'}\n`;
+  prompt += `Region: ${d.region || 'Unknown'}\n`;
+  prompt += `Enrollment: ${d.enrollment ? parseInt(d.enrollment).toLocaleString() : 'Unknown'}\n`;
+  prompt += `Account Executive: ${d.ae || 'Unassigned'}\n`;
+  prompt += `SIS Platform: ${d.sis || 'Unknown'}\n`;
+
+  if (d.type) prompt += `Account Type: ${d.type}\n`;
+  if (d.ada_adm) prompt += `ADA/ADM: ${d.ada_adm}\n`;
+
+  // Opportunity info
+  if (d.opp_stage) {
+    prompt += `\n=== OPPORTUNITY ===\n`;
+    prompt += `Stage: ${d.opp_stage}\n`;
+    if (d.opp_amount) prompt += `Amount: $${parseFloat(d.opp_amount).toLocaleString()}\n`;
+    if (d.opp_close_date) prompt += `Expected Close: ${d.opp_close_date}\n`;
+  }
+
+  // Leadership
+  const leaders = [
+    ['Superintendent', d.superintendent],
+    ['Asst Supt C&I', d.asst_supt_ci],
+    ['Asst Supt Student Services', d.asst_supt_ss],
+    ['Asst Supt Technology', d.asst_supt_tech],
+    ['Director C&I', d.dir_ci],
+    ['Director Math', d.dir_math],
+    ['Director Attendance', d.dir_attendance],
+  ].filter(([_, v]) => v);
+
+  if (leaders.length) {
+    prompt += `\n=== LEADERSHIP ===\n`;
+    leaders.forEach(([title, name]) => {
+      prompt += `${title}: ${name}\n`;
+    });
+  }
+
+  // Products/Curriculum
+  const products = [
+    ['Math Products', d.math_products],
+    ['Attendance System', d.attendance],
+  ].filter(([_, v]) => v);
+
+  if (products.length) {
+    prompt += `\n=== CURRENT PRODUCTS ===\n`;
+    products.forEach(([type, product]) => {
+      prompt += `${type}: ${product}\n`;
+    });
+  }
+
+  // Links
+  if (d.org_chart_url || d.strategic_plan_url) {
+    prompt += `\n=== RESOURCES ===\n`;
+    if (d.org_chart_url) prompt += `Org Chart: ${d.org_chart_url}\n`;
+    if (d.strategic_plan_url) prompt += `Strategic Plan: ${d.strategic_plan_url}\n`;
+  }
+
+  // Customer data if applicable
+  if (customerData) {
+    prompt += `\n=== EXISTING CUSTOMER DATA ===\n`;
+    prompt += `Active ARR: $${parseFloat(customerData.arr || 0).toLocaleString()}\n`;
+    if (customerData.arr_12mo_ago) prompt += `ARR 12mo Ago: $${parseFloat(customerData.arr_12mo_ago).toLocaleString()}\n`;
+    if (customerData.gdr) prompt += `GDR: ${customerData.gdr}%\n`;
+    if (customerData.ndr) prompt += `NDR: ${customerData.ndr}%\n`;
+    if (customerData.csm) prompt += `CSM: ${customerData.csm}\n`;
+    if (customerData.last_activity) prompt += `Last Activity: ${customerData.last_activity}\n`;
+  }
+
+  // Internal notes
+  if (notes.length > 0) {
+    prompt += `\n=== INTERNAL NOTES ===\n`;
+    notes.forEach(n => {
+      const date = new Date(n.ts).toLocaleDateString();
+      prompt += `[${date}] ${n.author}: ${n.text}\n`;
+    });
+  }
+
+  prompt += `\n=== REQUEST ===\n`;
+  prompt += `Please generate comprehensive meeting prep including:\n`;
+  prompt += `1. District background and key statistics\n`;
+  prompt += `2. Leadership research and LinkedIn profiles if findable\n`;
+  prompt += `3. Recent news and initiatives\n`;
+  prompt += `4. Strategic priorities based on their strategic plan\n`;
+  prompt += `5. Potential pain points and opportunities\n`;
+  prompt += `6. Suggested talking points and questions\n`;
+  prompt += `7. Competitive landscape\n`;
+
+  return prompt;
+}
+
+function fallbackCopy(text) {
+  const textarea = document.createElement('textarea');
+  textarea.value = text;
+  textarea.style.position = 'fixed';
+  textarea.style.opacity = '0';
+  document.body.appendChild(textarea);
+  textarea.select();
+  try {
+    document.execCommand('copy');
+  } catch (e) {
+    console.error('Fallback copy failed:', e);
+  }
+  document.body.removeChild(textarea);
+}
+
+function showMeetingPrepToast() {
+  // Remove existing toast if any
+  const existing = document.querySelector('.meeting-prep-toast');
+  if (existing) existing.remove();
+
+  const toast = document.createElement('div');
+  toast.className = 'meeting-prep-toast';
+  toast.innerHTML = `<span class="toast-icon">✓</span> District data copied! Opening ChatGPT...`;
+  document.body.appendChild(toast);
+
+  // Trigger animation
+  requestAnimationFrame(() => {
+    toast.classList.add('show');
+  });
+
+  // Remove after delay
+  setTimeout(() => {
+    toast.classList.remove('show');
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
 }
 
 // ============ SFDC CSV REFRESH ============
