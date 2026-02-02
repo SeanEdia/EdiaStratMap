@@ -851,6 +851,209 @@ input[type="range"]::-webkit-slider-thumb {
 }
 .notes-btn:hover { border-color: var(--text-muted); color: var(--text); }
 
+/* SFDC Refresh Panel */
+.sfdc-panel {
+  padding: 14px 18px;
+  border-top: 1px solid var(--panel-border);
+}
+.sfdc-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.sfdc-title {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text-dim);
+}
+.sfdc-badge {
+  font-size: 9px;
+  padding: 2px 6px;
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text-muted);
+}
+.sfdc-dropzone {
+  border: 2px dashed var(--panel-border);
+  border-radius: var(--radius);
+  padding: 20px 14px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: var(--bg);
+}
+.sfdc-dropzone:hover, .sfdc-dropzone.dragover {
+  border-color: var(--accent-strat);
+  background: rgba(108,92,231,0.05);
+}
+.sfdc-dropzone.dragover {
+  transform: scale(1.02);
+}
+.sfdc-dropzone-icon {
+  font-size: 24px;
+  margin-bottom: 6px;
+  opacity: 0.7;
+}
+.sfdc-dropzone-text {
+  font-size: 11px;
+  color: var(--text-dim);
+  line-height: 1.5;
+}
+.sfdc-dropzone-text strong {
+  color: var(--accent-strat);
+  cursor: pointer;
+}
+.sfdc-dropzone-hint {
+  font-size: 9px;
+  color: var(--text-muted);
+  margin-top: 6px;
+}
+.sfdc-type-btns {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.sfdc-type-btn {
+  flex: 1;
+  padding: 6px 10px;
+  font-size: 10px;
+  font-family: inherit;
+  font-weight: 500;
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.sfdc-type-btn:hover { border-color: var(--text-dim); color: var(--text); }
+.sfdc-type-btn.active-strat { background: var(--accent-strat); border-color: var(--accent-strat); color: #fff; }
+.sfdc-type-btn.active-cust { background: var(--accent-cust); border-color: var(--accent-cust); color: #fff; }
+
+/* Merge Results Modal */
+.merge-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s;
+}
+.merge-modal.show { opacity: 1; visibility: visible; }
+.merge-modal-content {
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius);
+  width: 90%;
+  max-width: 500px;
+  max-height: 80vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+.merge-modal-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--panel-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.merge-modal-header h3 {
+  font-size: 14px;
+  font-weight: 600;
+}
+.merge-modal-close {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-size: 18px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+.merge-modal-close:hover { background: var(--surface); color: var(--text); }
+.merge-modal-body {
+  padding: 16px 20px;
+  overflow-y: auto;
+  flex: 1;
+}
+.merge-stat {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--panel-border);
+  font-size: 12px;
+}
+.merge-stat:last-child { border-bottom: none; }
+.merge-stat .label { color: var(--text-dim); }
+.merge-stat .value { font-weight: 600; }
+.merge-stat .value.added { color: var(--accent-cust); }
+.merge-stat .value.updated { color: var(--accent-both); }
+.merge-stat .value.preserved { color: var(--accent-strat); }
+.merge-changes {
+  margin-top: 12px;
+  max-height: 200px;
+  overflow-y: auto;
+  background: var(--bg);
+  border-radius: var(--radius-sm);
+  padding: 10px;
+}
+.merge-change-item {
+  font-size: 11px;
+  padding: 4px 0;
+  color: var(--text-dim);
+  border-bottom: 1px solid var(--panel-border);
+}
+.merge-change-item:last-child { border-bottom: none; }
+.merge-change-item .name { color: var(--text); font-weight: 500; }
+.merge-change-item .action {
+  font-size: 9px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  margin-left: 6px;
+}
+.merge-change-item .action.new { background: rgba(0,184,148,0.2); color: var(--accent-cust); }
+.merge-change-item .action.upd { background: rgba(253,203,110,0.2); color: var(--accent-both); }
+.merge-modal-footer {
+  padding: 14px 20px;
+  border-top: 1px solid var(--panel-border);
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+.merge-btn {
+  padding: 8px 16px;
+  font-size: 12px;
+  font-family: inherit;
+  font-weight: 500;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.merge-btn-cancel {
+  background: transparent;
+  border: 1px solid var(--panel-border);
+  color: var(--text-dim);
+}
+.merge-btn-cancel:hover { border-color: var(--text-dim); color: var(--text); }
+.merge-btn-confirm {
+  background: var(--accent-cust);
+  border: none;
+  color: #fff;
+}
+.merge-btn-confirm:hover { opacity: 0.9; }
+
 </style>
 </head>
 <body>
@@ -921,12 +1124,65 @@ input[type="range"]::-webkit-slider-thumb {
     </div>
   </div>
 
+  <!-- SFDC Refresh Panel -->
+  <div class="sfdc-panel">
+    <div class="sfdc-header">
+      <span class="sfdc-title">SFDC Data Refresh</span>
+      <span class="sfdc-badge" id="sfdcLastRefresh">Never refreshed</span>
+    </div>
+    <div class="sfdc-type-btns">
+      <button class="sfdc-type-btn active-strat" id="sfdcTypeStrat" onclick="setSfdcType('strategic')">Strategic</button>
+      <button class="sfdc-type-btn" id="sfdcTypeCust" onclick="setSfdcType('customers')">Customers</button>
+    </div>
+    <div class="sfdc-dropzone" id="sfdcDropzone" onclick="document.getElementById('sfdcFileInput').click()">
+      <div class="sfdc-dropzone-icon">📄</div>
+      <div class="sfdc-dropzone-text">
+        Drag CSV here or <strong>browse</strong>
+      </div>
+      <div class="sfdc-dropzone-hint">Notes & local data preserved during merge</div>
+      <input type="file" id="sfdcFileInput" accept=".csv" style="display:none" onchange="handleSfdcFile(event)">
+    </div>
+  </div>
+
   <div class="notes-mgmt">
     <span class="notes-count" id="notesCount"></span>
     <div class="notes-btns">
       <button class="notes-btn" onclick="copyAllNotes()" title="Copy all notes to clipboard">📋 Copy All</button>
       <button class="notes-btn" onclick="exportNotes()" title="Export notes as JSON">↓ Export</button>
       <label class="notes-btn" title="Import notes from JSON">↑ Import<input type="file" accept=".json" style="display:none" onchange="importNotes(event)"></label>
+    </div>
+  </div>
+</div>
+
+<!-- Merge Preview Modal -->
+<div class="merge-modal" id="mergeModal">
+  <div class="merge-modal-content">
+    <div class="merge-modal-header">
+      <h3 id="mergeModalTitle">CSV Merge Preview</h3>
+      <button class="merge-modal-close" onclick="closeMergeModal()">&times;</button>
+    </div>
+    <div class="merge-modal-body">
+      <div class="merge-stat">
+        <span class="label">Records in CSV</span>
+        <span class="value" id="mergeTotalRecords">0</span>
+      </div>
+      <div class="merge-stat">
+        <span class="label">New records to add</span>
+        <span class="value added" id="mergeNewRecords">0</span>
+      </div>
+      <div class="merge-stat">
+        <span class="label">Existing records to update</span>
+        <span class="value updated" id="mergeUpdatedRecords">0</span>
+      </div>
+      <div class="merge-stat">
+        <span class="label">Notes preserved</span>
+        <span class="value preserved" id="mergeNotesPreserved">0</span>
+      </div>
+      <div class="merge-changes" id="mergeChangesList"></div>
+    </div>
+    <div class="merge-modal-footer">
+      <button class="merge-btn merge-btn-cancel" onclick="closeMergeModal()">Cancel</button>
+      <button class="merge-btn merge-btn-confirm" onclick="confirmMerge()">Apply Changes</button>
     </div>
   </div>
 </div>
@@ -1676,6 +1932,328 @@ function updateLegend() {
   } else {
     legend.style.display = 'none';
   }
+}
+
+// ============ SFDC CSV REFRESH ============
+let sfdcDataType = 'strategic';
+let pendingMergeData = null;
+let pendingMergeStats = null;
+
+function setSfdcType(type) {
+  sfdcDataType = type;
+  document.getElementById('sfdcTypeStrat').className = 'sfdc-type-btn' + (type === 'strategic' ? ' active-strat' : '');
+  document.getElementById('sfdcTypeCust').className = 'sfdc-type-btn' + (type === 'customers' ? ' active-cust' : '');
+}
+
+// Setup drag-and-drop
+document.addEventListener('DOMContentLoaded', () => {
+  const dropzone = document.getElementById('sfdcDropzone');
+  if (!dropzone) return;
+
+  ['dragenter', 'dragover'].forEach(evt => {
+    dropzone.addEventListener(evt, e => {
+      e.preventDefault();
+      e.stopPropagation();
+      dropzone.classList.add('dragover');
+    });
+  });
+
+  ['dragleave', 'drop'].forEach(evt => {
+    dropzone.addEventListener(evt, e => {
+      e.preventDefault();
+      e.stopPropagation();
+      dropzone.classList.remove('dragover');
+    });
+  });
+
+  dropzone.addEventListener('drop', e => {
+    const files = e.dataTransfer.files;
+    if (files.length > 0 && files[0].name.endsWith('.csv')) {
+      processCSVFile(files[0]);
+    }
+  });
+
+  // Load last refresh time
+  const lastRefresh = localStorage.getItem('edia_sfdc_last_refresh');
+  if (lastRefresh) {
+    document.getElementById('sfdcLastRefresh').textContent = 'Last: ' + new Date(lastRefresh).toLocaleDateString();
+  }
+});
+
+function handleSfdcFile(event) {
+  const file = event.target.files[0];
+  if (file && file.name.endsWith('.csv')) {
+    processCSVFile(file);
+  }
+  event.target.value = '';
+}
+
+function processCSVFile(file) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    const csvText = e.target.result;
+    const parsed = parseCSV(csvText);
+    if (parsed.length === 0) {
+      alert('No data found in CSV file');
+      return;
+    }
+    previewMerge(parsed);
+  };
+  reader.readAsText(file);
+}
+
+function parseCSV(text) {
+  const lines = text.split(/\r?\n/).filter(line => line.trim());
+  if (lines.length < 2) return [];
+
+  // Parse header row - handle quoted fields
+  const headers = parseCSVLine(lines[0]);
+  const data = [];
+
+  for (let i = 1; i < lines.length; i++) {
+    const values = parseCSVLine(lines[i]);
+    if (values.length === headers.length) {
+      const row = {};
+      headers.forEach((h, idx) => {
+        // Normalize header names (lowercase, trim, replace spaces with underscores)
+        const key = h.trim().toLowerCase().replace(/\s+/g, '_');
+        row[key] = values[idx].trim();
+      });
+      data.push(row);
+    }
+  }
+  return data;
+}
+
+function parseCSVLine(line) {
+  const result = [];
+  let current = '';
+  let inQuotes = false;
+
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+    if (char === '"') {
+      if (inQuotes && line[i + 1] === '"') {
+        current += '"';
+        i++;
+      } else {
+        inQuotes = !inQuotes;
+      }
+    } else if (char === ',' && !inQuotes) {
+      result.push(current);
+      current = '';
+    } else {
+      current += char;
+    }
+  }
+  result.push(current);
+  return result;
+}
+
+function previewMerge(csvData) {
+  const isStrategic = sfdcDataType === 'strategic';
+  const existingData = isStrategic ? STRATEGIC_DATA : CUSTOMER_DATA;
+
+  // Create a map of existing data by name for quick lookup
+  const existingByName = new Map();
+  existingData.forEach((item, idx) => {
+    existingByName.set(item.name.toLowerCase().trim(), { item, idx });
+  });
+
+  // Count notes that exist in localStorage
+  let notesCount = 0;
+  existingData.forEach(d => {
+    const noteKey = 'edia_notes_' + d.name.replace(/[^a-zA-Z0-9]/g, '_');
+    try {
+      const notes = JSON.parse(localStorage.getItem(noteKey) || '[]');
+      if (notes.length > 0) notesCount++;
+    } catch(e) {}
+  });
+
+  // Analyze merge impact
+  const stats = {
+    total: csvData.length,
+    newRecords: 0,
+    updatedRecords: 0,
+    notesPreserved: notesCount,
+    changes: []
+  };
+
+  const mergedData = [];
+  const processedNames = new Set();
+
+  csvData.forEach(csvRow => {
+    const name = csvRow.name || csvRow.district_name || csvRow.account_name || '';
+    if (!name) return;
+
+    const nameKey = name.toLowerCase().trim();
+    processedNames.add(nameKey);
+
+    const existing = existingByName.get(nameKey);
+
+    if (existing) {
+      // Update existing record but preserve certain local fields
+      const merged = { ...existing.item };
+
+      // Update with CSV data, mapping common field variations
+      Object.keys(csvRow).forEach(key => {
+        const val = csvRow[key];
+        if (val && val.trim()) {
+          // Map common CSV column names to our field names
+          const mappedKey = mapFieldName(key);
+          merged[mappedKey] = val.trim();
+        }
+      });
+
+      // Check if anything actually changed
+      const hasChanges = Object.keys(csvRow).some(key => {
+        const mappedKey = mapFieldName(key);
+        const oldVal = existing.item[mappedKey] || '';
+        const newVal = (csvRow[key] || '').trim();
+        return oldVal.toString() !== newVal;
+      });
+
+      if (hasChanges) {
+        stats.updatedRecords++;
+        stats.changes.push({ name, action: 'updated' });
+      }
+
+      mergedData.push(merged);
+    } else {
+      // New record
+      const newRecord = {};
+      Object.keys(csvRow).forEach(key => {
+        const mappedKey = mapFieldName(key);
+        newRecord[mappedKey] = (csvRow[key] || '').trim();
+      });
+      newRecord.name = name;
+
+      // Convert lat/lng to numbers if present
+      if (newRecord.lat) newRecord.lat = parseFloat(newRecord.lat);
+      if (newRecord.lng) newRecord.lng = parseFloat(newRecord.lng);
+
+      stats.newRecords++;
+      stats.changes.push({ name, action: 'new' });
+      mergedData.push(newRecord);
+    }
+  });
+
+  // Keep existing records not in CSV (preserve them)
+  existingData.forEach(item => {
+    const nameKey = item.name.toLowerCase().trim();
+    if (!processedNames.has(nameKey)) {
+      mergedData.push(item);
+    }
+  });
+
+  pendingMergeData = mergedData;
+  pendingMergeStats = stats;
+
+  showMergeModal(stats);
+}
+
+function mapFieldName(csvField) {
+  // Map common CSV field names to our internal field names
+  const mappings = {
+    'district_name': 'name',
+    'account_name': 'name',
+    'district': 'name',
+    'account': 'name',
+    'latitude': 'lat',
+    'longitude': 'lng',
+    'long': 'lng',
+    'account_executive': 'ae',
+    'account_owner': 'ae',
+    'enrollment_count': 'enrollment',
+    'student_count': 'students',
+    'total_students': 'students',
+    'sis_platform': 'sis',
+    'opportunity_stage': 'opp_stage',
+    'opp_stage': 'opp_stage',
+    'annual_recurring_revenue': 'arr',
+    'active_arr': 'arr',
+    'csm_name': 'csm',
+    'customer_success_manager': 'csm'
+  };
+
+  const normalized = csvField.toLowerCase().replace(/\s+/g, '_');
+  return mappings[normalized] || normalized;
+}
+
+function showMergeModal(stats) {
+  document.getElementById('mergeModalTitle').textContent =
+    `Merge Preview: ${sfdcDataType === 'strategic' ? 'Strategic Accounts' : 'Customers'}`;
+  document.getElementById('mergeTotalRecords').textContent = stats.total;
+  document.getElementById('mergeNewRecords').textContent = stats.newRecords;
+  document.getElementById('mergeUpdatedRecords').textContent = stats.updatedRecords;
+  document.getElementById('mergeNotesPreserved').textContent = stats.notesPreserved;
+
+  // Show change list
+  const changesList = document.getElementById('mergeChangesList');
+  if (stats.changes.length > 0) {
+    const maxShow = 20;
+    let html = '';
+    stats.changes.slice(0, maxShow).forEach(c => {
+      const actionClass = c.action === 'new' ? 'new' : 'upd';
+      const actionLabel = c.action === 'new' ? 'NEW' : 'UPD';
+      html += `<div class="merge-change-item">
+        <span class="name">${c.name}</span>
+        <span class="action ${actionClass}">${actionLabel}</span>
+      </div>`;
+    });
+    if (stats.changes.length > maxShow) {
+      html += `<div class="merge-change-item" style="color:var(--text-muted);font-style:italic;">
+        ...and ${stats.changes.length - maxShow} more
+      </div>`;
+    }
+    changesList.innerHTML = html;
+    changesList.style.display = 'block';
+  } else {
+    changesList.innerHTML = '<div style="color:var(--text-muted);font-size:11px;">No changes detected</div>';
+    changesList.style.display = 'block';
+  }
+
+  document.getElementById('mergeModal').classList.add('show');
+}
+
+function closeMergeModal() {
+  document.getElementById('mergeModal').classList.remove('show');
+  pendingMergeData = null;
+  pendingMergeStats = null;
+}
+
+function confirmMerge() {
+  if (!pendingMergeData) return;
+
+  const isStrategic = sfdcDataType === 'strategic';
+
+  // Apply the merge
+  if (isStrategic) {
+    STRATEGIC_DATA.length = 0;
+    pendingMergeData.forEach(item => STRATEGIC_DATA.push(item));
+  } else {
+    CUSTOMER_DATA.length = 0;
+    pendingMergeData.forEach(item => CUSTOMER_DATA.push(item));
+  }
+
+  // Update last refresh timestamp
+  localStorage.setItem('edia_sfdc_last_refresh', new Date().toISOString());
+  document.getElementById('sfdcLastRefresh').textContent = 'Last: ' + new Date().toLocaleDateString();
+
+  // Refresh the map and filters
+  renderFilters();
+  applyFilters();
+
+  closeMergeModal();
+
+  // Show success feedback
+  const badge = document.getElementById('sfdcLastRefresh');
+  badge.textContent = 'Merged!';
+  badge.style.color = 'var(--accent-cust)';
+  setTimeout(() => {
+    badge.textContent = 'Last: ' + new Date().toLocaleDateString();
+    badge.style.color = '';
+  }, 2000);
 }
 
 // ============ INIT ============
