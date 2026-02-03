@@ -1977,14 +1977,54 @@ function buildStratPopup(d) {
     });
   }
 
-  // Research links
+  // Research links (including Meeting Prep)
+  const prepLinkKey = 'edia_prep_' + d.name.replace(/[^a-zA-Z0-9]/g, '_');
+  const savedPrepLink = localStorage.getItem(prepLinkKey) || d.prep_doc_url || '';
+
   const links = [];
   if (d.org_chart_url) links.push(`<a href="${d.org_chart_url}" target="_blank" style="color:#a29bfe;text-decoration:none;font-size:11px;margin-right:12px;">📋 Org Chart</a>`);
   if (d.strategic_plan_url) links.push(`<a href="${d.strategic_plan_url}" target="_blank" style="color:#a29bfe;text-decoration:none;font-size:11px;margin-right:12px;">📄 Strategic Plan</a>`);
-  if (d.prep_doc_url) links.push(`<a href="${d.prep_doc_url}" target="_blank" style="color:#55efc4;text-decoration:none;font-size:11px;">📝 Meeting Prep</a>`);
-  if (links.length) {
-    html += `<div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.08);display:flex;gap:4px;">${links.join('')}</div>`;
+
+  // Meeting Prep link - from localStorage or data
+  if (savedPrepLink) {
+    links.push(`<a href="${savedPrepLink}" target="_blank" style="color:#55efc4;text-decoration:none;font-size:11px;" id="prepLink_${prepLinkKey}">📝 Meeting Prep</a>`);
   }
+
+  // Always show the links row (with add option if no prep link)
+  html += `<div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.08);display:flex;flex-wrap:wrap;align-items:center;gap:4px;" id="linksRow_${prepLinkKey}">`;
+  html += links.join('');
+
+  // Add Meeting Prep input/add button
+  if (!savedPrepLink) {
+    html += `<span id="prepAddBtn_${prepLinkKey}" style="display:inline-flex;align-items:center;gap:4px;">
+      <span style="color:#55efc4;text-decoration:none;font-size:11px;cursor:pointer;opacity:0.7;" onclick="showPrepInput('${prepLinkKey}')">+ Add Meeting Prep</span>
+    </span>
+    <span id="prepInputWrap_${prepLinkKey}" style="display:none;align-items:center;gap:4px;">
+      <input type="text" id="prepInput_${prepLinkKey}" placeholder="Paste link..."
+        style="padding:4px 8px;font-size:10px;background:var(--bg);border:1px solid var(--panel-border);border-radius:4px;color:var(--text);width:140px;outline:none;"
+        onkeydown="if(event.key==='Enter')savePrepLinkInline('${prepLinkKey}','${d.name.replace(/'/g, "\\'")}')">
+      <button onclick="savePrepLinkInline('${prepLinkKey}','${d.name.replace(/'/g, "\\'")}')"
+        style="padding:4px 8px;font-size:10px;background:var(--accent-cust);border:none;border-radius:4px;color:#fff;cursor:pointer;">Save</button>
+      <button onclick="hidePrepInput('${prepLinkKey}')"
+        style="padding:4px 6px;font-size:10px;background:transparent;border:1px solid var(--panel-border);border-radius:4px;color:var(--text-muted);cursor:pointer;">×</button>
+    </span>`;
+  } else {
+    html += `<span style="margin-left:8px;">
+      <button onclick="showEditPrepInput('${prepLinkKey}', '${savedPrepLink.replace(/'/g, "\\'")}')"
+        style="padding:2px 6px;font-size:9px;background:transparent;border:1px solid var(--panel-border);border-radius:3px;color:var(--text-muted);cursor:pointer;margin-right:4px;">Edit</button>
+      <button onclick="removePrepLinkInline('${prepLinkKey}','${d.name.replace(/'/g, "\\'")}')"
+        style="padding:2px 6px;font-size:9px;background:transparent;border:1px solid var(--panel-border);border-radius:3px;color:var(--text-muted);cursor:pointer;">×</button>
+    </span>
+    <span id="prepEditWrap_${prepLinkKey}" style="display:none;align-items:center;gap:4px;width:100%;margin-top:6px;">
+      <input type="text" id="prepEditInput_${prepLinkKey}" placeholder="Paste link..."
+        style="flex:1;padding:4px 8px;font-size:10px;background:var(--bg);border:1px solid var(--panel-border);border-radius:4px;color:var(--text);outline:none;">
+      <button onclick="savePrepLinkInline('${prepLinkKey}','${d.name.replace(/'/g, "\\'")}')"
+        style="padding:4px 8px;font-size:10px;background:var(--accent-cust);border:none;border-radius:4px;color:#fff;cursor:pointer;">Save</button>
+      <button onclick="hideEditPrepInput('${prepLinkKey}')"
+        style="padding:4px 6px;font-size:10px;background:transparent;border:1px solid var(--panel-border);border-radius:4px;color:var(--text-muted);cursor:pointer;">×</button>
+    </span>`;
+  }
+  html += `</div>`;
 
   // Notes section
   const noteKey = 'edia_notes_' + d.name.replace(/[^a-zA-Z0-9]/g, '_');
@@ -2000,29 +2040,6 @@ function buildStratPopup(d) {
   }
   html += `<div class="note-add-wrap"><textarea class="note-input" id="noteInput_${noteKey}" placeholder="Add a note..." onkeydown="handleNoteKey(event, '${noteKey}', this)"></textarea><button class="note-add-btn" onclick="addNote('${noteKey}', document.getElementById('noteInput_${noteKey}'))">Add</button></div>`;
   html += `</div>`;
-
-  // Meeting Prep Link Section
-  const prepLinkKey = 'edia_prep_' + d.name.replace(/[^a-zA-Z0-9]/g, '_');
-  const savedPrepLink = localStorage.getItem(prepLinkKey) || d.prep_doc_url || '';
-  html += `<div class="prep-link-section">`;
-  html += `<div class="prep-link-label">Meeting Prep Doc</div>`;
-  html += `<div class="prep-link-row" id="prepLinkRow_${prepLinkKey}">`;
-  if (savedPrepLink) {
-    html += `<div class="prep-link-display">
-      <a href="${savedPrepLink}" target="_blank">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-        View Meeting Prep
-      </a>
-    </div>
-    <button class="prep-link-edit-btn" onclick="editPrepLink('${prepLinkKey}')">Edit</button>
-    <button class="prep-link-remove-btn" onclick="removePrepLink('${prepLinkKey}')">Remove</button>`;
-  } else {
-    html += `<div class="prep-link-add">
-      <input type="text" class="prep-link-input" id="prepInput_${prepLinkKey}" placeholder="Paste Google Drive link...">
-      <button class="prep-link-save-btn" onclick="savePrepLink('${prepLinkKey}')">Save</button>
-    </div>`;
-  }
-  html += `</div></div>`;
 
   // Meeting Prep Button
   const dataJson = encodeURIComponent(JSON.stringify(d));
@@ -2114,76 +2131,102 @@ function updateLegend() {
 }
 
 // ============ PREP LINK MANAGEMENT ============
-function savePrepLink(key) {
-  const input = document.getElementById('prepInput_' + key);
-  if (!input) return;
-
-  const url = input.value.trim();
-  if (!url) {
-    input.style.borderColor = 'var(--danger)';
-    setTimeout(() => input.style.borderColor = '', 1500);
-    return;
-  }
-
-  // Validate it looks like a URL
-  if (!url.startsWith('http://') && !url.startsWith('https://')) {
-    input.style.borderColor = 'var(--danger)';
-    input.placeholder = 'Please enter a valid URL';
-    setTimeout(() => {
-      input.style.borderColor = '';
-      input.placeholder = 'Paste Google Drive link...';
-    }, 2000);
-    return;
-  }
-
-  localStorage.setItem(key, url);
-
-  // Update the UI to show the saved link
-  const row = document.getElementById('prepLinkRow_' + key);
-  if (row) {
-    row.innerHTML = `
-      <div class="prep-link-display">
-        <a href="${url}" target="_blank">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-          View Meeting Prep
-        </a>
-      </div>
-      <button class="prep-link-edit-btn" onclick="editPrepLink('${key}')">Edit</button>
-      <button class="prep-link-remove-btn" onclick="removePrepLink('${key}')">Remove</button>
-    `;
+function showPrepInput(key) {
+  const addBtn = document.getElementById('prepAddBtn_' + key);
+  const inputWrap = document.getElementById('prepInputWrap_' + key);
+  if (addBtn) addBtn.style.display = 'none';
+  if (inputWrap) {
+    inputWrap.style.display = 'inline-flex';
+    const input = document.getElementById('prepInput_' + key);
+    if (input) input.focus();
   }
 }
 
-function editPrepLink(key) {
-  const currentUrl = localStorage.getItem(key) || '';
-  const row = document.getElementById('prepLinkRow_' + key);
-  if (row) {
-    row.innerHTML = `
-      <div class="prep-link-add">
-        <input type="text" class="prep-link-input" id="prepInput_${key}" placeholder="Paste Google Drive link..." value="${currentUrl}">
-        <button class="prep-link-save-btn" onclick="savePrepLink('${key}')">Save</button>
-      </div>
-    `;
-    // Focus and select all
-    const input = document.getElementById('prepInput_' + key);
+function hidePrepInput(key) {
+  const addBtn = document.getElementById('prepAddBtn_' + key);
+  const inputWrap = document.getElementById('prepInputWrap_' + key);
+  if (addBtn) addBtn.style.display = 'inline-flex';
+  if (inputWrap) inputWrap.style.display = 'none';
+}
+
+function showEditPrepInput(key, currentUrl) {
+  const editWrap = document.getElementById('prepEditWrap_' + key);
+  if (editWrap) {
+    editWrap.style.display = 'flex';
+    const input = document.getElementById('prepEditInput_' + key);
     if (input) {
+      input.value = currentUrl;
       input.focus();
       input.select();
     }
   }
 }
 
-function removePrepLink(key) {
-  localStorage.removeItem(key);
-  const row = document.getElementById('prepLinkRow_' + key);
-  if (row) {
-    row.innerHTML = `
-      <div class="prep-link-add">
-        <input type="text" class="prep-link-input" id="prepInput_${key}" placeholder="Paste Google Drive link...">
-        <button class="prep-link-save-btn" onclick="savePrepLink('${key}')">Save</button>
-      </div>
-    `;
+function hideEditPrepInput(key) {
+  const editWrap = document.getElementById('prepEditWrap_' + key);
+  if (editWrap) editWrap.style.display = 'none';
+}
+
+function savePrepLinkInline(key, districtName) {
+  // Check both possible input IDs
+  let input = document.getElementById('prepInput_' + key);
+  if (!input || !input.value.trim()) {
+    input = document.getElementById('prepEditInput_' + key);
   }
+  if (!input) return;
+
+  const url = input.value.trim();
+  if (!url) {
+    input.style.borderColor = '#e17055';
+    setTimeout(() => input.style.borderColor = '', 1500);
+    return;
+  }
+
+  // Validate URL
+  if (!url.startsWith('http://') && !url.startsWith('https://')) {
+    input.style.borderColor = '#e17055';
+    input.placeholder = 'Enter valid URL';
+    setTimeout(() => {
+      input.style.borderColor = '';
+      input.placeholder = 'Paste link...';
+    }, 2000);
+    return;
+  }
+
+  // Save to localStorage
+  localStorage.setItem(key, url);
+
+  // Close the current popup and reopen to refresh
+  // Find the marker for this district and reopen its popup
+  const marker = findMarkerByDistrict(districtName);
+  if (marker) {
+    marker.closePopup();
+    setTimeout(() => marker.openPopup(), 100);
+  }
+}
+
+function removePrepLinkInline(key, districtName) {
+  localStorage.removeItem(key);
+
+  // Refresh the popup
+  const marker = findMarkerByDistrict(districtName);
+  if (marker) {
+    marker.closePopup();
+    setTimeout(() => marker.openPopup(), 100);
+  }
+}
+
+function findMarkerByDistrict(districtName) {
+  let foundMarker = null;
+  stratLayer.eachLayer(layer => {
+    if (layer._popup) {
+      const content = layer._popup.getContent();
+      if (content && content.includes(districtName)) {
+        foundMarker = layer;
+      }
+    }
+  });
+  return foundMarker;
 }
 
 // ============ MEETING PREP ============
