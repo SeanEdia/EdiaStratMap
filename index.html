@@ -2196,23 +2196,77 @@ function savePrepLinkInline(key, districtName) {
   // Save to localStorage
   localStorage.setItem(key, url);
 
-  // Close the current popup and reopen to refresh
-  // Find the marker for this district and reopen its popup
-  const marker = findMarkerByDistrict(districtName);
-  if (marker) {
-    marker.closePopup();
-    setTimeout(() => marker.openPopup(), 100);
+  // Update the UI directly without refresh
+  const linksRow = document.getElementById('linksRow_' + key);
+  if (linksRow) {
+    // Hide add button and input
+    const addBtn = document.getElementById('prepAddBtn_' + key);
+    const inputWrap = document.getElementById('prepInputWrap_' + key);
+    const editWrap = document.getElementById('prepEditWrap_' + key);
+    if (addBtn) addBtn.remove();
+    if (inputWrap) inputWrap.remove();
+    if (editWrap) editWrap.remove();
+
+    // Remove old prep link if exists
+    const oldLink = document.getElementById('prepLink_' + key);
+    if (oldLink) oldLink.parentElement.remove();
+
+    // Add the new Meeting Prep link inline
+    const linkHtml = `<a href="${url}" target="_blank" style="color:#55efc4;text-decoration:none;font-size:11px;" id="prepLink_${key}">📝 Meeting Prep</a>`;
+    const buttonsHtml = `<span style="margin-left:8px;" id="prepButtons_${key}">
+      <button onclick="showEditPrepInput('${key}', '${url.replace(/'/g, "\\'")}')"
+        style="padding:2px 6px;font-size:9px;background:transparent;border:1px solid var(--panel-border);border-radius:3px;color:var(--text-muted);cursor:pointer;margin-right:4px;">Edit</button>
+      <button onclick="removePrepLinkInline('${key}','${districtName.replace(/'/g, "\\'")}')"
+        style="padding:2px 6px;font-size:9px;background:transparent;border:1px solid var(--panel-border);border-radius:3px;color:var(--text-muted);cursor:pointer;">×</button>
+    </span>
+    <span id="prepEditWrap_${key}" style="display:none;align-items:center;gap:4px;width:100%;margin-top:6px;">
+      <input type="text" id="prepEditInput_${key}" placeholder="Paste link..."
+        style="flex:1;padding:4px 8px;font-size:10px;background:var(--bg);border:1px solid var(--panel-border);border-radius:4px;color:var(--text);outline:none;">
+      <button onclick="savePrepLinkInline('${key}','${districtName.replace(/'/g, "\\'")}')"
+        style="padding:4px 8px;font-size:10px;background:var(--accent-cust);border:none;border-radius:4px;color:#fff;cursor:pointer;">Save</button>
+      <button onclick="hideEditPrepInput('${key}')"
+        style="padding:4px 6px;font-size:10px;background:transparent;border:1px solid var(--panel-border);border-radius:4px;color:var(--text-muted);cursor:pointer;">×</button>
+    </span>`;
+
+    // Insert before any existing buttons or at end
+    const strategicLink = linksRow.querySelector('a[href*="strategic"]') || linksRow.querySelector('a');
+    if (strategicLink) {
+      strategicLink.insertAdjacentHTML('afterend', ' ' + linkHtml + buttonsHtml);
+    } else {
+      linksRow.insertAdjacentHTML('afterbegin', linkHtml + buttonsHtml);
+    }
   }
 }
 
 function removePrepLinkInline(key, districtName) {
   localStorage.removeItem(key);
 
-  // Refresh the popup
-  const marker = findMarkerByDistrict(districtName);
-  if (marker) {
-    marker.closePopup();
-    setTimeout(() => marker.openPopup(), 100);
+  // Update the UI directly
+  const linksRow = document.getElementById('linksRow_' + key);
+  if (linksRow) {
+    // Remove the link and buttons
+    const link = document.getElementById('prepLink_' + key);
+    const buttons = document.getElementById('prepButtons_' + key);
+    const editWrap = document.getElementById('prepEditWrap_' + key);
+    if (link) link.remove();
+    if (buttons) buttons.remove();
+    if (editWrap) editWrap.remove();
+
+    // Add back the "+ Add Meeting Prep" option
+    const addHtml = `<span id="prepAddBtn_${key}" style="display:inline-flex;align-items:center;gap:4px;">
+      <span style="color:#55efc4;text-decoration:none;font-size:11px;cursor:pointer;opacity:0.7;" onclick="showPrepInput('${key}')">+ Add Meeting Prep</span>
+    </span>
+    <span id="prepInputWrap_${key}" style="display:none;align-items:center;gap:4px;">
+      <input type="text" id="prepInput_${key}" placeholder="Paste link..."
+        style="padding:4px 8px;font-size:10px;background:var(--bg);border:1px solid var(--panel-border);border-radius:4px;color:var(--text);width:140px;outline:none;"
+        onkeydown="if(event.key==='Enter')savePrepLinkInline('${key}','${districtName.replace(/'/g, "\\'")}')">
+      <button onclick="savePrepLinkInline('${key}','${districtName.replace(/'/g, "\\'")}')"
+        style="padding:4px 8px;font-size:10px;background:var(--accent-cust);border:none;border-radius:4px;color:#fff;cursor:pointer;">Save</button>
+      <button onclick="hidePrepInput('${key}')"
+        style="padding:4px 6px;font-size:10px;background:transparent;border:1px solid var(--panel-border);border-radius:4px;color:var(--text-muted);cursor:pointer;">×</button>
+    </span>`;
+
+    linksRow.insertAdjacentHTML('beforeend', addHtml);
   }
 }
 
