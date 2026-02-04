@@ -1201,6 +1201,320 @@ input[type="range"]::-webkit-slider-thumb {
 }
 .prep-link-save-btn:hover { opacity: 0.85; }
 
+/* ============ FULL-SCREEN ACCOUNT MODAL ============ */
+.account-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2500;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.25s ease-out;
+  padding: 20px;
+}
+.account-modal.show {
+  opacity: 1;
+  visibility: visible;
+}
+.account-modal-content {
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius);
+  width: 100%;
+  max-width: 900px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 25px 80px rgba(0,0,0,0.6);
+  overflow: hidden;
+  transform: scale(0.95);
+  transition: transform 0.25s ease-out;
+}
+.account-modal.show .account-modal-content {
+  transform: scale(1);
+}
+.account-modal-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--panel-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+.account-modal-title {
+  flex: 1;
+}
+.account-modal-title h2 {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+.account-modal-title .subtitle {
+  font-size: 12px;
+  color: var(--text-dim);
+}
+.account-modal-badge {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.account-modal-badge.strategic { background: rgba(108,92,231,0.2); color: var(--accent-strat); }
+.account-modal-badge.customer { background: rgba(0,184,148,0.2); color: var(--accent-cust); }
+.account-modal-badge.both { background: rgba(253,203,110,0.2); color: var(--accent-both); }
+.account-modal-close {
+  background: var(--surface);
+  border: 1px solid var(--panel-border);
+  color: var(--text-dim);
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+.account-modal-close:hover {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: #fff;
+}
+
+/* Tabs */
+.account-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--panel-border);
+  padding: 0 24px;
+  gap: 4px;
+}
+.account-tab {
+  padding: 12px 20px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-dim);
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.15s;
+  margin-bottom: -1px;
+}
+.account-tab:hover {
+  color: var(--text);
+  background: var(--surface);
+}
+.account-tab.active {
+  color: var(--accent-strat);
+  border-bottom-color: var(--accent-strat);
+}
+.account-tab.active-cust {
+  color: var(--accent-cust);
+  border-bottom-color: var(--accent-cust);
+}
+.account-tab .tab-icon {
+  margin-right: 8px;
+}
+
+/* Tab Content */
+.account-modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0;
+}
+.tab-content {
+  display: none;
+  padding: 24px;
+  animation: fadeIn 0.2s ease-out;
+}
+.tab-content.active {
+  display: block;
+}
+
+/* Content Grid */
+.modal-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+.modal-section {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+}
+.modal-section-title {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.modal-section-title .icon {
+  font-size: 14px;
+}
+.modal-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--panel-border);
+  gap: 12px;
+}
+.modal-row:last-child {
+  border-bottom: none;
+}
+.modal-row .label {
+  font-size: 11px;
+  color: var(--text-dim);
+}
+.modal-row .value {
+  font-size: 13px;
+  color: var(--text);
+  text-align: right;
+  word-break: break-word;
+}
+.modal-row .value.highlight {
+  color: var(--accent-cust);
+  font-weight: 600;
+}
+.modal-row .value.warning {
+  color: var(--accent-both);
+}
+.modal-row .value a {
+  color: var(--accent-strat);
+  text-decoration: none;
+}
+.modal-row .value a:hover {
+  text-decoration: underline;
+}
+
+/* Contact Cards */
+.contact-card {
+  background: var(--bg);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  margin-bottom: 8px;
+}
+.contact-card:last-child {
+  margin-bottom: 0;
+}
+.contact-card .name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+.contact-card .title {
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+/* Opportunity Card */
+.opp-card {
+  background: linear-gradient(135deg, rgba(108,92,231,0.1) 0%, rgba(0,184,148,0.1) 100%);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+}
+.opp-stage-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+.opp-stage-badge.discovery { background: rgba(253,203,110,0.2); color: #fdcb6e; }
+.opp-stage-badge.demo { background: rgba(116,185,255,0.2); color: #74b9ff; }
+.opp-stage-badge.scoping { background: rgba(225,112,85,0.2); color: #e17055; }
+.opp-stage-badge.validation { background: rgba(85,239,196,0.2); color: #55efc4; }
+
+/* Notes in modal */
+.modal-notes-thread {
+  max-height: 200px;
+  overflow-y: auto;
+  background: var(--bg);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+}
+.modal-note-entry {
+  padding: 10px 12px;
+  background: var(--surface);
+  border-radius: var(--radius-sm);
+  margin-bottom: 8px;
+}
+.modal-note-entry:last-child {
+  margin-bottom: 0;
+}
+
+/* Expand button for popup */
+.popup-expand-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 28px;
+  height: 28px;
+  background: var(--surface);
+  border: 1px solid var(--panel-border);
+  border-radius: 6px;
+  color: var(--text-dim);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  z-index: 10;
+}
+.popup-expand-btn:hover {
+  background: var(--accent-strat);
+  border-color: var(--accent-strat);
+  color: #fff;
+}
+.popup-expand-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* Product-specific highlights */
+.product-highlight {
+  background: var(--bg);
+  border-left: 3px solid var(--accent-strat);
+  padding: 10px 14px;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  margin-bottom: 8px;
+}
+.product-highlight.math {
+  border-color: #a29bfe;
+}
+.product-highlight.attendance {
+  border-color: #74b9ff;
+}
+.product-highlight .label {
+  font-size: 10px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+.product-highlight .value {
+  font-size: 13px;
+  color: var(--text);
+}
+
 </style>
 </head>
 <body>
@@ -1330,6 +1644,39 @@ input[type="range"]::-webkit-slider-thumb {
     <div class="merge-modal-footer">
       <button class="merge-btn merge-btn-cancel" onclick="closeMergeModal()">Cancel</button>
       <button class="merge-btn merge-btn-confirm" onclick="confirmMerge()">Apply Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- FULL-SCREEN ACCOUNT MODAL -->
+<div class="account-modal" id="accountModal">
+  <div class="account-modal-content">
+    <div class="account-modal-header">
+      <div class="account-modal-title">
+        <h2 id="modalAccountName">District Name</h2>
+        <div class="subtitle" id="modalAccountSubtitle">State • Region • Enrollment</div>
+      </div>
+      <span class="account-modal-badge strategic" id="modalAccountBadge">Strategic</span>
+      <button class="account-modal-close" onclick="closeAccountModal()">&times;</button>
+    </div>
+    <div class="account-tabs">
+      <button class="account-tab active" onclick="switchTab('info', this)">
+        <span class="tab-icon">📋</span>Info
+      </button>
+      <button class="account-tab" onclick="switchTab('math', this)">
+        <span class="tab-icon">📐</span>Math
+      </button>
+      <button class="account-tab" onclick="switchTab('attendance', this)">
+        <span class="tab-icon">📅</span>Attendance
+      </button>
+    </div>
+    <div class="account-modal-body">
+      <!-- INFO TAB -->
+      <div class="tab-content active" id="tabInfo"></div>
+      <!-- MATH TAB -->
+      <div class="tab-content" id="tabMath"></div>
+      <!-- ATTENDANCE TAB -->
+      <div class="tab-content" id="tabAttendance"></div>
     </div>
   </div>
 </div>
@@ -1879,7 +2226,11 @@ function copyText(text, el) {
 }
 
 function buildStratPopup(d) {
-  let html = `<div class="popup-card">`;
+  const dataForModal = encodeURIComponent(JSON.stringify(d));
+  let html = `<div class="popup-card" style="position:relative;">`;
+  html += `<button class="popup-expand-btn" onclick="openAccountModal('${dataForModal}')" title="Full screen view">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+  </button>`;
   html += `<div class="popup-type ${d.is_customer ? 'both' : 'strat'}">${d.is_customer ? 'Strategic Account + Customer' : 'Strategic Account'}</div>`;
   html += `<h3 class="copyable" data-tooltip="Click to copy" onclick="copyText('${d.name.replace(/'/g, "\\\\'")}', this)">${d.name}</h3>`;
 
@@ -2129,6 +2480,313 @@ function updateLegend() {
     legend.style.display = 'none';
   }
 }
+
+// ============ FULL-SCREEN ACCOUNT MODAL ============
+let currentModalData = null;
+
+function openAccountModal(encodedData) {
+  try {
+    const d = JSON.parse(decodeURIComponent(encodedData));
+    currentModalData = d;
+
+    // Set header info
+    document.getElementById('modalAccountName').textContent = d.name;
+    document.getElementById('modalAccountSubtitle').textContent =
+      `${d.state || ''} • ${d.region || ''} • ${d.enrollment ? parseInt(d.enrollment).toLocaleString() + ' students' : ''}`;
+
+    // Set badge
+    const badge = document.getElementById('modalAccountBadge');
+    if (d.is_customer) {
+      badge.textContent = 'Strategic + Customer';
+      badge.className = 'account-modal-badge both';
+    } else {
+      badge.textContent = 'Strategic Account';
+      badge.className = 'account-modal-badge strategic';
+    }
+
+    // Populate tabs
+    populateInfoTab(d);
+    populateMathTab(d);
+    populateAttendanceTab(d);
+
+    // Reset to Info tab
+    switchTab('info', document.querySelector('.account-tab'));
+
+    // Show modal
+    document.getElementById('accountModal').classList.add('show');
+    document.body.style.overflow = 'hidden';
+  } catch (e) {
+    console.error('Error opening modal:', e);
+  }
+}
+
+function closeAccountModal() {
+  document.getElementById('accountModal').classList.remove('show');
+  document.body.style.overflow = '';
+  currentModalData = null;
+}
+
+function switchTab(tabId, btnEl) {
+  // Update tab buttons
+  document.querySelectorAll('.account-tab').forEach(t => t.classList.remove('active', 'active-cust'));
+  btnEl.classList.add('active');
+
+  // Update tab content
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.getElementById('tab' + tabId.charAt(0).toUpperCase() + tabId.slice(1)).classList.add('active');
+}
+
+function populateInfoTab(d) {
+  const noteKey = 'edia_notes_' + d.name.replace(/[^a-zA-Z0-9]/g, '_');
+  const notes = getAccountNotes(noteKey);
+  const prepLinkKey = 'edia_prep_' + d.name.replace(/[^a-zA-Z0-9]/g, '_');
+  const savedPrepLink = localStorage.getItem(prepLinkKey) || d.prep_doc_url || '';
+
+  let html = `<div class="modal-grid">`;
+
+  // Basic Info Section
+  html += `<div class="modal-section">
+    <div class="modal-section-title"><span class="icon">🏫</span> District Overview</div>
+    ${modalRow('Enrollment', d.enrollment ? parseInt(d.enrollment).toLocaleString() : '—')}
+    ${modalRow('State', d.state)}
+    ${modalRow('Region', d.region)}
+    ${modalRow('Account Executive', d.ae || '—')}
+    ${modalRow('ADA/ADM', d.ada_adm || '—')}
+  </div>`;
+
+  // Leadership Section
+  const leaders = [
+    ['Superintendent', d.superintendent],
+    ['Asst Supt C&I', d.asst_supt_ci],
+    ['Asst Supt Student Svcs', d.asst_supt_ss],
+    ['Asst Supt Technology', d.asst_supt_tech],
+    ['Director C&I', d.dir_ci],
+  ].filter(([_, v]) => v);
+
+  if (leaders.length) {
+    html += `<div class="modal-section">
+      <div class="modal-section-title"><span class="icon">👥</span> Leadership</div>`;
+    leaders.forEach(([title, name]) => {
+      html += `<div class="contact-card"><div class="name">${name}</div><div class="title">${title}</div></div>`;
+    });
+    html += `</div>`;
+  }
+
+  // Opportunity Section
+  if (d.opp_stage) {
+    let stageClass = 'discovery';
+    if (d.opp_stage.includes('Demo')) stageClass = 'demo';
+    else if (d.opp_stage.includes('Scoping')) stageClass = 'scoping';
+    else if (d.opp_stage.includes('Validation')) stageClass = 'validation';
+
+    html += `<div class="modal-section opp-card">
+      <div class="modal-section-title"><span class="icon">💼</span> Opportunity</div>
+      <span class="opp-stage-badge ${stageClass}">${d.opp_stage}</span>
+      ${modalRow('Forecast', d.opp_forecast || '—')}
+      ${modalRow('Areas', d.opp_areas || '—')}
+      ${modalRow('Probability', d.opp_probability ? d.opp_probability + '%' : '—')}
+      ${modalRow('Contact', d.opp_contact ? d.opp_contact + (d.opp_contact_title ? ' (' + d.opp_contact_title + ')' : '') : '—')}
+      ${modalRow('Next Step', d.opp_next_step || '—')}
+      ${modalRow('Last Activity', d.opp_last_activity || '—')}
+      ${modalRow('SDR', d.opp_sdr || '—')}
+    </div>`;
+  }
+
+  // Resources Section
+  html += `<div class="modal-section">
+    <div class="modal-section-title"><span class="icon">🔗</span> Resources</div>`;
+  if (d.org_chart_url) {
+    html += modalRow('Org Chart', `<a href="${d.org_chart_url}" target="_blank">View →</a>`);
+  }
+  if (d.strategic_plan_url) {
+    html += modalRow('Strategic Plan', `<a href="${d.strategic_plan_url}" target="_blank">View →</a>`);
+  }
+  if (savedPrepLink) {
+    html += modalRow('Meeting Prep', `<a href="${savedPrepLink}" target="_blank">View →</a>`);
+  }
+  if (!d.org_chart_url && !d.strategic_plan_url && !savedPrepLink) {
+    html += `<div style="color:var(--text-muted);font-size:12px;">No resources linked</div>`;
+  }
+  html += `</div>`;
+
+  // Notes Section
+  html += `<div class="modal-section" style="grid-column: 1 / -1;">
+    <div class="modal-section-title"><span class="icon">📝</span> Notes (${notes.length})</div>`;
+  if (notes.length) {
+    html += `<div class="modal-notes-thread">`;
+    notes.forEach(n => {
+      html += `<div class="modal-note-entry">
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+          <span style="font-size:11px;font-weight:600;color:#a29bfe;">${n.author}</span>
+          <span style="font-size:10px;color:var(--text-muted);">${formatNoteTime(n.ts)}</span>
+        </div>
+        <div style="font-size:12px;line-height:1.5;color:var(--text);">${n.text}</div>
+      </div>`;
+    });
+    html += `</div>`;
+  } else {
+    html += `<div style="color:var(--text-muted);font-size:12px;">No notes yet</div>`;
+  }
+  html += `</div>`;
+
+  html += `</div>`; // Close grid
+  document.getElementById('tabInfo').innerHTML = html;
+}
+
+function populateMathTab(d) {
+  let html = `<div class="modal-grid">`;
+
+  // Math Overview
+  html += `<div class="modal-section">
+    <div class="modal-section-title"><span class="icon">📐</span> Math Overview</div>`;
+
+  if (d.math_products) {
+    html += `<div class="product-highlight math">
+      <div class="label">Current Math Products</div>
+      <div class="value">${d.math_products}</div>
+    </div>`;
+  } else {
+    html += `<div style="color:var(--text-muted);font-size:12px;margin-bottom:12px;">No math products recorded</div>`;
+  }
+
+  // Math-related opportunity info
+  if (d.opp_areas && d.opp_areas.toLowerCase().includes('math')) {
+    html += `<div class="product-highlight math" style="border-color:#55efc4;">
+      <div class="label">Active Math Opportunity</div>
+      <div class="value">${d.opp_stage || 'In Progress'}</div>
+    </div>`;
+  }
+  html += `</div>`;
+
+  // Math Contacts
+  html += `<div class="modal-section">
+    <div class="modal-section-title"><span class="icon">👤</span> Math Contacts</div>`;
+
+  const mathContacts = [
+    ['Dir Math', d.dir_math],
+    ['Dir C&I', d.dir_ci],
+    ['Asst Supt C&I', d.asst_supt_ci],
+  ].filter(([_, v]) => v);
+
+  if (mathContacts.length) {
+    mathContacts.forEach(([title, name]) => {
+      html += `<div class="contact-card"><div class="name">${name}</div><div class="title">${title}</div></div>`;
+    });
+  } else {
+    html += `<div style="color:var(--text-muted);font-size:12px;">No math-specific contacts recorded</div>`;
+  }
+
+  // Opp contact if math-related
+  if (d.opp_contact && d.opp_areas && d.opp_areas.toLowerCase().includes('math')) {
+    html += `<div class="contact-card" style="border-left:3px solid #55efc4;">
+      <div class="name">${d.opp_contact}</div>
+      <div class="title">${d.opp_contact_title || 'Opportunity Contact'}</div>
+    </div>`;
+  }
+  html += `</div>`;
+
+  // Competition/Intel
+  html += `<div class="modal-section">
+    <div class="modal-section-title"><span class="icon">🎯</span> Math Intel</div>
+    ${modalRow('Competition', d.opp_competition || '—')}
+    ${modalRow('Economic Buyer', d.opp_economic_buyer || '—')}
+    ${modalRow('Champion', d.opp_champion || '—')}
+  </div>`;
+
+  html += `</div>`;
+  document.getElementById('tabMath').innerHTML = html;
+}
+
+function populateAttendanceTab(d) {
+  let html = `<div class="modal-grid">`;
+
+  // Attendance/SIS Overview
+  html += `<div class="modal-section">
+    <div class="modal-section-title"><span class="icon">📅</span> Attendance & SIS</div>`;
+
+  if (d.sis) {
+    html += `<div class="product-highlight attendance">
+      <div class="label">SIS Platform</div>
+      <div class="value">${d.sis}</div>
+    </div>`;
+  }
+
+  if (d.attendance) {
+    html += `<div class="product-highlight attendance">
+      <div class="label">Attendance System</div>
+      <div class="value">${d.attendance}</div>
+    </div>`;
+  }
+
+  if (!d.sis && !d.attendance) {
+    html += `<div style="color:var(--text-muted);font-size:12px;">No attendance/SIS info recorded</div>`;
+  }
+
+  // Attendance opportunity info
+  if (d.opp_areas && d.opp_areas.toLowerCase().includes('attendance')) {
+    html += `<div class="product-highlight attendance" style="border-color:#55efc4;margin-top:12px;">
+      <div class="label">Active Attendance Opportunity</div>
+      <div class="value">${d.opp_stage || 'In Progress'}</div>
+    </div>`;
+  }
+  html += `</div>`;
+
+  // Attendance Contacts
+  html += `<div class="modal-section">
+    <div class="modal-section-title"><span class="icon">👤</span> Attendance Contacts</div>`;
+
+  const attendanceContacts = [
+    ['Dir Attendance', d.dir_attendance],
+    ['Asst Supt Student Svcs', d.asst_supt_ss],
+    ['Asst Supt Technology', d.asst_supt_tech],
+  ].filter(([_, v]) => v);
+
+  if (attendanceContacts.length) {
+    attendanceContacts.forEach(([title, name]) => {
+      html += `<div class="contact-card"><div class="name">${name}</div><div class="title">${title}</div></div>`;
+    });
+  } else {
+    html += `<div style="color:var(--text-muted);font-size:12px;">No attendance-specific contacts recorded</div>`;
+  }
+
+  // Opp contact if attendance-related
+  if (d.opp_contact && d.opp_areas && d.opp_areas.toLowerCase().includes('attendance')) {
+    html += `<div class="contact-card" style="border-left:3px solid #55efc4;">
+      <div class="name">${d.opp_contact}</div>
+      <div class="title">${d.opp_contact_title || 'Opportunity Contact'}</div>
+    </div>`;
+  }
+  html += `</div>`;
+
+  // Additional Info
+  html += `<div class="modal-section">
+    <div class="modal-section-title"><span class="icon">📊</span> Additional Info</div>
+    ${modalRow('ADA/ADM', d.ada_adm || '—')}
+    ${modalRow('Enrollment', d.enrollment ? parseInt(d.enrollment).toLocaleString() : '—')}
+  </div>`;
+
+  html += `</div>`;
+  document.getElementById('tabAttendance').innerHTML = html;
+}
+
+function modalRow(label, value) {
+  return `<div class="modal-row"><span class="label">${label}</span><span class="value">${value}</span></div>`;
+}
+
+// Close modal on escape key
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    closeAccountModal();
+    closeMergeModal();
+  }
+});
+
+// Close modal on backdrop click
+document.addEventListener('click', (e) => {
+  if (e.target.classList.contains('account-modal')) {
+    closeAccountModal();
+  }
+});
 
 // ============ PREP LINK MANAGEMENT ============
 function showPrepInput(key) {
