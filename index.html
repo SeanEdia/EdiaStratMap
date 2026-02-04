@@ -2226,9 +2226,13 @@ function copyText(text, el) {
 }
 
 function buildStratPopup(d) {
-  const dataForModal = encodeURIComponent(JSON.stringify(d));
+  // Store data in global map for safe retrieval (avoids escaping issues in onclick)
+  const districtKey = d.name.replace(/[^a-zA-Z0-9]/g, '_');
+  window.districtDataCache = window.districtDataCache || {};
+  window.districtDataCache[districtKey] = d;
+
   let html = `<div class="popup-card" style="position:relative;">`;
-  html += `<button class="popup-expand-btn" onclick="openAccountModal('${dataForModal}')" title="Full screen view">
+  html += `<button class="popup-expand-btn" onclick="openAccountModalByKey('${districtKey}')" title="Full screen view">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
   </button>`;
   html += `<div class="popup-type ${d.is_customer ? 'both' : 'strat'}">${d.is_customer ? 'Strategic Account + Customer' : 'Strategic Account'}</div>`;
@@ -2484,40 +2488,53 @@ function updateLegend() {
 // ============ FULL-SCREEN ACCOUNT MODAL ============
 let currentModalData = null;
 
+function openAccountModalByKey(districtKey) {
+  const d = window.districtDataCache && window.districtDataCache[districtKey];
+  if (d) {
+    openAccountModalWithData(d);
+  } else {
+    console.error('District data not found for key:', districtKey);
+  }
+}
+
 function openAccountModal(encodedData) {
   try {
     const d = JSON.parse(decodeURIComponent(encodedData));
-    currentModalData = d;
-
-    // Set header info
-    document.getElementById('modalAccountName').textContent = d.name;
-    document.getElementById('modalAccountSubtitle').textContent =
-      `${d.state || ''} • ${d.region || ''} • ${d.enrollment ? parseInt(d.enrollment).toLocaleString() + ' students' : ''}`;
-
-    // Set badge
-    const badge = document.getElementById('modalAccountBadge');
-    if (d.is_customer) {
-      badge.textContent = 'Strategic + Customer';
-      badge.className = 'account-modal-badge both';
-    } else {
-      badge.textContent = 'Strategic Account';
-      badge.className = 'account-modal-badge strategic';
-    }
-
-    // Populate tabs
-    populateInfoTab(d);
-    populateMathTab(d);
-    populateAttendanceTab(d);
-
-    // Reset to Info tab
-    switchTab('info', document.querySelector('.account-tab'));
-
-    // Show modal
-    document.getElementById('accountModal').classList.add('show');
-    document.body.style.overflow = 'hidden';
+    openAccountModalWithData(d);
   } catch (e) {
     console.error('Error opening modal:', e);
   }
+}
+
+function openAccountModalWithData(d) {
+  currentModalData = d;
+
+  // Set header info
+  document.getElementById('modalAccountName').textContent = d.name;
+  document.getElementById('modalAccountSubtitle').textContent =
+    `${d.state || ''} • ${d.region || ''} • ${d.enrollment ? parseInt(d.enrollment).toLocaleString() + ' students' : ''}`;
+
+  // Set badge
+  const badge = document.getElementById('modalAccountBadge');
+  if (d.is_customer) {
+    badge.textContent = 'Strategic + Customer';
+    badge.className = 'account-modal-badge both';
+  } else {
+    badge.textContent = 'Strategic Account';
+    badge.className = 'account-modal-badge strategic';
+  }
+
+  // Populate tabs
+  populateInfoTab(d);
+  populateMathTab(d);
+  populateAttendanceTab(d);
+
+  // Reset to Info tab
+  switchTab('info', document.querySelector('.account-tab'));
+
+  // Show modal
+  document.getElementById('accountModal').classList.add('show');
+  document.body.style.overflow = 'hidden';
 }
 
 function closeAccountModal() {
