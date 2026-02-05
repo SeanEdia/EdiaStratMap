@@ -529,20 +529,6 @@ input[type="range"]::-webkit-slider-thumb {
 .legend-dot.cust { background: var(--accent-cust); box-shadow: 0 0 6px var(--accent-cust-glow); }
 
 /* Visible count badge */
-.count-badge {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  background: var(--panel);
-  border: 1px solid var(--panel-border);
-  border-radius: var(--radius);
-  padding: 10px 16px;
-  z-index: 999;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 13px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-}
-
 .count-badge .cb-num { font-weight: 600; }
 .count-badge .cb-strat { color: var(--accent-strat); }
 .count-badge .cb-cust { color: var(--accent-cust); }
@@ -628,35 +614,114 @@ input[type="range"]::-webkit-slider-thumb {
 #pipelineDetail.collapsed { display: none; }
 
 /* ============ ACTION DASHBOARD ============ */
-.action-dashboard {
-  margin-top: 18px;
-  padding-top: 14px;
-  border-top: 1px solid var(--panel-border);
+.ad-trigger-wrap {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
-.action-dashboard-toggle {
+.ad-trigger {
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius);
+  padding: 9px 14px;
+  color: var(--text-dim);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  transition: all 0.2s;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  white-space: nowrap;
+}
+.ad-trigger:hover { color: var(--text); border-color: var(--accent-strat); }
+.ad-trigger.active { color: var(--text); border-color: var(--accent-strat); background: var(--surface); }
+.ad-trigger svg { opacity: 0.6; }
+.ad-trigger:hover svg { opacity: 1; }
+.ad-trigger .ad-alert {
+  background: var(--danger);
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  min-width: 16px;
+  height: 16px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+}
+.count-badge {
+  position: static;
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius);
+  padding: 10px 16px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+.ad-overlay {
+  position: absolute;
+  top: 56px;
+  right: 16px;
+  width: 360px;
+  max-height: calc(100vh - 90px);
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.45);
+  z-index: 1000;
+  display: none;
+  overflow: hidden;
+  animation: adSlideIn 0.2s ease-out;
+}
+@keyframes adSlideIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.ad-overlay.open { display: flex; flex-direction: column; }
+.ad-overlay-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  cursor: pointer;
-  padding-bottom: 10px;
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid var(--panel-border);
 }
-.action-dashboard-toggle .ad-title {
-  font-size: 11px;
+.ad-overlay-header h3 {
+  font-size: 13px;
   font-weight: 600;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-  color: var(--text-dim);
+  letter-spacing: -0.2px;
 }
-.action-dashboard-toggle .ad-arrow {
-  font-size: 10px;
+.ad-overlay-close {
+  background: none;
+  border: none;
   color: var(--text-muted);
-  transition: transform 0.2s;
+  cursor: pointer;
+  font-size: 18px;
+  padding: 0 4px;
+  line-height: 1;
 }
-#actionDashboardBody.collapsed { display: none; }
+.ad-overlay-close:hover { color: var(--text); }
+.ad-overlay-body {
+  overflow-y: auto;
+  padding: 12px 16px 16px;
+  flex: 1;
+}
+.ad-overlay-body::-webkit-scrollbar { width: 4px; }
+.ad-overlay-body::-webkit-scrollbar-track { background: transparent; }
+.ad-overlay-body::-webkit-scrollbar-thumb { background: var(--panel-border); border-radius: 2px; }
 
 .ad-section {
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
+.ad-section:last-child { margin-bottom: 0; }
 .ad-section-header {
   font-size: 10px;
   font-weight: 600;
@@ -1801,7 +1866,20 @@ input[type="range"]::-webkit-slider-thumb {
 <!-- MAP -->
 <div class="map-container">
   <div id="map"></div>
-  <div class="count-badge" id="countBadge"></div>
+  <div class="ad-trigger-wrap">
+    <button class="ad-trigger" id="adTrigger" onclick="toggleActionDashboard()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="4" rx="1"/><rect x="14" y="10" width="7" height="4" rx="1"/><rect x="3" y="13" width="7" height="8" rx="1"/><rect x="14" y="17" width="7" height="4" rx="1"/></svg>
+      Actions
+    </button>
+    <div class="count-badge" id="countBadge"></div>
+  </div>
+  <div class="ad-overlay" id="adOverlay">
+    <div class="ad-overlay-header">
+      <h3>Action Dashboard</h3>
+      <button class="ad-overlay-close" onclick="toggleActionDashboard()">&times;</button>
+    </div>
+    <div class="ad-overlay-body" id="actionDashboardBody"></div>
+  </div>
   <div class="legend" id="legend"></div>
 </div>
 
@@ -1917,16 +1995,6 @@ function renderFilters() {
   }
 
   html += `<button class="reset-btn" onclick="resetFilters()">↺ Reset All Filters</button>`;
-
-  // Action Dashboard container
-  html += `<div class="action-dashboard" id="actionDashboard">
-    <div class="action-dashboard-toggle" onclick="toggleActionDashboard()">
-      <span class="ad-title">Action Dashboard</span>
-      <span class="ad-arrow" id="adArrow">▼</span>
-    </div>
-    <div id="actionDashboardBody"></div>
-  </div>`;
-
   area.innerHTML = html;
 }
 
@@ -2247,15 +2315,27 @@ function toggleStageDropdown(stageId) {
 
 // ============ ACTION DASHBOARD ============
 
-let actionDashboardCollapsed = false;
+let actionDashboardOpen = false;
 
 function toggleActionDashboard() {
-  actionDashboardCollapsed = !actionDashboardCollapsed;
-  const body = document.getElementById('actionDashboardBody');
-  const arrow = document.getElementById('adArrow');
-  if (body) body.classList.toggle('collapsed', actionDashboardCollapsed);
-  if (arrow) arrow.textContent = actionDashboardCollapsed ? '▶' : '▼';
+  actionDashboardOpen = !actionDashboardOpen;
+  const overlay = document.getElementById('adOverlay');
+  const trigger = document.getElementById('adTrigger');
+  if (overlay) overlay.classList.toggle('open', actionDashboardOpen);
+  if (trigger) trigger.classList.toggle('active', actionDashboardOpen);
 }
+
+// Close overlay when clicking outside
+document.addEventListener('click', function(e) {
+  if (!actionDashboardOpen) return;
+  const overlay = document.getElementById('adOverlay');
+  const trigger = document.getElementById('adTrigger');
+  if (overlay && trigger && !overlay.contains(e.target) && !trigger.contains(e.target)) {
+    actionDashboardOpen = false;
+    overlay.classList.remove('open');
+    trigger.classList.remove('active');
+  }
+});
 
 function parseUSDate(str) {
   if (!str) return null;
@@ -2428,10 +2508,20 @@ function updateActionDashboard() {
   html += `</div>`;
 
   body.innerHTML = html;
-  // Restore collapsed state
-  body.classList.toggle('collapsed', actionDashboardCollapsed);
-  const arrow = document.getElementById('adArrow');
-  if (arrow) arrow.textContent = actionDashboardCollapsed ? '▶' : '▼';
+
+  // Update alert badge on trigger button
+  const trigger = document.getElementById('adTrigger');
+  if (trigger) {
+    const alertCount = dueThisWeek.length;
+    const existing = trigger.querySelector('.ad-alert');
+    if (existing) existing.remove();
+    if (alertCount > 0) {
+      const badge = document.createElement('span');
+      badge.className = 'ad-alert';
+      badge.textContent = alertCount;
+      trigger.appendChild(badge);
+    }
+  }
 }
 
 // ============ POPUPS ============
