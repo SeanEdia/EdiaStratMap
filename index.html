@@ -3379,14 +3379,41 @@ function previewMerge(csvData) {
   // Use both exact name and normalized name for matching
   const existingByName = new Map();
   const existingByNormalized = new Map();
+  const existingByState = new Map(); // Group by state for fuzzy matching
   existingData.forEach((item, idx) => {
     const exactKey = item.name.toLowerCase().trim();
     const normalizedKey = normalizeDistrictName(item.name);
     existingByName.set(exactKey, { item, idx });
     existingByNormalized.set(normalizedKey, { item, idx });
+    // Group by state
+    const state = (item.state || '').toUpperCase().trim();
+    if (state) {
+      if (!existingByState.has(state)) existingByState.set(state, []);
+      existingByState.get(state).push({ item, idx, normalizedKey });
+    }
   });
   console.log('[SFDC Merge] Existing exact keys:', Array.from(existingByName.keys()).slice(0, 10), '...');
   console.log('[SFDC Merge] Existing normalized keys:', Array.from(existingByNormalized.keys()).slice(0, 10), '...');
+  console.log('[SFDC Merge] States indexed:', Array.from(existingByState.keys()).join(', '));
+
+  // Fuzzy match by state + core name contains
+  function findByStateAndName(csvName, csvState) {
+    if (!csvState) return null;
+    const stateKey = csvState.toUpperCase().trim();
+    const stateRecords = existingByState.get(stateKey);
+    if (!stateRecords) return null;
+
+    const csvNormalized = normalizeDistrictName(csvName);
+
+    for (const { item, idx, normalizedKey } of stateRecords) {
+      // Check if either name contains the other (handles "Dallas" matching "Dallas ISD")
+      if (csvNormalized.includes(normalizedKey) || normalizedKey.includes(csvNormalized)) {
+        console.log('[SFDC Merge] State+Name match:', csvName, '→', item.name, '(state:', stateKey, ')');
+        return { item, idx };
+      }
+    }
+    return null;
+  }
   // Log Dallas specifically if it exists - test with CORRECT keys
   const dallasExact = existingByName.get('dallas isd');
   const dallasNormalized = existingByNormalized.get('dallas'); // normalized key is "dallas", not "dallas isd"
@@ -3453,12 +3480,22 @@ function previewMerge(csvData) {
       console.log('  - existingByNormalized.has(normalizedKey):', existingByNormalized.has(normalizedKey));
     }
 
-    // Try exact match first, then normalized match
+    // Try exact match first, then normalized match, then state+name fuzzy match
     let existing = existingByName.get(nameKey);
     if (!existing) {
       existing = existingByNormalized.get(normalizedKey);
       if (existing) {
         console.log('[SFDC Merge] Normalized match:', name, '→', existing.item.name);
+      }
+    }
+    // Fallback: try state + name contains match
+    if (!existing) {
+      const csvState = csvRow.state || '';
+      existing = findByStateAndName(name, csvState);
+      // If we found a match, also add to processedNames to avoid duplicates
+      if (existing) {
+        processedNames.add(existing.item.name.toLowerCase().trim());
+        processedNames.add(normalizeDistrictName(existing.item.name));
       }
     }
     if (!existing && idx < 10) {
@@ -3535,6 +3572,13 @@ function previewMerge(csvData) {
       const possibleMatch = findPartialMatch(name, existingByName);
       if (possibleMatch) {
         stats.changes.push({ name, action: 'new', warning: `Similar to existing: "${possibleMatch}"` });
+      }
+
+      // Log ALL new records so we can debug matching issues
+      console.log('[SFDC Merge] NEW RECORD (no match):', name);
+      console.log('  - Normalized key tried:', normalizedKey);
+      if (possibleMatch) {
+        console.log('  - Possible match found:', possibleMatch);
       }
 
       const newRecord = {};
