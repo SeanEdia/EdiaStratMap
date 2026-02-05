@@ -2847,13 +2847,19 @@ function populateMathTab(d) {
   }
   html += `</div>`;
 
-  // Competition/Intel
-  html += `<div class="modal-section">
-    <div class="modal-section-title"><span class="icon">🎯</span> Math Intel</div>
-    ${modalRow('Competition', d.opp_competition || '—')}
-    ${modalRow('Economic Buyer', d.opp_economic_buyer || '—')}
-    ${modalRow('Champion', d.opp_champion || '—')}
-  </div>`;
+  // Competition/Intel - only show if this is a Math opp
+  const isMathOpp = d.opp_areas && d.opp_areas.toLowerCase().includes('math');
+  if (isMathOpp && (d.opp_competition || d.opp_economic_buyer || d.opp_champion)) {
+    html += `<div class="modal-section">
+      <div class="modal-section-title"><span class="icon">🎯</span> Math Opp Intel</div>
+      ${d.opp_stage ? modalRow('Stage', d.opp_stage) : ''}
+      ${d.opp_acv ? modalRow('Year 1 ACV', '$' + Number(d.opp_acv).toLocaleString()) : ''}
+      ${modalRow('Competition', d.opp_competition || '—')}
+      ${modalRow('Economic Buyer', d.opp_economic_buyer || '—')}
+      ${modalRow('Champion', d.opp_champion || '—')}
+      ${d.opp_next_step ? modalRow('Next Step', d.opp_next_step) : ''}
+    </div>`;
+  }
 
   html += `</div>`;
   document.getElementById('tabMath').innerHTML = html;
@@ -2919,6 +2925,20 @@ function populateAttendanceTab(d) {
     </div>`;
   }
   html += `</div>`;
+
+  // Attendance Opp Intel - only show if this is an Attendance opp
+  const isAttendanceOpp = d.opp_areas && d.opp_areas.toLowerCase().includes('attendance');
+  if (isAttendanceOpp && (d.opp_competition || d.opp_economic_buyer || d.opp_champion || d.opp_stage)) {
+    html += `<div class="modal-section">
+      <div class="modal-section-title"><span class="icon">🎯</span> Attendance Opp Intel</div>
+      ${d.opp_stage ? modalRow('Stage', d.opp_stage) : ''}
+      ${d.opp_acv ? modalRow('Year 1 ACV', '$' + Number(d.opp_acv).toLocaleString()) : ''}
+      ${modalRow('Competition', d.opp_competition || '—')}
+      ${modalRow('Economic Buyer', d.opp_economic_buyer || '—')}
+      ${modalRow('Champion', d.opp_champion || '—')}
+      ${d.opp_next_step ? modalRow('Next Step', d.opp_next_step) : ''}
+    </div>`;
+  }
 
   // Additional Info
   html += `<div class="modal-section">
