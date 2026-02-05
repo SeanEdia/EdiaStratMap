@@ -4017,61 +4017,96 @@ async function geocodeMissingRecords(records) {
 async function confirmMerge() {
   if (!pendingMergeData) return;
 
-  const isStrategic = sfdcDataType === 'strategic';
+  const confirmBtn = document.querySelector('.merge-btn-confirm');
+  const originalBtnText = confirmBtn.textContent;
+  let errors = [];
+  let geocodedCount = 0;
 
-  // Check for records needing geocoding
-  const needsGeocoding = pendingMergeData.filter(r => !r.lat || !r.lng);
-  if (needsGeocoding.length > 0) {
-    // Show geocoding status
-    const badge = document.getElementById('sfdcLastRefresh');
-    badge.textContent = `Geocoding ${needsGeocoding.length} new...`;
-    badge.style.color = '#fdcb6e';
+  try {
+    // Disable button and show loading state
+    confirmBtn.disabled = true;
+    confirmBtn.textContent = 'Processing...';
 
-    // Geocode missing records
-    await geocodeMissingRecords(pendingMergeData);
-  }
+    const isStrategic = sfdcDataType === 'strategic';
 
-  // Apply the merge
-  if (isStrategic) {
-    STRATEGIC_DATA.length = 0;
-    pendingMergeData.forEach(item => STRATEGIC_DATA.push(item));
-    // Persist to localStorage
-    try {
+    // Check for records needing geocoding
+    const needsGeocoding = pendingMergeData.filter(r => !r.lat || !r.lng);
+    if (needsGeocoding.length > 0) {
+      confirmBtn.textContent = `Geocoding ${needsGeocoding.length} records...`;
+
+      // Geocode missing records
+      for (let i = 0; i < needsGeocoding.length; i++) {
+        const record = needsGeocoding[i];
+        confirmBtn.textContent = `Geocoding ${i + 1}/${needsGeocoding.length}...`;
+
+        if (!record.state) {
+          errors.push(`No state for: ${record.name}`);
+          continue;
+        }
+
+        try {
+          const coords = await geocodeDistrict(record.name, record.state);
+          if (coords) {
+            record.lat = coords.lat;
+            record.lng = coords.lng;
+            geocodedCount++;
+          } else {
+            errors.push(`Could not geocode: ${record.name}`);
+          }
+        } catch (e) {
+          errors.push(`Geocode error for ${record.name}: ${e.message}`);
+        }
+      }
+    }
+
+    confirmBtn.textContent = 'Saving data...';
+
+    // Apply the merge
+    if (isStrategic) {
+      STRATEGIC_DATA.length = 0;
+      pendingMergeData.forEach(item => STRATEGIC_DATA.push(item));
+      // Persist to localStorage
       localStorage.setItem('edia_strategic_data', JSON.stringify(STRATEGIC_DATA));
       console.log('[Persist] Saved', STRATEGIC_DATA.length, 'strategic accounts to localStorage');
-    } catch (e) {
-      console.error('[Persist] Failed to save strategic data:', e);
-    }
-  } else {
-    CUSTOMER_DATA.length = 0;
-    pendingMergeData.forEach(item => CUSTOMER_DATA.push(item));
-    // Persist to localStorage
-    try {
+    } else {
+      CUSTOMER_DATA.length = 0;
+      pendingMergeData.forEach(item => CUSTOMER_DATA.push(item));
+      // Persist to localStorage
       localStorage.setItem('edia_customer_data', JSON.stringify(CUSTOMER_DATA));
       console.log('[Persist] Saved', CUSTOMER_DATA.length, 'customers to localStorage');
-    } catch (e) {
-      console.error('[Persist] Failed to save customer data:', e);
     }
+
+    // Update last refresh timestamp
+    localStorage.setItem('edia_sfdc_last_refresh', new Date().toISOString());
+
+    // Close modal
+    closeMergeModal();
+
+    // Show confirmation and refresh
+    const recordCount = isStrategic ? STRATEGIC_DATA.length : CUSTOMER_DATA.length;
+    let message = `✓ Merge complete!\n\n${recordCount} ${isStrategic ? 'strategic accounts' : 'customers'} saved.`;
+    if (geocodedCount > 0) {
+      message += `\n${geocodedCount} new records geocoded.`;
+    }
+    if (errors.length > 0) {
+      message += `\n\n⚠ ${errors.length} warning(s):\n• ${errors.slice(0, 5).join('\n• ')}`;
+      if (errors.length > 5) {
+        message += `\n• ...and ${errors.length - 5} more`;
+      }
+    }
+    message += '\n\nPage will refresh to load new data.';
+
+    alert(message);
+
+    // Refresh page to ensure all new pins and data load properly
+    window.location.reload();
+
+  } catch (e) {
+    console.error('[Merge] Error:', e);
+    confirmBtn.disabled = false;
+    confirmBtn.textContent = originalBtnText;
+    alert(`❌ Merge failed!\n\nError: ${e.message}\n\nCheck console for details.`);
   }
-
-  // Update last refresh timestamp
-  localStorage.setItem('edia_sfdc_last_refresh', new Date().toISOString());
-  document.getElementById('sfdcLastRefresh').textContent = 'Last: ' + new Date().toLocaleDateString();
-
-  // Refresh the map and filters
-  renderFilters();
-  applyFilters();
-
-  closeMergeModal();
-
-  // Show success feedback
-  const badge = document.getElementById('sfdcLastRefresh');
-  badge.textContent = 'Merged!';
-  badge.style.color = 'var(--accent-cust)';
-  setTimeout(() => {
-    badge.textContent = 'Last: ' + new Date().toLocaleDateString();
-    badge.style.color = '';
-  }, 2000);
 }
 
 // ============ INIT ============
