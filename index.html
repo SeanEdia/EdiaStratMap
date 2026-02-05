@@ -627,6 +627,96 @@ input[type="range"]::-webkit-slider-thumb {
 .dropdown-acv { color: var(--text); font-weight: 600; white-space: nowrap; }
 #pipelineDetail.collapsed { display: none; }
 
+/* ============ ACTION DASHBOARD ============ */
+.action-dashboard {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--panel-border);
+}
+.action-dashboard-toggle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  padding-bottom: 10px;
+}
+.action-dashboard-toggle .ad-title {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.action-dashboard-toggle .ad-arrow {
+  font-size: 10px;
+  color: var(--text-muted);
+  transition: transform 0.2s;
+}
+#actionDashboardBody.collapsed { display: none; }
+
+.ad-section {
+  margin-bottom: 12px;
+}
+.ad-section-header {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-dim);
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.ad-section-header .ad-count {
+  background: var(--surface);
+  color: var(--text-muted);
+  font-size: 9px;
+  padding: 1px 6px;
+  border-radius: 8px;
+  font-weight: 500;
+}
+.ad-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px 8px;
+  font-size: 11px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.15s;
+  gap: 8px;
+}
+.ad-item:hover { background: rgba(255,255,255,0.05); }
+.ad-item .ad-name {
+  flex: 1;
+  color: var(--text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ad-item .ad-meta {
+  white-space: nowrap;
+  font-size: 10px;
+  font-family: 'JetBrains Mono', monospace;
+}
+.ad-stale { color: var(--danger); }
+.ad-due { color: var(--accent-both); }
+.ad-untouched { color: var(--text-muted); font-style: italic; }
+.ad-next-step-text {
+  font-size: 10px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 180px;
+}
+.ad-empty {
+  font-size: 11px;
+  color: var(--text-muted);
+  padding: 4px 8px;
+  font-style: italic;
+}
 
 .copyable {
   cursor: pointer;
@@ -1827,6 +1917,16 @@ function renderFilters() {
   }
 
   html += `<button class="reset-btn" onclick="resetFilters()">↺ Reset All Filters</button>`;
+
+  // Action Dashboard container
+  html += `<div class="action-dashboard" id="actionDashboard">
+    <div class="action-dashboard-toggle" onclick="toggleActionDashboard()">
+      <span class="ad-title">Action Dashboard</span>
+      <span class="ad-arrow" id="adArrow">▼</span>
+    </div>
+    <div id="actionDashboardBody"></div>
+  </div>`;
+
   area.innerHTML = html;
 }
 
@@ -2039,6 +2139,7 @@ function applyFilters() {
   updateCountBadge(stratCount, custCount);
   updateLegend();
   updatePipeline();
+  updateActionDashboard();
 }
 
 function zoomToSearchResult() {
@@ -2142,6 +2243,195 @@ function toggleStageDropdown(stageId) {
     dropdown.style.display = 'none';
     if (arrow) arrow.textContent = '▼';
   }
+}
+
+// ============ ACTION DASHBOARD ============
+
+let actionDashboardCollapsed = false;
+
+function toggleActionDashboard() {
+  actionDashboardCollapsed = !actionDashboardCollapsed;
+  const body = document.getElementById('actionDashboardBody');
+  const arrow = document.getElementById('adArrow');
+  if (body) body.classList.toggle('collapsed', actionDashboardCollapsed);
+  if (arrow) arrow.textContent = actionDashboardCollapsed ? '▶' : '▼';
+}
+
+function parseUSDate(str) {
+  if (!str) return null;
+  const parts = str.trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
+  if (!parts) return null;
+  let year = parseInt(parts[3]);
+  if (year < 100) year += 2000;
+  return new Date(year, parseInt(parts[1]) - 1, parseInt(parts[2]));
+}
+
+function daysAgo(dateStr) {
+  const d = parseUSDate(dateStr);
+  if (!d) return Infinity;
+  const now = new Date();
+  now.setHours(0,0,0,0);
+  d.setHours(0,0,0,0);
+  return Math.floor((now - d) / 86400000);
+}
+
+function extractDatesFromText(text) {
+  if (!text) return [];
+  // Match M/D, M/D/YY, M/D/YYYY, or MM/DD patterns
+  const datePatterns = text.match(/\b(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?\b/g);
+  if (!datePatterns) return [];
+  const results = [];
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  datePatterns.forEach(p => {
+    const m = p.match(/^(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?$/);
+    if (!m) return;
+    const month = parseInt(m[1]);
+    const day = parseInt(m[2]);
+    if (month < 1 || month > 12 || day < 1 || day > 31) return;
+    let year = currentYear;
+    if (m[3]) {
+      year = parseInt(m[3]);
+      if (year < 100) year += 2000;
+    }
+    results.push(new Date(year, month - 1, day));
+  });
+  return results;
+}
+
+function isThisWeek(date) {
+  const now = new Date();
+  now.setHours(0,0,0,0);
+  // Start of week (Monday)
+  const dayOfWeek = now.getDay();
+  const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+  const weekStart = new Date(now);
+  weekStart.setDate(now.getDate() + mondayOffset);
+  const weekEnd = new Date(weekStart);
+  weekEnd.setDate(weekStart.getDate() + 6);
+  weekEnd.setHours(23,59,59,999);
+  const d = new Date(date);
+  d.setHours(0,0,0,0);
+  return d >= weekStart && d <= weekEnd;
+}
+
+function updateActionDashboard() {
+  const body = document.getElementById('actionDashboardBody');
+  if (!body) return;
+
+  let allAccounts = [];
+  window.districtDataCache = window.districtDataCache || {};
+
+  // Gather accounts based on current view
+  if (currentView === 'strategic' || currentView === 'all') {
+    STRATEGIC_DATA.forEach(d => {
+      const key = d.name.replace(/[^a-zA-Z0-9]/g, '_');
+      window.districtDataCache[key] = d;
+      allAccounts.push({
+        name: d.name,
+        key: key,
+        lastActivity: d.opp_last_activity || '',
+        nextStep: d.opp_next_step || '',
+        type: 'strategic',
+        data: d
+      });
+    });
+  }
+  if (currentView === 'customers' || currentView === 'all') {
+    CUSTOMER_DATA.forEach(d => {
+      // Avoid duplicates in 'all' view
+      if (currentView === 'all' && allAccounts.some(a => a.name === d.name)) return;
+      const key = d.name.replace(/[^a-zA-Z0-9]/g, '_');
+      window.districtDataCache[key] = d;
+      allAccounts.push({
+        name: d.name,
+        key: key,
+        lastActivity: d.last_activity || '',
+        nextStep: '',
+        type: 'customer',
+        data: d
+      });
+    });
+  }
+
+  // 1) Stalest accounts - those with activity dates, sorted oldest first
+  const withActivity = allAccounts
+    .filter(a => a.lastActivity && parseUSDate(a.lastActivity))
+    .map(a => ({ ...a, daysSince: daysAgo(a.lastActivity) }))
+    .sort((a, b) => b.daysSince - a.daysSince);
+  const stalest = withActivity.slice(0, 8);
+
+  // 2) Next steps due this week
+  const dueThisWeek = [];
+  allAccounts.forEach(a => {
+    if (!a.nextStep) return;
+    const dates = extractDatesFromText(a.nextStep);
+    if (dates.some(d => isThisWeek(d))) {
+      dueThisWeek.push(a);
+    }
+  });
+
+  // 3) Untouched accounts - no activity date at all
+  const untouched = allAccounts.filter(a => !a.lastActivity || !parseUSDate(a.lastActivity));
+
+  let html = '';
+
+  // --- Stalest Accounts ---
+  html += `<div class="ad-section">`;
+  html += `<div class="ad-section-header">Stalest Accounts <span class="ad-count">${stalest.length}</span></div>`;
+  if (stalest.length === 0) {
+    html += `<div class="ad-empty">No activity dates on record</div>`;
+  } else {
+    stalest.forEach(a => {
+      const label = a.daysSince === 1 ? '1d ago' : a.daysSince + 'd ago';
+      html += `<div class="ad-item" onclick="openAccountModalByKey('${a.key}')">`;
+      html += `<span class="ad-name">${a.name}</span>`;
+      html += `<span class="ad-meta ad-stale">${label}</span>`;
+      html += `</div>`;
+    });
+  }
+  html += `</div>`;
+
+  // --- Next Steps Due This Week ---
+  html += `<div class="ad-section">`;
+  html += `<div class="ad-section-header">Due This Week <span class="ad-count">${dueThisWeek.length}</span></div>`;
+  if (dueThisWeek.length === 0) {
+    html += `<div class="ad-empty">No next steps due this week</div>`;
+  } else {
+    dueThisWeek.forEach(a => {
+      const truncStep = a.nextStep.length > 40 ? a.nextStep.slice(0, 40) + '...' : a.nextStep;
+      html += `<div class="ad-item" onclick="openAccountModalByKey('${a.key}')" title="${a.nextStep.replace(/"/g, '&quot;')}">`;
+      html += `<span class="ad-name">${a.name}</span>`;
+      html += `<span class="ad-next-step-text ad-due">${truncStep}</span>`;
+      html += `</div>`;
+    });
+  }
+  html += `</div>`;
+
+  // --- Untouched Accounts ---
+  html += `<div class="ad-section">`;
+  html += `<div class="ad-section-header">Untouched <span class="ad-count">${untouched.length}</span></div>`;
+  if (untouched.length === 0) {
+    html += `<div class="ad-empty">All accounts have activity dates</div>`;
+  } else {
+    const shown = untouched.slice(0, 8);
+    shown.forEach(a => {
+      html += `<div class="ad-item" onclick="openAccountModalByKey('${a.key}')">`;
+      html += `<span class="ad-name">${a.name}</span>`;
+      html += `<span class="ad-meta ad-untouched">no activity</span>`;
+      html += `</div>`;
+    });
+    if (untouched.length > 8) {
+      html += `<div class="ad-empty">+ ${untouched.length - 8} more</div>`;
+    }
+  }
+  html += `</div>`;
+
+  body.innerHTML = html;
+  // Restore collapsed state
+  body.classList.toggle('collapsed', actionDashboardCollapsed);
+  const arrow = document.getElementById('adArrow');
+  if (arrow) arrow.textContent = actionDashboardCollapsed ? '▶' : '▼';
 }
 
 // ============ POPUPS ============
