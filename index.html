@@ -627,6 +627,75 @@ input[type="range"]::-webkit-slider-thumb {
 .dropdown-acv { color: var(--text); font-weight: 600; white-space: nowrap; }
 #pipelineDetail.collapsed { display: none; }
 
+/* Action Dashboard */
+.action-panel {
+  padding: 14px 18px;
+  border-top: 1px solid var(--panel-border);
+}
+.action-toggle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  padding-bottom: 10px;
+}
+#actionDetail.collapsed { display: none; }
+.action-section {
+  margin-bottom: 12px;
+}
+.action-section-title {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.action-section-title .count {
+  background: var(--panel-border);
+  color: var(--text-dim);
+  padding: 1px 6px;
+  border-radius: 8px;
+  font-size: 9px;
+}
+.action-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 8px;
+  margin: 2px -8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.15s;
+  font-size: 11px;
+}
+.action-item:hover { background: rgba(255,255,255,0.05); }
+.action-item .name {
+  color: var(--text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  margin-right: 8px;
+}
+.action-item .meta {
+  color: var(--text-muted);
+  font-size: 10px;
+  white-space: nowrap;
+}
+.action-item.stale .meta { color: #e17055; }
+.action-item.due .meta { color: #fdcb6e; }
+.action-item.untouched .meta { color: #74b9ff; }
+.action-empty {
+  color: var(--text-muted);
+  font-size: 11px;
+  font-style: italic;
+  padding: 4px 0;
+}
+
 
 .copyable {
   cursor: pointer;
@@ -1612,6 +1681,17 @@ input[type="range"]::-webkit-slider-thumb {
     </div>
   </div>
 
+  <!-- Action Dashboard -->
+  <div class="action-panel" id="actionPanel" style="display:none;">
+    <div class="action-toggle" onclick="document.getElementById('actionDetail').classList.toggle('collapsed')">
+      <span style="font-size:11px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;color:var(--text-dim);">⚡ Action Dashboard</span>
+      <span style="font-size:10px;color:var(--text-muted);">▼</span>
+    </div>
+    <div id="actionDetail">
+      <div id="actionStats"></div>
+    </div>
+  </div>
+
   <!-- SFDC Refresh Panel -->
   <div class="sfdc-panel">
     <div class="sfdc-header">
@@ -2039,6 +2119,7 @@ function applyFilters() {
   updateCountBadge(stratCount, custCount);
   updateLegend();
   updatePipeline();
+  updateActionDashboard();
 }
 
 function zoomToSearchResult() {
@@ -2142,6 +2223,112 @@ function toggleStageDropdown(stageId) {
     dropdown.style.display = 'none';
     if (arrow) arrow.textContent = '▼';
   }
+}
+
+function updateActionDashboard() {
+  const panel = document.getElementById('actionPanel');
+  const stats = document.getElementById('actionStats');
+  if (currentView === 'customers') { panel.style.display = 'none'; return; }
+  panel.style.display = 'block';
+
+  const withOpp = STRATEGIC_DATA.filter(d => d.opp_stage);
+  const today = new Date();
+  const oneWeekFromNow = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+  // Helper to parse dates in various formats
+  function parseDate(dateStr) {
+    if (!dateStr) return null;
+    // Try common formats: MM/DD/YYYY, YYYY-MM-DD, M/D/YYYY
+    const d = new Date(dateStr);
+    return isNaN(d.getTime()) ? null : d;
+  }
+
+  // Helper to calculate days ago
+  function daysAgo(date) {
+    if (!date) return Infinity;
+    const diff = today - date;
+    return Math.floor(diff / (1000 * 60 * 60 * 24));
+  }
+
+  // 1. Stalest accounts (oldest last activity, has activity)
+  const staleAccounts = withOpp
+    .filter(d => d.opp_last_activity)
+    .map(d => ({ ...d, lastDate: parseDate(d.opp_last_activity), days: daysAgo(parseDate(d.opp_last_activity)) }))
+    .filter(d => d.lastDate && d.days > 14) // More than 2 weeks old
+    .sort((a, b) => b.days - a.days)
+    .slice(0, 5);
+
+  // 2. Next steps due this week (look for dates in next_step field)
+  const dueSoon = withOpp
+    .filter(d => d.opp_next_step)
+    .map(d => {
+      // Try to extract a date from next_step text
+      const dateMatch = d.opp_next_step.match(/(\d{1,2}\/\d{1,2}(?:\/\d{2,4})?)/);
+      let dueDate = null;
+      if (dateMatch) {
+        dueDate = parseDate(dateMatch[1]);
+      }
+      return { ...d, dueDate };
+    })
+    .filter(d => d.dueDate && d.dueDate >= today && d.dueDate <= oneWeekFromNow)
+    .sort((a, b) => a.dueDate - b.dueDate)
+    .slice(0, 5);
+
+  // 3. Untouched accounts (has opp but no last activity)
+  const untouched = withOpp
+    .filter(d => !d.opp_last_activity)
+    .slice(0, 5);
+
+  // Build HTML
+  let h = '';
+
+  // Stalest accounts section
+  h += `<div class="action-section">`;
+  h += `<div class="action-section-title">🔴 Stalest Accounts <span class="count">${staleAccounts.length}</span></div>`;
+  if (staleAccounts.length > 0) {
+    staleAccounts.forEach(d => {
+      h += `<div class="action-item stale" onclick="showDetail(STRATEGIC_DATA.indexOf(STRATEGIC_DATA.find(x => x.name === '${d.name.replace(/'/g, "\\'")}')))" >`;
+      h += `<span class="name">${d.name}</span>`;
+      h += `<span class="meta">${d.days}d ago</span>`;
+      h += `</div>`;
+    });
+  } else {
+    h += `<div class="action-empty">No stale accounts</div>`;
+  }
+  h += `</div>`;
+
+  // Due this week section
+  h += `<div class="action-section">`;
+  h += `<div class="action-section-title">📅 Due This Week <span class="count">${dueSoon.length}</span></div>`;
+  if (dueSoon.length > 0) {
+    dueSoon.forEach(d => {
+      const dateStr = d.dueDate ? `${d.dueDate.getMonth()+1}/${d.dueDate.getDate()}` : '';
+      h += `<div class="action-item due" onclick="showDetail(STRATEGIC_DATA.indexOf(STRATEGIC_DATA.find(x => x.name === '${d.name.replace(/'/g, "\\'")}')))" >`;
+      h += `<span class="name">${d.name}</span>`;
+      h += `<span class="meta">${dateStr}</span>`;
+      h += `</div>`;
+    });
+  } else {
+    h += `<div class="action-empty">No upcoming due dates</div>`;
+  }
+  h += `</div>`;
+
+  // Untouched accounts section
+  h += `<div class="action-section">`;
+  h += `<div class="action-section-title">⚪ Untouched <span class="count">${untouched.length}</span></div>`;
+  if (untouched.length > 0) {
+    untouched.forEach(d => {
+      h += `<div class="action-item untouched" onclick="showDetail(STRATEGIC_DATA.indexOf(STRATEGIC_DATA.find(x => x.name === '${d.name.replace(/'/g, "\\'")}')))" >`;
+      h += `<span class="name">${d.name}</span>`;
+      h += `<span class="meta">${d.opp_stage || 'Opp'}</span>`;
+      h += `</div>`;
+    });
+  } else {
+    h += `<div class="action-empty">All accounts have activity</div>`;
+  }
+  h += `</div>`;
+
+  stats.innerHTML = h;
 }
 
 // ============ POPUPS ============
