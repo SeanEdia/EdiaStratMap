@@ -19,6 +19,7 @@ A web-based interactive map for **Edia Learning's sales team** to visualize and 
 
 ### Filtering & Search
 - Search districts by name
+- **Press Enter** to zoom to the searched district and open its popup
 - Filter by: Region, State, Account Executive, SIS Platform, Opportunity Stage, Enrollment size, Segment, CSM
 - Toggle views: Strategic only, Customers only, or All
 
@@ -102,6 +103,7 @@ Your notes and meeting prep links will be preserved during the merge.
 
 | Key | Action |
 |-----|--------|
+| Enter | Zoom to searched district and open popup |
 | Escape | Close full-screen modal |
 
 ---
