@@ -52,13 +52,13 @@ Press **Escape** or click outside to close.
 - Drag-and-drop CSV upload to refresh data from Salesforce
 - Merges without losing notes or local customizations
 - Preview changes before applying
-- **Smart name matching**: Automatically matches district name variations:
-  - "Dallas Independent School District" → "Dallas ISD"
-  - "Los Angeles Unified School District" → "Los Angeles USD"
-  - Supports ISD, USD, CSD, UFSD, PSD, and other common abbreviations
+- **Smart name matching**: Strips school suffixes to match on base name:
+  - "Dallas Independent School District" ↔ "Dallas ISD" (both normalize to "dallas")
+  - "DeSoto County School District" ↔ "Desoto County Schools" (both normalize to "desoto county")
+  - Handles ISD, USD, CSD, Schools, School District, Public Schools, etc.
 - **Warnings**: Shows alerts if CSV districts are similar to but don't match existing ones
 - **Supported columns**: Automatically maps common SFDC column names (Account Name, Opportunity Stage, etc.)
-- **Debugging**: Open browser console (F12) to see merge diagnostics
+- **Debugging**: Open browser console (F12) to see merge diagnostics and normalization
 
 ### Meeting Prep Generation
 - One-click **"Generate Meeting Prep"** button in account popups
@@ -107,11 +107,13 @@ Your notes and meeting prep links will be preserved during the merge.
 ### Troubleshooting SFDC Refresh
 
 If updates aren't applying:
-1. **Check district names** - Names in CSV must match exactly (e.g., "Dallas ISD" not "Dallas Independent School District")
-2. **Open browser console** (F12 → Console) - Look for `[SFDC Merge]` logs showing:
-   - CSV columns detected
-   - Sample row data
-   - Districts that didn't match
+1. **Check base names match** - The base name (before "ISD", "Schools", etc.) must be the same:
+   - ✅ "Dallas ISD" ↔ "Dallas Independent School District" (base: "Dallas")
+   - ❌ "Dallas ISD" ↔ "Dallas County Schools" (different entities)
+2. **Open browser console** (F12 → Console) - Look for `[Normalize]` and `[SFDC Merge]` logs showing:
+   - How names are being normalized
+   - What keys are being looked up
+   - Whether matches are found
 3. **Check for warnings** - The merge preview will show ⚠ warnings for similar but non-matching names
 
 ---

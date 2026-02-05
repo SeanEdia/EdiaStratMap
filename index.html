@@ -3330,7 +3330,13 @@ function previewMerge(csvData) {
     existingByName.set(exactKey, { item, idx });
     existingByNormalized.set(normalizedKey, { item, idx });
   });
-  console.log('[SFDC Merge] Existing district names:', Array.from(existingByName.keys()).slice(0, 10), '...');
+  console.log('[SFDC Merge] Existing exact keys:', Array.from(existingByName.keys()).slice(0, 10), '...');
+  console.log('[SFDC Merge] Existing normalized keys:', Array.from(existingByNormalized.keys()).slice(0, 10), '...');
+  // Log Dallas specifically if it exists
+  const dallasExact = existingByName.get('dallas isd');
+  const dallasNorm = existingByNormalized.get('dallas isd');
+  console.log('[SFDC Merge] Dallas lookup test - exact "dallas isd":', dallasExact ? 'FOUND' : 'NOT FOUND');
+  console.log('[SFDC Merge] Dallas lookup test - normalized "dallas isd":', dallasNorm ? 'FOUND' : 'NOT FOUND');
 
   // Count notes that exist in localStorage
   let notesCount = 0;
@@ -3366,6 +3372,16 @@ function previewMerge(csvData) {
     processedNames.add(nameKey);
     processedNames.add(normalizedKey);
 
+    // Special logging for Dallas
+    if (name.toLowerCase().includes('dallas')) {
+      console.log('[SFDC Merge] DALLAS DEBUG:');
+      console.log('  - CSV name:', name);
+      console.log('  - Exact key:', nameKey);
+      console.log('  - Normalized key:', normalizedKey);
+      console.log('  - existingByName.has(exactKey):', existingByName.has(nameKey));
+      console.log('  - existingByNormalized.has(normalizedKey):', existingByNormalized.has(normalizedKey));
+    }
+
     // Try exact match first, then normalized match
     let existing = existingByName.get(nameKey);
     if (!existing) {
@@ -3374,7 +3390,7 @@ function previewMerge(csvData) {
         console.log('[SFDC Merge] Normalized match:', name, '→', existing.item.name);
       }
     }
-    if (!existing && idx < 5) {
+    if (!existing && idx < 10) {
       console.log('[SFDC Merge] No match for:', name, '(exact:', nameKey, ', normalized:', normalizedKey, ')');
     }
 
@@ -3522,35 +3538,52 @@ function mapFieldName(csvField) {
 }
 
 function normalizeDistrictName(name) {
-  // Normalize district name variations for matching
-  // "Dallas Independent School District" -> "dallas isd"
-  // "Los Angeles Unified School District" -> "los angeles usd"
+  // Aggressively normalize district names by stripping ALL school-related suffixes
+  // "Dallas Independent School District" -> "dallas"
+  // "Dallas ISD" -> "dallas"
+  // "DeSoto County School District" -> "desoto county"
+  // "Desoto County Schools" -> "desoto county"
   let normalized = name.toLowerCase().trim();
+  const original = normalized;
 
-  // Common full forms to abbreviations
-  const replacements = [
-    [/\bindependent school district\b/gi, 'ISD'],
-    [/\bunified school district\b/gi, 'USD'],
-    [/\bconsolidated school district\b/gi, 'CSD'],
-    [/\bcity school district\b/gi, 'CSD'],
-    [/\bcentral school district\b/gi, 'CSD'],
-    [/\bunion free school district\b/gi, 'UFSD'],
-    [/\bpublic school district\b/gi, 'PSD'],
-    [/\bpublic schools\b/gi, 'PS'],
-    [/\bschool district\b/gi, 'SD'],
-    [/\barea schools\b/gi, 'AS'],
-    [/\bcounty schools\b/gi, 'CS'],
-    [/\bcounty school system\b/gi, 'CSS'],
-    [/\bcounty public schools\b/gi, 'CPS'],
-    [/\bcity schools\b/gi, 'CS'],
+  // Remove all school-related suffixes (order matters - longer patterns first)
+  const suffixPatterns = [
+    /\s+independent school district$/i,
+    /\s+unified school district$/i,
+    /\s+consolidated school district$/i,
+    /\s+central school district$/i,
+    /\s+city school district$/i,
+    /\s+union free school district$/i,
+    /\s+public school district$/i,
+    /\s+county school district$/i,
+    /\s+school district$/i,
+    /\s+county public schools$/i,
+    /\s+county schools$/i,
+    /\s+public schools$/i,
+    /\s+city schools$/i,
+    /\s+area schools$/i,
+    /\s+schools$/i,
+    /\s+parish school system$/i,
+    /\s+parish school board$/i,
+    /\s+school system$/i,
+    /\s+isd$/i,
+    /\s+usd$/i,
+    /\s+csd$/i,
+    /\s+sd$/i,
+    /\s+ps$/i,
   ];
 
-  replacements.forEach(([pattern, abbrev]) => {
-    normalized = normalized.replace(pattern, abbrev.toLowerCase());
+  suffixPatterns.forEach(pattern => {
+    normalized = normalized.replace(pattern, '');
   });
 
   // Clean up extra spaces
   normalized = normalized.replace(/\s+/g, ' ').trim();
+
+  // Log normalization for debugging
+  if (original !== normalized) {
+    console.log('[Normalize]', `"${original}" → "${normalized}"`);
+  }
 
   return normalized;
 }
