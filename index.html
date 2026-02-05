@@ -3398,6 +3398,16 @@ function previewMerge(csvData) {
       // Update existing record but preserve certain local fields
       const merged = { ...existing.item };
 
+      // Debug: Log CSV columns for first few rows or Dallas
+      if (idx < 2 || name.toLowerCase().includes('dallas')) {
+        console.log('[SFDC Merge] Processing:', name);
+        console.log('[SFDC Merge] CSV columns:', Object.keys(csvRow));
+        console.log('[SFDC Merge] Key fields from CSV:');
+        ['stage', 'opp_stage', 'year_1_acv', 'acv', 'probability'].forEach(k => {
+          if (csvRow[k] !== undefined) console.log(`  ${k}: "${csvRow[k]}"`);
+        });
+      }
+
       // Update with CSV data, mapping common field variations
       Object.keys(csvRow).forEach(key => {
         const val = csvRow[key];
@@ -3411,15 +3421,37 @@ function previewMerge(csvData) {
       // Parse numeric fields
       parseNumericFields(merged);
 
-      // Check if anything actually changed
+      // Check if anything actually changed - compare key opp fields
+      const keyFields = ['opp_stage', 'opp_acv', 'opp_probability', 'opp_forecast', 'opp_next_step'];
+      const changedFields = [];
+
       const hasChanges = Object.keys(csvRow).some(key => {
         const mappedKey = mapFieldName(key);
         const oldVal = existing.item[mappedKey];
         const newVal = (csvRow[key] || '').trim();
         // Handle numeric comparisons
-        if (oldVal === undefined || oldVal === null) return newVal !== '';
-        return oldVal.toString() !== newVal;
+        if (oldVal === undefined || oldVal === null) {
+          if (newVal !== '') {
+            changedFields.push({ field: mappedKey, old: oldVal, new: newVal });
+            return true;
+          }
+          return false;
+        }
+        if (oldVal.toString() !== newVal) {
+          changedFields.push({ field: mappedKey, old: oldVal.toString(), new: newVal });
+          return true;
+        }
+        return false;
       });
+
+      // Debug logging for Dallas
+      if (name.toLowerCase().includes('dallas') || name.toLowerCase().includes('kern')) {
+        console.log('[SFDC Merge] Change detection for:', name);
+        console.log('  hasChanges:', hasChanges);
+        console.log('  changedFields:', changedFields);
+        console.log('  existing opp_stage:', existing.item.opp_stage);
+        console.log('  merged opp_stage:', merged.opp_stage);
+      }
 
       if (hasChanges) {
         stats.updatedRecords++;
@@ -3489,12 +3521,18 @@ function mapFieldName(csvField) {
     'csm_name': 'csm',
     'customer_success_manager': 'csm',
     'sdr_name': 'opp_sdr',
+    'sales_develop': 'opp_sdr',
+    'primary_contact': 'opp_contact',
+    'contact_name': 'opp_contact',
+    'contact_title': 'opp_contact_title',
     // Enrollment
     'enrollment_count': 'enrollment',
     'student_count': 'enrollment',
     'total_students': 'enrollment',
     'students': 'enrollment',
     'total_enrollment': 'enrollment',
+    'students_in_d': 'enrollment',
+    'students_in_district': 'enrollment',
     // SIS
     'sis_platform': 'sis',
     'sis_system': 'sis',
@@ -3504,19 +3542,19 @@ function mapFieldName(csvField) {
     'stage': 'opp_stage',
     'forecast_category': 'opp_forecast',
     'forecast': 'opp_forecast',
+    'active_forecast': 'opp_forecast',
     'probability': 'opp_probability',
     'probability_%': 'opp_probability',
     'probability_(%)': 'opp_probability',
     'acv': 'opp_acv',
     'amount': 'opp_acv',
     'opportunity_amount': 'opp_acv',
+    'year_1_acv': 'opp_acv',
     'next_step': 'opp_next_step',
     'next_steps': 'opp_next_step',
+    'intro_meeting_next_step': 'opp_next_step',
     'last_activity': 'opp_last_activity',
     'last_activity_date': 'opp_last_activity',
-    'contact_name': 'opp_contact',
-    'primary_contact': 'opp_contact',
-    'contact_title': 'opp_contact_title',
     'competition': 'opp_competition',
     'competitors': 'opp_competition',
     'economic_buyer': 'opp_economic_buyer',
@@ -3524,6 +3562,7 @@ function mapFieldName(csvField) {
     'opportunity_areas': 'opp_areas',
     'areas': 'opp_areas',
     'product_areas': 'opp_areas',
+    'areas_of_interest': 'opp_areas',
     // Revenue
     'annual_recurring_revenue': 'arr',
     'active_arr': 'arr',
