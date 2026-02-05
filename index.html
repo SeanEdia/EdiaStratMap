@@ -3360,18 +3360,24 @@ function previewMerge(csvData) {
   const mergedData = [];
   const processedNames = new Set();
 
+  // Helper to get name from CSV row - checks all name field variations
+  function getNameFromRow(row) {
+    return row.name || row.district_name || row.account_name ||
+           row.district || row.organization || row.org_name || row.account || '';
+  }
+
   // Debug: Find all Dallas rows in CSV
   const dallasRows = csvData.filter(r => {
-    const n = r.name || r.district_name || r.account_name || '';
+    const n = getNameFromRow(r);
     return n.toLowerCase().includes('dallas');
   });
   console.log('[SFDC Merge] CSV rows containing "dallas":', dallasRows.length);
   dallasRows.forEach(r => {
-    console.log('  -', r.name || r.district_name || r.account_name);
+    console.log('  -', getNameFromRow(r));
   });
 
   csvData.forEach((csvRow, idx) => {
-    const name = csvRow.name || csvRow.district_name || csvRow.account_name || '';
+    const name = getNameFromRow(csvRow);
     if (!name) {
       console.log('[SFDC Merge] Row', idx, 'has no name field. Keys:', Object.keys(csvRow));
       return;
