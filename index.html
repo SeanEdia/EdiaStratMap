@@ -3314,11 +3314,18 @@ function previewMerge(csvData) {
   const isStrategic = sfdcDataType === 'strategic';
   const existingData = isStrategic ? STRATEGIC_DATA : CUSTOMER_DATA;
 
+  // Log CSV columns for debugging
+  if (csvData.length > 0) {
+    console.log('[SFDC Merge] CSV columns:', Object.keys(csvData[0]));
+    console.log('[SFDC Merge] Sample row:', csvData[0]);
+  }
+
   // Create a map of existing data by name for quick lookup
   const existingByName = new Map();
   existingData.forEach((item, idx) => {
     existingByName.set(item.name.toLowerCase().trim(), { item, idx });
   });
+  console.log('[SFDC Merge] Existing district names:', Array.from(existingByName.keys()).slice(0, 10), '...');
 
   // Count notes that exist in localStorage
   let notesCount = 0;
@@ -3342,14 +3349,20 @@ function previewMerge(csvData) {
   const mergedData = [];
   const processedNames = new Set();
 
-  csvData.forEach(csvRow => {
+  csvData.forEach((csvRow, idx) => {
     const name = csvRow.name || csvRow.district_name || csvRow.account_name || '';
-    if (!name) return;
+    if (!name) {
+      console.log('[SFDC Merge] Row', idx, 'has no name field. Keys:', Object.keys(csvRow));
+      return;
+    }
 
     const nameKey = name.toLowerCase().trim();
     processedNames.add(nameKey);
 
     const existing = existingByName.get(nameKey);
+    if (!existing && idx < 5) {
+      console.log('[SFDC Merge] No match for:', name, '(key:', nameKey, ')');
+    }
 
     if (existing) {
       // Update existing record but preserve certain local fields
@@ -3365,22 +3378,32 @@ function previewMerge(csvData) {
         }
       });
 
+      // Parse numeric fields
+      parseNumericFields(merged);
+
       // Check if anything actually changed
       const hasChanges = Object.keys(csvRow).some(key => {
         const mappedKey = mapFieldName(key);
-        const oldVal = existing.item[mappedKey] || '';
+        const oldVal = existing.item[mappedKey];
         const newVal = (csvRow[key] || '').trim();
+        // Handle numeric comparisons
+        if (oldVal === undefined || oldVal === null) return newVal !== '';
         return oldVal.toString() !== newVal;
       });
 
       if (hasChanges) {
         stats.updatedRecords++;
-        stats.changes.push({ name, action: 'updated' });
+        stats.changes.push({ name, action: 'updated', oldData: existing.item, newData: merged });
       }
 
       mergedData.push(merged);
     } else {
-      // New record
+      // New record - check if name might be a partial match
+      const possibleMatch = findPartialMatch(name, existingByName);
+      if (possibleMatch) {
+        stats.changes.push({ name, action: 'new', warning: `Similar to existing: "${possibleMatch}"` });
+      }
+
       const newRecord = {};
       Object.keys(csvRow).forEach(key => {
         const mappedKey = mapFieldName(key);
@@ -3388,12 +3411,13 @@ function previewMerge(csvData) {
       });
       newRecord.name = name;
 
-      // Convert lat/lng to numbers if present
-      if (newRecord.lat) newRecord.lat = parseFloat(newRecord.lat);
-      if (newRecord.lng) newRecord.lng = parseFloat(newRecord.lng);
+      // Parse numeric fields
+      parseNumericFields(newRecord);
 
       stats.newRecords++;
-      stats.changes.push({ name, action: 'new' });
+      if (!possibleMatch) {
+        stats.changes.push({ name, action: 'new' });
+      }
       mergedData.push(newRecord);
     }
   });
@@ -3415,29 +3439,101 @@ function previewMerge(csvData) {
 function mapFieldName(csvField) {
   // Map common CSV field names to our internal field names
   const mappings = {
+    // Name variations
     'district_name': 'name',
     'account_name': 'name',
     'district': 'name',
     'account': 'name',
+    'organization': 'name',
+    'org_name': 'name',
+    // Location
     'latitude': 'lat',
     'longitude': 'lng',
     'long': 'lng',
+    // People
     'account_executive': 'ae',
     'account_owner': 'ae',
+    'owner': 'ae',
+    'ae_name': 'ae',
+    'csm_name': 'csm',
+    'customer_success_manager': 'csm',
+    'sdr_name': 'opp_sdr',
+    // Enrollment
     'enrollment_count': 'enrollment',
-    'student_count': 'students',
-    'total_students': 'students',
+    'student_count': 'enrollment',
+    'total_students': 'enrollment',
+    'students': 'enrollment',
+    'total_enrollment': 'enrollment',
+    // SIS
     'sis_platform': 'sis',
+    'sis_system': 'sis',
+    'student_information_system': 'sis',
+    // Opportunity fields
     'opportunity_stage': 'opp_stage',
-    'opp_stage': 'opp_stage',
+    'stage': 'opp_stage',
+    'forecast_category': 'opp_forecast',
+    'forecast': 'opp_forecast',
+    'probability': 'opp_probability',
+    'probability_%': 'opp_probability',
+    'probability_(%)': 'opp_probability',
+    'acv': 'opp_acv',
+    'amount': 'opp_acv',
+    'opportunity_amount': 'opp_acv',
+    'next_step': 'opp_next_step',
+    'next_steps': 'opp_next_step',
+    'last_activity': 'opp_last_activity',
+    'last_activity_date': 'opp_last_activity',
+    'contact_name': 'opp_contact',
+    'primary_contact': 'opp_contact',
+    'contact_title': 'opp_contact_title',
+    'competition': 'opp_competition',
+    'competitors': 'opp_competition',
+    'economic_buyer': 'opp_economic_buyer',
+    'champion': 'opp_champion',
+    'opportunity_areas': 'opp_areas',
+    'areas': 'opp_areas',
+    'product_areas': 'opp_areas',
+    // Revenue
     'annual_recurring_revenue': 'arr',
     'active_arr': 'arr',
-    'csm_name': 'csm',
-    'customer_success_manager': 'csm'
+    'revenue': 'arr',
+    // Leadership
+    'superintendent': 'superintendent',
+    'super': 'superintendent'
   };
 
   const normalized = csvField.toLowerCase().replace(/\s+/g, '_');
   return mappings[normalized] || normalized;
+}
+
+function parseNumericFields(record) {
+  // Convert numeric fields from strings to numbers
+  const numericFields = ['lat', 'lng', 'enrollment', 'students', 'opp_acv', 'opp_probability', 'arr', 'gdr', 'ndr', 'opp_count'];
+  numericFields.forEach(field => {
+    if (record[field] !== undefined && record[field] !== '') {
+      const val = parseFloat(record[field]);
+      if (!isNaN(val)) record[field] = val;
+    }
+  });
+}
+
+function findPartialMatch(name, existingByName) {
+  // Check if there's a similar name in existing data
+  const nameLower = name.toLowerCase().trim();
+  const nameWords = nameLower.split(/\s+/);
+
+  for (const [existingKey, data] of existingByName) {
+    // Check if first word matches (e.g., "Dallas" matches "Dallas ISD")
+    const existingWords = existingKey.split(/\s+/);
+    if (nameWords[0] === existingWords[0] && nameWords[0].length > 3) {
+      return data.item.name;
+    }
+    // Check for substring match
+    if (existingKey.includes(nameLower) || nameLower.includes(existingKey)) {
+      return data.item.name;
+    }
+  }
+  return null;
 }
 
 function showMergeModal(stats) {
@@ -3451,14 +3547,19 @@ function showMergeModal(stats) {
   // Show change list
   const changesList = document.getElementById('mergeChangesList');
   if (stats.changes.length > 0) {
-    const maxShow = 20;
+    const maxShow = 30;
     let html = '';
     stats.changes.slice(0, maxShow).forEach(c => {
       const actionClass = c.action === 'new' ? 'new' : 'upd';
       const actionLabel = c.action === 'new' ? 'NEW' : 'UPD';
+      let warningHtml = '';
+      if (c.warning) {
+        warningHtml = `<div style="font-size:10px;color:#e17055;margin-top:2px;">⚠ ${c.warning}</div>`;
+      }
       html += `<div class="merge-change-item">
         <span class="name">${c.name}</span>
         <span class="action ${actionClass}">${actionLabel}</span>
+        ${warningHtml}
       </div>`;
     });
     if (stats.changes.length > maxShow) {
@@ -3469,7 +3570,7 @@ function showMergeModal(stats) {
     changesList.innerHTML = html;
     changesList.style.display = 'block';
   } else {
-    changesList.innerHTML = '<div style="color:var(--text-muted);font-size:11px;">No changes detected</div>';
+    changesList.innerHTML = '<div style="color:var(--text-muted);font-size:11px;">No changes detected - check that CSV column names match</div>';
     changesList.style.display = 'block';
   }
 
