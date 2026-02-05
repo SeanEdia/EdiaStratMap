@@ -3330,7 +3330,13 @@ function previewMerge(csvData) {
     existingByName.set(exactKey, { item, idx });
     existingByNormalized.set(normalizedKey, { item, idx });
   });
-  console.log('[SFDC Merge] Existing district names:', Array.from(existingByName.keys()).slice(0, 10), '...');
+  console.log('[SFDC Merge] Existing exact keys:', Array.from(existingByName.keys()).slice(0, 10), '...');
+  console.log('[SFDC Merge] Existing normalized keys:', Array.from(existingByNormalized.keys()).slice(0, 10), '...');
+  // Log Dallas specifically if it exists
+  const dallasExact = existingByName.get('dallas isd');
+  const dallasNorm = existingByNormalized.get('dallas isd');
+  console.log('[SFDC Merge] Dallas lookup test - exact "dallas isd":', dallasExact ? 'FOUND' : 'NOT FOUND');
+  console.log('[SFDC Merge] Dallas lookup test - normalized "dallas isd":', dallasNorm ? 'FOUND' : 'NOT FOUND');
 
   // Count notes that exist in localStorage
   let notesCount = 0;
@@ -3366,6 +3372,16 @@ function previewMerge(csvData) {
     processedNames.add(nameKey);
     processedNames.add(normalizedKey);
 
+    // Special logging for Dallas
+    if (name.toLowerCase().includes('dallas')) {
+      console.log('[SFDC Merge] DALLAS DEBUG:');
+      console.log('  - CSV name:', name);
+      console.log('  - Exact key:', nameKey);
+      console.log('  - Normalized key:', normalizedKey);
+      console.log('  - existingByName.has(exactKey):', existingByName.has(nameKey));
+      console.log('  - existingByNormalized.has(normalizedKey):', existingByNormalized.has(normalizedKey));
+    }
+
     // Try exact match first, then normalized match
     let existing = existingByName.get(nameKey);
     if (!existing) {
@@ -3374,7 +3390,7 @@ function previewMerge(csvData) {
         console.log('[SFDC Merge] Normalized match:', name, '→', existing.item.name);
       }
     }
-    if (!existing && idx < 5) {
+    if (!existing && idx < 10) {
       console.log('[SFDC Merge] No match for:', name, '(exact:', nameKey, ', normalized:', normalizedKey, ')');
     }
 
@@ -3526,6 +3542,7 @@ function normalizeDistrictName(name) {
   // "Dallas Independent School District" -> "dallas isd"
   // "Los Angeles Unified School District" -> "los angeles usd"
   let normalized = name.toLowerCase().trim();
+  const original = normalized;
 
   // Common full forms to abbreviations
   const replacements = [
@@ -3551,6 +3568,11 @@ function normalizeDistrictName(name) {
 
   // Clean up extra spaces
   normalized = normalized.replace(/\s+/g, ' ').trim();
+
+  // Log normalization for debugging
+  if (original !== normalized) {
+    console.log('[Normalize]', `"${original}" → "${normalized}"`);
+  }
 
   return normalized;
 }
