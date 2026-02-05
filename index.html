@@ -598,6 +598,33 @@ input[type="range"]::-webkit-slider-thumb {
 }
 .pipeline-total .label { color: var(--text); }
 .pipeline-total .value { color: #55efc4; }
+.pipeline-stage-container { position: relative; }
+.pipeline-clickable { cursor: pointer; transition: background 0.15s; border-radius: 4px; margin: 0 -6px; padding: 5px 6px; }
+.pipeline-clickable:hover { background: rgba(255,255,255,0.05); }
+.dropdown-arrow { font-size: 8px; margin-left: 6px; opacity: 0.5; transition: transform 0.2s; }
+.stage-dropdown {
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 6px;
+  margin: 4px 0 8px 14px;
+  max-height: 200px;
+  overflow-y: auto;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+.stage-dropdown-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 10px;
+  font-size: 11px;
+  border-bottom: 1px solid var(--panel-border);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.stage-dropdown-item:last-child { border-bottom: none; }
+.stage-dropdown-item:hover { background: rgba(255,255,255,0.08); }
+.dropdown-name { color: var(--text-dim); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-right: 10px; }
+.dropdown-acv { color: var(--text); font-weight: 600; white-space: nowrap; }
 #pipelineDetail.collapsed { display: none; }
 
 
@@ -2046,17 +2073,51 @@ function updatePipeline() {
   let h = '';
   let totalACV = 0;
   let totalCount = 0;
-  stages.forEach(s => {
+  stages.forEach((s, idx) => {
     const inStage = withOpp.filter(d => d.opp_stage && d.opp_stage.startsWith(s.key));
     const acv = inStage.reduce((sum, d) => sum + (Number(d.opp_acv) || 0), 0);
     totalACV += acv;
     totalCount += inStage.length;
     if (inStage.length > 0) {
-      h += `<div class="pipeline-detail-row"><span class="label"><span class="stage-dot" style="background:${s.color}"></span>${s.label} (${inStage.length})</span><span class="value">$${acv.toLocaleString()}</span></div>`;
+      // Sort by ACV descending to show largest first
+      const sorted = [...inStage].sort((a, b) => (Number(b.opp_acv) || 0) - (Number(a.opp_acv) || 0));
+      const stageId = `stage-dropdown-${idx}`;
+      h += `<div class="pipeline-stage-container">`;
+      h += `<div class="pipeline-detail-row pipeline-clickable" onclick="toggleStageDropdown('${stageId}')">`;
+      h += `<span class="label"><span class="stage-dot" style="background:${s.color}"></span>${s.label} (${inStage.length})</span>`;
+      h += `<span class="value">$${acv.toLocaleString()} <span class="dropdown-arrow">▼</span></span>`;
+      h += `</div>`;
+      h += `<div id="${stageId}" class="stage-dropdown" style="display:none;">`;
+      sorted.forEach(d => {
+        const oppAcv = Number(d.opp_acv) || 0;
+        h += `<div class="stage-dropdown-item" onclick="event.stopPropagation(); showDetail(STRATEGIC_DATA.indexOf(STRATEGIC_DATA.find(x => x.name === '${d.name.replace(/'/g, "\\'")}')))">`;
+        h += `<span class="dropdown-name">${d.name}</span>`;
+        h += `<span class="dropdown-acv">$${oppAcv.toLocaleString()}</span>`;
+        h += `</div>`;
+      });
+      h += `</div></div>`;
     }
   });
   h += `<div class="pipeline-total"><span class="label">${totalCount} Open Opps</span><span class="value">$${totalACV.toLocaleString()}</span></div>`;
   stats.innerHTML = h;
+}
+
+function toggleStageDropdown(stageId) {
+  const dropdown = document.getElementById(stageId);
+  const arrow = dropdown.previousElementSibling.querySelector('.dropdown-arrow');
+  if (dropdown.style.display === 'none') {
+    // Close all other dropdowns first
+    document.querySelectorAll('.stage-dropdown').forEach(d => {
+      d.style.display = 'none';
+      const otherArrow = d.previousElementSibling.querySelector('.dropdown-arrow');
+      if (otherArrow) otherArrow.textContent = '▼';
+    });
+    dropdown.style.display = 'block';
+    if (arrow) arrow.textContent = '▲';
+  } else {
+    dropdown.style.display = 'none';
+    if (arrow) arrow.textContent = '▼';
+  }
 }
 
 // ============ POPUPS ============
