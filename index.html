@@ -1555,7 +1555,7 @@ input[type="range"]::-webkit-slider-thumb {
   <div class="search-box">
     <div class="search-wrap">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-      <input type="text" class="search-input" id="searchInput" placeholder="Search districts..." oninput="applyFilters()">
+      <input type="text" class="search-input" id="searchInput" placeholder="Search districts... (Enter to zoom)" oninput="applyFilters()" onkeydown="if(event.key==='Enter')zoomToSearchResult()">
     </div>
   </div>
 
@@ -1847,6 +1847,9 @@ function resetFilters() {
   applyFilters();
 }
 
+// Track search results for zoom functionality
+let lastSearchResults = [];
+
 function applyFilters() {
   const search = document.getElementById('searchInput').value.toLowerCase().trim();
 
@@ -1856,6 +1859,7 @@ function applyFilters() {
 
   let stratCount = 0, custCount = 0;
   let statesSet = new Set();
+  lastSearchResults = []; // Reset search results
 
   // Strategic accounts
   if (currentView === 'strategic' || currentView === 'all') {
@@ -1897,6 +1901,11 @@ function applyFilters() {
       const marker = L.marker([d.lat, d.lng], { icon }).addTo(stratLayer);
       marker.bindPopup(buildStratPopup(d), { maxWidth: 320 });
       statesSet.add(d.state);
+
+      // Track for search zoom functionality
+      if (search) {
+        lastSearchResults.push({ marker, data: d, type: 'strategic' });
+      }
     });
     stratCount = filtered.length;
   }
@@ -1925,6 +1934,11 @@ function applyFilters() {
       const marker = L.marker([d.lat, d.lng], { icon }).addTo(custLayer);
       marker.bindPopup(buildCustPopup(d), { maxWidth: 320 });
       statesSet.add(d.state);
+
+      // Track for search zoom functionality
+      if (search) {
+        lastSearchResults.push({ marker, data: d, type: 'customer' });
+      }
     });
     custCount = filtered.length;
   }
@@ -1974,6 +1988,45 @@ function applyFilters() {
   updateCountBadge(stratCount, custCount);
   updateLegend();
   updatePipeline();
+}
+
+function zoomToSearchResult() {
+  if (lastSearchResults.length === 0) {
+    return; // No results to zoom to
+  }
+
+  // If only one result, zoom to it and open popup
+  if (lastSearchResults.length === 1) {
+    const result = lastSearchResults[0];
+    const latLng = result.marker.getLatLng();
+    map.setView(latLng, 10, { animate: true });
+    setTimeout(() => {
+      result.marker.openPopup();
+    }, 300);
+    return;
+  }
+
+  // Multiple results - find best match (exact match or starts with search term)
+  const search = document.getElementById('searchInput').value.toLowerCase().trim();
+
+  // First try exact match
+  let bestMatch = lastSearchResults.find(r => r.data.name.toLowerCase() === search);
+
+  // Then try starts with
+  if (!bestMatch) {
+    bestMatch = lastSearchResults.find(r => r.data.name.toLowerCase().startsWith(search));
+  }
+
+  // Otherwise just use first result
+  if (!bestMatch) {
+    bestMatch = lastSearchResults[0];
+  }
+
+  const latLng = bestMatch.marker.getLatLng();
+  map.setView(latLng, 10, { animate: true });
+  setTimeout(() => {
+    bestMatch.marker.openPopup();
+  }, 300);
 }
 
 function updatePipeline() {
