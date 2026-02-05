@@ -3270,6 +3270,7 @@ function parseCSV(text) {
   const headers = parseCSVLine(lines[0]);
   const data = [];
 
+  let skippedRows = [];
   for (let i = 1; i < lines.length; i++) {
     const values = parseCSVLine(lines[i]);
     if (values.length === headers.length) {
@@ -3280,7 +3281,22 @@ function parseCSV(text) {
         row[key] = values[idx].trim();
       });
       data.push(row);
+    } else {
+      // Log skipped rows - column count mismatch
+      const preview = lines[i].substring(0, 100);
+      skippedRows.push({ line: i + 1, expected: headers.length, got: values.length, preview });
+      // Check if this might be Dallas
+      if (lines[i].toLowerCase().includes('dallas')) {
+        console.warn('[CSV Parse] DALLAS ROW SKIPPED! Line', i + 1, '- Expected', headers.length, 'columns, got', values.length);
+        console.warn('[CSV Parse] Raw line:', lines[i]);
+      }
     }
+  }
+  if (skippedRows.length > 0) {
+    console.warn('[CSV Parse] Skipped', skippedRows.length, 'rows due to column count mismatch:');
+    skippedRows.slice(0, 5).forEach(r => {
+      console.warn('  Line', r.line + ':', r.got, 'cols (expected', r.expected + '):', r.preview + '...');
+    });
   }
   return data;
 }
