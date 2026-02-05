@@ -3952,16 +3952,45 @@ function closeMergeModal() {
 }
 
 // Geocode a district using OpenStreetMap Nominatim API
-async function geocodeDistrict(name, state) {
-  // Try multiple query formats for better results
-  const queries = [
-    `${name}, ${state}, USA`,
-    `${name} School District, ${state}, USA`,
-    // Strip common suffixes and try just the city/county name
-    `${name.replace(/\s*(School District|ISD|USD|Public Schools|Schools|County).*$/i, '')}, ${state}, USA`
-  ];
+async function geocodeDistrict(name, state, record) {
+  // Check for address fields in the record (most accurate if available)
+  // CSV headers get normalized: "Billing Address Line 1" → "billing_address_line_1"
+  const address = record?.billing_address_line_1 || record?.address || record?.street_address || record?.billing_address || record?.mailing_address || record?.billing_street || '';
+  const city = record?.billing_city || record?.city || record?.mailing_city || '';
 
-  for (const query of queries) {
+  // Build list of query variations to try
+  const baseName = name.replace(/\s*(Independent School District|School District|Public Schools|County Schools|City Schools|Parish Schools|ISD|USD|CSD|Schools|District).*$/i, '').trim();
+
+  const queries = [];
+
+  // If we have address + city, try that first (most accurate)
+  if (address && city && state) {
+    queries.push(`${address}, ${city}, ${state}, USA`);
+    console.log('[Geocode] Using address from CSV:', address, city, state);
+  }
+  // If we have just city, try that
+  if (city && state) {
+    queries.push(`${city}, ${state}, USA`);
+  }
+
+  // Add name-based fallback queries
+  queries.push(
+    // Try the base name as a city
+    `${baseName}, ${state}, USA`,
+    // Try as a county
+    `${baseName} County, ${state}, USA`,
+    // Try the full name
+    `${name}, ${state}, USA`,
+    // Try adding "city" explicitly
+    `${baseName} city, ${state}, USA`,
+    // For names that might be school districts, search for the school district HQ
+    `${name} school district, ${state}, USA`
+  );
+
+  // Remove duplicates and empty queries
+  const uniqueQueries = [...new Set(queries)].filter(q => q && !q.includes('undefined'));
+
+  for (const query of uniqueQueries) {
     const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1&countrycodes=us`;
 
     try {
@@ -3979,6 +4008,22 @@ async function geocodeDistrict(name, state) {
     } catch (err) {
       console.error('[Geocode] Error for:', query, err);
     }
+  }
+
+  // Last resort: try to at least place it somewhere in the state
+  console.warn('[Geocode] Trying state-level fallback for:', name, state);
+  try {
+    const stateUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(state + ', USA')}&limit=1&countrycodes=us`;
+    const response = await fetch(stateUrl, {
+      headers: { 'User-Agent': 'EdiaStratMap/1.0' }
+    });
+    const data = await response.json();
+    if (data && data.length > 0) {
+      console.log('[Geocode] Using state center for:', name, '→', data[0].lat, data[0].lon);
+      return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+    }
+  } catch (err) {
+    console.error('[Geocode] State fallback error:', err);
   }
 
   console.warn('[Geocode] No results for:', name, state);
@@ -4003,7 +4048,7 @@ async function geocodeMissingRecords(records) {
       continue;
     }
 
-    const coords = await geocodeDistrict(record.name, record.state);
+    const coords = await geocodeDistrict(record.name, record.state, record);
     if (coords) {
       record.lat = coords.lat;
       record.lng = coords.lng;
@@ -4045,7 +4090,7 @@ async function confirmMerge() {
         }
 
         try {
-          const coords = await geocodeDistrict(record.name, record.state);
+          const coords = await geocodeDistrict(record.name, record.state, record);
           if (coords) {
             record.lat = coords.lat;
             record.lng = coords.lng;
