@@ -17,6 +17,15 @@ A web-based interactive map for **Edia Learning's sales team** to visualize and 
 - Real-time counts: Strategic accounts, Customers, Overlap, States covered
 - Pipeline summary panel showing opportunity values by stage
 
+### Action Dashboard
+- Click the **"Actions" button** on the map (next to the account count badge) to open a floating workload panel
+- **Stalest Accounts**: Accounts sorted by last activity date, oldest first — shows how many days since last touch in red
+- **Due This Week**: Accounts whose next steps contain dates within the current Monday–Sunday week
+- **Untouched Accounts**: Accounts with no activity date on record
+- A **red alert badge** appears on the Actions button when next steps are due this week
+- Click any account row to open its full-screen modal
+- Click outside the panel or the **×** button to close
+
 ### Filtering & Search
 - Search districts by name
 - **Press Enter** to zoom to the searched district and open its popup
