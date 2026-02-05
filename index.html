@@ -1730,6 +1730,30 @@ let PROXIMITY_MILES = 50;
 
 // ============ INIT ============
 function initMap() {
+  // Load persisted data from localStorage if available
+  try {
+    const savedStrategic = localStorage.getItem('edia_strategic_data');
+    if (savedStrategic) {
+      const parsed = JSON.parse(savedStrategic);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        STRATEGIC_DATA.length = 0;
+        parsed.forEach(item => STRATEGIC_DATA.push(item));
+        console.log('[Persist] Loaded', STRATEGIC_DATA.length, 'strategic accounts from localStorage');
+      }
+    }
+    const savedCustomers = localStorage.getItem('edia_customer_data');
+    if (savedCustomers) {
+      const parsed = JSON.parse(savedCustomers);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        CUSTOMER_DATA.length = 0;
+        parsed.forEach(item => CUSTOMER_DATA.push(item));
+        console.log('[Persist] Loaded', CUSTOMER_DATA.length, 'customers from localStorage');
+      }
+    }
+  } catch (e) {
+    console.error('[Persist] Failed to load data from localStorage:', e);
+  }
+
   // Pre-populate district data cache for modal access
   window.districtDataCache = {};
   STRATEGIC_DATA.forEach(d => {
@@ -3502,6 +3526,7 @@ function previewMerge(csvData) {
 
   const mergedData = [];
   const processedNames = new Set();
+  const mergedByName = new Map(); // Track already-merged records to handle duplicate CSV rows
 
   // Helper to get name from CSV row - checks all name field variations
   function getNameFromRow(row) {
@@ -3541,12 +3566,17 @@ function previewMerge(csvData) {
       console.log('  - existingByNormalized.has(normalizedKey):', existingByNormalized.has(normalizedKey));
     }
 
+    // First check if we already merged this account from an earlier CSV row (handles multiple opps per account)
+    let alreadyMerged = mergedByName.get(nameKey) || mergedByName.get(normalizedKey);
+
     // Try exact match first, then normalized match, then state+name fuzzy match
     let existing = existingByName.get(nameKey);
     if (!existing) {
       existing = existingByNormalized.get(normalizedKey);
       if (existing) {
         console.log('[SFDC Merge] Normalized match:', name, '→', existing.item.name);
+        // Check if we already merged this existing record
+        alreadyMerged = alreadyMerged || mergedByName.get(existing.item.name.toLowerCase().trim());
       }
     }
     // Fallback: try state + name contains match
@@ -3557,10 +3587,29 @@ function previewMerge(csvData) {
       if (existing) {
         processedNames.add(existing.item.name.toLowerCase().trim());
         processedNames.add(normalizeDistrictName(existing.item.name));
+        alreadyMerged = alreadyMerged || mergedByName.get(existing.item.name.toLowerCase().trim());
       }
     }
-    if (!existing && idx < 10) {
+    if (!existing && !alreadyMerged && idx < 10) {
       console.log('[SFDC Merge] No match for:', name, '(exact:', nameKey, ', normalized:', normalizedKey, ')');
+    }
+
+    // If this account was already merged from a previous CSV row, update that record (multiple opps scenario)
+    if (alreadyMerged) {
+      console.log('[SFDC Merge] Multiple opps for:', name, '- updating existing merged record');
+      // Update with this row's opp data (later row wins, or we could aggregate)
+      Object.keys(csvRow).forEach(key => {
+        const val = csvRow[key];
+        if (val && val.trim()) {
+          const mappedKey = mapFieldName(key);
+          // Don't overwrite name with opportunity_name
+          if (mappedKey !== 'name' || !alreadyMerged.name) {
+            alreadyMerged[mappedKey] = val.trim();
+          }
+        }
+      });
+      parseNumericFields(alreadyMerged);
+      continue; // Skip to next CSV row
     }
 
     if (existing) {
@@ -3628,6 +3677,10 @@ function previewMerge(csvData) {
       }
 
       mergedData.push(merged);
+      // Track this merged record to handle duplicate CSV rows (multiple opps per account)
+      mergedByName.set(nameKey, merged);
+      mergedByName.set(normalizedKey, merged);
+      mergedByName.set(existing.item.name.toLowerCase().trim(), merged);
     } else {
       // New record - check if name might be a partial match
       const possibleMatch = findPartialMatch(name, existingByName);
@@ -3638,6 +3691,7 @@ function previewMerge(csvData) {
       // Log ALL new records so we can debug matching issues
       console.log('[SFDC Merge] NEW RECORD (no match):', name);
       console.log('  - Normalized key tried:', normalizedKey);
+      console.log('  - State:', csvRow.state || 'NOT SET');
       if (possibleMatch) {
         console.log('  - Possible match found:', possibleMatch);
       }
@@ -3657,6 +3711,9 @@ function previewMerge(csvData) {
         stats.changes.push({ name, action: 'new' });
       }
       mergedData.push(newRecord);
+      // Track this new record to handle duplicate CSV rows
+      mergedByName.set(nameKey, newRecord);
+      mergedByName.set(normalizedKey, newRecord);
     }
   });
 
@@ -3896,24 +3953,36 @@ function closeMergeModal() {
 
 // Geocode a district using OpenStreetMap Nominatim API
 async function geocodeDistrict(name, state) {
-  const query = `${name}, ${state}, USA`;
-  const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`;
+  // Try multiple query formats for better results
+  const queries = [
+    `${name}, ${state}, USA`,
+    `${name} School District, ${state}, USA`,
+    // Strip common suffixes and try just the city/county name
+    `${name.replace(/\s*(School District|ISD|USD|Public Schools|Schools|County).*$/i, '')}, ${state}, USA`
+  ];
 
-  try {
-    const response = await fetch(url, {
-      headers: { 'User-Agent': 'EdiaStratMap/1.0' }
-    });
-    const data = await response.json();
-    if (data && data.length > 0) {
-      console.log('[Geocode] Found:', name, '→', data[0].lat, data[0].lon);
-      return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+  for (const query of queries) {
+    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1&countrycodes=us`;
+
+    try {
+      console.log('[Geocode] Trying:', query);
+      const response = await fetch(url, {
+        headers: { 'User-Agent': 'EdiaStratMap/1.0' }
+      });
+      const data = await response.json();
+      if (data && data.length > 0) {
+        console.log('[Geocode] Found:', name, '→', data[0].lat, data[0].lon, '(query:', query, ')');
+        return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+      }
+      // Rate limit between query attempts
+      await new Promise(resolve => setTimeout(resolve, 1100));
+    } catch (err) {
+      console.error('[Geocode] Error for:', query, err);
     }
-    console.warn('[Geocode] No results for:', query);
-    return null;
-  } catch (err) {
-    console.error('[Geocode] Error for:', query, err);
-    return null;
   }
+
+  console.warn('[Geocode] No results for:', name, state);
+  return null;
 }
 
 // Geocode all records missing lat/lng (with rate limiting)
@@ -3922,21 +3991,27 @@ async function geocodeMissingRecords(records) {
   if (needsGeocoding.length === 0) return;
 
   console.log('[Geocode] Geocoding', needsGeocoding.length, 'records...');
+  console.log('[Geocode] Records to geocode:', needsGeocoding.map(r => `${r.name} (${r.state})`));
 
+  let geocoded = 0;
   for (let i = 0; i < needsGeocoding.length; i++) {
     const record = needsGeocoding[i];
+    console.log('[Geocode] Processing', i + 1, '/', needsGeocoding.length, ':', record.name, 'state:', record.state);
+
+    if (!record.state) {
+      console.warn('[Geocode] Skipping - no state for:', record.name);
+      continue;
+    }
+
     const coords = await geocodeDistrict(record.name, record.state);
     if (coords) {
       record.lat = coords.lat;
       record.lng = coords.lng;
-    }
-    // Rate limit: Nominatim requires 1 request per second
-    if (i < needsGeocoding.length - 1) {
-      await new Promise(resolve => setTimeout(resolve, 1100));
+      geocoded++;
     }
   }
 
-  console.log('[Geocode] Completed geocoding');
+  console.log('[Geocode] Completed - geocoded', geocoded, 'of', needsGeocoding.length, 'records');
 }
 
 async function confirmMerge() {
@@ -3960,9 +4035,23 @@ async function confirmMerge() {
   if (isStrategic) {
     STRATEGIC_DATA.length = 0;
     pendingMergeData.forEach(item => STRATEGIC_DATA.push(item));
+    // Persist to localStorage
+    try {
+      localStorage.setItem('edia_strategic_data', JSON.stringify(STRATEGIC_DATA));
+      console.log('[Persist] Saved', STRATEGIC_DATA.length, 'strategic accounts to localStorage');
+    } catch (e) {
+      console.error('[Persist] Failed to save strategic data:', e);
+    }
   } else {
     CUSTOMER_DATA.length = 0;
     pendingMergeData.forEach(item => CUSTOMER_DATA.push(item));
+    // Persist to localStorage
+    try {
+      localStorage.setItem('edia_customer_data', JSON.stringify(CUSTOMER_DATA));
+      console.log('[Persist] Saved', CUSTOMER_DATA.length, 'customers to localStorage');
+    } catch (e) {
+      console.error('[Persist] Failed to save customer data:', e);
+    }
   }
 
   // Update last refresh timestamp
