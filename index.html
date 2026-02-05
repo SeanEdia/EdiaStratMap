@@ -3609,7 +3609,7 @@ function previewMerge(csvData) {
         }
       });
       parseNumericFields(alreadyMerged);
-      continue; // Skip to next CSV row
+      return; // Skip to next CSV row (return in forEach acts like continue)
     }
 
     if (existing) {
