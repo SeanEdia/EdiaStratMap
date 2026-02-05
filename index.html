@@ -3263,16 +3263,54 @@ function processCSVFile(file) {
 }
 
 function parseCSV(text) {
-  const lines = text.split(/\r?\n/).filter(line => line.trim());
-  if (lines.length < 2) return [];
+  // Split into rows while respecting quoted fields that may contain newlines
+  const rows = [];
+  let currentRow = '';
+  let inQuotes = false;
 
-  // Parse header row - handle quoted fields
-  const headers = parseCSVLine(lines[0]);
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i];
+
+    if (char === '"') {
+      // Handle escaped quotes (doubled)
+      if (inQuotes && text[i + 1] === '"') {
+        currentRow += '""';
+        i++;
+      } else {
+        inQuotes = !inQuotes;
+        currentRow += char;
+      }
+    } else if ((char === '\n' || (char === '\r' && text[i + 1] === '\n')) && !inQuotes) {
+      // End of row (only if not inside quotes)
+      if (currentRow.trim()) {
+        rows.push(currentRow);
+      }
+      currentRow = '';
+      if (char === '\r') i++; // Skip the \n in \r\n
+    } else if (char === '\r' && !inQuotes) {
+      // Handle \r alone as line ending
+      if (currentRow.trim()) {
+        rows.push(currentRow);
+      }
+      currentRow = '';
+    } else {
+      currentRow += char;
+    }
+  }
+  // Don't forget the last row
+  if (currentRow.trim()) {
+    rows.push(currentRow);
+  }
+
+  if (rows.length < 2) return [];
+
+  // Parse header row
+  const headers = parseCSVLine(rows[0]);
   const data = [];
 
   let skippedRows = [];
-  for (let i = 1; i < lines.length; i++) {
-    const values = parseCSVLine(lines[i]);
+  for (let i = 1; i < rows.length; i++) {
+    const values = parseCSVLine(rows[i]);
     if (values.length === headers.length) {
       const row = {};
       headers.forEach((h, idx) => {
@@ -3283,21 +3321,22 @@ function parseCSV(text) {
       data.push(row);
     } else {
       // Log skipped rows - column count mismatch
-      const preview = lines[i].substring(0, 100);
+      const preview = rows[i].substring(0, 100);
       skippedRows.push({ line: i + 1, expected: headers.length, got: values.length, preview });
       // Check if this might be Dallas
-      if (lines[i].toLowerCase().includes('dallas')) {
-        console.warn('[CSV Parse] DALLAS ROW SKIPPED! Line', i + 1, '- Expected', headers.length, 'columns, got', values.length);
-        console.warn('[CSV Parse] Raw line:', lines[i]);
+      if (rows[i].toLowerCase().includes('dallas')) {
+        console.warn('[CSV Parse] DALLAS ROW SKIPPED! Row', i + 1, '- Expected', headers.length, 'columns, got', values.length);
+        console.warn('[CSV Parse] Raw row:', rows[i].substring(0, 500));
       }
     }
   }
   if (skippedRows.length > 0) {
     console.warn('[CSV Parse] Skipped', skippedRows.length, 'rows due to column count mismatch:');
     skippedRows.slice(0, 5).forEach(r => {
-      console.warn('  Line', r.line + ':', r.got, 'cols (expected', r.expected + '):', r.preview + '...');
+      console.warn('  Row', r.line + ':', r.got, 'cols (expected', r.expected + '):', r.preview + '...');
     });
   }
+  console.log('[CSV Parse] Successfully parsed', data.length, 'rows from', rows.length - 1, 'data rows');
   return data;
 }
 
