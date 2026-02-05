@@ -3332,11 +3332,11 @@ function previewMerge(csvData) {
   });
   console.log('[SFDC Merge] Existing exact keys:', Array.from(existingByName.keys()).slice(0, 10), '...');
   console.log('[SFDC Merge] Existing normalized keys:', Array.from(existingByNormalized.keys()).slice(0, 10), '...');
-  // Log Dallas specifically if it exists
+  // Log Dallas specifically if it exists - test with CORRECT keys
   const dallasExact = existingByName.get('dallas isd');
-  const dallasNorm = existingByNormalized.get('dallas isd');
-  console.log('[SFDC Merge] Dallas lookup test - exact "dallas isd":', dallasExact ? 'FOUND' : 'NOT FOUND');
-  console.log('[SFDC Merge] Dallas lookup test - normalized "dallas isd":', dallasNorm ? 'FOUND' : 'NOT FOUND');
+  const dallasNormalized = existingByNormalized.get('dallas'); // normalized key is "dallas", not "dallas isd"
+  console.log('[SFDC Merge] Dallas in exact map ("dallas isd"):', dallasExact ? 'FOUND' : 'NOT FOUND');
+  console.log('[SFDC Merge] Dallas in normalized map ("dallas"):', dallasNormalized ? 'FOUND' : 'NOT FOUND');
 
   // Count notes that exist in localStorage
   let notesCount = 0;
@@ -3359,6 +3359,16 @@ function previewMerge(csvData) {
 
   const mergedData = [];
   const processedNames = new Set();
+
+  // Debug: Find all Dallas rows in CSV
+  const dallasRows = csvData.filter(r => {
+    const n = r.name || r.district_name || r.account_name || '';
+    return n.toLowerCase().includes('dallas');
+  });
+  console.log('[SFDC Merge] CSV rows containing "dallas":', dallasRows.length);
+  dallasRows.forEach(r => {
+    console.log('  -', r.name || r.district_name || r.account_name);
+  });
 
   csvData.forEach((csvRow, idx) => {
     const name = csvRow.name || csvRow.district_name || csvRow.account_name || '';
