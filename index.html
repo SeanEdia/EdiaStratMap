@@ -3953,15 +3953,26 @@ function closeMergeModal() {
 
 // Geocode a district using OpenStreetMap Nominatim API
 async function geocodeDistrict(name, state) {
-  // Try multiple query formats for better results
+  // Build list of query variations to try
+  const baseName = name.replace(/\s*(Independent School District|School District|Public Schools|County Schools|City Schools|Parish Schools|ISD|USD|CSD|Schools|District).*$/i, '').trim();
+
   const queries = [
+    // Try the base name as a city
+    `${baseName}, ${state}, USA`,
+    // Try as a county
+    `${baseName} County, ${state}, USA`,
+    // Try the full name
     `${name}, ${state}, USA`,
-    `${name} School District, ${state}, USA`,
-    // Strip common suffixes and try just the city/county name
-    `${name.replace(/\s*(School District|ISD|USD|Public Schools|Schools|County).*$/i, '')}, ${state}, USA`
+    // Try adding "city" explicitly
+    `${baseName} city, ${state}, USA`,
+    // For names that might be school districts, search for the school district HQ
+    `${name} school district, ${state}, USA`,
   ];
 
-  for (const query of queries) {
+  // Remove duplicates
+  const uniqueQueries = [...new Set(queries)];
+
+  for (const query of uniqueQueries) {
     const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1&countrycodes=us`;
 
     try {
@@ -3979,6 +3990,22 @@ async function geocodeDistrict(name, state) {
     } catch (err) {
       console.error('[Geocode] Error for:', query, err);
     }
+  }
+
+  // Last resort: try to at least place it somewhere in the state
+  console.warn('[Geocode] Trying state-level fallback for:', name, state);
+  try {
+    const stateUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(state + ', USA')}&limit=1&countrycodes=us`;
+    const response = await fetch(stateUrl, {
+      headers: { 'User-Agent': 'EdiaStratMap/1.0' }
+    });
+    const data = await response.json();
+    if (data && data.length > 0) {
+      console.log('[Geocode] Using state center for:', name, '→', data[0].lat, data[0].lon);
+      return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+    }
+  } catch (err) {
+    console.error('[Geocode] State fallback error:', err);
   }
 
   console.warn('[Geocode] No results for:', name, state);
