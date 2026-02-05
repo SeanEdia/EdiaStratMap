@@ -3952,11 +3952,28 @@ function closeMergeModal() {
 }
 
 // Geocode a district using OpenStreetMap Nominatim API
-async function geocodeDistrict(name, state) {
+async function geocodeDistrict(name, state, record) {
+  // Check for address fields in the record (most accurate if available)
+  const address = record?.address || record?.street_address || record?.billing_address || record?.mailing_address || record?.billing_street || '';
+  const city = record?.city || record?.billing_city || record?.mailing_city || '';
+
   // Build list of query variations to try
   const baseName = name.replace(/\s*(Independent School District|School District|Public Schools|County Schools|City Schools|Parish Schools|ISD|USD|CSD|Schools|District).*$/i, '').trim();
 
-  const queries = [
+  const queries = [];
+
+  // If we have address + city, try that first (most accurate)
+  if (address && city && state) {
+    queries.push(`${address}, ${city}, ${state}, USA`);
+    console.log('[Geocode] Using address from CSV:', address, city, state);
+  }
+  // If we have just city, try that
+  if (city && state) {
+    queries.push(`${city}, ${state}, USA`);
+  }
+
+  // Add name-based fallback queries
+  queries.push(
     // Try the base name as a city
     `${baseName}, ${state}, USA`,
     // Try as a county
@@ -3966,11 +3983,11 @@ async function geocodeDistrict(name, state) {
     // Try adding "city" explicitly
     `${baseName} city, ${state}, USA`,
     // For names that might be school districts, search for the school district HQ
-    `${name} school district, ${state}, USA`,
-  ];
+    `${name} school district, ${state}, USA`
+  );
 
-  // Remove duplicates
-  const uniqueQueries = [...new Set(queries)];
+  // Remove duplicates and empty queries
+  const uniqueQueries = [...new Set(queries)].filter(q => q && !q.includes('undefined'));
 
   for (const query of uniqueQueries) {
     const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1&countrycodes=us`;
@@ -4030,7 +4047,7 @@ async function geocodeMissingRecords(records) {
       continue;
     }
 
-    const coords = await geocodeDistrict(record.name, record.state);
+    const coords = await geocodeDistrict(record.name, record.state, record);
     if (coords) {
       record.lat = coords.lat;
       record.lng = coords.lng;
@@ -4072,7 +4089,7 @@ async function confirmMerge() {
         }
 
         try {
-          const coords = await geocodeDistrict(record.name, record.state);
+          const coords = await geocodeDistrict(record.name, record.state, record);
           if (coords) {
             record.lat = coords.lat;
             record.lng = coords.lng;
