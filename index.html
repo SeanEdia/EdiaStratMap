@@ -3954,8 +3954,9 @@ function closeMergeModal() {
 // Geocode a district using OpenStreetMap Nominatim API
 async function geocodeDistrict(name, state, record) {
   // Check for address fields in the record (most accurate if available)
-  const address = record?.address || record?.street_address || record?.billing_address || record?.mailing_address || record?.billing_street || '';
-  const city = record?.city || record?.billing_city || record?.mailing_city || '';
+  // CSV headers get normalized: "Billing Address Line 1" → "billing_address_line_1"
+  const address = record?.billing_address_line_1 || record?.address || record?.street_address || record?.billing_address || record?.mailing_address || record?.billing_street || '';
+  const city = record?.billing_city || record?.city || record?.mailing_city || '';
 
   // Build list of query variations to try
   const baseName = name.replace(/\s*(Independent School District|School District|Public Schools|County Schools|City Schools|Parish Schools|ISD|USD|CSD|Schools|District).*$/i, '').trim();
