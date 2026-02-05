@@ -3537,6 +3537,13 @@ function previewMerge(csvData) {
         stats.changes.push({ name, action: 'new', warning: `Similar to existing: "${possibleMatch}"` });
       }
 
+      // Log ALL new records so we can debug matching issues
+      console.log('[SFDC Merge] NEW RECORD (no match):', name);
+      console.log('  - Normalized key tried:', normalizedKey);
+      if (possibleMatch) {
+        console.log('  - Possible match found:', possibleMatch);
+      }
+
       const newRecord = {};
       Object.keys(csvRow).forEach(key => {
         const mappedKey = mapFieldName(key);
