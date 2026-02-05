@@ -52,7 +52,10 @@ Press **Escape** or click outside to close.
 - Drag-and-drop CSV upload to refresh data from Salesforce
 - Merges without losing notes or local customizations
 - Preview changes before applying
-- **Name matching**: District names must match exactly (case-insensitive)
+- **Smart name matching**: Automatically matches district name variations:
+  - "Dallas Independent School District" → "Dallas ISD"
+  - "Los Angeles Unified School District" → "Los Angeles USD"
+  - Supports ISD, USD, CSD, UFSD, PSD, and other common abbreviations
 - **Warnings**: Shows alerts if CSV districts are similar to but don't match existing ones
 - **Supported columns**: Automatically maps common SFDC column names (Account Name, Opportunity Stage, etc.)
 - **Debugging**: Open browser console (F12) to see merge diagnostics
