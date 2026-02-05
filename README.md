@@ -52,6 +52,10 @@ Press **Escape** or click outside to close.
 - Drag-and-drop CSV upload to refresh data from Salesforce
 - Merges without losing notes or local customizations
 - Preview changes before applying
+- **Name matching**: District names must match exactly (case-insensitive)
+- **Warnings**: Shows alerts if CSV districts are similar to but don't match existing ones
+- **Supported columns**: Automatically maps common SFDC column names (Account Name, Opportunity Stage, etc.)
+- **Debugging**: Open browser console (F12) to see merge diagnostics
 
 ### Meeting Prep Generation
 - One-click **"Generate Meeting Prep"** button in account popups
@@ -96,6 +100,16 @@ To update data from Salesforce:
 5. Review changes and click "Apply"
 
 Your notes and meeting prep links will be preserved during the merge.
+
+### Troubleshooting SFDC Refresh
+
+If updates aren't applying:
+1. **Check district names** - Names in CSV must match exactly (e.g., "Dallas ISD" not "Dallas Independent School District")
+2. **Open browser console** (F12 → Console) - Look for `[SFDC Merge]` logs showing:
+   - CSV columns detected
+   - Sample row data
+   - Districts that didn't match
+3. **Check for warnings** - The merge preview will show ⚠ warnings for similar but non-matching names
 
 ---
 
