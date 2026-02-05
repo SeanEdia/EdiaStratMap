@@ -1703,6 +1703,13 @@ let PROXIMITY_MILES = 50;
 
 // ============ INIT ============
 function initMap() {
+  // Pre-populate district data cache for modal access
+  window.districtDataCache = {};
+  STRATEGIC_DATA.forEach(d => {
+    const key = d.name.replace(/[^a-zA-Z0-9]/g, '_');
+    window.districtDataCache[key] = d;
+  });
+
   map = L.map('map', {
     center: [39.5, -98.5],
     zoom: 5,
