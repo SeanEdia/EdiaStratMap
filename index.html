@@ -3321,9 +3321,14 @@ function previewMerge(csvData) {
   }
 
   // Create a map of existing data by name for quick lookup
+  // Use both exact name and normalized name for matching
   const existingByName = new Map();
+  const existingByNormalized = new Map();
   existingData.forEach((item, idx) => {
-    existingByName.set(item.name.toLowerCase().trim(), { item, idx });
+    const exactKey = item.name.toLowerCase().trim();
+    const normalizedKey = normalizeDistrictName(item.name);
+    existingByName.set(exactKey, { item, idx });
+    existingByNormalized.set(normalizedKey, { item, idx });
   });
   console.log('[SFDC Merge] Existing district names:', Array.from(existingByName.keys()).slice(0, 10), '...');
 
@@ -3357,11 +3362,20 @@ function previewMerge(csvData) {
     }
 
     const nameKey = name.toLowerCase().trim();
+    const normalizedKey = normalizeDistrictName(name);
     processedNames.add(nameKey);
+    processedNames.add(normalizedKey);
 
-    const existing = existingByName.get(nameKey);
+    // Try exact match first, then normalized match
+    let existing = existingByName.get(nameKey);
+    if (!existing) {
+      existing = existingByNormalized.get(normalizedKey);
+      if (existing) {
+        console.log('[SFDC Merge] Normalized match:', name, '→', existing.item.name);
+      }
+    }
     if (!existing && idx < 5) {
-      console.log('[SFDC Merge] No match for:', name, '(key:', nameKey, ')');
+      console.log('[SFDC Merge] No match for:', name, '(exact:', nameKey, ', normalized:', normalizedKey, ')');
     }
 
     if (existing) {
@@ -3425,7 +3439,8 @@ function previewMerge(csvData) {
   // Keep existing records not in CSV (preserve them)
   existingData.forEach(item => {
     const nameKey = item.name.toLowerCase().trim();
-    if (!processedNames.has(nameKey)) {
+    const normalizedKey = normalizeDistrictName(item.name);
+    if (!processedNames.has(nameKey) && !processedNames.has(normalizedKey)) {
       mergedData.push(item);
     }
   });
@@ -3504,6 +3519,40 @@ function mapFieldName(csvField) {
 
   const normalized = csvField.toLowerCase().replace(/\s+/g, '_');
   return mappings[normalized] || normalized;
+}
+
+function normalizeDistrictName(name) {
+  // Normalize district name variations for matching
+  // "Dallas Independent School District" -> "dallas isd"
+  // "Los Angeles Unified School District" -> "los angeles usd"
+  let normalized = name.toLowerCase().trim();
+
+  // Common full forms to abbreviations
+  const replacements = [
+    [/\bindependent school district\b/gi, 'ISD'],
+    [/\bunified school district\b/gi, 'USD'],
+    [/\bconsolidated school district\b/gi, 'CSD'],
+    [/\bcity school district\b/gi, 'CSD'],
+    [/\bcentral school district\b/gi, 'CSD'],
+    [/\bunion free school district\b/gi, 'UFSD'],
+    [/\bpublic school district\b/gi, 'PSD'],
+    [/\bpublic schools\b/gi, 'PS'],
+    [/\bschool district\b/gi, 'SD'],
+    [/\barea schools\b/gi, 'AS'],
+    [/\bcounty schools\b/gi, 'CS'],
+    [/\bcounty school system\b/gi, 'CSS'],
+    [/\bcounty public schools\b/gi, 'CPS'],
+    [/\bcity schools\b/gi, 'CS'],
+  ];
+
+  replacements.forEach(([pattern, abbrev]) => {
+    normalized = normalized.replace(pattern, abbrev.toLowerCase());
+  });
+
+  // Clean up extra spaces
+  normalized = normalized.replace(/\s+/g, ' ').trim();
+
+  return normalized;
 }
 
 function parseNumericFields(record) {
