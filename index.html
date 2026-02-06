@@ -40,10 +40,11 @@ body {
 
 /* ============ SIDEBAR ============ */
 .sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
   width: 340px;
-  min-width: 340px;
   max-height: 100vh;
-  align-self: flex-start;
   background: var(--panel);
   border-right: 1px solid var(--panel-border);
   display: flex;
@@ -369,8 +370,9 @@ input[type="range"]::-webkit-slider-thumb {
 
 /* ============ MAP ============ */
 .map-container {
-  flex: 1;
-  position: relative;
+  position: fixed;
+  inset: 0;
+  z-index: 0;
 }
 
 #map {
@@ -388,6 +390,7 @@ input[type="range"]::-webkit-slider-thumb {
 }
 
 .leaflet-control-attribution { display: none; }
+.leaflet-left { left: 350px !important; }
 
 /* Custom markers */
 .marker-strat {
