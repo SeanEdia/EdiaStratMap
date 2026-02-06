@@ -183,10 +183,9 @@ body {
 
 /* Filters */
 .filters-area {
+  flex: 1;
   overflow-y: auto;
   padding: 14px 22px 20px;
-  flex-shrink: 0;
-  max-height: 40vh;
 }
 
 .filters-area::-webkit-scrollbar { width: 4px; }
@@ -1698,55 +1697,99 @@ input[type="range"]::-webkit-slider-thumb {
   color: var(--text);
 }
 
-/* ============ ACCOUNT LIST PANEL ============ */
-.account-list-panel {
+/* ============ ACCOUNT LIST OVERLAY ============ */
+/* Trigger button — top-left of map, mirrors Actions button style */
+.al-trigger-wrap {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 999;
+}
+.al-trigger {
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius);
+  padding: 9px 14px;
+  color: var(--text-dim);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
   display: flex;
-  flex-direction: column;
-  border-top: 1px solid var(--panel-border);
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
+  align-items: center;
+  gap: 7px;
+  transition: all 0.2s;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  white-space: nowrap;
 }
-.account-list-panel.collapsed .account-list-body,
-.account-list-panel.collapsed .account-list-sort-bar {
+.al-trigger:hover { color: var(--text); border-color: var(--accent-strat); }
+.al-trigger.active { color: var(--text); border-color: var(--accent-strat); background: var(--surface); }
+.al-trigger svg { opacity: 0.6; }
+.al-trigger:hover svg { opacity: 1; }
+.al-trigger-count {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--text-muted);
+  background: var(--surface);
+  padding: 1px 6px;
+  border-radius: 8px;
+}
+
+/* Overlay panel */
+.al-overlay {
+  position: absolute;
+  top: 56px;
+  left: 16px;
+  width: 380px;
+  max-height: calc(100vh - 90px);
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.45);
+  z-index: 1000;
   display: none;
+  overflow: hidden;
+  animation: alSlideIn 0.2s ease-out;
 }
-.account-list-header {
+@keyframes alSlideIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.al-overlay.open { display: flex; flex-direction: column; }
+.al-overlay-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 18px;
-  cursor: pointer;
-  user-select: none;
-  transition: background 0.15s;
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid var(--panel-border);
 }
-.account-list-header:hover { background: rgba(255,255,255,0.03); }
-.account-list-title {
-  font-size: 10px;
+.al-overlay-header h3 {
+  font-size: 13px;
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
-  color: var(--text-dim);
+  letter-spacing: -0.2px;
 }
-.account-list-count {
-  font-size: 10px;
-  color: var(--text-muted);
+.al-overlay-count {
+  font-size: 11px;
   font-family: 'JetBrains Mono', monospace;
-}
-.account-list-chevron {
-  font-size: 10px;
   color: var(--text-muted);
-  transition: transform 0.2s;
-  margin-left: 8px;
 }
-.account-list-panel.collapsed .account-list-chevron {
-  transform: rotate(-90deg);
+.al-overlay-close {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 18px;
+  padding: 0 4px;
+  line-height: 1;
 }
+.al-overlay-close:hover { color: var(--text); }
+
+/* Sort bar */
 .account-list-sort-bar {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 0 18px 8px;
+  padding: 10px 16px 8px;
   flex-wrap: wrap;
 }
 .account-list-sort-label {
@@ -1786,6 +1829,8 @@ input[type="range"]::-webkit-slider-thumb {
 }
 .account-list-group-btn:hover { border-color: var(--text-muted); color: var(--text-dim); }
 .account-list-group-btn.active { border-color: var(--accent-strat); color: var(--accent-strat); background: rgba(108,92,231,0.1); }
+
+/* Scrollable list body */
 .account-list-body {
   flex: 1;
   overflow-y: auto;
@@ -1800,7 +1845,7 @@ input[type="range"]::-webkit-slider-thumb {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 18px 4px;
+  padding: 8px 16px 4px;
   cursor: pointer;
   user-select: none;
   transition: background 0.15s;
@@ -1831,7 +1876,7 @@ input[type="range"]::-webkit-slider-thumb {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 18px;
+  padding: 6px 16px;
   cursor: pointer;
   transition: background 0.15s;
   min-height: 40px;
@@ -1916,7 +1961,7 @@ input[type="range"]::-webkit-slider-thumb {
 
 /* Empty state */
 .account-list-empty {
-  padding: 20px 18px;
+  padding: 20px 16px;
   text-align: center;
   font-size: 11px;
   color: var(--text-muted);
@@ -1989,19 +2034,6 @@ input[type="range"]::-webkit-slider-thumb {
 
   <div class="filters-area" id="filtersArea">
     <!-- Filters injected by JS based on view -->
-  </div>
-
-  <!-- ACCOUNT LIST PANEL -->
-  <div class="account-list-panel" id="accountListPanel">
-    <div class="account-list-header" onclick="toggleAccountList()">
-      <div style="display:flex;align-items:center;gap:8px;">
-        <span class="account-list-title">Account List</span>
-        <span class="account-list-count" id="accountListCount"></span>
-      </div>
-      <span class="account-list-chevron" id="accountListChevron">&#9660;</span>
-    </div>
-    <div class="account-list-sort-bar" id="accountListSortBar"></div>
-    <div class="account-list-body" id="accountListBody"></div>
   </div>
 
   <div class="pipeline-panel" id="pipelinePanel" style="display:none;">
@@ -2127,6 +2159,26 @@ input[type="range"]::-webkit-slider-thumb {
     </div>
     <div class="ad-overlay-body" id="actionDashboardBody"></div>
   </div>
+  <!-- Account List Trigger & Overlay -->
+  <div class="al-trigger-wrap">
+    <button class="al-trigger" id="alTrigger" onclick="toggleAccountListOverlay()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      <span>Account List</span>
+      <span class="al-trigger-count" id="alTriggerCount"></span>
+    </button>
+  </div>
+  <div class="al-overlay" id="alOverlay">
+    <div class="al-overlay-header">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <h3>Account List</h3>
+        <span class="al-overlay-count" id="accountListCount"></span>
+      </div>
+      <button class="al-overlay-close" onclick="toggleAccountListOverlay()">&times;</button>
+    </div>
+    <div class="account-list-sort-bar" id="accountListSortBar"></div>
+    <div class="account-list-body" id="accountListBody"></div>
+  </div>
+
   <div class="legend" id="legend"></div>
 </div>
 
@@ -2148,7 +2200,7 @@ let filteredStratData = [];     // current filtered strategic data
 let filteredCustData = [];      // current filtered customer data
 let accountListSort = 'enrollment_desc';
 let accountListGroupBy = null;  // null | 'state' | 'stage'
-let accountListCollapsed = false;
+let accountListOpen = false;
 let collapsedGroups = {};       // track collapsed group headers
 let PROXIMITY_MILES = 50;
 
@@ -2601,6 +2653,18 @@ document.addEventListener('click', function(e) {
   const trigger = document.getElementById('adTrigger');
   if (overlay && trigger && !overlay.contains(e.target) && !trigger.contains(e.target)) {
     actionDashboardOpen = false;
+    overlay.classList.remove('open');
+    trigger.classList.remove('active');
+  }
+});
+
+// Close account list overlay when clicking outside
+document.addEventListener('click', function(e) {
+  if (!accountListOpen) return;
+  const overlay = document.getElementById('alOverlay');
+  const trigger = document.getElementById('alTrigger');
+  if (overlay && trigger && !overlay.contains(e.target) && !trigger.contains(e.target)) {
+    accountListOpen = false;
     overlay.classList.remove('open');
     trigger.classList.remove('active');
   }
@@ -3252,11 +3316,14 @@ function buildCustPopup(d) {
 }
 
 // ============ ACCOUNT LIST ============
-function toggleAccountList() {
-  accountListCollapsed = !accountListCollapsed;
-  const panel = document.getElementById('accountListPanel');
-  if (accountListCollapsed) panel.classList.add('collapsed');
-  else panel.classList.remove('collapsed');
+function toggleAccountListOverlay() {
+  accountListOpen = !accountListOpen;
+  const overlay = document.getElementById('alOverlay');
+  const trigger = document.getElementById('alTrigger');
+  if (overlay) overlay.classList.toggle('open', accountListOpen);
+  if (trigger) trigger.classList.toggle('active', accountListOpen);
+  // Render if opening for the first time or after filter changes
+  if (accountListOpen) renderAccountList();
 }
 
 function getStageInfo(d) {
@@ -3404,10 +3471,10 @@ function openAccountFromList(districtKey) {
 }
 
 function renderAccountList() {
-  const panel = document.getElementById('accountListPanel');
   const body = document.getElementById('accountListBody');
   const countEl = document.getElementById('accountListCount');
   const sortBar = document.getElementById('accountListSortBar');
+  const triggerCount = document.getElementById('alTriggerCount');
 
   // Build unified list of items to show
   let items = [];
@@ -3432,7 +3499,11 @@ function renderAccountList() {
 
   // Total counts
   const totalCount = (showStrat ? STRATEGIC_DATA.length : 0) + (showCust ? CUSTOMER_DATA.length : 0);
-  countEl.textContent = `${items.length} of ${totalCount}`;
+  if (countEl) countEl.textContent = `Showing ${items.length} of ${totalCount}`;
+  if (triggerCount) triggerCount.textContent = items.length;
+
+  // Only render full list if overlay is open
+  if (!accountListOpen) return;
 
   // Render sort bar
   const isCust = currentView === 'customers';
