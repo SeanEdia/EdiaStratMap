@@ -666,7 +666,11 @@ input[type="range"]::-webkit-slider-thumb {
   font-family: 'JetBrains Mono', monospace;
   font-size: 13px;
   box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  cursor: pointer;
+  transition: all 0.2s;
 }
+.count-badge:hover { border-color: var(--accent-strat); color: var(--text); }
+.count-badge.active { border-color: var(--accent-strat); background: var(--surface); }
 .ad-overlay {
   position: absolute;
   top: 56px;
@@ -859,6 +863,17 @@ input[type="range"]::-webkit-slider-thumb {
   color: var(--text-dim);
 }
 .prox-toggle input:checked ~ .prox-label { color: #00b894; }
+/* ADA toggle — uses prox-toggle structure with accent-strat color */
+.ada-slider {}
+.prox-toggle input:checked + .ada-slider {
+  background: rgba(108,92,231,0.2);
+  border-color: rgba(108,92,231,0.4);
+}
+.prox-toggle input:checked + .ada-slider::after {
+  transform: translateX(15px);
+  background: #6c5ce7;
+}
+.prox-toggle input:checked + .ada-slider ~ .prox-label { color: #6c5ce7; }
 .prox-radius-wrap {
   display: flex;
   align-items: center;
@@ -1698,55 +1713,18 @@ input[type="range"]::-webkit-slider-thumb {
 }
 
 /* ============ ACCOUNT LIST OVERLAY ============ */
-/* Trigger button — top-left of map, mirrors Actions button style */
-.al-trigger-wrap {
-  position: absolute;
-  top: 16px;
-  left: 16px;
-  z-index: 999;
-}
-.al-trigger {
-  background: var(--panel);
-  border: 1px solid var(--panel-border);
-  border-radius: var(--radius);
-  padding: 9px 14px;
-  color: var(--text-dim);
-  font-family: inherit;
-  font-size: 12px;
-  font-weight: 500;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  transition: all 0.2s;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-  white-space: nowrap;
-}
-.al-trigger:hover { color: var(--text); border-color: var(--accent-strat); }
-.al-trigger.active { color: var(--text); border-color: var(--accent-strat); background: var(--surface); }
-.al-trigger svg { opacity: 0.6; }
-.al-trigger:hover svg { opacity: 1; }
-.al-trigger-count {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
-  color: var(--text-muted);
-  background: var(--surface);
-  padding: 1px 6px;
-  border-radius: 8px;
-}
-
-/* Overlay panel */
+/* Overlay panel — drops from count badge (top-right) */
 .al-overlay {
   position: absolute;
   top: 56px;
-  left: 16px;
-  width: 380px;
+  right: 16px;
+  width: 400px;
   max-height: calc(100vh - 90px);
   background: var(--panel);
   border: 1px solid var(--panel-border);
   border-radius: var(--radius);
   box-shadow: 0 8px 32px rgba(0,0,0,0.45);
-  z-index: 1000;
+  z-index: 1001;
   display: none;
   overflow: hidden;
   animation: alSlideIn 0.2s ease-out;
@@ -1967,13 +1945,11 @@ input[type="range"]::-webkit-slider-thumb {
   color: var(--text-muted);
 }
 
-/* Marker highlight effect on hover */
+/* Marker highlight effect on hover from account list */
 .marker-highlight {
-  animation: markerPulse 0.6s ease-in-out infinite alternate;
-}
-@keyframes markerPulse {
-  from { transform: scale(1); filter: brightness(1); }
-  to { transform: scale(1.8); filter: brightness(1.4); }
+  box-shadow: 0 0 0 4px rgba(108,92,231,0.6), 0 0 16px 6px rgba(108,92,231,0.4) !important;
+  border-radius: 50%;
+  z-index: 9000 !important;
 }
 
 </style>
@@ -2030,6 +2006,14 @@ input[type="range"]::-webkit-slider-thumb {
       <input type="range" id="proxRadius" min="10" max="150" value="50" step="10" class="prox-range" oninput="updateProxRadius(this.value)">
       <span class="prox-miles" id="proxMilesLabel">50 mi</span>
     </div>
+  </div>
+
+  <div class="prox-control" id="adaControl">
+    <label class="prox-toggle">
+      <input type="checkbox" id="adaCheck" onchange="toggleAdaFilter(this.checked)">
+      <span class="prox-slider ada-slider"></span>
+      <span class="prox-label">ADA Accounts</span>
+    </label>
   </div>
 
   <div class="filters-area" id="filtersArea">
@@ -2150,7 +2134,7 @@ input[type="range"]::-webkit-slider-thumb {
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="4" rx="1"/><rect x="14" y="10" width="7" height="4" rx="1"/><rect x="3" y="13" width="7" height="8" rx="1"/><rect x="14" y="17" width="7" height="4" rx="1"/></svg>
       Actions
     </button>
-    <div class="count-badge" id="countBadge"></div>
+    <div class="count-badge" id="countBadge" onclick="toggleAccountListOverlay()"></div>
   </div>
   <div class="ad-overlay" id="adOverlay">
     <div class="ad-overlay-header">
@@ -2159,14 +2143,7 @@ input[type="range"]::-webkit-slider-thumb {
     </div>
     <div class="ad-overlay-body" id="actionDashboardBody"></div>
   </div>
-  <!-- Account List Trigger & Overlay -->
-  <div class="al-trigger-wrap">
-    <button class="al-trigger" id="alTrigger" onclick="toggleAccountListOverlay()">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-      <span>Account List</span>
-      <span class="al-trigger-count" id="alTriggerCount"></span>
-    </button>
-  </div>
+  <!-- Account List Overlay (drops from count badge) -->
   <div class="al-overlay" id="alOverlay">
     <div class="al-overlay-header">
       <div style="display:flex;align-items:center;gap:10px;">
@@ -2193,6 +2170,7 @@ let map;
 let stratLayer, custLayer, proxLayer;
 let filters = {};
 let proximityOn = false;
+let adaFilterOn = false;
 
 // Account list state
 let markerLookup = {};          // name -> { marker, data, type }
@@ -2373,6 +2351,9 @@ function clearFilter(key) {
 function resetFilters() {
   filters = {};
   document.getElementById('searchInput').value = '';
+  adaFilterOn = false;
+  const adaCheck = document.getElementById('adaCheck');
+  if (adaCheck) adaCheck.checked = false;
   renderFilters();
   applyFilters();
 }
@@ -2407,6 +2388,7 @@ function applyFilters() {
         else { if (d.opp_stage !== filters.strat_opp_stage) return false; }
       }
       if (filters.strat_enrollment && parseInt(d.enrollment) < parseInt(filters.strat_enrollment)) return false;
+      if (adaFilterOn && !d.ada_adm) return false;
       return true;
     });
 
@@ -2661,12 +2643,14 @@ document.addEventListener('click', function(e) {
 // Close account list overlay when clicking outside
 document.addEventListener('click', function(e) {
   if (!accountListOpen) return;
+  // Skip close if a sort/group action just re-rendered (target removed from DOM)
+  if (!document.body.contains(e.target)) return;
   const overlay = document.getElementById('alOverlay');
-  const trigger = document.getElementById('alTrigger');
-  if (overlay && trigger && !overlay.contains(e.target) && !trigger.contains(e.target)) {
+  const badge = document.getElementById('countBadge');
+  if (overlay && badge && !overlay.contains(e.target) && !badge.contains(e.target)) {
     accountListOpen = false;
     overlay.classList.remove('open');
-    trigger.classList.remove('active');
+    badge.classList.remove('active');
   }
 });
 
@@ -2863,6 +2847,11 @@ function toggleProximity(on) {
   proximityOn = on;
   document.getElementById('proxRadiusWrap').style.display = on ? 'flex' : 'none';
   drawProximity();
+}
+
+function toggleAdaFilter(on) {
+  adaFilterOn = on;
+  applyFilters();
 }
 
 function updateProxRadius(val) {
@@ -3319,10 +3308,17 @@ function buildCustPopup(d) {
 function toggleAccountListOverlay() {
   accountListOpen = !accountListOpen;
   const overlay = document.getElementById('alOverlay');
-  const trigger = document.getElementById('alTrigger');
+  const badge = document.getElementById('countBadge');
   if (overlay) overlay.classList.toggle('open', accountListOpen);
-  if (trigger) trigger.classList.toggle('active', accountListOpen);
-  // Render if opening for the first time or after filter changes
+  if (badge) badge.classList.toggle('active', accountListOpen);
+  // Close action dashboard if open
+  if (accountListOpen && actionDashboardOpen) {
+    actionDashboardOpen = false;
+    const adOverlay = document.getElementById('adOverlay');
+    const adTrigger = document.getElementById('adTrigger');
+    if (adOverlay) adOverlay.classList.remove('open');
+    if (adTrigger) adTrigger.classList.remove('active');
+  }
   if (accountListOpen) renderAccountList();
 }
 
@@ -3343,7 +3339,16 @@ function getAccountListDefaultSort() {
 }
 
 function setAccountListSort(sortKey) {
-  accountListSort = sortKey;
+  // If clicking the same base sort, toggle direction
+  const baseKey = sortKey.replace(/_(?:asc|desc)$/, '');
+  const currentBase = accountListSort.replace(/_(?:asc|desc)$/, '');
+  if (baseKey === currentBase) {
+    // Flip direction
+    if (accountListSort.endsWith('_desc')) accountListSort = baseKey + '_asc';
+    else accountListSort = baseKey + '_desc';
+  } else {
+    accountListSort = sortKey;
+  }
   renderAccountList();
 }
 
@@ -3474,7 +3479,7 @@ function renderAccountList() {
   const body = document.getElementById('accountListBody');
   const countEl = document.getElementById('accountListCount');
   const sortBar = document.getElementById('accountListSortBar');
-  const triggerCount = document.getElementById('alTriggerCount');
+  // Count badge is updated by updateCountBadge, no separate trigger
 
   // Build unified list of items to show
   let items = [];
@@ -3500,7 +3505,6 @@ function renderAccountList() {
   // Total counts
   const totalCount = (showStrat ? STRATEGIC_DATA.length : 0) + (showCust ? CUSTOMER_DATA.length : 0);
   if (countEl) countEl.textContent = `Showing ${items.length} of ${totalCount}`;
-  if (triggerCount) triggerCount.textContent = items.length;
 
   // Only render full list if overlay is open
   if (!accountListOpen) return;
@@ -3526,8 +3530,11 @@ function renderAccountList() {
   sortOptions.push({ key: 'last_activity_desc', label: 'Activity' });
 
   sortOptions.forEach(opt => {
-    const isActive = accountListSort === opt.key;
-    sortHtml += `<button class="account-list-sort-btn ${isActive ? sortBtnClass : ''}" onclick="setAccountListSort('${opt.key}')">${opt.label}</button>`;
+    const baseKey = opt.key.replace(/_(?:asc|desc)$/, '');
+    const currentBase = accountListSort.replace(/_(?:asc|desc)$/, '');
+    const isActive = baseKey === currentBase;
+    const arrow = isActive ? (accountListSort.endsWith('_desc') ? ' ↓' : ' ↑') : '';
+    sortHtml += `<button class="account-list-sort-btn ${isActive ? sortBtnClass : ''}" onclick="setAccountListSort('${opt.key}')">${opt.label}${arrow}</button>`;
   });
 
   // Group buttons
