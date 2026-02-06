@@ -181,6 +181,51 @@ body {
   color: var(--text-muted);
 }
 
+/* Filters — collapsible wrapper */
+.filters-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+.filters-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 22px;
+  cursor: pointer;
+  user-select: none;
+  border-bottom: 1px solid var(--panel-border);
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+.filters-toggle:hover { background: rgba(255,255,255,0.03); }
+.filters-toggle-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.filters-toggle-active {
+  font-size: 9px;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--accent-strat);
+}
+.filters-toggle-chevron {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-left: auto;
+  transition: transform 0.2s;
+}
+.filters-wrap.collapsed .filters-toggle-chevron {
+  transform: rotate(-90deg);
+}
+.filters-wrap.collapsed .filters-area {
+  display: none;
+}
+
 /* Filters */
 .filters-area {
   flex: 1;
@@ -1060,20 +1105,20 @@ input[type="range"]::-webkit-slider-thumb {
 .sfdc-open-btn {
   font-size: 10px;
   font-family: inherit;
-  font-weight: 500;
+  font-weight: 600;
   padding: 5px 10px;
-  border: 1px solid var(--panel-border);
+  border: 1px solid rgba(116,185,255,0.3);
   border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--text-dim);
+  background: rgba(116,185,255,0.1);
+  color: #74b9ff;
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 6px;
   transition: all 0.15s;
 }
-.sfdc-open-btn:hover { border-color: var(--text-muted); color: var(--text); }
-.sfdc-open-btn svg { opacity: 0.6; }
+.sfdc-open-btn:hover { border-color: #74b9ff; background: rgba(116,185,255,0.18); color: #a0d2ff; }
+.sfdc-open-btn svg { opacity: 0.8; }
 .sfdc-open-btn:hover svg { opacity: 1; }
 .sfdc-badge {
   font-size: 9px;
@@ -2068,8 +2113,15 @@ input[type="range"]::-webkit-slider-thumb {
     </label>
   </div>
 
-  <div class="filters-area" id="filtersArea">
-    <!-- Filters injected by JS based on view -->
+  <div class="filters-wrap" id="filtersWrap">
+    <div class="filters-toggle" onclick="toggleFiltersPanel()">
+      <span class="filters-toggle-label">Filters</span>
+      <span class="filters-toggle-active" id="filtersActiveCount"></span>
+      <span class="filters-toggle-chevron" id="filtersChevron">&#9660;</span>
+    </div>
+    <div class="filters-area" id="filtersArea">
+      <!-- Filters injected by JS based on view -->
+    </div>
   </div>
 
   <div class="pipeline-panel" id="pipelinePanel" style="display:none;">
@@ -2423,6 +2475,16 @@ function resetFilters() {
   applyFilters();
 }
 
+function toggleFiltersPanel() {
+  document.getElementById('filtersWrap').classList.toggle('collapsed');
+}
+
+function updateFiltersActiveCount() {
+  const count = Object.keys(filters).length;
+  const el = document.getElementById('filtersActiveCount');
+  if (el) el.textContent = count > 0 ? count + ' active' : '';
+}
+
 // Track search results for zoom functionality
 let lastSearchResults = [];
 
@@ -2576,6 +2638,7 @@ function applyFilters() {
   updatePipeline();
   updateActionDashboard();
   renderAccountList();
+  updateFiltersActiveCount();
 }
 
 function zoomToSearchResult() {
