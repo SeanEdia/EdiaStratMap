@@ -638,7 +638,8 @@ input[type="range"]::-webkit-slider-thumb {
 .pipeline-stage-container { position: relative; }
 .pipeline-clickable { cursor: pointer; transition: background 0.15s; border-radius: 4px; margin: 0 -6px; padding: 5px 6px; }
 .pipeline-clickable:hover { background: rgba(255,255,255,0.05); }
-.dropdown-arrow { font-size: 8px; margin-left: 6px; opacity: 0.5; transition: transform 0.2s; }
+.dropdown-arrow { font-size: 8px; margin-left: 6px; opacity: 0.5; transition: transform 0.2s; display: inline-block; transform: rotate(-90deg); }
+.dropdown-arrow.open { transform: rotate(0deg); }
 .stage-dropdown {
   background: var(--panel-bg);
   border: 1px solid var(--panel-border);
@@ -663,6 +664,14 @@ input[type="range"]::-webkit-slider-thumb {
 .dropdown-name { color: var(--text-dim); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-right: 10px; }
 .dropdown-acv { color: var(--text); font-weight: 600; white-space: nowrap; }
 #pipelineDetail.collapsed { display: none; }
+.pipeline-chevron {
+  font-size: 10px;
+  color: var(--text-muted);
+  transition: transform 0.2s;
+}
+.pipeline-panel.pl-collapsed .pipeline-chevron {
+  transform: rotate(-90deg);
+}
 
 /* ============ ACTION DASHBOARD ============ */
 .ad-trigger-wrap {
@@ -2131,9 +2140,9 @@ input[type="range"]::-webkit-slider-thumb {
   </div>
 
   <div class="pipeline-panel" id="pipelinePanel" style="display:none;">
-    <div class="pipeline-toggle" onclick="document.getElementById('pipelineDetail').classList.toggle('collapsed')">
+    <div class="pipeline-toggle" onclick="togglePipelinePanel()">
       <span style="font-size:11px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;color:var(--text-dim);">Pipeline Summary</span>
-      <span style="font-size:10px;color:var(--text-muted);">▼</span>
+      <span class="pipeline-chevron" id="pipelineChevron">&#9660;</span>
     </div>
     <div id="pipelineDetail">
       <div id="pipelineStats"></div>
@@ -2686,6 +2695,13 @@ function zoomToSearchResult() {
   }, 300);
 }
 
+function togglePipelinePanel() {
+  const panel = document.getElementById('pipelinePanel');
+  const detail = document.getElementById('pipelineDetail');
+  detail.classList.toggle('collapsed');
+  panel.classList.toggle('pl-collapsed');
+}
+
 function updatePipeline() {
   const panel = document.getElementById('pipelinePanel');
   const stats = document.getElementById('pipelineStats');
@@ -2740,13 +2756,13 @@ function toggleStageDropdown(stageId) {
     document.querySelectorAll('.stage-dropdown').forEach(d => {
       d.style.display = 'none';
       const otherArrow = d.previousElementSibling.querySelector('.dropdown-arrow');
-      if (otherArrow) otherArrow.textContent = '▼';
+      if (otherArrow) otherArrow.classList.remove('open');
     });
     dropdown.style.display = 'block';
-    if (arrow) arrow.textContent = '▲';
+    if (arrow) arrow.classList.add('open');
   } else {
     dropdown.style.display = 'none';
-    if (arrow) arrow.textContent = '▼';
+    if (arrow) arrow.classList.remove('open');
   }
 }
 
