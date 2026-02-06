@@ -1048,30 +1048,82 @@ input[type="range"]::-webkit-slider-thumb {
 }
 .notes-btn:hover { border-color: var(--text-muted); color: var(--text); }
 
-/* SFDC Refresh Panel */
-.sfdc-panel {
-  padding: 14px 18px;
+/* SFDC Refresh — compact button + modal */
+.sfdc-compact {
+  padding: 8px 18px;
   border-top: 1px solid var(--panel-border);
-}
-.sfdc-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 10px;
+  justify-content: space-between;
+  gap: 8px;
 }
-.sfdc-title {
+.sfdc-open-btn {
   font-size: 10px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
+  font-family: inherit;
+  font-weight: 500;
+  padding: 5px 10px;
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-sm);
+  background: transparent;
   color: var(--text-dim);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s;
 }
+.sfdc-open-btn:hover { border-color: var(--text-muted); color: var(--text); }
+.sfdc-open-btn svg { opacity: 0.6; }
+.sfdc-open-btn:hover svg { opacity: 1; }
 .sfdc-badge {
   font-size: 9px;
   padding: 2px 6px;
   border-radius: 10px;
   background: var(--surface);
   color: var(--text-muted);
+}
+/* SFDC Modal */
+.sfdc-modal-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 10000;
+  align-items: center;
+  justify-content: center;
+}
+.sfdc-modal-backdrop.open { display: flex; }
+.sfdc-modal-content {
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius);
+  width: 380px;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.5);
+  animation: alSlideIn 0.2s ease-out;
+}
+.sfdc-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid var(--panel-border);
+}
+.sfdc-modal-header h3 {
+  font-size: 14px;
+  font-weight: 600;
+}
+.sfdc-modal-close {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 20px;
+  padding: 0 4px;
+  line-height: 1;
+}
+.sfdc-modal-close:hover { color: var(--text); }
+.sfdc-modal-body {
+  padding: 16px 20px 20px;
 }
 .sfdc-dropzone {
   border: 2px dashed var(--panel-border);
@@ -2030,24 +2082,13 @@ input[type="range"]::-webkit-slider-thumb {
     </div>
   </div>
 
-  <!-- SFDC Refresh Panel -->
-  <div class="sfdc-panel">
-    <div class="sfdc-header">
-      <span class="sfdc-title">SFDC Data Refresh</span>
-      <span class="sfdc-badge" id="sfdcLastRefresh">Never refreshed</span>
-    </div>
-    <div class="sfdc-type-btns">
-      <button class="sfdc-type-btn active-strat" id="sfdcTypeStrat" onclick="setSfdcType('strategic')">Strategic</button>
-      <button class="sfdc-type-btn" id="sfdcTypeCust" onclick="setSfdcType('customers')">Customers</button>
-    </div>
-    <div class="sfdc-dropzone" id="sfdcDropzone" onclick="document.getElementById('sfdcFileInput').click()">
-      <div class="sfdc-dropzone-icon">📄</div>
-      <div class="sfdc-dropzone-text">
-        Drag CSV here or <strong>browse</strong>
-      </div>
-      <div class="sfdc-dropzone-hint">Notes & local data preserved during merge</div>
-      <input type="file" id="sfdcFileInput" accept=".csv" style="display:none" onchange="handleSfdcFile(event)">
-    </div>
+  <!-- SFDC Refresh — compact button -->
+  <div class="sfdc-compact">
+    <button class="sfdc-open-btn" onclick="openSfdcModal()">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      SFDC Data Refresh
+    </button>
+    <span class="sfdc-badge" id="sfdcLastRefresh">Never refreshed</span>
   </div>
 
   <div class="notes-mgmt">
@@ -2089,6 +2130,30 @@ input[type="range"]::-webkit-slider-thumb {
     <div class="merge-modal-footer">
       <button class="merge-btn merge-btn-cancel" onclick="closeMergeModal()">Cancel</button>
       <button class="merge-btn merge-btn-confirm" onclick="confirmMerge()">Apply Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- SFDC Refresh Modal -->
+<div class="sfdc-modal-backdrop" id="sfdcModal" onclick="if(event.target===this)closeSfdcModal()">
+  <div class="sfdc-modal-content">
+    <div class="sfdc-modal-header">
+      <h3>SFDC Data Refresh</h3>
+      <button class="sfdc-modal-close" onclick="closeSfdcModal()">&times;</button>
+    </div>
+    <div class="sfdc-modal-body">
+      <div class="sfdc-type-btns">
+        <button class="sfdc-type-btn active-strat" id="sfdcTypeStrat" onclick="setSfdcType('strategic')">Strategic</button>
+        <button class="sfdc-type-btn" id="sfdcTypeCust" onclick="setSfdcType('customers')">Customers</button>
+      </div>
+      <div class="sfdc-dropzone" id="sfdcDropzone" onclick="document.getElementById('sfdcFileInput').click()">
+        <div class="sfdc-dropzone-icon">📄</div>
+        <div class="sfdc-dropzone-text">
+          Drag CSV here or <strong>browse</strong>
+        </div>
+        <div class="sfdc-dropzone-hint">Notes & local data preserved during merge</div>
+        <input type="file" id="sfdcFileInput" accept=".csv" style="display:none" onchange="handleSfdcFile(event)">
+      </div>
     </div>
   </div>
 </div>
@@ -4315,6 +4380,13 @@ function showMeetingPrepToast() {
 let sfdcDataType = 'strategic';
 let pendingMergeData = null;
 let pendingMergeStats = null;
+
+function openSfdcModal() {
+  document.getElementById('sfdcModal').classList.add('open');
+}
+function closeSfdcModal() {
+  document.getElementById('sfdcModal').classList.remove('open');
+}
 
 function setSfdcType(type) {
   sfdcDataType = type;
