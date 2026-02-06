@@ -183,9 +183,10 @@ body {
 
 /* Filters */
 .filters-area {
-  flex: 1;
   overflow-y: auto;
   padding: 14px 22px 20px;
+  flex-shrink: 0;
+  max-height: 40vh;
 }
 
 .filters-area::-webkit-scrollbar { width: 4px; }
@@ -1697,6 +1698,239 @@ input[type="range"]::-webkit-slider-thumb {
   color: var(--text);
 }
 
+/* ============ ACCOUNT LIST PANEL ============ */
+.account-list-panel {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--panel-border);
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+.account-list-panel.collapsed .account-list-body,
+.account-list-panel.collapsed .account-list-sort-bar {
+  display: none;
+}
+.account-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 18px;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s;
+}
+.account-list-header:hover { background: rgba(255,255,255,0.03); }
+.account-list-title {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text-dim);
+}
+.account-list-count {
+  font-size: 10px;
+  color: var(--text-muted);
+  font-family: 'JetBrains Mono', monospace;
+}
+.account-list-chevron {
+  font-size: 10px;
+  color: var(--text-muted);
+  transition: transform 0.2s;
+  margin-left: 8px;
+}
+.account-list-panel.collapsed .account-list-chevron {
+  transform: rotate(-90deg);
+}
+.account-list-sort-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 18px 8px;
+  flex-wrap: wrap;
+}
+.account-list-sort-label {
+  font-size: 9px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+}
+.account-list-sort-btn {
+  font-size: 9px;
+  font-family: inherit;
+  padding: 2px 7px;
+  border: 1px solid var(--panel-border);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.account-list-sort-btn:hover { border-color: var(--text-muted); color: var(--text-dim); }
+.account-list-sort-btn.active { border-color: var(--accent-strat); color: var(--accent-strat); background: rgba(108,92,231,0.1); }
+.account-list-sort-btn.active-cust { border-color: var(--accent-cust); color: var(--accent-cust); background: rgba(0,184,148,0.1); }
+.account-list-group-btn {
+  font-size: 9px;
+  font-family: inherit;
+  padding: 2px 7px;
+  border: 1px solid var(--panel-border);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s;
+  margin-left: auto;
+  white-space: nowrap;
+}
+.account-list-group-btn:hover { border-color: var(--text-muted); color: var(--text-dim); }
+.account-list-group-btn.active { border-color: var(--accent-strat); color: var(--accent-strat); background: rgba(108,92,231,0.1); }
+.account-list-body {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+.account-list-body::-webkit-scrollbar { width: 4px; }
+.account-list-body::-webkit-scrollbar-track { background: transparent; }
+.account-list-body::-webkit-scrollbar-thumb { background: var(--panel-border); border-radius: 2px; }
+
+/* Group headers */
+.account-list-group-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 18px 4px;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s;
+}
+.account-list-group-header:hover { background: rgba(255,255,255,0.03); }
+.account-list-group-chevron {
+  font-size: 8px;
+  color: var(--text-muted);
+  transition: transform 0.2s;
+}
+.account-list-group-header.collapsed .account-list-group-chevron {
+  transform: rotate(-90deg);
+}
+.account-list-group-name {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-dim);
+}
+.account-list-group-count {
+  font-size: 9px;
+  color: var(--text-muted);
+  font-family: 'JetBrains Mono', monospace;
+}
+.account-list-group-items.collapsed-group { display: none; }
+
+/* Individual rows */
+.account-list-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 18px;
+  cursor: pointer;
+  transition: background 0.15s;
+  min-height: 40px;
+}
+.account-list-item:hover {
+  background: var(--surface);
+}
+.account-list-item.highlighted {
+  background: rgba(108,92,231,0.12);
+}
+.al-stage-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.al-stage-dot.stage-none { background: #6c5ce7; box-shadow: 0 0 4px rgba(108,92,231,0.4); }
+.al-stage-dot.stage-discovery { background: #fdcb6e; box-shadow: 0 0 4px rgba(253,203,110,0.4); }
+.al-stage-dot.stage-demo { background: #74b9ff; box-shadow: 0 0 4px rgba(116,185,255,0.4); }
+.al-stage-dot.stage-scoping { background: #e17055; box-shadow: 0 0 4px rgba(225,112,85,0.4); }
+.al-stage-dot.stage-validation { background: #55efc4; box-shadow: 0 0 4px rgba(85,239,196,0.4); }
+.al-stage-dot.stage-customer { background: #00b894; box-shadow: 0 0 4px rgba(0,184,148,0.4); }
+.al-name {
+  flex: 1;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+.al-state-badge {
+  font-size: 9px;
+  font-weight: 600;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: var(--surface);
+  color: var(--text-dim);
+  flex-shrink: 0;
+  letter-spacing: 0.3px;
+}
+.al-enrollment {
+  font-size: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--text-dim);
+  flex-shrink: 0;
+  text-align: right;
+  min-width: 42px;
+}
+.al-acv {
+  font-size: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--accent-cust);
+  font-weight: 500;
+  flex-shrink: 0;
+  text-align: right;
+  min-width: 40px;
+}
+.al-arr {
+  font-size: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--accent-cust);
+  font-weight: 500;
+  flex-shrink: 0;
+  text-align: right;
+  min-width: 40px;
+}
+.al-expand-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 2px;
+  font-size: 10px;
+  opacity: 0;
+  transition: opacity 0.15s;
+  flex-shrink: 0;
+}
+.account-list-item:hover .al-expand-btn { opacity: 1; }
+.al-expand-btn:hover { color: var(--text); }
+
+/* Empty state */
+.account-list-empty {
+  padding: 20px 18px;
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* Marker highlight effect on hover */
+.marker-highlight {
+  animation: markerPulse 0.6s ease-in-out infinite alternate;
+}
+@keyframes markerPulse {
+  from { transform: scale(1); filter: brightness(1); }
+  to { transform: scale(1.8); filter: brightness(1.4); }
+}
+
 </style>
 </head>
 <body>
@@ -1755,6 +1989,19 @@ input[type="range"]::-webkit-slider-thumb {
 
   <div class="filters-area" id="filtersArea">
     <!-- Filters injected by JS based on view -->
+  </div>
+
+  <!-- ACCOUNT LIST PANEL -->
+  <div class="account-list-panel" id="accountListPanel">
+    <div class="account-list-header" onclick="toggleAccountList()">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span class="account-list-title">Account List</span>
+        <span class="account-list-count" id="accountListCount"></span>
+      </div>
+      <span class="account-list-chevron" id="accountListChevron">&#9660;</span>
+    </div>
+    <div class="account-list-sort-bar" id="accountListSortBar"></div>
+    <div class="account-list-body" id="accountListBody"></div>
   </div>
 
   <div class="pipeline-panel" id="pipelinePanel" style="display:none;">
@@ -1894,6 +2141,15 @@ let map;
 let stratLayer, custLayer, proxLayer;
 let filters = {};
 let proximityOn = false;
+
+// Account list state
+let markerLookup = {};          // name -> { marker, data, type }
+let filteredStratData = [];     // current filtered strategic data
+let filteredCustData = [];      // current filtered customer data
+let accountListSort = 'enrollment_desc';
+let accountListGroupBy = null;  // null | 'state' | 'stage'
+let accountListCollapsed = false;
+let collapsedGroups = {};       // track collapsed group headers
 let PROXIMITY_MILES = 50;
 
 // ============ INIT ============
@@ -1964,6 +2220,9 @@ function setView(view) {
   });
   filters = {};
   document.getElementById('searchInput').value = '';
+  accountListSort = (view === 'customers') ? 'arr_desc' : 'enrollment_desc';
+  accountListGroupBy = null;
+  collapsedGroups = {};
   renderFilters();
   applyFilters();
 }
@@ -2079,6 +2338,9 @@ function applyFilters() {
   let stratCount = 0, custCount = 0;
   let statesSet = new Set();
   lastSearchResults = []; // Reset search results
+  markerLookup = {};            // Reset marker lookup
+  filteredStratData = [];       // Reset filtered data
+  filteredCustData = [];
 
   // Strategic accounts
   if (currentView === 'strategic' || currentView === 'all') {
@@ -2120,6 +2382,7 @@ function applyFilters() {
       const marker = L.marker([d.lat, d.lng], { icon }).addTo(stratLayer);
       marker.bindPopup(buildStratPopup(d), { maxWidth: 320 });
       statesSet.add(d.state);
+      markerLookup[d.name] = { marker, data: d, type: 'strategic' };
 
       // Track for search zoom functionality
       if (search) {
@@ -2127,6 +2390,7 @@ function applyFilters() {
       }
     });
     stratCount = filtered.length;
+    filteredStratData = filtered;
   }
 
   // Active customers
@@ -2153,6 +2417,9 @@ function applyFilters() {
       const marker = L.marker([d.lat, d.lng], { icon }).addTo(custLayer);
       marker.bindPopup(buildCustPopup(d), { maxWidth: 320 });
       statesSet.add(d.state);
+      if (!markerLookup[d.name]) {
+        markerLookup[d.name] = { marker, data: d, type: 'customer' };
+      }
 
       // Track for search zoom functionality
       if (search) {
@@ -2160,6 +2427,7 @@ function applyFilters() {
       }
     });
     custCount = filtered.length;
+    filteredCustData = filtered;
   }
 
   // Update stats - context-aware
@@ -2208,6 +2476,7 @@ function applyFilters() {
   updateLegend();
   updatePipeline();
   updateActionDashboard();
+  renderAccountList();
 }
 
 function zoomToSearchResult() {
@@ -2979,6 +3248,291 @@ function buildCustPopup(d) {
   if (d.last_activity) html += `<div class="popup-row"><span class="pk">Last Activity</span><span class="pv">${d.last_activity}</span></div>`;
 
   html += `</div>`;
+  return html;
+}
+
+// ============ ACCOUNT LIST ============
+function toggleAccountList() {
+  accountListCollapsed = !accountListCollapsed;
+  const panel = document.getElementById('accountListPanel');
+  if (accountListCollapsed) panel.classList.add('collapsed');
+  else panel.classList.remove('collapsed');
+}
+
+function getStageInfo(d) {
+  if (d.opp_stage) {
+    if (d.opp_stage.startsWith('1')) return { cls: 'stage-discovery', label: 'Discovery', order: 1 };
+    if (d.opp_stage.startsWith('2')) return { cls: 'stage-demo', label: 'Demo', order: 2 };
+    if (d.opp_stage.startsWith('3')) return { cls: 'stage-scoping', label: 'Scoping', order: 3 };
+    if (d.opp_stage.startsWith('5')) return { cls: 'stage-validation', label: 'Validation', order: 4 };
+    return { cls: 'stage-none', label: 'Opp', order: 0 };
+  }
+  return { cls: 'stage-none', label: 'No Opp', order: 0 };
+}
+
+function getAccountListDefaultSort() {
+  if (currentView === 'customers') return 'arr_desc';
+  return 'enrollment_desc';
+}
+
+function setAccountListSort(sortKey) {
+  accountListSort = sortKey;
+  renderAccountList();
+}
+
+function toggleAccountListGroup(groupBy) {
+  if (accountListGroupBy === groupBy) accountListGroupBy = null;
+  else accountListGroupBy = groupBy;
+  collapsedGroups = {};
+  renderAccountList();
+}
+
+function toggleGroupCollapse(groupKey) {
+  collapsedGroups[groupKey] = !collapsedGroups[groupKey];
+  const items = document.getElementById('alg-items-' + groupKey.replace(/[^a-zA-Z0-9]/g, '_'));
+  const header = document.getElementById('alg-header-' + groupKey.replace(/[^a-zA-Z0-9]/g, '_'));
+  if (items) items.classList.toggle('collapsed-group');
+  if (header) header.classList.toggle('collapsed');
+}
+
+function sortAccountListData(items) {
+  const sort = accountListSort;
+  return items.slice().sort((a, b) => {
+    switch (sort) {
+      case 'name_asc': return (a.name || '').localeCompare(b.name || '');
+      case 'name_desc': return (b.name || '').localeCompare(a.name || '');
+      case 'enrollment_desc': return (parseInt(b.enrollment || b.students || 0)) - (parseInt(a.enrollment || a.students || 0));
+      case 'enrollment_asc': return (parseInt(a.enrollment || a.students || 0)) - (parseInt(b.enrollment || b.students || 0));
+      case 'acv_desc': return (Number(b.opp_acv || 0)) - (Number(a.opp_acv || 0));
+      case 'acv_asc': return (Number(a.opp_acv || 0)) - (Number(b.opp_acv || 0));
+      case 'arr_desc': return (parseFloat(b.arr || 0)) - (parseFloat(a.arr || 0));
+      case 'arr_asc': return (parseFloat(a.arr || 0)) - (parseFloat(b.arr || 0));
+      case 'stage_asc': return getStageInfo(a).order - getStageInfo(b).order;
+      case 'stage_desc': return getStageInfo(b).order - getStageInfo(a).order;
+      case 'state_asc': return (a.state || '').localeCompare(b.state || '');
+      case 'state_desc': return (b.state || '').localeCompare(a.state || '');
+      case 'last_activity_desc': {
+        const da = parseActivityDate(a.opp_last_activity || a.last_activity);
+        const db = parseActivityDate(b.opp_last_activity || b.last_activity);
+        return db - da;
+      }
+      case 'last_activity_asc': {
+        const da = parseActivityDate(a.opp_last_activity || a.last_activity);
+        const db = parseActivityDate(b.opp_last_activity || b.last_activity);
+        return da - db;
+      }
+      default: return 0;
+    }
+  });
+}
+
+function parseActivityDate(str) {
+  if (!str) return 0;
+  const d = new Date(str);
+  return isNaN(d.getTime()) ? 0 : d.getTime();
+}
+
+function formatCompactNumber(n) {
+  if (n >= 1000000) return (n / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+  if (n >= 1000) return (n / 1000).toFixed(0) + 'k';
+  return String(n);
+}
+
+function buildAccountListRow(d, type) {
+  const isStrat = type === 'strategic';
+  const stage = isStrat ? getStageInfo(d) : { cls: 'stage-customer', label: 'Customer', order: 99 };
+  const enrollment = parseInt(isStrat ? d.enrollment : d.students) || 0;
+  const acv = isStrat ? (Number(d.opp_acv) || 0) : 0;
+  const arr = !isStrat ? (parseFloat(d.arr) || 0) : 0;
+  const districtKey = d.name.replace(/[^a-zA-Z0-9]/g, '_');
+
+  let moneyHtml = '';
+  if (isStrat && acv > 0) {
+    moneyHtml = `<span class="al-acv">$${formatCompactNumber(acv)}</span>`;
+  } else if (!isStrat && arr > 0) {
+    moneyHtml = `<span class="al-arr">$${formatCompactNumber(arr)}</span>`;
+  }
+
+  return `<div class="account-list-item" data-name="${d.name.replace(/"/g, '&quot;')}" data-key="${districtKey}"
+    onmouseenter="highlightAccountMarker('${d.name.replace(/'/g, "\\'")}')"
+    onmouseleave="unhighlightAccountMarker('${d.name.replace(/'/g, "\\'")}')"
+    onclick="flyToAccount('${d.name.replace(/'/g, "\\'")}')"
+    ondblclick="openAccountFromList('${districtKey}')">
+    <span class="al-stage-dot ${stage.cls}" title="${stage.label}"></span>
+    <span class="al-name" title="${d.name}">${d.name}</span>
+    <span class="al-state-badge">${d.state || ''}</span>
+    <span class="al-enrollment">${enrollment > 0 ? formatCompactNumber(enrollment) : ''}</span>
+    ${moneyHtml}
+    <button class="al-expand-btn" onclick="event.stopPropagation();openAccountFromList('${districtKey}')" title="Open full view">&#x2197;</button>
+  </div>`;
+}
+
+function highlightAccountMarker(name) {
+  const entry = markerLookup[name];
+  if (!entry || !entry.marker) return;
+  const el = entry.marker.getElement();
+  if (el) el.classList.add('marker-highlight');
+}
+
+function unhighlightAccountMarker(name) {
+  const entry = markerLookup[name];
+  if (!entry || !entry.marker) return;
+  const el = entry.marker.getElement();
+  if (el) el.classList.remove('marker-highlight');
+}
+
+function flyToAccount(name) {
+  const entry = markerLookup[name];
+  if (!entry || !entry.marker) return;
+  const latLng = entry.marker.getLatLng();
+  map.flyTo(latLng, 10, { duration: 0.6 });
+  setTimeout(() => {
+    entry.marker.openPopup();
+  }, 400);
+}
+
+function openAccountFromList(districtKey) {
+  let d = window.districtDataCache && window.districtDataCache[districtKey];
+  if (!d) {
+    // Fallback: search by key
+    const name = Object.keys(markerLookup).find(n => n.replace(/[^a-zA-Z0-9]/g, '_') === districtKey);
+    if (name && markerLookup[name]) d = markerLookup[name].data;
+  }
+  if (d) {
+    openAccountModalWithData(d);
+  }
+}
+
+function renderAccountList() {
+  const panel = document.getElementById('accountListPanel');
+  const body = document.getElementById('accountListBody');
+  const countEl = document.getElementById('accountListCount');
+  const sortBar = document.getElementById('accountListSortBar');
+
+  // Build unified list of items to show
+  let items = [];
+  const showStrat = currentView === 'strategic' || currentView === 'all';
+  const showCust = currentView === 'customers' || currentView === 'all';
+
+  if (showStrat) {
+    filteredStratData.forEach(d => {
+      if (d.lat && d.lng) items.push({ data: d, type: 'strategic' });
+    });
+  }
+  if (showCust) {
+    filteredCustData.forEach(d => {
+      if (d.lat && d.lng) {
+        // Avoid duplicates if already in strategic
+        if (!showStrat || !markerLookup[d.name] || markerLookup[d.name].type !== 'strategic') {
+          items.push({ data: d, type: 'customer' });
+        }
+      }
+    });
+  }
+
+  // Total counts
+  const totalCount = (showStrat ? STRATEGIC_DATA.length : 0) + (showCust ? CUSTOMER_DATA.length : 0);
+  countEl.textContent = `${items.length} of ${totalCount}`;
+
+  // Render sort bar
+  const isCust = currentView === 'customers';
+  const sortBtnClass = isCust ? 'active-cust' : 'active';
+  let sortHtml = `<span class="account-list-sort-label">Sort</span>`;
+
+  const sortOptions = [
+    { key: 'name_asc', label: 'Name' },
+    { key: 'enrollment_desc', label: 'Enrollment' },
+  ];
+
+  if (showStrat && currentView !== 'customers') {
+    sortOptions.push({ key: 'acv_desc', label: 'ACV' });
+    sortOptions.push({ key: 'stage_asc', label: 'Stage' });
+  }
+  if (showCust) {
+    sortOptions.push({ key: 'arr_desc', label: 'ARR' });
+  }
+  sortOptions.push({ key: 'state_asc', label: 'State' });
+  sortOptions.push({ key: 'last_activity_desc', label: 'Activity' });
+
+  sortOptions.forEach(opt => {
+    const isActive = accountListSort === opt.key;
+    sortHtml += `<button class="account-list-sort-btn ${isActive ? sortBtnClass : ''}" onclick="setAccountListSort('${opt.key}')">${opt.label}</button>`;
+  });
+
+  // Group buttons
+  sortHtml += `<button class="account-list-group-btn ${accountListGroupBy === 'state' ? 'active' : ''}" onclick="toggleAccountListGroup('state')">Group: State</button>`;
+  if (showStrat && currentView !== 'customers') {
+    sortHtml += `<button class="account-list-group-btn ${accountListGroupBy === 'stage' ? 'active' : ''}" onclick="toggleAccountListGroup('stage')">Group: Stage</button>`;
+  }
+
+  sortBar.innerHTML = sortHtml;
+
+  // Sort items
+  const sortedData = sortAccountListData(items.map(i => i.data));
+  const itemTypeMap = {};
+  items.forEach(i => { itemTypeMap[i.data.name] = i.type; });
+
+  // Render body
+  if (sortedData.length === 0) {
+    body.innerHTML = '<div class="account-list-empty">No accounts match current filters</div>';
+    return;
+  }
+
+  if (accountListGroupBy) {
+    body.innerHTML = renderGroupedList(sortedData, itemTypeMap);
+  } else {
+    let html = '';
+    sortedData.forEach(d => {
+      html += buildAccountListRow(d, itemTypeMap[d.name] || 'strategic');
+    });
+    body.innerHTML = html;
+  }
+}
+
+function renderGroupedList(sortedData, itemTypeMap) {
+  const groups = {};
+  const groupOrder = [];
+
+  sortedData.forEach(d => {
+    let groupKey;
+    if (accountListGroupBy === 'state') {
+      groupKey = d.state || 'Unknown';
+    } else if (accountListGroupBy === 'stage') {
+      const type = itemTypeMap[d.name];
+      if (type === 'customer') {
+        groupKey = 'Customer';
+      } else {
+        groupKey = getStageInfo(d).label;
+      }
+    } else {
+      groupKey = 'All';
+    }
+
+    if (!groups[groupKey]) {
+      groups[groupKey] = [];
+      groupOrder.push(groupKey);
+    }
+    groups[groupKey].push(d);
+  });
+
+  let html = '';
+  groupOrder.forEach(key => {
+    const items = groups[key];
+    const safeKey = key.replace(/[^a-zA-Z0-9]/g, '_');
+    const isCollapsed = collapsedGroups[key];
+
+    html += `<div class="account-list-group-header ${isCollapsed ? 'collapsed' : ''}" id="alg-header-${safeKey}" onclick="toggleGroupCollapse('${key.replace(/'/g, "\\'")}')">
+      <span class="account-list-group-chevron">&#9660;</span>
+      <span class="account-list-group-name">${key}</span>
+      <span class="account-list-group-count">(${items.length})</span>
+    </div>`;
+    html += `<div class="account-list-group-items ${isCollapsed ? 'collapsed-group' : ''}" id="alg-items-${safeKey}">`;
+    items.forEach(d => {
+      html += buildAccountListRow(d, itemTypeMap[d.name] || 'strategic');
+    });
+    html += `</div>`;
+  });
+
   return html;
 }
 
