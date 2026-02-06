@@ -1830,7 +1830,7 @@ input[type="range"]::-webkit-slider-thumb {
   position: absolute;
   top: 56px;
   right: 16px;
-  width: 400px;
+  width: 460px;
   max-height: calc(100vh - 90px);
   background: var(--panel);
   border: 1px solid var(--panel-border);
@@ -1950,16 +1950,17 @@ input[type="range"]::-webkit-slider-thumb {
   transform: rotate(-90deg);
 }
 .account-list-group-name {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
-  color: var(--text-dim);
+  color: var(--text);
 }
 .account-list-group-count {
-  font-size: 9px;
+  font-size: 10px;
   color: var(--text-muted);
   font-family: 'JetBrains Mono', monospace;
 }
 .account-list-group-items.collapsed-group { display: none; }
+.account-list-group-items > .account-list-item { padding-left: 28px; }
 
 /* Individual rows */
 .account-list-item {
@@ -1989,6 +1990,19 @@ input[type="range"]::-webkit-slider-thumb {
 .al-stage-dot.stage-scoping { background: #e17055; box-shadow: 0 0 4px rgba(225,112,85,0.4); }
 .al-stage-dot.stage-validation { background: #55efc4; box-shadow: 0 0 4px rgba(85,239,196,0.4); }
 .al-stage-dot.stage-customer { background: #00b894; box-shadow: 0 0 4px rgba(0,184,148,0.4); }
+.al-stage-label {
+  font-size: 9px;
+  font-weight: 500;
+  color: var(--text-dim);
+  flex-shrink: 0;
+  min-width: 52px;
+}
+.al-stage-label.stage-discovery { color: #fdcb6e; }
+.al-stage-label.stage-demo { color: #74b9ff; }
+.al-stage-label.stage-scoping { color: #e17055; }
+.al-stage-label.stage-validation { color: #55efc4; }
+.al-stage-label.stage-customer { color: #00b894; }
+.al-stage-label.stage-none { color: var(--text-muted); }
 .al-name {
   flex: 1;
   font-size: 11px;
@@ -2311,6 +2325,7 @@ let filteredCustData = [];      // current filtered customer data
 let accountListSort = 'enrollment_desc';
 let accountListGroupBy = null;  // null | 'state' | 'stage'
 let accountListOpen = false;
+let accountListAutoOpened = false; // tracks if overlay was auto-opened by filtering
 let collapsedGroups = {};       // track collapsed group headers
 let PROXIMITY_MILES = 50;
 
@@ -3457,6 +3472,7 @@ function buildCustPopup(d) {
 // ============ ACCOUNT LIST ============
 function toggleAccountListOverlay() {
   accountListOpen = !accountListOpen;
+  accountListAutoOpened = false; // manual toggle resets auto-open tracking
   const overlay = document.getElementById('alOverlay');
   const badge = document.getElementById('countBadge');
   if (overlay) overlay.classList.toggle('open', accountListOpen);
@@ -3581,6 +3597,7 @@ function buildAccountListRow(d, type) {
     onclick="flyToAccount('${d.name.replace(/'/g, "\\'")}')"
     ondblclick="openAccountFromList('${districtKey}')">
     <span class="al-stage-dot ${stage.cls}" title="${stage.label}"></span>
+    <span class="al-stage-label ${stage.cls}">${stage.label}</span>
     <span class="al-name" title="${d.name}">${d.name}</span>
     <span class="al-state-badge">${d.state || ''}</span>
     <span class="al-enrollment">${enrollment > 0 ? formatCompactNumber(enrollment) : ''}</span>
@@ -3654,7 +3671,34 @@ function renderAccountList() {
 
   // Total counts
   const totalCount = (showStrat ? STRATEGIC_DATA.length : 0) + (showCust ? CUSTOMER_DATA.length : 0);
-  if (countEl) countEl.textContent = `Showing ${items.length} of ${totalCount}`;
+  if (countEl) countEl.textContent = `Showing ${items.length} of ${totalCount} accounts`;
+
+  // Auto-open overlay when filters narrow results, auto-close when cleared
+  const hasActiveFilters = Object.keys(filters).length > 0 || (document.getElementById('searchInput') && document.getElementById('searchInput').value.trim().length > 0) || adaFilterOn;
+  if (hasActiveFilters && !accountListOpen) {
+    accountListOpen = true;
+    accountListAutoOpened = true;
+    const overlay = document.getElementById('alOverlay');
+    const badge = document.getElementById('countBadge');
+    if (overlay) overlay.classList.add('open');
+    if (badge) badge.classList.add('active');
+    // Close action dashboard if open
+    if (typeof actionDashboardOpen !== 'undefined' && actionDashboardOpen) {
+      actionDashboardOpen = false;
+      const adOverlay = document.getElementById('adOverlay');
+      const adTrigger = document.getElementById('adTrigger');
+      if (adOverlay) adOverlay.classList.remove('open');
+      if (adTrigger) adTrigger.classList.remove('active');
+    }
+  } else if (!hasActiveFilters && accountListAutoOpened && accountListOpen) {
+    accountListOpen = false;
+    accountListAutoOpened = false;
+    const overlay = document.getElementById('alOverlay');
+    const badge = document.getElementById('countBadge');
+    if (overlay) overlay.classList.remove('open');
+    if (badge) badge.classList.remove('active');
+  }
+  if (!hasActiveFilters) accountListAutoOpened = false;
 
   // Only render full list if overlay is open
   if (!accountListOpen) return;
