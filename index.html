@@ -2325,7 +2325,6 @@ let filteredCustData = [];      // current filtered customer data
 let accountListSort = 'enrollment_desc';
 let accountListGroupBy = null;  // null | 'state' | 'stage'
 let accountListOpen = false;
-let accountListAutoOpened = false; // tracks if overlay was auto-opened by filtering
 let collapsedGroups = {};       // track collapsed group headers
 let PROXIMITY_MILES = 50;
 
@@ -3472,7 +3471,6 @@ function buildCustPopup(d) {
 // ============ ACCOUNT LIST ============
 function toggleAccountListOverlay() {
   accountListOpen = !accountListOpen;
-  accountListAutoOpened = false; // manual toggle resets auto-open tracking
   const overlay = document.getElementById('alOverlay');
   const badge = document.getElementById('countBadge');
   if (overlay) overlay.classList.toggle('open', accountListOpen);
@@ -3672,33 +3670,6 @@ function renderAccountList() {
   // Total counts
   const totalCount = (showStrat ? STRATEGIC_DATA.length : 0) + (showCust ? CUSTOMER_DATA.length : 0);
   if (countEl) countEl.textContent = `Showing ${items.length} of ${totalCount} accounts`;
-
-  // Auto-open overlay when filters narrow results, auto-close when cleared
-  const hasActiveFilters = Object.keys(filters).length > 0 || (document.getElementById('searchInput') && document.getElementById('searchInput').value.trim().length > 0) || adaFilterOn;
-  if (hasActiveFilters && !accountListOpen) {
-    accountListOpen = true;
-    accountListAutoOpened = true;
-    const overlay = document.getElementById('alOverlay');
-    const badge = document.getElementById('countBadge');
-    if (overlay) overlay.classList.add('open');
-    if (badge) badge.classList.add('active');
-    // Close action dashboard if open
-    if (typeof actionDashboardOpen !== 'undefined' && actionDashboardOpen) {
-      actionDashboardOpen = false;
-      const adOverlay = document.getElementById('adOverlay');
-      const adTrigger = document.getElementById('adTrigger');
-      if (adOverlay) adOverlay.classList.remove('open');
-      if (adTrigger) adTrigger.classList.remove('active');
-    }
-  } else if (!hasActiveFilters && accountListAutoOpened && accountListOpen) {
-    accountListOpen = false;
-    accountListAutoOpened = false;
-    const overlay = document.getElementById('alOverlay');
-    const badge = document.getElementById('countBadge');
-    if (overlay) overlay.classList.remove('open');
-    if (badge) badge.classList.remove('active');
-  }
-  if (!hasActiveFilters) accountListAutoOpened = false;
 
   // Only render full list if overlay is open
   if (!accountListOpen) return;
