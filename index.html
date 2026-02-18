@@ -929,6 +929,195 @@ input[type="range"]::-webkit-slider-thumb {
   background: rgba(108,92,231,0.2);
   border-color: rgba(108,92,231,0.4);
 }
+/* Conference toggle — uses prox-toggle structure with orange accent */
+.conf-slider {}
+.prox-toggle input:checked + .conf-slider {
+  background: rgba(255,159,67,0.2);
+  border-color: rgba(255,159,67,0.4);
+}
+.prox-toggle input:checked + .conf-slider::after {
+  transform: translateX(15px);
+  background: #ff9f43;
+}
+.prox-toggle input:checked ~ .conf-label { color: #ff9f43; }
+
+/* Conference date range picker */
+.conf-options {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.conf-date-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.conf-date-row label {
+  font-size: 10px;
+  color: var(--text-muted);
+  width: 42px;
+  flex-shrink: 0;
+}
+.conf-date-input {
+  flex: 1;
+  padding: 4px 6px;
+  font-size: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  background: var(--bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 4px;
+  color: var(--text);
+  outline: none;
+}
+.conf-date-input:focus {
+  border-color: rgba(255,159,67,0.5);
+}
+.conf-quick-btns {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.conf-quick-btn {
+  font-size: 9px;
+  padding: 2px 7px;
+  border-radius: 4px;
+  border: 1px solid var(--panel-border);
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.conf-quick-btn:hover, .conf-quick-btn.active {
+  border-color: rgba(255,159,67,0.5);
+  color: #ff9f43;
+  background: rgba(255,159,67,0.08);
+}
+.conf-stats {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+.conf-stats b {
+  color: #ff9f43;
+  font-family: 'JetBrains Mono', monospace;
+}
+.conf-upload-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--panel-border);
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  margin-top: 4px;
+  transition: all 0.15s;
+}
+.conf-upload-btn:hover {
+  border-color: rgba(255,159,67,0.5);
+  color: #ff9f43;
+}
+
+/* Conference map markers */
+.marker-conf {
+  width: 20px;
+  height: 20px;
+  background: #ff9f43;
+  border: 2px solid #fff;
+  border-radius: 4px;
+  transform: rotate(45deg);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+  position: relative;
+}
+.marker-conf::after {
+  content: '★';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-45deg);
+  font-size: 9px;
+  color: #fff;
+  line-height: 1;
+}
+.marker-conf.conf-past {
+  background: #636e72;
+  border-color: #b2bec3;
+  opacity: 0.6;
+}
+
+/* Conference proximity rings */
+.conf-prox-ring {
+  stroke: #ff9f43;
+  fill: rgba(255,159,67,0.06);
+}
+
+/* Conference popup */
+.popup-conf-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.popup-conf-badge {
+  font-size: 9px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+.popup-conf-badge.upcoming {
+  background: rgba(255,159,67,0.15);
+  color: #ff9f43;
+}
+.popup-conf-badge.past {
+  background: rgba(99,110,114,0.15);
+  color: #b2bec3;
+}
+.popup-conf-badge.attending {
+  background: rgba(0,184,148,0.15);
+  color: #00b894;
+}
+.popup-conf-badge.exhibiting {
+  background: rgba(108,92,231,0.15);
+  color: #a29bfe;
+}
+.popup-conf-dates {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+.popup-conf-nearby {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
+.popup-conf-nearby-title {
+  font-size: 10px;
+  font-weight: 600;
+  color: #ff9f43;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+.popup-conf-nearby-item {
+  font-size: 11px;
+  color: var(--text-dim);
+  padding: 2px 0;
+  cursor: pointer;
+}
+.popup-conf-nearby-item:hover {
+  color: var(--text);
+}
+.popup-conf-nearby-item .conf-dist {
+  font-size: 9px;
+  color: var(--text-muted);
+  font-family: 'JetBrains Mono', monospace;
+}
 .prox-toggle input:checked + .ada-slider::after {
   transform: translateX(15px);
   background: #6c5ce7;
@@ -2405,6 +2594,39 @@ input[type="range"]::-webkit-slider-thumb {
     </label>
   </div>
 
+  <div class="prox-control" id="confControl">
+    <label class="prox-toggle">
+      <input type="checkbox" id="confCheck" onchange="toggleConferences(this.checked)">
+      <span class="prox-slider conf-slider"></span>
+      <span class="prox-label conf-label">Conferences</span>
+    </label>
+    <div id="confOptions" class="conf-options" style="display:none;">
+      <div class="conf-quick-btns">
+        <button class="conf-quick-btn active" onclick="setConfRange('30')">30d</button>
+        <button class="conf-quick-btn" onclick="setConfRange('60')">60d</button>
+        <button class="conf-quick-btn" onclick="setConfRange('90')">90d</button>
+        <button class="conf-quick-btn" onclick="setConfRange('all')">All</button>
+        <button class="conf-quick-btn" onclick="setConfRange('custom')">Custom</button>
+      </div>
+      <div id="confCustomDates" style="display:none;">
+        <div class="conf-date-row">
+          <label>From</label>
+          <input type="date" class="conf-date-input" id="confDateFrom" onchange="applyConfDateFilter()">
+        </div>
+        <div class="conf-date-row">
+          <label>To</label>
+          <input type="date" class="conf-date-input" id="confDateTo" onchange="applyConfDateFilter()">
+        </div>
+      </div>
+      <div class="conf-stats" id="confStats"></div>
+      <button class="conf-upload-btn" onclick="document.getElementById('confFileInput').click()">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Upload Conference CSV
+      </button>
+      <input type="file" id="confFileInput" accept=".csv" style="display:none" onchange="handleConfFile(event)">
+    </div>
+  </div>
+
   <div class="filters-wrap" id="filtersWrap">
     <div class="filters-toggle" onclick="toggleFiltersPanel()">
       <span class="filters-toggle-label">Filters</span>
@@ -2615,6 +2837,16 @@ let showScoreOverlays = false;  // score labels on map markers
 let scoreCache = {};            // name -> { total, enrollment, stage, staleness, proximity, acv, reason }
 let PROXIMITY_MILES = 50;
 
+// Conference state
+let CONFERENCE_DATA = [];
+let confLayer = null;
+let confProxLayer = null;
+let conferencesOn = false;
+let confRangeMode = '30'; // '30', '60', '90', 'all', 'custom'
+let confDateFrom = null;
+let confDateTo = null;
+let filteredConfData = [];
+
 // ============ INIT ============
 function initMap() {
   // Load persisted data from localStorage if available
@@ -2664,6 +2896,22 @@ function initMap() {
   stratLayer = L.layerGroup().addTo(map);
   custLayer = L.layerGroup().addTo(map);
   proxLayer = L.layerGroup().addTo(map);
+  confLayer = L.layerGroup().addTo(map);
+  confProxLayer = L.layerGroup().addTo(map);
+
+  // Load persisted conference data
+  try {
+    const savedConf = localStorage.getItem('edia_conference_data');
+    if (savedConf) {
+      const parsed = JSON.parse(savedConf);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        CONFERENCE_DATA = parsed;
+        console.log('[Persist] Loaded', CONFERENCE_DATA.length, 'conferences from localStorage');
+      }
+    }
+  } catch(e) {
+    console.error('[Persist] Failed to load conference data:', e);
+  }
 
   renderFilters();
   applyFilters();
@@ -5963,6 +6211,352 @@ function buildModalScoreBar(d) {
   }
   html += `</div></div></div>`;
   return html;
+}
+
+// ============ CONFERENCE TRACKER ============
+
+function toggleConferences(on) {
+  conferencesOn = on;
+  document.getElementById('confOptions').style.display = on ? '' : 'none';
+  renderConferences();
+}
+
+function setConfRange(mode) {
+  confRangeMode = mode;
+  // Update quick button active states
+  document.querySelectorAll('.conf-quick-btn').forEach(b => b.classList.remove('active'));
+  const btns = document.querySelectorAll('.conf-quick-btn');
+  btns.forEach(b => { if (b.textContent.toLowerCase().replace('d','') === mode || b.textContent.toLowerCase() === mode) b.classList.add('active'); });
+
+  const customDates = document.getElementById('confCustomDates');
+  if (mode === 'custom') {
+    customDates.style.display = '';
+  } else {
+    customDates.style.display = 'none';
+    confDateFrom = null;
+    confDateTo = null;
+  }
+  renderConferences();
+}
+
+function applyConfDateFilter() {
+  const fromEl = document.getElementById('confDateFrom');
+  const toEl = document.getElementById('confDateTo');
+  confDateFrom = fromEl.value ? new Date(fromEl.value + 'T00:00:00') : null;
+  confDateTo = toEl.value ? new Date(toEl.value + 'T23:59:59') : null;
+  renderConferences();
+}
+
+function getConfDateRange() {
+  const now = new Date();
+  now.setHours(0,0,0,0);
+  let from = null;
+  let to = null;
+
+  if (confRangeMode === 'custom') {
+    from = confDateFrom;
+    to = confDateTo;
+  } else if (confRangeMode === 'all') {
+    from = null;
+    to = null;
+  } else {
+    const days = parseInt(confRangeMode) || 30;
+    from = new Date(now);
+    from.setDate(from.getDate() - 7); // Show conferences from 1 week ago
+    to = new Date(now);
+    to.setDate(to.getDate() + days);
+  }
+  return { from, to };
+}
+
+function filterConferences() {
+  const { from, to } = getConfDateRange();
+
+  return CONFERENCE_DATA.filter(c => {
+    if (!c.lat || !c.lng) return false;
+    const startDate = parseConfDate(c.start_date);
+    const endDate = parseConfDate(c.end_date) || startDate;
+    if (!startDate) return false;
+
+    if (from && endDate < from) return false;
+    if (to && startDate > to) return false;
+    return true;
+  });
+}
+
+function parseConfDate(str) {
+  if (!str) return null;
+  // Handle M/D/YYYY, MM/DD/YYYY, YYYY-MM-DD
+  if (str.includes('-')) {
+    const d = new Date(str + 'T00:00:00');
+    return isNaN(d.getTime()) ? null : d;
+  }
+  const parts = str.trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
+  if (!parts) return null;
+  let year = parseInt(parts[3]);
+  if (year < 100) year += 2000;
+  const d = new Date(year, parseInt(parts[1]) - 1, parseInt(parts[2]));
+  return isNaN(d.getTime()) ? null : d;
+}
+
+function formatConfDate(dateStr) {
+  const d = parseConfDate(dateStr);
+  if (!d) return dateStr || '—';
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function isConfPast(c) {
+  const endDate = parseConfDate(c.end_date) || parseConfDate(c.start_date);
+  if (!endDate) return false;
+  const now = new Date();
+  now.setHours(0,0,0,0);
+  return endDate < now;
+}
+
+function renderConferences() {
+  confLayer.clearLayers();
+  confProxLayer.clearLayers();
+  filteredConfData = [];
+
+  if (!conferencesOn || CONFERENCE_DATA.length === 0) {
+    updateConfStats();
+    return;
+  }
+
+  filteredConfData = filterConferences();
+
+  filteredConfData.forEach(c => {
+    const past = isConfPast(c);
+    const icon = L.divIcon({
+      className: `marker-conf${past ? ' conf-past' : ''}`,
+      iconSize: [20, 20],
+      iconAnchor: [10, 10],
+    });
+
+    const marker = L.marker([c.lat, c.lng], { icon }).addTo(confLayer);
+    marker.bindPopup(buildConfPopup(c), { maxWidth: 340 });
+
+    // Draw proximity ring (100mi)
+    if (!past) {
+      const radiusMeters = 100 * 1609.34;
+      L.circle([c.lat, c.lng], {
+        radius: radiusMeters,
+        color: '#ff9f43',
+        weight: 1,
+        opacity: 0.2,
+        fillColor: '#ff9f43',
+        fillOpacity: 0.04,
+        interactive: false,
+      }).addTo(confProxLayer);
+    }
+  });
+
+  updateConfStats();
+}
+
+function updateConfStats() {
+  const statsEl = document.getElementById('confStats');
+  if (!statsEl) return;
+  if (CONFERENCE_DATA.length === 0) {
+    statsEl.innerHTML = 'No conferences loaded — upload a CSV';
+    return;
+  }
+  const showing = filteredConfData.length;
+  const total = CONFERENCE_DATA.length;
+  const upcoming = filteredConfData.filter(c => !isConfPast(c)).length;
+  let nearbyAccounts = 0;
+  filteredConfData.forEach(c => {
+    if (isConfPast(c)) return;
+    nearbyAccounts += countNearbyStrategic(c, 100);
+  });
+  statsEl.innerHTML = `<b>${showing}</b> of ${total} conferences · <b>${upcoming}</b> upcoming · <b>${nearbyAccounts}</b> strategic accounts nearby`;
+}
+
+function countNearbyStrategic(conf, radiusMiles) {
+  let count = 0;
+  STRATEGIC_DATA.forEach(s => {
+    if (!s.lat || !s.lng) return;
+    if (haversine(conf.lat, conf.lng, s.lat, s.lng) <= radiusMiles) count++;
+  });
+  return count;
+}
+
+function getNearbyStrategic(conf, radiusMiles) {
+  const results = [];
+  STRATEGIC_DATA.forEach(s => {
+    if (!s.lat || !s.lng) return;
+    const dist = haversine(conf.lat, conf.lng, s.lat, s.lng);
+    if (dist <= radiusMiles) {
+      results.push({ data: s, distance: dist });
+    }
+  });
+  return results.sort((a, b) => a.distance - b.distance);
+}
+
+function buildConfPopup(c) {
+  const past = isConfPast(c);
+  const statusLabel = past ? 'Past' : 'Upcoming';
+  const statusClass = past ? 'past' : 'upcoming';
+  let html = `<div class="popup-card">`;
+
+  // Header badges
+  html += `<div class="popup-conf-header">`;
+  html += `<span class="popup-conf-badge ${statusClass}">${statusLabel}</span>`;
+  if (c.status) {
+    const sClass = c.status.toLowerCase() === 'exhibiting' ? 'exhibiting' : c.status.toLowerCase() === 'attending' ? 'attending' : 'upcoming';
+    html += `<span class="popup-conf-badge ${sClass}">${c.status}</span>`;
+  }
+  html += `</div>`;
+
+  html += `<h3 style="margin-bottom:6px;">${c.name || 'Conference'}</h3>`;
+
+  // Dates
+  const startFmt = formatConfDate(c.start_date);
+  const endFmt = formatConfDate(c.end_date);
+  if (c.start_date && c.end_date) {
+    html += `<div class="popup-conf-dates">${startFmt} — ${endFmt}</div>`;
+  } else if (c.start_date) {
+    html += `<div class="popup-conf-dates">${startFmt}</div>`;
+  }
+
+  // Details
+  const rows = [
+    ['Location', [c.city, c.state].filter(Boolean).join(', ')],
+    ['Type/Focus', c.type],
+    ['Expected Attendees', c.attendees],
+    ['Cost/Budget', c.cost],
+    ['Edia Contacts', c.edia_contacts],
+    ['Notes', c.notes],
+  ];
+  rows.forEach(([k, v]) => {
+    if (v) html += `<div class="popup-row"><span class="pk">${k}</span><span class="pv">${v}</span></div>`;
+  });
+
+  if (c.registration_url) {
+    html += `<div style="margin-top:6px;"><a href="${c.registration_url}" target="_blank" style="color:#ff9f43;text-decoration:none;font-size:11px;">🔗 Registration</a></div>`;
+  }
+
+  // Nearby strategic accounts
+  if (!past) {
+    const nearby = getNearbyStrategic(c, 100);
+    if (nearby.length > 0) {
+      html += `<div class="popup-conf-nearby">`;
+      html += `<div class="popup-conf-nearby-title">${nearby.length} strategic accounts within 100 mi</div>`;
+      const shown = nearby.slice(0, 10);
+      shown.forEach(n => {
+        const districtKey = n.data.name.replace(/[^a-zA-Z0-9]/g, '_');
+        const distMi = Math.round(n.distance);
+        const stageLbl = n.data.opp_stage ? n.data.opp_stage.replace(/^\d+\s*-\s*/, '') : '';
+        html += `<div class="popup-conf-nearby-item" onclick="focusOnAccount('${districtKey}')">`;
+        html += `${n.data.name}`;
+        if (stageLbl) html += ` <span style="font-size:9px;color:#fdcb6e;">(${stageLbl})</span>`;
+        html += ` <span class="conf-dist">${distMi}mi</span>`;
+        html += `</div>`;
+      });
+      if (nearby.length > 10) {
+        html += `<div style="font-size:10px;color:var(--text-muted);margin-top:4px;">+ ${nearby.length - 10} more</div>`;
+      }
+      html += `</div>`;
+    }
+  }
+
+  html += `</div>`;
+  return html;
+}
+
+// ============ CONFERENCE CSV IMPORT ============
+
+function handleConfFile(event) {
+  const file = event.target.files[0];
+  if (file && file.name.endsWith('.csv')) {
+    processConfCSV(file);
+  }
+  event.target.value = '';
+}
+
+function processConfCSV(file) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    const csvText = e.target.result;
+    const parsed = parseCSV(csvText);
+    if (parsed.length === 0) {
+      alert('No data found in CSV file');
+      return;
+    }
+
+    // Map fields to conference schema
+    const conferences = parsed.map(row => {
+      const mapped = {};
+      Object.keys(row).forEach(key => {
+        const val = row[key] ? row[key].trim() : '';
+        const lk = key.toLowerCase().replace(/[^a-z0-9]/g, '_').replace(/_+/g, '_');
+        if (lk.includes('name') || lk.includes('conference') || lk.includes('event')) mapped.name = mapped.name || val;
+        else if (lk === 'city' || lk.includes('city')) mapped.city = mapped.city || val;
+        else if (lk === 'state' || lk === 'st') mapped.state = mapped.state || val;
+        else if (lk.includes('start') || lk === 'date' || lk === 'begin') mapped.start_date = mapped.start_date || val;
+        else if (lk.includes('end')) mapped.end_date = mapped.end_date || val;
+        else if (lk.includes('status') || lk.includes('attend') || lk.includes('booth')) mapped.status = mapped.status || val;
+        else if (lk.includes('type') || lk.includes('focus') || lk.includes('category')) mapped.type = mapped.type || val;
+        else if (lk.includes('attendee') || lk.includes('expected')) mapped.attendees = mapped.attendees || val;
+        else if (lk.includes('registr') || lk.includes('url') || lk.includes('link')) mapped.registration_url = mapped.registration_url || val;
+        else if (lk.includes('cost') || lk.includes('budget') || lk.includes('fee')) mapped.cost = mapped.cost || val;
+        else if (lk.includes('edia') || lk.includes('team') || lk.includes('rep')) mapped.edia_contacts = mapped.edia_contacts || val;
+        else if (lk.includes('note') || lk.includes('comment')) mapped.notes = mapped.notes || val;
+        else if (lk === 'lat' || lk === 'latitude') mapped.lat = parseFloat(val) || null;
+        else if (lk === 'lng' || lk === 'lon' || lk === 'longitude') mapped.lng = parseFloat(val) || null;
+      });
+      return mapped;
+    }).filter(c => c.name);
+
+    if (conferences.length === 0) {
+      alert('Could not find conference names in the CSV. Make sure you have a "Name" or "Conference" column.');
+      return;
+    }
+
+    // Geocode conferences that need it
+    geocodeConferences(conferences).then(results => {
+      CONFERENCE_DATA = results;
+      localStorage.setItem('edia_conference_data', JSON.stringify(CONFERENCE_DATA));
+      console.log('[Persist] Saved', CONFERENCE_DATA.length, 'conferences to localStorage');
+
+      // Auto-enable conference layer
+      conferencesOn = true;
+      document.getElementById('confCheck').checked = true;
+      document.getElementById('confOptions').style.display = '';
+      renderConferences();
+
+      alert(`✓ Loaded ${results.length} conferences!\n${results.filter(r => r.lat && r.lng).length} geocoded successfully.`);
+    });
+  };
+  reader.readAsText(file);
+}
+
+async function geocodeConferences(conferences) {
+  const needGeocode = conferences.filter(c => !c.lat || !c.lng);
+  if (needGeocode.length === 0) return conferences;
+
+  for (const conf of needGeocode) {
+    const query = [conf.city, conf.state, 'USA'].filter(Boolean).join(', ');
+    if (!query || query === 'USA') continue;
+
+    try {
+      const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1&countrycodes=us`;
+      const response = await fetch(url, {
+        headers: { 'User-Agent': 'EdiaStratMap/1.0' }
+      });
+      const data = await response.json();
+      if (data.length > 0) {
+        conf.lat = parseFloat(data[0].lat);
+        conf.lng = parseFloat(data[0].lon);
+      }
+      // Rate limit for Nominatim
+      await new Promise(r => setTimeout(r, 1100));
+    } catch(e) {
+      console.error('Geocode error for conference:', conf.name, e);
+    }
+  }
+
+  return conferences;
 }
 
 // ============ INIT ============
