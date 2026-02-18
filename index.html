@@ -2250,17 +2250,17 @@ input[type="range"]::-webkit-slider-thumb {
   align-items: center;
   gap: 8px;
   padding: 8px 10px;
-  margin: -2px -2px 8px;
+  margin: 0 0 8px;
   border-radius: var(--radius-sm);
   background: rgba(108,92,231,0.08);
   border: 1px solid rgba(108,92,231,0.15);
-  position: relative;
 }
 .popup-score-number {
   font-size: 18px;
   font-weight: 700;
   font-family: 'JetBrains Mono', monospace;
   line-height: 1;
+  flex-shrink: 0;
 }
 .popup-score-number.score-red { color: #ff6b6b; }
 .popup-score-number.score-yellow { color: #fdcb6e; }
@@ -2271,39 +2271,15 @@ input[type="range"]::-webkit-slider-thumb {
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.3px;
+  flex-shrink: 0;
 }
 .popup-score-breakdown {
-  margin-left: auto;
   font-size: 9px;
   color: var(--text-muted);
-  cursor: help;
-  position: relative;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-.popup-score-breakdown:hover .score-tooltip {
-  display: block;
-}
-.score-tooltip {
-  display: none;
-  position: absolute;
-  bottom: calc(100% + 6px);
-  right: 0;
-  background: #1e2028;
-  border: 1px solid var(--panel-border);
-  border-radius: var(--radius-sm);
-  padding: 8px 10px;
-  white-space: nowrap;
-  z-index: 100;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-}
-.score-tooltip-row {
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-  font-size: 10px;
-  line-height: 1.8;
-}
-.score-tooltip-row .stl { color: var(--text-dim); }
-.score-tooltip-row .stv { color: var(--text); font-family: 'JetBrains Mono', monospace; font-weight: 600; }
 
 /* Score column in account list */
 .al-score {
@@ -5953,24 +5929,20 @@ function applyScoreOverlays() {
 // ============ SCORE IN POPUPS ============
 
 function buildScoreBar(d) {
-  const s = scoreCache[d.name] || computeAccountScore(d);
-  const colorClass = getScoreColorClass(s.total);
-  let html = `<div class="popup-score-bar">`;
-  html += `<span class="popup-score-number ${colorClass}">${s.total}</span>`;
-  html += `<span class="popup-score-label">Priority Score</span>`;
-  html += `<span class="popup-score-breakdown">`;
-  html += `<span style="border-bottom:1px dotted var(--text-muted);">Breakdown ▾</span>`;
-  html += `<div class="score-tooltip">`;
-  html += `<div class="score-tooltip-row"><span class="stl">Enrollment</span><span class="stv">${s.enrollment}</span></div>`;
-  html += `<div class="score-tooltip-row"><span class="stl">Stage</span><span class="stv">${s.stage}</span></div>`;
-  html += `<div class="score-tooltip-row"><span class="stl">Staleness</span><span class="stv">${s.staleness}</span></div>`;
-  html += `<div class="score-tooltip-row"><span class="stl">Proximity</span><span class="stv">${s.proximity}</span></div>`;
-  html += `<div class="score-tooltip-row"><span class="stl">ACV</span><span class="stv">${s.acv}</span></div>`;
-  if (s.crossSell > 0) {
-    html += `<div class="score-tooltip-row"><span class="stl">Cross-sell</span><span class="stv">+${s.crossSell}</span></div>`;
+  try {
+    const s = scoreCache[d.name] || computeAccountScore(d);
+    const colorClass = getScoreColorClass(s.total);
+    const breakdown = `Score: ${s.total} — Enrollment: ${s.enrollment}, Stage: ${s.stage}, Staleness: ${s.staleness}, Proximity: ${s.proximity}, ACV: ${s.acv}${s.crossSell ? ', Cross-sell: +' + s.crossSell : ''}`;
+    let html = `<div class="popup-score-bar" title="${breakdown}">`;
+    html += `<span class="popup-score-number ${colorClass}">${s.total}</span>`;
+    html += `<span class="popup-score-label">Priority Score</span>`;
+    html += `<span class="popup-score-breakdown">${breakdown}</span>`;
+    html += `</div>`;
+    return html;
+  } catch(e) {
+    console.error('Score bar error:', e);
+    return '';
   }
-  html += `</div></span></div>`;
-  return html;
 }
 
 function buildModalScoreBar(d) {
