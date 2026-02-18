@@ -3753,8 +3753,7 @@ function buildStratPopup(d) {
   html += `</div>`;
 
   // Meeting Prep Button
-  const dataJson = encodeURIComponent(JSON.stringify(d));
-  html += `<button class="meeting-prep-btn" onclick="generateMeetingPrep('${dataJson}')">
+  html += `<button class="meeting-prep-btn" onclick="generateMeetingPrepByKey('${districtKey}')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/>
     </svg>
@@ -4663,6 +4662,16 @@ function findMarkerByDistrict(districtName) {
 
 // ============ MEETING PREP ============
 const CHATGPT_PROJECT_URL = 'https://chatgpt.com/g/g-p-693073aad1948191993a5742400f59a1-meeting-research/project';
+
+function generateMeetingPrepByKey(districtKey) {
+  const d = window.districtDataCache && window.districtDataCache[districtKey];
+  if (!d) {
+    console.error('District data not found for key:', districtKey);
+    alert('Error: account data not found. Please try again.');
+    return;
+  }
+  generateMeetingPrep(encodeURIComponent(JSON.stringify(d)));
+}
 
 function generateMeetingPrep(encodedData) {
   try {
