@@ -2078,6 +2078,293 @@ input[type="range"]::-webkit-slider-thumb {
   z-index: 9000 !important;
 }
 
+/* ============ FOCUS PANEL ============ */
+.focus-panel {
+  display: none;
+  flex-direction: column;
+  border-top: 1px solid var(--panel-border);
+  max-height: 340px;
+  overflow: hidden;
+}
+.focus-panel.open { display: flex; }
+.focus-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 22px;
+  cursor: pointer;
+  user-select: none;
+  border-top: 1px solid var(--panel-border);
+}
+.focus-toggle:hover { background: rgba(255,255,255,0.03); }
+.focus-toggle-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.focus-toggle-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.focus-toggle-count {
+  font-size: 10px;
+  background: var(--accent-strat);
+  color: #fff;
+  border-radius: 8px;
+  padding: 1px 7px;
+  font-weight: 600;
+}
+.focus-toggle-chevron {
+  font-size: 10px;
+  color: var(--text-muted);
+  transition: transform 0.2s;
+}
+.focus-panel.fp-collapsed .focus-toggle-chevron { transform: rotate(-90deg); }
+.focus-panel.fp-collapsed #focusDetail { display: none; }
+.focus-body {
+  overflow-y: auto;
+  flex: 1;
+  padding: 0 0 8px;
+}
+.focus-body::-webkit-scrollbar { width: 4px; }
+.focus-body::-webkit-scrollbar-track { background: transparent; }
+.focus-body::-webkit-scrollbar-thumb { background: var(--panel-border); border-radius: 2px; }
+
+.focus-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 22px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background 0.12s;
+  border-left: 3px solid transparent;
+}
+.focus-item:hover {
+  background: rgba(108,92,231,0.08);
+  border-left-color: var(--accent-strat);
+}
+.focus-rank {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-muted);
+  width: 16px;
+  text-align: right;
+  flex-shrink: 0;
+  font-family: 'JetBrains Mono', monospace;
+}
+.focus-score-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 18px;
+  border-radius: 9px;
+  font-size: 10px;
+  font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+  flex-shrink: 0;
+}
+.focus-score-badge.score-red { background: rgba(214,48,49,0.18); color: #ff6b6b; }
+.focus-score-badge.score-yellow { background: rgba(253,203,110,0.18); color: #fdcb6e; }
+.focus-score-badge.score-green { background: rgba(0,184,148,0.18); color: #00b894; }
+
+.focus-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text);
+}
+.focus-stage-pill {
+  font-size: 9px;
+  padding: 1px 6px;
+  border-radius: 6px;
+  font-weight: 500;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.focus-stage-pill.discovery { background: rgba(253,203,110,0.15); color: #fdcb6e; }
+.focus-stage-pill.demo { background: rgba(116,185,255,0.15); color: #74b9ff; }
+.focus-stage-pill.scoping { background: rgba(225,112,85,0.15); color: #e17055; }
+.focus-stage-pill.validation { background: rgba(85,239,196,0.15); color: #55efc4; }
+.focus-stage-pill.no-opp { background: rgba(139,141,151,0.15); color: var(--text-muted); }
+
+.focus-reason {
+  font-size: 10px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 140px;
+  flex-shrink: 0;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* ============ SCORE OVERLAY ON MAP MARKERS ============ */
+.marker-score-label {
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 8px;
+  font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+  line-height: 1;
+  padding: 1px 3px;
+  border-radius: 4px;
+  pointer-events: none;
+  z-index: 2;
+  white-space: nowrap;
+}
+.marker-score-label.score-red { background: rgba(214,48,49,0.85); color: #fff; }
+.marker-score-label.score-yellow { background: rgba(200,160,60,0.85); color: #fff; }
+.marker-score-label.score-green { background: rgba(0,140,110,0.85); color: #fff; }
+
+/* Show scores toggle in sidebar */
+.show-scores-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 22px;
+  border-top: 1px solid var(--panel-border);
+}
+.show-scores-control label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--text-dim);
+  cursor: pointer;
+}
+.show-scores-control input[type="checkbox"] {
+  accent-color: var(--accent-strat);
+}
+
+/* ============ SCORE IN POPUP/MODAL ============ */
+.popup-score-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  margin: -2px -2px 8px;
+  border-radius: var(--radius-sm);
+  background: rgba(108,92,231,0.08);
+  border: 1px solid rgba(108,92,231,0.15);
+  position: relative;
+}
+.popup-score-number {
+  font-size: 18px;
+  font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+  line-height: 1;
+}
+.popup-score-number.score-red { color: #ff6b6b; }
+.popup-score-number.score-yellow { color: #fdcb6e; }
+.popup-score-number.score-green { color: #00b894; }
+.popup-score-label {
+  font-size: 10px;
+  color: var(--text-dim);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+.popup-score-breakdown {
+  margin-left: auto;
+  font-size: 9px;
+  color: var(--text-muted);
+  cursor: help;
+  position: relative;
+}
+.popup-score-breakdown:hover .score-tooltip {
+  display: block;
+}
+.score-tooltip {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 6px);
+  right: 0;
+  background: #1e2028;
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  white-space: nowrap;
+  z-index: 100;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+}
+.score-tooltip-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  font-size: 10px;
+  line-height: 1.8;
+}
+.score-tooltip-row .stl { color: var(--text-dim); }
+.score-tooltip-row .stv { color: var(--text); font-family: 'JetBrains Mono', monospace; font-weight: 600; }
+
+/* Score column in account list */
+.al-score {
+  font-size: 10px;
+  font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+  width: 28px;
+  text-align: center;
+  flex-shrink: 0;
+  border-radius: 6px;
+  padding: 1px 0;
+}
+.al-score.score-red { background: rgba(214,48,49,0.18); color: #ff6b6b; }
+.al-score.score-yellow { background: rgba(253,203,110,0.18); color: #fdcb6e; }
+.al-score.score-green { background: rgba(0,184,148,0.18); color: #00b894; }
+
+/* Modal score bar */
+.modal-score-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  border-radius: var(--radius);
+  background: rgba(108,92,231,0.06);
+  border: 1px solid rgba(108,92,231,0.12);
+}
+.modal-score-number {
+  font-size: 28px;
+  font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+  line-height: 1;
+}
+.modal-score-number.score-red { color: #ff6b6b; }
+.modal-score-number.score-yellow { color: #fdcb6e; }
+.modal-score-number.score-green { color: #00b894; }
+.modal-score-meta {
+  flex: 1;
+}
+.modal-score-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+.modal-score-breakdown {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+}
+.modal-score-chip {
+  font-size: 10px;
+  color: var(--text-muted);
+}
+.modal-score-chip b {
+  color: var(--text);
+  font-family: 'JetBrains Mono', monospace;
+}
+
 </style>
 </head>
 <body>
@@ -2170,6 +2457,28 @@ input[type="range"]::-webkit-slider-thumb {
       SFDC Data Refresh
     </button>
     <span class="sfdc-badge" id="sfdcLastRefresh">Never refreshed</span>
+  </div>
+
+  <!-- Focus Panel (Top Accounts by Score) -->
+  <div class="focus-panel open" id="focusPanel">
+    <div class="focus-toggle" onclick="toggleFocusPanel()">
+      <div class="focus-toggle-left">
+        <span class="focus-toggle-label">Focus: Top Accounts</span>
+        <span class="focus-toggle-count" id="focusCount">0</span>
+      </div>
+      <span class="focus-toggle-chevron" id="focusChevron">&#9660;</span>
+    </div>
+    <div id="focusDetail">
+      <div class="focus-body" id="focusBody"></div>
+    </div>
+  </div>
+
+  <!-- Show Scores on Map Toggle -->
+  <div class="show-scores-control" id="showScoresControl">
+    <label>
+      <input type="checkbox" id="showScoresCheck" onchange="toggleScoreOverlays(this.checked)">
+      Show scores on map
+    </label>
   </div>
 
   <div class="notes-mgmt">
@@ -2326,6 +2635,8 @@ let accountListSort = 'enrollment_desc';
 let accountListGroupBy = null;  // null | 'state' | 'stage'
 let accountListOpen = false;
 let collapsedGroups = {};       // track collapsed group headers
+let showScoreOverlays = false;  // score labels on map markers
+let scoreCache = {};            // name -> { total, enrollment, stage, staleness, proximity, acv, reason }
 let PROXIMITY_MILES = 50;
 
 // ============ INIT ============
@@ -2666,8 +2977,14 @@ function applyFilters() {
   updateLegend();
   updatePipeline();
   updateActionDashboard();
+  computeAllScores();
+  updateFocusPanel();
   renderAccountList();
   updateFiltersActiveCount();
+  // Re-apply score overlays after markers are rebuilt
+  if (showScoreOverlays) {
+    setTimeout(() => applyScoreOverlays(), 50);
+  }
 }
 
 function zoomToSearchResult() {
@@ -3112,6 +3429,33 @@ function addNote(key, el) {
     // Update count in header
     if (label) label.innerHTML = label.innerHTML.replace(/Notes \(\d+\)/, 'Notes (' + notes.length + ')');
   }
+
+  // Update last activity date to today (resets staleness clock)
+  const districtName = key.replace('edia_notes_', '').replace(/_/g, ' ');
+  const matchedAccount = STRATEGIC_DATA.find(d => d.name.replace(/[^a-zA-Z0-9]/g, '_') === key.replace('edia_notes_', ''));
+  if (matchedAccount) {
+    const today = new Date();
+    const dateStr = (today.getMonth() + 1) + '/' + today.getDate() + '/' + today.getFullYear();
+    matchedAccount.opp_last_activity = dateStr;
+    // Persist updated data
+    localStorage.setItem('edia_strategic_data', JSON.stringify(STRATEGIC_DATA));
+    // Recompute scores - the account should drop in the list
+    computeAllScores();
+    updateFocusPanel();
+    // Update score overlay on the popup if visible
+    const scoreBar = popup ? popup.querySelector('.popup-score-bar') : null;
+    if (scoreBar && matchedAccount.name) {
+      const s = scoreCache[matchedAccount.name];
+      if (s) {
+        const colorClass = getScoreColorClass(s.total);
+        const numEl = scoreBar.querySelector('.popup-score-number');
+        if (numEl) {
+          numEl.textContent = s.total;
+          numEl.className = 'popup-score-number ' + colorClass;
+        }
+      }
+    }
+  }
 }
 
 function handleNoteKey(e, key, el) {
@@ -3248,6 +3592,7 @@ function buildStratPopup(d) {
   </button>`;
   html += `<div class="popup-type ${d.is_customer ? 'both' : 'strat'}">${d.is_customer ? 'Strategic Account + Customer' : 'Strategic Account'}</div>`;
   html += `<h3 class="copyable" data-tooltip="Click to copy" onclick="copyText('${d.name.replace(/'/g, "\\\\'")}', this)">${d.name}</h3>`;
+  html += buildScoreBar(d);
 
   const rows = [
     ['State', d.state],
@@ -3408,8 +3753,7 @@ function buildStratPopup(d) {
   html += `</div>`;
 
   // Meeting Prep Button
-  const dataJson = encodeURIComponent(JSON.stringify(d));
-  html += `<button class="meeting-prep-btn" onclick="generateMeetingPrep('${dataJson}')">
+  html += `<button class="meeting-prep-btn" onclick="generateMeetingPrepByKey('${districtKey}')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/>
     </svg>
@@ -3535,6 +3879,8 @@ function sortAccountListData(items) {
   const sort = accountListSort;
   return items.slice().sort((a, b) => {
     switch (sort) {
+      case 'score_desc': return ((scoreCache[b.name] || {}).total || 0) - ((scoreCache[a.name] || {}).total || 0);
+      case 'score_asc': return ((scoreCache[a.name] || {}).total || 0) - ((scoreCache[b.name] || {}).total || 0);
       case 'name_asc': return (a.name || '').localeCompare(b.name || '');
       case 'name_desc': return (b.name || '').localeCompare(a.name || '');
       case 'enrollment_desc': return (parseInt(b.enrollment || b.students || 0)) - (parseInt(a.enrollment || a.students || 0));
@@ -3589,11 +3935,22 @@ function buildAccountListRow(d, type) {
     moneyHtml = `<span class="al-arr">$${formatCompactNumber(arr)}</span>`;
   }
 
+  // Score badge for strategic accounts
+  let scoreHtml = '';
+  if (isStrat) {
+    const s = scoreCache[d.name];
+    if (s) {
+      const colorClass = getScoreColorClass(s.total);
+      scoreHtml = `<span class="al-score ${colorClass}" title="Score: ${s.total} — ${s.reason}">${s.total}</span>`;
+    }
+  }
+
   return `<div class="account-list-item" data-name="${d.name.replace(/"/g, '&quot;')}" data-key="${districtKey}"
     onmouseenter="highlightAccountMarker('${d.name.replace(/'/g, "\\'")}')"
     onmouseleave="unhighlightAccountMarker('${d.name.replace(/'/g, "\\'")}')"
     onclick="flyToAccount('${d.name.replace(/'/g, "\\'")}')"
     ondblclick="openAccountFromList('${districtKey}')">
+    ${scoreHtml}
     <span class="al-stage-dot ${stage.cls}" title="${stage.label}"></span>
     <span class="al-stage-label ${stage.cls}">${stage.label}</span>
     <span class="al-name" title="${d.name}">${d.name}</span>
@@ -3685,6 +4042,7 @@ function renderAccountList() {
   ];
 
   if (showStrat && currentView !== 'customers') {
+    sortOptions.push({ key: 'score_desc', label: 'Score' });
     sortOptions.push({ key: 'acv_desc', label: 'ACV' });
     sortOptions.push({ key: 'stage_asc', label: 'Stage' });
   }
@@ -3881,7 +4239,9 @@ function populateInfoTab(d) {
   const prepLinkKey = 'edia_prep_' + d.name.replace(/[^a-zA-Z0-9]/g, '_');
   const savedPrepLink = localStorage.getItem(prepLinkKey) || d.prep_doc_url || '';
 
-  let html = `<div class="modal-grid">`;
+  let html = '';
+  html += buildModalScoreBar(d);
+  html += `<div class="modal-grid">`;
 
   // Basic Info Section
   html += `<div class="modal-section">
@@ -4302,6 +4662,16 @@ function findMarkerByDistrict(districtName) {
 
 // ============ MEETING PREP ============
 const CHATGPT_PROJECT_URL = 'https://chatgpt.com/g/g-p-693073aad1948191993a5742400f59a1-meeting-research/project';
+
+function generateMeetingPrepByKey(districtKey) {
+  const d = window.districtDataCache && window.districtDataCache[districtKey];
+  if (!d) {
+    console.error('District data not found for key:', districtKey);
+    alert('Error: account data not found. Please try again.');
+    return;
+  }
+  generateMeetingPrep(encodeURIComponent(JSON.stringify(d)));
+}
 
 function generateMeetingPrep(encodedData) {
   try {
@@ -5356,6 +5726,271 @@ async function confirmMerge() {
     confirmBtn.textContent = originalBtnText;
     alert(`❌ Merge failed!\n\nError: ${e.message}\n\nCheck console for details.`);
   }
+}
+
+// ============ ACCOUNT SCORING ENGINE ============
+
+function computeAccountScore(d) {
+  let enrollmentScore = 0;
+  let stageScore = 0;
+  let stalenessScore = 0;
+  let proximityScore = 0;
+  let acvScore = 0;
+
+  // --- Enrollment (0-20): larger districts = higher priority ---
+  const enroll = parseInt(d.enrollment) || 0;
+  if (enroll >= 200000) enrollmentScore = 20;
+  else if (enroll >= 100000) enrollmentScore = 18;
+  else if (enroll >= 50000) enrollmentScore = 16;
+  else if (enroll >= 25000) enrollmentScore = 14;
+  else if (enroll >= 10000) enrollmentScore = 10;
+  else if (enroll >= 5000) enrollmentScore = 6;
+  else enrollmentScore = 3;
+
+  // --- Stage (0-20): later stages = higher urgency ---
+  if (d.opp_stage) {
+    if (d.opp_stage.startsWith('5')) stageScore = 20;       // Validation — close the deal
+    else if (d.opp_stage.startsWith('3')) stageScore = 18;  // Scoping
+    else if (d.opp_stage.startsWith('2')) stageScore = 14;  // Demo
+    else if (d.opp_stage.startsWith('1')) stageScore = 10;  // Discovery
+    else stageScore = 8;
+  } else {
+    stageScore = 2; // No opportunity
+  }
+
+  // --- Staleness (0-25): longer since last touch = higher urgency ---
+  const lastAct = d.opp_last_activity || '';
+  if (lastAct) {
+    const days = daysAgo(lastAct);
+    if (days === Infinity) {
+      stalenessScore = 25; // unparseable date = treat as very stale
+    } else if (days >= 60) stalenessScore = 25;
+    else if (days >= 45) stalenessScore = 22;
+    else if (days >= 30) stalenessScore = 18;
+    else if (days >= 21) stalenessScore = 14;
+    else if (days >= 14) stalenessScore = 10;
+    else if (days >= 7) stalenessScore = 6;
+    else stalenessScore = 2;
+  } else {
+    stalenessScore = 25; // Never touched = maximum staleness
+  }
+
+  // --- Proximity (0-10): near existing customers = higher leverage ---
+  if (d.lat && d.lng) {
+    let nearbyCount = 0;
+    const radiusMiles = 50;
+    CUSTOMER_DATA.forEach(c => {
+      if (!c.lat || !c.lng) return;
+      const dist = haversine(d.lat, d.lng, c.lat, c.lng);
+      if (dist <= radiusMiles) nearbyCount++;
+    });
+    if (nearbyCount >= 5) proximityScore = 10;
+    else if (nearbyCount >= 3) proximityScore = 8;
+    else if (nearbyCount >= 1) proximityScore = 5;
+    else proximityScore = 0;
+  }
+
+  // --- ACV (0-15): higher dollar value = higher priority ---
+  const acv = Number(d.opp_acv) || 0;
+  if (acv >= 500000) acvScore = 15;
+  else if (acv >= 250000) acvScore = 13;
+  else if (acv >= 100000) acvScore = 11;
+  else if (acv >= 50000) acvScore = 8;
+  else if (acv >= 10000) acvScore = 5;
+  else if (acv > 0) acvScore = 3;
+  else acvScore = 0;
+
+  // --- Bonus: is_customer cross-sell bonus (+5) ---
+  const crossSellBonus = d.is_customer ? 5 : 0;
+
+  const total = Math.min(100, enrollmentScore + stageScore + stalenessScore + proximityScore + acvScore + crossSellBonus);
+
+  // Build reason string
+  const reasonParts = [];
+  if (lastAct) {
+    const days = daysAgo(lastAct);
+    if (days !== Infinity) reasonParts.push('Stale ' + days + 'd');
+  } else {
+    reasonParts.push('Untouched');
+  }
+  if (d.opp_stage) {
+    const stageLabel = d.opp_stage.replace(/^\d+\s*-\s*/, '');
+    reasonParts.push(stageLabel);
+  }
+  if (acv > 0) reasonParts.push('$' + formatCompactNumber(acv));
+
+  return {
+    total,
+    enrollment: enrollmentScore,
+    stage: stageScore,
+    staleness: stalenessScore,
+    proximity: proximityScore,
+    acv: acvScore,
+    crossSell: crossSellBonus,
+    reason: reasonParts.join(' · ')
+  };
+}
+
+function getScoreColorClass(score) {
+  if (score >= 80) return 'score-red';
+  if (score >= 50) return 'score-yellow';
+  return 'score-green';
+}
+
+function computeAllScores() {
+  scoreCache = {};
+  STRATEGIC_DATA.forEach(d => {
+    scoreCache[d.name] = computeAccountScore(d);
+  });
+}
+
+// ============ FOCUS PANEL ============
+
+function toggleFocusPanel() {
+  const panel = document.getElementById('focusPanel');
+  panel.classList.toggle('fp-collapsed');
+}
+
+function updateFocusPanel() {
+  const panel = document.getElementById('focusPanel');
+  const body = document.getElementById('focusBody');
+  const countEl = document.getElementById('focusCount');
+
+  if (currentView === 'customers') {
+    panel.style.display = 'none';
+    return;
+  }
+  panel.style.display = '';
+  panel.classList.add('open');
+
+  // Score all strategic accounts and rank
+  computeAllScores();
+
+  const ranked = filteredStratData
+    .filter(d => d.lat && d.lng)
+    .map(d => ({ data: d, score: scoreCache[d.name] || computeAccountScore(d) }))
+    .sort((a, b) => b.score.total - a.score.total)
+    .slice(0, 15);
+
+  countEl.textContent = ranked.length;
+
+  if (ranked.length === 0) {
+    body.innerHTML = '<div style="padding:12px 22px;font-size:11px;color:var(--text-muted);">No strategic accounts match current filters</div>';
+    return;
+  }
+
+  let html = '';
+  ranked.forEach((item, idx) => {
+    const d = item.data;
+    const s = item.score;
+    const colorClass = getScoreColorClass(s.total);
+    const districtKey = d.name.replace(/[^a-zA-Z0-9]/g, '_');
+
+    // Stage pill
+    let stagePillClass = 'no-opp';
+    let stageLabel = 'No Opp';
+    if (d.opp_stage) {
+      if (d.opp_stage.startsWith('1')) { stagePillClass = 'discovery'; stageLabel = 'Discovery'; }
+      else if (d.opp_stage.startsWith('2')) { stagePillClass = 'demo'; stageLabel = 'Demo'; }
+      else if (d.opp_stage.startsWith('3')) { stagePillClass = 'scoping'; stageLabel = 'Scoping'; }
+      else if (d.opp_stage.startsWith('5')) { stagePillClass = 'validation'; stageLabel = 'Validation'; }
+      else { stageLabel = 'Opp'; }
+    }
+
+    html += `<div class="focus-item" onclick="focusOnAccount('${districtKey}')" title="${s.reason}">`;
+    html += `<span class="focus-rank">${idx + 1}</span>`;
+    html += `<span class="focus-score-badge ${colorClass}">${s.total}</span>`;
+    html += `<span class="focus-name">${d.name}</span>`;
+    html += `<span class="focus-stage-pill ${stagePillClass}">${stageLabel}</span>`;
+    html += `<span class="focus-reason">${s.reason}</span>`;
+    html += `</div>`;
+  });
+
+  body.innerHTML = html;
+}
+
+function focusOnAccount(districtKey) {
+  const d = window.districtDataCache && window.districtDataCache[districtKey];
+  if (!d) return;
+  const entry = markerLookup[d.name];
+  if (entry && entry.marker) {
+    const latLng = entry.marker.getLatLng();
+    map.flyTo(latLng, 10, { duration: 0.6 });
+    setTimeout(() => entry.marker.openPopup(), 400);
+  } else {
+    openAccountModalByKey(districtKey);
+  }
+}
+
+// ============ SCORE OVERLAYS ON MAP MARKERS ============
+
+function toggleScoreOverlays(on) {
+  showScoreOverlays = on;
+  applyScoreOverlays();
+}
+
+function applyScoreOverlays() {
+  // Remove all existing score labels
+  document.querySelectorAll('.marker-score-label').forEach(el => el.remove());
+
+  if (!showScoreOverlays) return;
+
+  Object.keys(markerLookup).forEach(name => {
+    const entry = markerLookup[name];
+    if (entry.type !== 'strategic') return;
+    const score = scoreCache[name];
+    if (!score) return;
+    const el = entry.marker.getElement();
+    if (!el) return;
+    el.style.position = 'relative';
+    const label = document.createElement('div');
+    label.className = 'marker-score-label ' + getScoreColorClass(score.total);
+    label.textContent = score.total;
+    el.appendChild(label);
+  });
+}
+
+// ============ SCORE IN POPUPS ============
+
+function buildScoreBar(d) {
+  const s = scoreCache[d.name] || computeAccountScore(d);
+  const colorClass = getScoreColorClass(s.total);
+  let html = `<div class="popup-score-bar">`;
+  html += `<span class="popup-score-number ${colorClass}">${s.total}</span>`;
+  html += `<span class="popup-score-label">Priority Score</span>`;
+  html += `<span class="popup-score-breakdown">`;
+  html += `<span style="border-bottom:1px dotted var(--text-muted);">Breakdown ▾</span>`;
+  html += `<div class="score-tooltip">`;
+  html += `<div class="score-tooltip-row"><span class="stl">Enrollment</span><span class="stv">${s.enrollment}</span></div>`;
+  html += `<div class="score-tooltip-row"><span class="stl">Stage</span><span class="stv">${s.stage}</span></div>`;
+  html += `<div class="score-tooltip-row"><span class="stl">Staleness</span><span class="stv">${s.staleness}</span></div>`;
+  html += `<div class="score-tooltip-row"><span class="stl">Proximity</span><span class="stv">${s.proximity}</span></div>`;
+  html += `<div class="score-tooltip-row"><span class="stl">ACV</span><span class="stv">${s.acv}</span></div>`;
+  if (s.crossSell > 0) {
+    html += `<div class="score-tooltip-row"><span class="stl">Cross-sell</span><span class="stv">+${s.crossSell}</span></div>`;
+  }
+  html += `</div></span></div>`;
+  return html;
+}
+
+function buildModalScoreBar(d) {
+  const s = scoreCache[d.name] || computeAccountScore(d);
+  const colorClass = getScoreColorClass(s.total);
+  let html = `<div class="modal-score-bar">`;
+  html += `<span class="modal-score-number ${colorClass}">${s.total}</span>`;
+  html += `<div class="modal-score-meta">`;
+  html += `<div class="modal-score-title">Priority Score</div>`;
+  html += `<div class="modal-score-breakdown">`;
+  html += `<span class="modal-score-chip">Enrollment: <b>${s.enrollment}</b></span>`;
+  html += `<span class="modal-score-chip">Stage: <b>${s.stage}</b></span>`;
+  html += `<span class="modal-score-chip">Staleness: <b>${s.staleness}</b></span>`;
+  html += `<span class="modal-score-chip">Proximity: <b>${s.proximity}</b></span>`;
+  html += `<span class="modal-score-chip">ACV: <b>${s.acv}</b></span>`;
+  if (s.crossSell > 0) {
+    html += `<span class="modal-score-chip">Cross-sell: <b>+${s.crossSell}</b></span>`;
+  }
+  html += `</div></div></div>`;
+  return html;
 }
 
 // ============ INIT ============
