@@ -1007,18 +1007,21 @@ input[type="range"]::-webkit-slider-thumb {
   align-items: center;
   gap: 5px;
   font-size: 10px;
-  padding: 3px 8px;
+  padding: 5px 10px;
   border-radius: 4px;
-  border: 1px solid var(--panel-border);
-  background: transparent;
-  color: var(--text-dim);
+  border: 1px dashed rgba(255,159,67,0.4);
+  background: rgba(255,159,67,0.05);
+  color: #ff9f43;
   cursor: pointer;
-  margin-top: 4px;
+  margin-top: 8px;
   transition: all 0.15s;
+  width: 100%;
+  justify-content: center;
 }
 .conf-upload-btn:hover {
-  border-color: rgba(255,159,67,0.5);
-  color: #ff9f43;
+  border-style: solid;
+  border-color: rgba(255,159,67,0.6);
+  background: rgba(255,159,67,0.1);
 }
 
 /* Conference map markers */
@@ -2393,46 +2396,6 @@ input[type="range"]::-webkit-slider-thumb {
   font-family: 'JetBrains Mono', monospace;
 }
 
-/* ============ SCORE OVERLAY ON MAP MARKERS ============ */
-.marker-score-label {
-  position: absolute;
-  top: -8px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 8px;
-  font-weight: 700;
-  font-family: 'JetBrains Mono', monospace;
-  line-height: 1;
-  padding: 1px 3px;
-  border-radius: 4px;
-  pointer-events: none;
-  z-index: 2;
-  white-space: nowrap;
-}
-.marker-score-label.score-red { background: rgba(214,48,49,0.85); color: #fff; }
-.marker-score-label.score-yellow { background: rgba(200,160,60,0.85); color: #fff; }
-.marker-score-label.score-green { background: rgba(0,140,110,0.85); color: #fff; }
-
-/* Show scores toggle in sidebar */
-.show-scores-control {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 22px;
-  border-top: 1px solid var(--panel-border);
-}
-.show-scores-control label {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 11px;
-  color: var(--text-dim);
-  cursor: pointer;
-}
-.show-scores-control input[type="checkbox"] {
-  accent-color: var(--accent-strat);
-}
-
 /* ============ SCORE IN POPUP/MODAL ============ */
 .popup-score-bar {
   display: flex;
@@ -2619,12 +2582,12 @@ input[type="range"]::-webkit-slider-thumb {
         </div>
       </div>
       <div class="conf-stats" id="confStats"></div>
-      <button class="conf-upload-btn" onclick="document.getElementById('confFileInput').click()">
-        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-        Upload Conference CSV
-      </button>
-      <input type="file" id="confFileInput" accept=".csv" style="display:none" onchange="handleConfFile(event)">
     </div>
+    <button class="conf-upload-btn" onclick="document.getElementById('confFileInput').click()">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      Upload Conference CSV
+    </button>
+    <input type="file" id="confFileInput" accept=".csv" style="display:none" onchange="handleConfFile(event)">
   </div>
 
   <div class="filters-wrap" id="filtersWrap">
@@ -2669,14 +2632,6 @@ input[type="range"]::-webkit-slider-thumb {
     <div id="focusDetail">
       <div class="focus-body" id="focusBody"></div>
     </div>
-  </div>
-
-  <!-- Show Scores on Map Toggle -->
-  <div class="show-scores-control" id="showScoresControl">
-    <label>
-      <input type="checkbox" id="showScoresCheck" onchange="toggleScoreOverlays(this.checked)">
-      Show scores on map
-    </label>
   </div>
 
   <div class="notes-mgmt">
@@ -2833,7 +2788,6 @@ let accountListSort = 'enrollment_desc';
 let accountListGroupBy = null;  // null | 'state' | 'stage'
 let accountListOpen = false;
 let collapsedGroups = {};       // track collapsed group headers
-let showScoreOverlays = false;  // score labels on map markers
 let scoreCache = {};            // name -> { total, enrollment, stage, staleness, proximity, acv, reason }
 let PROXIMITY_MILES = 50;
 
@@ -3205,10 +3159,6 @@ function applyFilters() {
   updateFocusPanel();
   renderAccountList();
   updateFiltersActiveCount();
-  // Re-apply score overlays after markers are rebuilt
-  if (showScoreOverlays) {
-    setTimeout(() => applyScoreOverlays(), 50);
-  }
 }
 
 function zoomToSearchResult() {
@@ -6144,34 +6094,6 @@ function focusOnAccount(districtKey) {
   } else {
     openAccountModalByKey(districtKey);
   }
-}
-
-// ============ SCORE OVERLAYS ON MAP MARKERS ============
-
-function toggleScoreOverlays(on) {
-  showScoreOverlays = on;
-  applyScoreOverlays();
-}
-
-function applyScoreOverlays() {
-  // Remove all existing score labels
-  document.querySelectorAll('.marker-score-label').forEach(el => el.remove());
-
-  if (!showScoreOverlays) return;
-
-  Object.keys(markerLookup).forEach(name => {
-    const entry = markerLookup[name];
-    if (entry.type !== 'strategic') return;
-    const score = scoreCache[name];
-    if (!score) return;
-    const el = entry.marker.getElement();
-    if (!el) return;
-    el.style.position = 'relative';
-    const label = document.createElement('div');
-    label.className = 'marker-score-label ' + getScoreColorClass(score.total);
-    label.textContent = score.total;
-    el.appendChild(label);
-  });
 }
 
 // ============ SCORE IN POPUPS ============
