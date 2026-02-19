@@ -6,6 +6,7 @@
 <title>Edia Learning — Territory Map</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -1301,9 +1302,51 @@ input[type="range"]::-webkit-slider-thumb {
 .notes-btn:hover { border-color: var(--text-muted); color: var(--text); }
 
 /* SFDC Refresh — compact button + modal */
-.sfdc-compact {
-  padding: 8px 18px;
+/* Data Uploads — collapsible panel */
+.uploads-panel {
   border-top: 1px solid var(--panel-border);
+}
+.uploads-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 22px;
+  cursor: pointer;
+  user-select: none;
+}
+.uploads-toggle:hover { background: rgba(255,255,255,0.03); }
+.uploads-toggle-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.uploads-toggle-chevron {
+  font-size: 10px;
+  color: var(--text-muted);
+  transition: transform 0.2s;
+}
+.uploads-panel.up-collapsed .uploads-toggle-chevron { transform: rotate(-90deg); }
+.uploads-panel.up-collapsed .uploads-detail { display: none; }
+.uploads-detail {
+  padding: 0 22px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.uploads-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.uploads-row .sfdc-badge {
+  font-size: 9px;
+  color: var(--text-muted);
+}
+
+.sfdc-compact {
+  padding: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -2583,11 +2626,6 @@ input[type="range"]::-webkit-slider-thumb {
       </div>
       <div class="conf-stats" id="confStats"></div>
     </div>
-    <button class="conf-upload-btn" onclick="document.getElementById('confFileInput').click()">
-      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-      Upload Conference CSV
-    </button>
-    <input type="file" id="confFileInput" accept=".csv" style="display:none" onchange="handleConfFile(event)">
   </div>
 
   <div class="filters-wrap" id="filtersWrap">
@@ -2611,13 +2649,28 @@ input[type="range"]::-webkit-slider-thumb {
     </div>
   </div>
 
-  <!-- SFDC Refresh — compact button -->
-  <div class="sfdc-compact">
-    <button class="sfdc-open-btn" onclick="openSfdcModal()">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-      SFDC Data Refresh
-    </button>
-    <span class="sfdc-badge" id="sfdcLastRefresh">Never refreshed</span>
+  <!-- Data Uploads — collapsible panel -->
+  <div class="uploads-panel" id="uploadsPanel">
+    <div class="uploads-toggle" onclick="toggleUploadsPanel()">
+      <span class="uploads-toggle-label">Data Uploads</span>
+      <span class="uploads-toggle-chevron" id="uploadsChevron">&#9660;</span>
+    </div>
+    <div class="uploads-detail">
+      <div class="uploads-row">
+        <button class="sfdc-open-btn" onclick="openSfdcModal()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          SFDC Data Refresh
+        </button>
+        <span class="sfdc-badge" id="sfdcLastRefresh">Never refreshed</span>
+      </div>
+      <div class="uploads-row">
+        <button class="conf-upload-btn" onclick="document.getElementById('confFileInput').click()" style="margin-top:0;">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Conference Data Upload
+        </button>
+        <input type="file" id="confFileInput" accept=".csv,.xls,.xlsx" style="display:none" onchange="handleConfFile(event)">
+      </div>
+    </div>
   </div>
 
   <!-- Focus Panel (Top Accounts by Score) -->
@@ -2692,10 +2745,10 @@ input[type="range"]::-webkit-slider-thumb {
       <div class="sfdc-dropzone" id="sfdcDropzone" onclick="document.getElementById('sfdcFileInput').click()">
         <div class="sfdc-dropzone-icon">📄</div>
         <div class="sfdc-dropzone-text">
-          Drag CSV here or <strong>browse</strong>
+          Drag CSV or Excel file here or <strong>browse</strong>
         </div>
-        <div class="sfdc-dropzone-hint">Notes & local data preserved during merge</div>
-        <input type="file" id="sfdcFileInput" accept=".csv" style="display:none" onchange="handleSfdcFile(event)">
+        <div class="sfdc-dropzone-hint">Supports .csv, .xls, .xlsx — Notes & local data preserved during merge</div>
+        <input type="file" id="sfdcFileInput" accept=".csv,.xls,.xlsx" style="display:none" onchange="handleSfdcFile(event)">
       </div>
     </div>
   </div>
@@ -5020,7 +5073,59 @@ function showMeetingPrepToast() {
   }, 3000);
 }
 
-// ============ SFDC CSV REFRESH ============
+// ============ UPLOADS PANEL ============
+
+function toggleUploadsPanel() {
+  document.getElementById('uploadsPanel').classList.toggle('up-collapsed');
+}
+
+// ============ SPREADSHEET FILE READER (CSV + Excel) ============
+
+function isExcelFile(filename) {
+  return /\.(xlsx?|xls)$/i.test(filename);
+}
+
+function readSpreadsheetFile(file) {
+  return new Promise((resolve, reject) => {
+    if (isExcelFile(file.name)) {
+      // Excel file — use SheetJS
+      const reader = new FileReader();
+      reader.onload = e => {
+        try {
+          const workbook = XLSX.read(e.target.result, { type: 'array' });
+          const sheetName = workbook.SheetNames[0];
+          const sheet = workbook.Sheets[sheetName];
+          // Convert to array of objects with lowercase underscore keys
+          const rawRows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+          const rows = rawRows.map(row => {
+            const mapped = {};
+            Object.keys(row).forEach(key => {
+              const normKey = key.trim().toLowerCase().replace(/\s+/g, '_');
+              mapped[normKey] = String(row[key]).trim();
+            });
+            return mapped;
+          });
+          resolve(rows);
+        } catch (err) {
+          reject(new Error('Failed to parse Excel file: ' + err.message));
+        }
+      };
+      reader.onerror = () => reject(new Error('Failed to read file'));
+      reader.readAsArrayBuffer(file);
+    } else {
+      // CSV file — use existing parser
+      const reader = new FileReader();
+      reader.onload = e => {
+        const parsed = parseCSV(e.target.result);
+        resolve(parsed);
+      };
+      reader.onerror = () => reject(new Error('Failed to read file'));
+      reader.readAsText(file);
+    }
+  });
+}
+
+// ============ SFDC DATA REFRESH ============
 let sfdcDataType = 'strategic';
 let pendingMergeData = null;
 let pendingMergeStats = null;
@@ -5061,8 +5166,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   dropzone.addEventListener('drop', e => {
     const files = e.dataTransfer.files;
-    if (files.length > 0 && files[0].name.endsWith('.csv')) {
-      processCSVFile(files[0]);
+    if (files.length > 0 && /\.(csv|xlsx?|xls)$/i.test(files[0].name)) {
+      processUploadFile(files[0]);
     }
   });
 
@@ -5075,24 +5180,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function handleSfdcFile(event) {
   const file = event.target.files[0];
-  if (file && file.name.endsWith('.csv')) {
-    processCSVFile(file);
+  if (file && /\.(csv|xlsx?|xls)$/i.test(file.name)) {
+    processUploadFile(file);
   }
   event.target.value = '';
 }
 
-function processCSVFile(file) {
-  const reader = new FileReader();
-  reader.onload = e => {
-    const csvText = e.target.result;
-    const parsed = parseCSV(csvText);
+function processUploadFile(file) {
+  readSpreadsheetFile(file).then(parsed => {
     if (parsed.length === 0) {
-      alert('No data found in CSV file');
+      alert('No data found in file');
       return;
     }
     previewMerge(parsed);
-  };
-  reader.readAsText(file);
+  }).catch(err => {
+    alert('Error reading file: ' + err.message);
+  });
 }
 
 function parseCSV(text) {
@@ -6390,21 +6493,25 @@ function buildConfPopup(c) {
 
 function handleConfFile(event) {
   const file = event.target.files[0];
-  if (file && file.name.endsWith('.csv')) {
-    processConfCSV(file);
+  if (file && /\.(csv|xlsx?|xls)$/i.test(file.name)) {
+    processConfUpload(file);
   }
   event.target.value = '';
 }
 
-function processConfCSV(file) {
-  const reader = new FileReader();
-  reader.onload = e => {
-    const csvText = e.target.result;
-    const parsed = parseCSV(csvText);
+function processConfUpload(file) {
+  readSpreadsheetFile(file).then(parsed => {
     if (parsed.length === 0) {
-      alert('No data found in CSV file');
+      alert('No data found in file');
       return;
     }
+    processConfData(parsed);
+  }).catch(err => {
+    alert('Error reading file: ' + err.message);
+  });
+}
+
+function processConfData(parsed) {
 
     // Map fields to conference schema
     const conferences = parsed.map(row => {
@@ -6449,8 +6556,6 @@ function processConfCSV(file) {
 
       alert(`✓ Loaded ${results.length} conferences!\n${results.filter(r => r.lat && r.lng).length} geocoded successfully.`);
     });
-  };
-  reader.readAsText(file);
 }
 
 async function geocodeConferences(conferences) {
