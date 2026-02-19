@@ -1,129 +1,168 @@
-# Edia Territory Map
+# Edia Strategic Territory Map
 
-A web-based interactive map for **Edia Learning's sales team** to visualize and manage their territory - strategic accounts (prospects) and active customers across the US.
+A single-page interactive map for **Edia Learning's sales team** to visualize strategic accounts, active customers, and conference activity across the US.
 
 ---
 
-## Core Features
+## Quick Start
 
-### Interactive Map
-- Leaflet.js-powered map with color-coded pins
-- **Purple pins** = Strategic accounts (prospects)
-- **Green pins** = Active customers
-- Pin colors change based on opportunity stage (Discovery, Demo, Scoping, Validation)
-- Click any pin to see full account details
+1. Open `index.html` in any modern browser
+2. Data is embedded — the map loads immediately with strategic accounts and customers
+3. Use the sidebar to search, filter, and switch views
+4. Click any pin to see details; click the expand button for a full-screen modal
 
-### Dashboard & Stats
-- Real-time counts: Strategic accounts, Customers, Overlap, States covered
-- Pipeline summary panel showing opportunity values by stage
+---
 
-### Action Dashboard
-- Click the **"Actions" button** on the map (next to the account count badge) to open a floating workload panel
-- **Stalest Accounts**: Accounts sorted by last activity date, oldest first — shows how many days since last touch in red
-- **Due This Week**: Accounts whose next steps contain dates within the current Monday–Sunday week
-- **Untouched Accounts**: Accounts with no activity date on record
-- A **red alert badge** appears on the Actions button when next steps are due this week
-- Click any account row to open its full-screen modal
-- Click outside the panel or the **×** button to close
+## Map Views
 
-### Filtering & Search
-- Search districts by name
-- **Press Enter** to zoom to the searched district and open its popup
-- Filter by: Region, State, Account Executive, SIS Platform, Opportunity Stage, Enrollment size, Segment, CSM
-- Toggle views: Strategic only, Customers only, or All
+| View | What it shows |
+|------|---------------|
+| **Strategic Accounts** | Purple pins — prospect school districts |
+| **Active Customers** | Green pins — current Edia customers |
+| **All** | Both, color-coded by opportunity stage |
 
-### Account Popups (Pin Details)
-- District info: enrollment, region, SIS platform
-- Leadership contacts: Superintendent, Asst Supts, Directors
-- Opportunity details: stage, forecast, probability, next steps
-- Links: Org Chart, Strategic Plan, Meeting Prep docs
-- Revenue data for customers: ARR, GDR, NDR
+Switch views with the buttons at the top of the sidebar.
 
-### Full-Screen View with Product Tabs
-Click the **expand button (↗)** in any popup to open a full-screen modal with organized tabs:
+### Pin Colors (All View)
 
-- **Info Tab**: District overview, leadership contacts, opportunity details, resources, notes
-- **Math Tab**: Math products/curriculum, math-specific contacts, competition intel
-- **Attendance Tab**: SIS platform, attendance system, related contacts
+| Color | Meaning |
+|-------|---------|
+| Purple | No opportunity |
+| Yellow | Discovery stage |
+| Blue | Demo stage |
+| Red-orange | Scoping stage |
+| Green (bright) | Validation stage |
+| Green (standard) | Active customer |
+| Orange star | Conference |
+| Gray star | Past conference |
 
-Press **Escape** or click outside to close.
+A legend is always visible in the bottom-left corner of the map.
 
-### Notes System
-- Add notes to any account (stored in browser localStorage)
-- Notes persist across sessions
-- Copy/Export/Import notes functionality
+---
 
-### Proximity Mode
-- Toggle to show strategic accounts near existing customers
+## Conferences
+
+### Uploading Conference Data
+
+1. Click **Data Refresh** (bottom-right)
+2. Click **Conference Data**
+3. Select a CSV or Excel file
+
+### Expected Columns
+
+The following columns are recognized (order does not matter):
+
+| Column | Purpose |
+|--------|---------|
+| **Conference** | Conference name (required) |
+| **Start Date** | Start date |
+| **End Date** | End date |
+| **Full Address** | Used for pin placement (geocoding) |
+| **Conference Location** | Displayed in popup |
+| **State** | State abbreviation |
+| **Speaking?** | Yes/No — shown as checkbox |
+| **Attendee List?** | Yes/No — shown as checkbox |
+| **Edia Attendee** | Who from Edia is attending |
+| **Attendee Size** | Expected attendance |
+| **Registered** | Yes/No |
+| **Paid** | Yes/No |
+| **Actual Cost** | Cost/budget |
+| **Booth** | Booth info |
+| **Table** | Table info |
+| **Notes** | Additional notes |
+
+Rows starting with Q1, Q2, Q3, Q4 (quarter headers) are automatically filtered out.
+
+### Conference Features
+
+- **Proximity rings**: 100-mile orange circles around upcoming conferences
+- **Nearby accounts**: Each conference popup lists strategic accounts within 100 miles
+- **Date filtering**: 30d / 60d / 90d / All / Custom date range
+- **Geocoding**: Addresses are geocoded via OpenStreetMap Nominatim with automatic fallbacks
+
+---
+
+## Searching & Filtering
+
+- **Search bar**: Type a district name and press **Enter** to zoom to it
+- **Filters**: Region, State, AE, SIS Platform, Opportunity Stage, Enrollment, Segment, CSM
+- Filters are view-specific (strategic vs customer filters)
+
+---
+
+## Account Details
+
+Click any pin to see a popup with:
+- District info (enrollment, region, SIS)
+- Leadership contacts
+- Opportunity details (stage, forecast, next steps)
+- Links to org chart, strategic plan, meeting prep
+
+Click the **expand button** for a full-screen modal with organized tabs:
+- **Info**: Overview, leadership, opportunities, resources, notes
+- **Math**: Math products, curriculum, contacts, competition
+- **Attendance**: SIS platform, attendance system, related contacts
+
+---
+
+## Dashboard & Stats
+
+- Top bar shows: Strategic accounts, Customers, Overlap, States covered
+- **Pipeline panel**: Opportunity values by stage
+- **Actions button**: Opens a floating workload panel with:
+  - Stalest accounts (days since last touch)
+  - Due this week (accounts with next steps due)
+  - Untouched accounts (no activity on record)
+  - Red alert badge when items are due
+
+---
+
+## Proximity Mode
+
+Toggle proximity overlays in the sidebar:
+- **Strategic proximity**: Show strategic accounts near existing customers
+- **ADA accounts**: Show ADA-related account proximity
 - Adjustable radius slider
 
-### SFDC Refresh
-- Drag-and-drop CSV upload to refresh data from Salesforce
-- Merges without losing notes or local customizations
-- Preview changes before applying
-- **Smart name matching**: Strips school suffixes to match on base name:
-  - "Dallas Independent School District" ↔ "Dallas ISD" (both normalize to "dallas")
-  - "DeSoto County School District" ↔ "Desoto County Schools" (both normalize to "desoto county")
-  - Handles ISD, USD, CSD, Schools, School District, Public Schools, etc.
-- **Warnings**: Shows alerts if CSV districts are similar to but don't match existing ones
-- **Supported columns**: Automatically maps common SFDC column names (Account Name, Opportunity Stage, etc.)
-- **Debugging**: Open browser console (F12) to see merge diagnostics and normalization
-
-### Meeting Prep Generation
-- One-click **"Generate Meeting Prep"** button in account popups
-- Copies all account data to clipboard (district info, leadership, opportunities, notes)
-- Automatically opens ChatGPT Meeting Research project
-- Just paste and hit Enter for comprehensive meeting preparation
-
-### Meeting Prep Links
-- Save Google Drive links to meeting prep docs per account
-- Shows inline with Strategic Plan link
-- Click **"+ Add Meeting Prep"** to add a link
-- Updates instantly without page refresh
-
 ---
-
-## Tech Stack
-
-- Single HTML file (self-contained)
-- Leaflet.js for mapping
-- Vanilla JavaScript
-- localStorage for notes/links persistence
-- Dark theme UI
-
----
-
-## Usage
-
-1. Open `index.html` in a web browser
-2. Use the sidebar to filter and search accounts
-3. Click pins on the map to view account details
-4. Click the **expand button (↗)** for full-screen view with product tabs
-5. Add notes and meeting prep links as needed
-6. Click **"Generate Meeting Prep"** to prepare for meetings with ChatGPT
 
 ## Data Refresh
 
-To update data from Salesforce:
-1. Export CSV from SFDC
-2. Use the "SFDC Data Refresh" panel in the sidebar
-3. Select data type (Strategic or Customers)
-4. Drag and drop the CSV file
-5. Review changes and click "Apply"
+### SFDC Data
 
-Your notes and meeting prep links will be preserved during the merge.
+1. Click **Data Refresh** > **SFDC Data**
+2. Choose data type (Strategic or Customers)
+3. Drag-and-drop or select a CSV exported from Salesforce
+4. Preview changes and click **Apply**
 
-### Troubleshooting SFDC Refresh
+Smart name matching normalizes school district names:
+- "Dallas Independent School District" matches "Dallas ISD"
+- "DeSoto County School District" matches "Desoto County Schools"
 
-If updates aren't applying:
-1. **Check base names match** - The base name (before "ISD", "Schools", etc.) must be the same:
-   - ✅ "Dallas ISD" ↔ "Dallas Independent School District" (base: "Dallas")
-   - ❌ "Dallas ISD" ↔ "Dallas County Schools" (different entities)
-2. **Open browser console** (F12 → Console) - Look for `[Normalize]` and `[SFDC Merge]` logs showing:
-   - How names are being normalized
-   - What keys are being looked up
-   - Whether matches are found
-3. **Check for warnings** - The merge preview will show ⚠ warnings for similar but non-matching names
+Notes and meeting prep links are preserved during merges.
+
+### Conference Data
+
+1. Click **Data Refresh** > **Conference Data**
+2. Select CSV or Excel file
+3. Conferences are geocoded automatically and displayed on the map
+
+---
+
+## Meeting Prep
+
+- Click **"Generate Meeting Prep"** in any account popup
+- Copies all account data to clipboard
+- Opens ChatGPT for meeting preparation
+- Save Google Drive meeting prep links per account
+
+---
+
+## Notes
+
+- Add notes to any account (stored in localStorage)
+- Notes persist across browser sessions
+- Copy / Export / Import functionality available
 
 ---
 
@@ -131,16 +170,30 @@ If updates aren't applying:
 
 | Key | Action |
 |-----|--------|
-| Enter | Zoom to searched district and open popup |
-| Escape | Close full-screen modal |
+| **Enter** | Zoom to searched district |
+| **Escape** | Close full-screen modal |
+
+---
+
+## Tech Stack
+
+- Single self-contained HTML file
+- [Leaflet.js](https://leafletjs.com/) for mapping
+- [SheetJS](https://sheetjs.com/) for Excel file reading
+- Vanilla JavaScript — no build step required
+- localStorage for persistence (notes, links, conference data, SFDC refresh timestamp)
 
 ---
 
 ## Data Storage
 
-The following data is stored in your browser's localStorage:
-- **Notes**: Per-account notes you've added
-- **Meeting Prep Links**: Google Drive links to meeting prep documents
-- **Last SFDC Refresh**: Timestamp of last data refresh
+All data is stored in the browser's localStorage:
+
+| Key | Contents |
+|-----|----------|
+| Notes | Per-account notes |
+| Meeting Prep Links | Google Drive links |
+| Conference Data | Uploaded conference records |
+| SFDC Refresh | Last refresh timestamp |
 
 This data persists across sessions but is local to your browser.
