@@ -2886,7 +2886,7 @@ function applyFilters() {
       const marker = L.marker([d.lat, d.lng], { icon }).addTo(stratLayer);
       marker.bindPopup(buildStratPopup(d), { maxWidth: 320 });
       marker.on('click', function() {
-        map.flyTo([d.lat - 2.5, d.lng], 7, { duration: 0.6 });
+        map.flyTo([d.lat + 2.5, d.lng], 7, { duration: 0.6 });
       });
       statesSet.add(d.state);
       markerLookup[d.name] = { marker, data: d, type: 'strategic' };
@@ -2937,7 +2937,7 @@ function applyFilters() {
       const marker = L.marker([d.lat, d.lng], { icon }).addTo(custLayer);
       marker.bindPopup(buildCustPopup(d), { maxWidth: 320 });
       marker.on('click', function() {
-        map.flyTo([d.lat - 2.5, d.lng], 7, { duration: 0.6 });
+        map.flyTo([d.lat + 2.5, d.lng], 7, { duration: 0.6 });
       });
       statesSet.add(d.state);
       if (!markerLookup[d.name]) {
@@ -3209,10 +3209,10 @@ function selectAutocomplete(index) {
     const entry = markerLookup[item.label];
     if (entry && entry.marker) {
       const latLng = entry.marker.getLatLng();
-      map.setView([latLng.lat - 2.5, latLng.lng], 7, { animate: true });
+      map.setView([latLng.lat + 2.5, latLng.lng], 7, { animate: true });
       setTimeout(() => entry.marker.openPopup(), 400);
     } else if (item.data && item.data.lat && item.data.lng) {
-      map.setView([item.data.lat - 2.5, item.data.lng], 7, { animate: true });
+      map.setView([item.data.lat + 2.5, item.data.lng], 7, { animate: true });
     }
   }
 }
@@ -3237,7 +3237,7 @@ function zoomToSearchResult() {
 
   if (lastSearchResults.length === 1) {
     const latLng = bestMatch.marker.getLatLng();
-    map.setView([latLng.lat - 2.5, latLng.lng], 7, { animate: true });
+    map.setView([latLng.lat + 2.5, latLng.lng], 7, { animate: true });
     setTimeout(() => bestMatch.marker.openPopup(), 300);
   } else {
     // Multiple results — fit bounds
@@ -4173,9 +4173,9 @@ function flyToAccount(name) {
   const entry = markerLookup[name];
   if (!entry || !entry.marker) return;
   const latLng = entry.marker.getLatLng();
-  // Offset center south so the popup (which opens above the pin) is centered on screen
+  // Offset center north so the pin sits near the bottom and the popup is centered on screen
   const targetZoom = 7;
-  const offsetLat = latLng.lat - 2.5;
+  const offsetLat = latLng.lat + 2.5;
   map.flyTo([offsetLat, latLng.lng], targetZoom, { duration: 0.6 });
   setTimeout(() => {
     entry.marker.openPopup();
