@@ -3308,6 +3308,13 @@ function onSearchInput() {
   const items = buildAutocompleteList(query);
   renderAutocomplete(items);
   applyFilters();
+  // When search is cleared, reset map to full view
+  if (!query && map) {
+    const bounds = [];
+    STRATEGIC_DATA.forEach(d => { if (d.lat && d.lng) bounds.push([d.lat, d.lng]); });
+    CUSTOMER_DATA.forEach(d => { if (d.lat && d.lng) bounds.push([d.lat, d.lng]); });
+    if (bounds.length > 0) map.fitBounds(bounds, { padding: [40, 40], maxZoom: 6 });
+  }
 }
 
 function onSearchKeydown(e) {
@@ -6387,13 +6394,9 @@ function buildConfPopup(c) {
   const statusClass = past ? 'past' : 'upcoming';
   let html = `<div class="popup-card">`;
 
-  // Header badges
+  // Header badge
   html += `<div class="popup-conf-header">`;
   html += `<span class="popup-conf-badge ${statusClass}">${statusLabel}</span>`;
-  if (c.status) {
-    const sClass = c.status.toLowerCase() === 'exhibiting' ? 'exhibiting' : c.status.toLowerCase() === 'attending' ? 'attending' : 'upcoming';
-    html += `<span class="popup-conf-badge ${sClass}">${c.status}</span>`;
-  }
   html += `</div>`;
 
   html += `<h3 style="margin-bottom:6px;">${c.name || 'Conference'}</h3>`;
@@ -6407,21 +6410,26 @@ function buildConfPopup(c) {
     html += `<div class="popup-conf-dates">${startFmt}</div>`;
   }
 
-  // Details
-  const rows = [
-    ['Location', [c.city, c.state].filter(Boolean).join(', ')],
-    ['Type/Focus', c.type],
-    ['Expected Attendees', c.attendees],
-    ['Cost/Budget', c.cost],
-    ['Edia Contacts', c.edia_contacts],
-    ['Notes', c.notes],
-  ];
-  rows.forEach(([k, v]) => {
-    if (v) html += `<div class="popup-row"><span class="pk">${k}</span><span class="pv">${v}</span></div>`;
-  });
+  // Key details
+  const speakingVal = (c.speaking || '').toLowerCase();
+  const speakingChecked = speakingVal === 'yes' || speakingVal === 'y' || speakingVal === 'true' || speakingVal === '1' || speakingVal === 'x';
+  const attendeeListVal = (c.attendee_list || '').toLowerCase();
+  const attendeeListChecked = attendeeListVal === 'yes' || attendeeListVal === 'y' || attendeeListVal === 'true' || attendeeListVal === '1' || attendeeListVal === 'x';
 
-  if (c.registration_url) {
-    html += `<div style="margin-top:6px;"><a href="${c.registration_url}" target="_blank" style="color:#ff9f43;text-decoration:none;font-size:11px;">🔗 Registration</a></div>`;
+  html += `<div style="margin:8px 0;display:flex;gap:16px;font-size:11px;">`;
+  html += `<label style="display:flex;align-items:center;gap:4px;color:var(--text-dim);cursor:default;">`;
+  html += `<input type="checkbox" ${speakingChecked ? 'checked' : ''} disabled style="pointer-events:none;"> Speaking</label>`;
+  html += `<label style="display:flex;align-items:center;gap:4px;color:var(--text-dim);cursor:default;">`;
+  html += `<input type="checkbox" ${attendeeListChecked ? 'checked' : ''} disabled style="pointer-events:none;"> Attendee List</label>`;
+  html += `</div>`;
+
+  if (c.edia_attendee) {
+    html += `<div class="popup-row"><span class="pk">Edia Attendee</span><span class="pv">${c.edia_attendee}</span></div>`;
+  }
+  if (c._fullAddress) {
+    html += `<div class="popup-row"><span class="pk">Location</span><span class="pv">${c._fullAddress}</span></div>`;
+  } else if (c.city || c.state) {
+    html += `<div class="popup-row"><span class="pk">Location</span><span class="pv">${[c.city, c.state].filter(Boolean).join(', ')}</span></div>`;
   }
 
   // Nearby strategic accounts
@@ -6477,45 +6485,106 @@ function processConfUpload(file) {
 function processConfData(parsed) {
 
     // Map fields to conference schema
+    // Uses a scoring approach: each column is checked against all possible fields,
+    // and the best (most specific) match wins, avoiding greedy else-if issues
     const conferences = parsed.map(row => {
       const mapped = {};
       Object.keys(row).forEach(key => {
         const val = row[key] ? String(row[key]).trim() : '';
         if (!val) return;
         const lk = key.toLowerCase().replace(/[^a-z0-9]/g, '_').replace(/_+/g, '_');
-        if (lk.includes('name') || lk.includes('conference') || lk.includes('event') || lk.includes('title')) mapped.name = mapped.name || val;
-        else if (lk === 'city' || lk.includes('city')) mapped.city = mapped.city || val;
-        else if (lk.includes('state') || lk === 'st' || lk.includes('province')) mapped.state = mapped.state || val;
-        else if (lk.includes('location') || lk.includes('venue') || lk.includes('address') || lk.includes('where')) mapped._location = mapped._location || val;
-        else if (lk.includes('start') || lk === 'date' || lk === 'begin') mapped.start_date = mapped.start_date || val;
-        else if (lk.includes('end')) mapped.end_date = mapped.end_date || val;
-        else if (lk.includes('status') || lk.includes('attend') || lk.includes('booth')) mapped.status = mapped.status || val;
-        else if (lk.includes('type') || lk.includes('focus') || lk.includes('category')) mapped.type = mapped.type || val;
-        else if (lk.includes('attendee') || lk.includes('expected') || lk.includes('size')) mapped.attendees = mapped.attendees || val;
-        else if (lk.includes('registr') || lk.includes('url') || lk.includes('link')) mapped.registration_url = mapped.registration_url || val;
-        else if (lk.includes('cost') || lk.includes('budget') || lk.includes('fee') || lk.includes('price')) mapped.cost = mapped.cost || val;
-        else if (lk.includes('edia') || lk.includes('team') || lk.includes('rep') || lk.includes('owner') || lk.includes('contact')) mapped.edia_contacts = mapped.edia_contacts || val;
-        else if (lk.includes('note') || lk.includes('comment') || lk.includes('description')) mapped.notes = mapped.notes || val;
-        else if (lk === 'lat' || lk === 'latitude') mapped.lat = parseFloat(val) || null;
-        else if (lk === 'lng' || lk === 'lon' || lk === 'longitude') mapped.lng = parseFloat(val) || null;
+
+        // --- Exact/specific matches first, then fuzzy ---
+
+        // Conference name: only if key IS "conference" or "event_name" etc, NOT "conference_location"
+        if (lk === 'conference' || lk === 'event' || lk === 'event_name' || lk === 'conference_name') {
+          mapped.name = mapped.name || val;
+        }
+        // Conference location / full address — for geocoding
+        else if (lk.includes('location') || lk.includes('full_address') || lk.includes('venue') || lk.includes('address')) {
+          mapped._location = mapped._location || val;
+        }
+        // Start date
+        else if (lk === 'start_date' || lk === 'start' || lk === 'date' || lk === 'begin' || lk === 'begin_date') {
+          mapped.start_date = mapped.start_date || val;
+        }
+        // End date
+        else if (lk === 'end_date' || lk === 'end') {
+          mapped.end_date = mapped.end_date || val;
+        }
+        // State
+        else if (lk === 'state' || lk === 'st') {
+          mapped.state = mapped.state || val;
+        }
+        // City
+        else if (lk === 'city') {
+          mapped.city = mapped.city || val;
+        }
+        // Speaking?
+        else if (lk.includes('speaking')) {
+          mapped.speaking = mapped.speaking || val;
+        }
+        // Attendee list?
+        else if (lk.includes('attendee_list')) {
+          mapped.attendee_list = mapped.attendee_list || val;
+        }
+        // Edia attendee (who from Edia is going)
+        else if (lk === 'edia_attendee' || (lk.includes('edia') && lk.includes('attend'))) {
+          mapped.edia_attendee = mapped.edia_attendee || val;
+        }
+        // Attendee size
+        else if (lk.includes('attendee_size') || lk.includes('size') || lk.includes('expected')) {
+          mapped.attendees = mapped.attendees || val;
+        }
+        // Booth / table
+        else if (lk === 'booth' || lk === 'table') {
+          mapped.booth = mapped.booth || val;
+        }
+        // Registered / paid
+        else if (lk === 'registered') {
+          mapped.registered = mapped.registered || val;
+        }
+        else if (lk === 'paid') {
+          mapped.paid = mapped.paid || val;
+        }
+        // Notes
+        else if (lk === 'notes' || lk.includes('note') || lk.includes('comment')) {
+          mapped.notes = mapped.notes || val;
+        }
+        // Cost
+        else if (lk.includes('cost') || lk.includes('budget')) {
+          mapped.cost = mapped.cost || val;
+        }
+        // Lat/lng
+        else if (lk === 'lat' || lk === 'latitude') {
+          mapped.lat = parseFloat(val) || null;
+        }
+        else if (lk === 'lng' || lk === 'lon' || lk === 'longitude') {
+          mapped.lng = parseFloat(val) || null;
+        }
+        // Fallback: if key literally is just "name" or "title", use as conference name
+        else if ((lk === 'name' || lk === 'title') && !mapped.name) {
+          mapped.name = val;
+        }
       });
 
-      // If city/state missing, try to parse from _location field
+      // Parse location for geocoding
       if (mapped._location && (!mapped.city || !mapped.state)) {
-        // Try "City, State" or "City, ST" patterns
         const parts = mapped._location.split(/[,;]+/).map(s => s.trim()).filter(Boolean);
         if (parts.length >= 2) {
           if (!mapped.city) mapped.city = parts[0];
-          if (!mapped.state) mapped.state = parts[1];
+          if (!mapped.state) mapped.state = parts[parts.length >= 3 ? parts.length - 2 : 1];
         } else if (parts.length === 1 && !mapped.city) {
           mapped.city = parts[0];
         }
       }
+      // Keep _location for geocoding fallback (full address is better than city/state)
+      mapped._fullAddress = mapped._location || '';
       delete mapped._location;
 
       return mapped;
     }).filter(c => c.name);
-    console.log('[Conference] Mapped', conferences.length, 'conferences. Sample:', conferences.slice(0, 3).map(c => ({ name: c.name, city: c.city, state: c.state })));
+    console.log('[Conference] Mapped', conferences.length, 'conferences. Sample:', JSON.stringify(conferences.slice(0, 2)));
 
     if (conferences.length === 0) {
       alert('Could not find conference names in the CSV. Make sure you have a "Name" or "Conference" column.');
@@ -6573,7 +6642,13 @@ async function geocodeConferences(conferences) {
     updateGeocodeProgress(i + 1, total, (i + 1) + ' of ' + total + ' — ' + (conf.name || '').substring(0, 30));
 
     // Build geocoding query — try city/state first, fall back to conference name
-    let query = [conf.city, conf.state, 'USA'].filter(Boolean).join(', ');
+    // Prefer full address, then city/state, then conference name as fallback
+    let query = '';
+    if (conf._fullAddress) {
+      query = conf._fullAddress;
+    } else {
+      query = [conf.city, conf.state, 'USA'].filter(Boolean).join(', ');
+    }
     if (!query || query === 'USA') {
       query = conf.name ? conf.name + ', USA' : '';
     }
