@@ -184,6 +184,68 @@ body {
   position: relative;
 }
 
+/* Autocomplete dropdown */
+.search-autocomplete {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-top: none;
+  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+  max-height: 260px;
+  overflow-y: auto;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+}
+.search-autocomplete.open { display: block; }
+.search-ac-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background 0.1s;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+}
+.search-ac-item:last-child { border-bottom: none; }
+.search-ac-item:hover,
+.search-ac-item.selected { background: rgba(108,92,231,0.1); }
+.search-ac-type {
+  font-size: 8px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  min-width: 36px;
+  text-align: center;
+}
+.search-ac-type.strat { background: rgba(108,92,231,0.15); color: var(--accent-strat); }
+.search-ac-type.cust { background: rgba(0,184,148,0.15); color: var(--accent-cust); }
+.search-ac-type.state { background: rgba(253,203,110,0.15); color: #fdcb6e; }
+.search-ac-type.region { background: rgba(116,185,255,0.15); color: #74b9ff; }
+.search-ac-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text);
+}
+.search-ac-name b { color: var(--accent-strat); }
+.search-ac-meta {
+  font-size: 10px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+.search-autocomplete::-webkit-scrollbar { width: 4px; }
+.search-autocomplete::-webkit-scrollbar-track { background: transparent; }
+.search-autocomplete::-webkit-scrollbar-thumb { background: var(--panel-border); border-radius: 2px; }
+
 .search-wrap svg {
   position: absolute;
   left: 10px;
@@ -594,16 +656,18 @@ input[type="range"]::-webkit-slider-thumb {
 .filter-group:nth-child(5) { animation-delay: 0.2s; }
 
 .pipeline-panel {
-  padding: 14px 18px;
   border-top: 1px solid var(--panel-border);
 }
 .pipeline-toggle {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
+  padding: 10px 22px;
   cursor: pointer;
-  padding-bottom: 10px;
+  user-select: none;
+  transition: background 0.15s;
 }
+.pipeline-toggle:hover { background: rgba(255,255,255,0.03); }
 .pipeline-detail-row {
   display: flex;
   justify-content: space-between;
@@ -659,6 +723,7 @@ input[type="range"]::-webkit-slider-thumb {
 .stage-dropdown-item:hover { background: rgba(255,255,255,0.08); }
 .dropdown-name { color: var(--text-dim); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-right: 10px; }
 .dropdown-acv { color: var(--text); font-weight: 600; white-space: nowrap; }
+#pipelineDetail { padding: 0 22px 12px; }
 #pipelineDetail.collapsed { display: none; }
 .pipeline-chevron {
   font-size: 10px;
@@ -1296,56 +1361,135 @@ input[type="range"]::-webkit-slider-thumb {
 }
 .notes-btn:hover { border-color: var(--text-muted); color: var(--text); }
 
-/* SFDC Refresh — compact button + modal */
-/* Data Uploads — collapsible panel */
-.uploads-panel {
-  border-top: 1px solid var(--panel-border);
+/* Data Refresh — floating bottom-right button + panel */
+.data-refresh-fab {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 1100;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius);
+  color: var(--text-dim);
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+  transition: all 0.15s;
 }
-.uploads-toggle {
+.data-refresh-fab:hover {
+  border-color: #74b9ff;
+  color: #74b9ff;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+}
+.data-refresh-fab svg { opacity: 0.7; }
+.data-refresh-fab:hover svg { opacity: 1; }
+
+.data-refresh-panel {
+  display: none;
+  position: fixed;
+  bottom: 72px;
+  right: 24px;
+  z-index: 1100;
+  width: 320px;
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  overflow: hidden;
+}
+.data-refresh-panel.open { display: block; }
+.data-refresh-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 22px;
-  cursor: pointer;
-  user-select: none;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--panel-border);
 }
-.uploads-toggle:hover { background: rgba(255,255,255,0.03); }
-.uploads-toggle-label {
-  font-size: 11px;
+.data-refresh-header h4 {
+  font-size: 13px;
   font-weight: 600;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-  color: var(--text-dim);
+  color: var(--text);
+  margin: 0;
 }
-.uploads-toggle-chevron {
-  font-size: 10px;
+.data-refresh-close {
+  background: none;
+  border: none;
   color: var(--text-muted);
-  transition: transform 0.2s;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
 }
-.uploads-panel.up-collapsed .uploads-toggle-chevron { transform: rotate(-90deg); }
-.uploads-panel.up-collapsed .uploads-detail { display: none; }
-.uploads-detail {
-  padding: 0 22px 12px;
+.data-refresh-close:hover { background: var(--surface); color: var(--text); }
+.data-refresh-body {
+  padding: 16px 18px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
 }
-.uploads-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+.data-refresh-dropzone {
+  border: 2px dashed var(--panel-border);
+  border-radius: var(--radius-sm);
+  padding: 24px 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.15s;
 }
-.uploads-row .sfdc-badge {
-  font-size: 9px;
+.data-refresh-dropzone:hover,
+.data-refresh-dropzone.drag-over {
+  border-color: #74b9ff;
+  background: rgba(116,185,255,0.06);
+}
+.data-refresh-dropzone svg { opacity: 0.5; margin-bottom: 8px; }
+.data-refresh-dropzone:hover svg { opacity: 0.8; }
+.data-refresh-dropzone-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-dim);
+  margin-bottom: 4px;
+}
+.data-refresh-dropzone-hint {
+  font-size: 10px;
   color: var(--text-muted);
 }
-
-.sfdc-compact {
-  padding: 0;
+.data-refresh-btns {
+  display: flex;
+  gap: 8px;
+}
+.data-refresh-btn {
+  flex: 1;
+  font-size: 10px;
+  font-family: inherit;
+  font-weight: 600;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(116,185,255,0.3);
+  background: rgba(116,185,255,0.08);
+  color: #74b9ff;
+  cursor: pointer;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 8px;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.15s;
+}
+.data-refresh-btn:hover { border-color: #74b9ff; background: rgba(116,185,255,0.18); }
+.data-refresh-btn.conf-btn {
+  border-color: rgba(255,159,67,0.3);
+  background: rgba(255,159,67,0.08);
+  color: #ff9f43;
+}
+.data-refresh-btn.conf-btn:hover { border-color: #ff9f43; background: rgba(255,159,67,0.18); }
+.data-refresh-status {
+  font-size: 9px;
+  color: var(--text-muted);
+  text-align: center;
 }
 .sfdc-open-btn {
   font-size: 10px;
@@ -2350,7 +2494,9 @@ input[type="range"]::-webkit-slider-thumb {
   <div class="search-box">
     <div class="search-wrap">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-      <input type="text" class="search-input" id="searchInput" placeholder="Search districts... (Enter to zoom)" oninput="applyFilters()" onkeydown="if(event.key==='Enter')zoomToSearchResult()">
+      <input type="text" class="search-input" id="searchInput" placeholder="Search districts, regions, states..." autocomplete="off"
+        oninput="onSearchInput()" onkeydown="onSearchKeydown(event)" onfocus="onSearchInput()" onblur="setTimeout(()=>closeAutocomplete(),150)">
+      <div class="search-autocomplete" id="searchAutocomplete"></div>
     </div>
   </div>
 
@@ -2415,35 +2561,11 @@ input[type="range"]::-webkit-slider-thumb {
 
   <div class="pipeline-panel" id="pipelinePanel" style="display:none;">
     <div class="pipeline-toggle" onclick="togglePipelinePanel()">
-      <span style="font-size:11px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;color:var(--text-dim);">Pipeline Summary</span>
+      <span class="filters-toggle-label">Pipeline Summary</span>
       <span class="pipeline-chevron" id="pipelineChevron">&#9660;</span>
     </div>
     <div id="pipelineDetail">
       <div id="pipelineStats"></div>
-    </div>
-  </div>
-
-  <!-- Data Uploads — collapsible panel -->
-  <div class="uploads-panel" id="uploadsPanel">
-    <div class="uploads-toggle" onclick="toggleUploadsPanel()">
-      <span class="uploads-toggle-label">Data Uploads</span>
-      <span class="uploads-toggle-chevron" id="uploadsChevron">&#9660;</span>
-    </div>
-    <div class="uploads-detail">
-      <div class="uploads-row">
-        <button class="sfdc-open-btn" onclick="openSfdcModal()">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-          SFDC Data Refresh
-        </button>
-        <span class="sfdc-badge" id="sfdcLastRefresh">Never refreshed</span>
-      </div>
-      <div class="uploads-row">
-        <button class="conf-upload-btn" onclick="document.getElementById('confFileInput').click()" style="margin-top:0;">
-          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-          Conference Data Upload
-        </button>
-        <input type="file" id="confFileInput" accept=".csv,.xls,.xlsx" style="display:none" onchange="handleConfFile(event)">
-      </div>
     </div>
   </div>
 
@@ -2457,6 +2579,44 @@ input[type="range"]::-webkit-slider-thumb {
     </div>
   </div>
   </div><!-- end sidebar-scroll -->
+</div>
+
+<!-- Data Refresh FAB + Panel -->
+<button class="data-refresh-fab" onclick="toggleDataRefreshPanel()" title="Upload data">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+  Data Refresh
+</button>
+<div class="data-refresh-panel" id="dataRefreshPanel">
+  <div class="data-refresh-header">
+    <h4>Data Refresh</h4>
+    <button class="data-refresh-close" onclick="toggleDataRefreshPanel()">&times;</button>
+  </div>
+  <div class="data-refresh-body">
+    <div class="data-refresh-dropzone" id="dataRefreshDropzone"
+      onclick="document.getElementById('dataRefreshFileInput').click()"
+      ondragover="event.preventDefault();this.classList.add('drag-over')"
+      ondragleave="this.classList.remove('drag-over')"
+      ondrop="event.preventDefault();this.classList.remove('drag-over');handleDataRefreshDrop(event)">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      <div class="data-refresh-dropzone-label">Drop file here or click to browse</div>
+      <div class="data-refresh-dropzone-hint">SFDC accounts/customers or Conference data<br>CSV, XLS, XLSX</div>
+    </div>
+    <input type="file" id="dataRefreshFileInput" accept=".csv,.xls,.xlsx" style="display:none" onchange="handleDataRefreshFile(event)">
+    <input type="file" id="confFileInput" accept=".csv,.xls,.xlsx" style="display:none" onchange="handleConfFile(event)">
+    <div class="data-refresh-btns">
+      <button class="data-refresh-btn" onclick="openSfdcModal()">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        SFDC Data
+      </button>
+      <button class="data-refresh-btn conf-btn" onclick="document.getElementById('confFileInput').click()">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Conference Data
+      </button>
+    </div>
+    <div class="data-refresh-status" id="dataRefreshStatus">
+      <span id="sfdcLastRefresh">Never refreshed</span>
+    </div>
+  </div>
 </div>
 
 <!-- Merge Preview Modal -->
@@ -2593,6 +2753,7 @@ let map;
 let stratLayer, custLayer, proxLayer;
 let filters = {};
 let proximityOn = false;
+let PROXIMITY_MILES = 50;
 let adaFilterOn = false;
 
 // Account list state
@@ -2972,43 +3133,243 @@ function applyFilters() {
   updateFiltersActiveCount();
 }
 
-function zoomToSearchResult() {
-  if (lastSearchResults.length === 0) {
-    return; // No results to zoom to
-  }
+// ============ AUTOCOMPLETE SEARCH ============
 
-  // If only one result, zoom to it and open popup
-  if (lastSearchResults.length === 1) {
-    const result = lastSearchResults[0];
-    const latLng = result.marker.getLatLng();
-    map.setView(latLng, 10, { animate: true });
-    setTimeout(() => {
-      result.marker.openPopup();
-    }, 300);
+let acSelectedIndex = -1;
+let acItems = [];
+
+function buildAutocompleteList(query) {
+  if (!query || query.length < 1) return [];
+
+  const q = query.toLowerCase();
+  const results = [];
+  const seen = new Set();
+
+  // US state abbreviation map for matching
+  const stateNames = {
+    'al':'Alabama','ak':'Alaska','az':'Arizona','ar':'Arkansas','ca':'California',
+    'co':'Colorado','ct':'Connecticut','de':'Delaware','fl':'Florida','ga':'Georgia',
+    'hi':'Hawaii','id':'Idaho','il':'Illinois','in':'Indiana','ia':'Iowa','ks':'Kansas',
+    'ky':'Kentucky','la':'Louisiana','me':'Maine','md':'Maryland','ma':'Massachusetts',
+    'mi':'Michigan','mn':'Minnesota','ms':'Mississippi','mo':'Missouri','mt':'Montana',
+    'ne':'Nebraska','nv':'Nevada','nh':'New Hampshire','nj':'New Jersey','nm':'New Mexico',
+    'ny':'New York','nc':'North Carolina','nd':'North Dakota','oh':'Ohio','ok':'Oklahoma',
+    'or':'Oregon','pa':'Pennsylvania','ri':'Rhode Island','sc':'South Carolina',
+    'sd':'South Dakota','tn':'Tennessee','tx':'Texas','ut':'Utah','vt':'Vermont',
+    'va':'Virginia','wa':'Washington','wv':'West Virginia','wi':'Wisconsin','wy':'Wyoming','dc':'District of Columbia'
+  };
+
+  // Match states
+  Object.entries(stateNames).forEach(([abbr, name]) => {
+    if (abbr.startsWith(q) || name.toLowerCase().startsWith(q)) {
+      const key = 'state:' + abbr;
+      if (!seen.has(key)) {
+        seen.add(key);
+        // Count accounts in this state
+        const stratCount = STRATEGIC_DATA.filter(d => (d.state || '').toLowerCase() === abbr || (d.state || '').toLowerCase() === name.toLowerCase()).length;
+        const custCount = CUSTOMER_DATA.filter(d => (d.state || '').toLowerCase() === abbr || (d.state || '').toLowerCase() === name.toLowerCase()).length;
+        if (stratCount + custCount > 0) {
+          results.push({ type: 'state', label: name + ' (' + abbr.toUpperCase() + ')', meta: stratCount + custCount + ' accounts', abbr, name });
+        }
+      }
+    }
+  });
+
+  // Match regions
+  const regionSet = new Set();
+  [...STRATEGIC_DATA, ...CUSTOMER_DATA].forEach(d => { if (d.region) regionSet.add(d.region); });
+  regionSet.forEach(region => {
+    if (region.toLowerCase().includes(q)) {
+      const count = [...STRATEGIC_DATA, ...CUSTOMER_DATA].filter(d => d.region === region).length;
+      results.push({ type: 'region', label: region, meta: count + ' accounts', region });
+    }
+  });
+
+  // Match districts (strategic accounts)
+  STRATEGIC_DATA.forEach(d => {
+    const nameMatch = d.name && d.name.toLowerCase().includes(q);
+    if (nameMatch && !seen.has('strat:' + d.name)) {
+      seen.add('strat:' + d.name);
+      results.push({ type: 'strat', label: d.name, meta: d.state || '', data: d });
+    }
+  });
+
+  // Match districts (customers)
+  CUSTOMER_DATA.forEach(d => {
+    const nameMatch = d.name && d.name.toLowerCase().includes(q);
+    if (nameMatch && !seen.has('cust:' + d.name) && !seen.has('strat:' + d.name)) {
+      seen.add('cust:' + d.name);
+      results.push({ type: 'cust', label: d.name, meta: d.state || '', data: d });
+    }
+  });
+
+  // Sort: prioritize starts-with matches, then alphabetical
+  results.sort((a, b) => {
+    const aStarts = a.label.toLowerCase().startsWith(q) ? 0 : 1;
+    const bStarts = b.label.toLowerCase().startsWith(q) ? 0 : 1;
+    if (aStarts !== bStarts) return aStarts - bStarts;
+    // Type priority: state > region > strat > cust
+    const typeOrder = { state: 0, region: 1, strat: 2, cust: 3 };
+    if (typeOrder[a.type] !== typeOrder[b.type]) return typeOrder[a.type] - typeOrder[b.type];
+    return a.label.localeCompare(b.label);
+  });
+
+  return results.slice(0, 12);
+}
+
+function renderAutocomplete(items) {
+  const dropdown = document.getElementById('searchAutocomplete');
+  if (items.length === 0) {
+    dropdown.classList.remove('open');
+    dropdown.innerHTML = '';
+    acItems = [];
+    acSelectedIndex = -1;
     return;
   }
 
-  // Multiple results - find best match (exact match or starts with search term)
+  acItems = items;
+  acSelectedIndex = -1;
+  const q = document.getElementById('searchInput').value.toLowerCase();
+
+  dropdown.innerHTML = items.map((item, i) => {
+    const typeLabels = { strat: 'Acct', cust: 'Cust', state: 'State', region: 'Region' };
+    // Highlight matching portion in label
+    const idx = item.label.toLowerCase().indexOf(q);
+    let labelHtml = item.label;
+    if (idx >= 0) {
+      labelHtml = item.label.substring(0, idx) + '<b>' + item.label.substring(idx, idx + q.length) + '</b>' + item.label.substring(idx + q.length);
+    }
+    return `<div class="search-ac-item" data-index="${i}" onmousedown="selectAutocomplete(${i})">
+      <span class="search-ac-type ${item.type}">${typeLabels[item.type]}</span>
+      <span class="search-ac-name">${labelHtml}</span>
+      <span class="search-ac-meta">${item.meta}</span>
+    </div>`;
+  }).join('');
+  dropdown.classList.add('open');
+}
+
+function onSearchInput() {
+  const query = document.getElementById('searchInput').value.trim();
+  const items = buildAutocompleteList(query);
+  renderAutocomplete(items);
+  applyFilters();
+}
+
+function onSearchKeydown(e) {
+  const dropdown = document.getElementById('searchAutocomplete');
+  if (!dropdown.classList.contains('open')) {
+    if (e.key === 'Enter') { zoomToSearchResult(); }
+    return;
+  }
+
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    acSelectedIndex = Math.min(acSelectedIndex + 1, acItems.length - 1);
+    updateAcSelection();
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    acSelectedIndex = Math.max(acSelectedIndex - 1, -1);
+    updateAcSelection();
+  } else if (e.key === 'Enter') {
+    e.preventDefault();
+    if (acSelectedIndex >= 0) {
+      selectAutocomplete(acSelectedIndex);
+    } else if (acItems.length > 0) {
+      selectAutocomplete(0);
+    }
+  } else if (e.key === 'Escape') {
+    closeAutocomplete();
+  }
+}
+
+function updateAcSelection() {
+  const dropdown = document.getElementById('searchAutocomplete');
+  dropdown.querySelectorAll('.search-ac-item').forEach((el, i) => {
+    el.classList.toggle('selected', i === acSelectedIndex);
+  });
+  // Scroll selected into view
+  const selected = dropdown.querySelector('.selected');
+  if (selected) selected.scrollIntoView({ block: 'nearest' });
+}
+
+function selectAutocomplete(index) {
+  const item = acItems[index];
+  if (!item) return;
+  closeAutocomplete();
+
+  if (item.type === 'state') {
+    // Filter to this state and fit bounds
+    document.getElementById('searchInput').value = item.name;
+    applyFilters();
+    // Fit map to all accounts in this state
+    const bounds = [];
+    [...STRATEGIC_DATA, ...CUSTOMER_DATA].forEach(d => {
+      const st = (d.state || '').toLowerCase();
+      if ((st === item.abbr || st === item.name.toLowerCase()) && d.lat && d.lng) {
+        bounds.push([d.lat, d.lng]);
+      }
+    });
+    if (bounds.length > 0) {
+      map.fitBounds(bounds, { padding: [40, 40], maxZoom: 8 });
+    }
+  } else if (item.type === 'region') {
+    document.getElementById('searchInput').value = item.region;
+    applyFilters();
+    const bounds = [];
+    [...STRATEGIC_DATA, ...CUSTOMER_DATA].forEach(d => {
+      if (d.region === item.region && d.lat && d.lng) {
+        bounds.push([d.lat, d.lng]);
+      }
+    });
+    if (bounds.length > 0) {
+      map.fitBounds(bounds, { padding: [40, 40], maxZoom: 8 });
+    }
+  } else {
+    // Individual account
+    document.getElementById('searchInput').value = item.label;
+    applyFilters();
+    const entry = markerLookup[item.label];
+    if (entry && entry.marker) {
+      const latLng = entry.marker.getLatLng();
+      map.setView(latLng, 7, { animate: true });
+      setTimeout(() => entry.marker.openPopup(), 400);
+    } else if (item.data && item.data.lat && item.data.lng) {
+      map.setView([item.data.lat, item.data.lng], 7, { animate: true });
+    }
+  }
+}
+
+function closeAutocomplete() {
+  const dropdown = document.getElementById('searchAutocomplete');
+  dropdown.classList.remove('open');
+  dropdown.innerHTML = '';
+  acItems = [];
+  acSelectedIndex = -1;
+}
+
+function zoomToSearchResult() {
+  closeAutocomplete();
+  if (lastSearchResults.length === 0) return;
+
+  // Find best match
   const search = document.getElementById('searchInput').value.toLowerCase().trim();
-
-  // First try exact match
   let bestMatch = lastSearchResults.find(r => r.data.name.toLowerCase() === search);
+  if (!bestMatch) bestMatch = lastSearchResults.find(r => r.data.name.toLowerCase().startsWith(search));
+  if (!bestMatch) bestMatch = lastSearchResults[0];
 
-  // Then try starts with
-  if (!bestMatch) {
-    bestMatch = lastSearchResults.find(r => r.data.name.toLowerCase().startsWith(search));
+  if (lastSearchResults.length === 1) {
+    const latLng = bestMatch.marker.getLatLng();
+    map.setView(latLng, 7, { animate: true });
+    setTimeout(() => bestMatch.marker.openPopup(), 300);
+  } else {
+    // Multiple results — fit bounds
+    const bounds = lastSearchResults.map(r => r.marker.getLatLng());
+    if (bounds.length > 0) {
+      map.fitBounds(bounds, { padding: [40, 40], maxZoom: 8 });
+    }
+    // Still open best match popup
+    setTimeout(() => bestMatch.marker.openPopup(), 400);
   }
-
-  // Otherwise just use first result
-  if (!bestMatch) {
-    bestMatch = lastSearchResults[0];
-  }
-
-  const latLng = bestMatch.marker.getLatLng();
-  map.setView(latLng, 10, { animate: true });
-  setTimeout(() => {
-    bestMatch.marker.openPopup();
-  }, 300);
 }
 
 function togglePipelinePanel() {
@@ -4799,10 +5160,40 @@ function showMeetingPrepToast() {
   }, 3000);
 }
 
-// ============ UPLOADS PANEL ============
+// ============ DATA REFRESH PANEL ============
 
-function toggleUploadsPanel() {
-  document.getElementById('uploadsPanel').classList.toggle('up-collapsed');
+function toggleDataRefreshPanel() {
+  document.getElementById('dataRefreshPanel').classList.toggle('open');
+}
+
+function handleDataRefreshDrop(event) {
+  const file = event.dataTransfer.files[0];
+  if (!file) return;
+  if (!/\.(csv|xlsx?|xls)$/i.test(file.name)) {
+    alert('Please drop a CSV or Excel file.');
+    return;
+  }
+  // Auto-detect: if filename hints at conference, route there; else SFDC
+  const fn = file.name.toLowerCase();
+  if (fn.includes('conf') || fn.includes('event') || fn.includes('convention') || fn.includes('trade')) {
+    processConfUpload(file);
+  } else {
+    processUploadFile(file);
+  }
+  toggleDataRefreshPanel();
+}
+
+function handleDataRefreshFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const fn = file.name.toLowerCase();
+  if (fn.includes('conf') || fn.includes('event') || fn.includes('convention') || fn.includes('trade')) {
+    processConfUpload(file);
+  } else {
+    processUploadFile(file);
+  }
+  event.target.value = '';
+  toggleDataRefreshPanel();
 }
 
 // ============ SPREADSHEET FILE READER (CSV + Excel) ============
@@ -4818,7 +5209,7 @@ function readSpreadsheetFile(file) {
       const reader = new FileReader();
       reader.onload = e => {
         try {
-          const workbook = XLSX.read(e.target.result, { type: 'array' });
+          const workbook = XLSX.read(e.target.result, { type: 'array', cellDates: true });
           const sheetName = workbook.SheetNames[0];
           const sheet = workbook.Sheets[sheetName];
           // Convert to array of objects with lowercase underscore keys
@@ -4827,7 +5218,13 @@ function readSpreadsheetFile(file) {
             const mapped = {};
             Object.keys(row).forEach(key => {
               const normKey = key.trim().toLowerCase().replace(/\s+/g, '_');
-              mapped[normKey] = String(row[key]).trim();
+              const val = row[key];
+              // Handle Date objects from Excel (cellDates: true)
+              if (val instanceof Date && !isNaN(val.getTime())) {
+                mapped[normKey] = (val.getMonth() + 1) + '/' + val.getDate() + '/' + val.getFullYear();
+              } else {
+                mapped[normKey] = String(val).trim();
+              }
             });
             return mapped;
           });
@@ -5731,6 +6128,19 @@ async function confirmMerge() {
   }
 }
 
+function focusOnAccount(districtKey) {
+  const d = window.districtDataCache && window.districtDataCache[districtKey];
+  if (!d) return;
+  const entry = markerLookup[d.name];
+  if (entry && entry.marker) {
+    const latLng = entry.marker.getLatLng();
+    map.flyTo(latLng, 8, { duration: 0.6 });
+    setTimeout(() => entry.marker.openPopup(), 400);
+  } else {
+    openAccountModalByKey(districtKey);
+  }
+}
+
 // ============ CONFERENCE TRACKER ============
 
 function toggleConferences(on) {
@@ -6062,7 +6472,8 @@ function processConfData(parsed) {
       conferencesOn = true;
       document.getElementById('confCheck').checked = true;
       document.getElementById('confOptions').style.display = '';
-      renderConferences();
+      // Show all conferences on first upload so user sees everything
+      setConfRange('all');
 
       alert(`✓ Loaded ${results.length} conferences!\n${results.filter(r => r.lat && r.lng).length} geocoded successfully.`);
     });
