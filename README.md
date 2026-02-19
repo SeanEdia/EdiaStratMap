@@ -1,6 +1,6 @@
 # Edia Strategic Territory Map
 
-A single-page interactive map for **Edia Learning's sales team** to visualize strategic accounts, active customers, and conference activity across the US.
+A single-page interactive map for **Edia Learning's sales team** to visualize strategic accounts and active customers across the US.
 
 ---
 
@@ -10,6 +10,7 @@ A single-page interactive map for **Edia Learning's sales team** to visualize st
 2. Data is embedded — the map loads immediately with strategic accounts and customers
 3. Use the sidebar to search, filter, and switch views
 4. Click any pin to see details; click the expand button for a full-screen modal
+5. Click the **reset button** (top-right of sidebar) to clear all filters and return to the default view
 
 ---
 
@@ -33,52 +34,16 @@ Switch views with the buttons at the top of the sidebar.
 | Red-orange | Scoping stage |
 | Green (bright) | Validation stage |
 | Green (standard) | Active customer |
-| Orange star | Conference |
-| Gray star | Past conference |
 
-A legend is always visible in the bottom-left corner of the map.
+A legend showing opportunity stages is always visible in the bottom-right corner of the map.
 
----
+### Reset View
 
-## Conferences
-
-### Uploading Conference Data
-
-1. Click **Data Refresh** (bottom-right)
-2. Click **Conference Data**
-3. Select a CSV or Excel file
-
-### Expected Columns
-
-The following columns are recognized (order does not matter):
-
-| Column | Purpose |
-|--------|---------|
-| **Conference** | Conference name (required) |
-| **Start Date** | Start date |
-| **End Date** | End date |
-| **Full Address** | Used for pin placement (geocoding) |
-| **Conference Location** | Displayed in popup |
-| **State** | State abbreviation |
-| **Speaking?** | Yes/No — shown as checkbox |
-| **Attendee List?** | Yes/No — shown as checkbox |
-| **Edia Attendee** | Who from Edia is attending |
-| **Attendee Size** | Expected attendance |
-| **Registered** | Yes/No |
-| **Paid** | Yes/No |
-| **Actual Cost** | Cost/budget |
-| **Booth** | Booth info |
-| **Table** | Table info |
-| **Notes** | Additional notes |
-
-Rows starting with Q1, Q2, Q3, Q4 (quarter headers) are automatically filtered out.
-
-### Conference Features
-
-- **Proximity rings**: 100-mile orange circles around upcoming conferences
-- **Nearby accounts**: Each conference popup lists strategic accounts within 100 miles
-- **Date filtering**: 30d / 60d / 90d / All / Custom date range
-- **Geocoding**: Addresses are geocoded via OpenStreetMap Nominatim with automatic fallbacks
+Click the **reset button** in the top-right of the sidebar header to:
+- Reset all filters
+- Switch back to Strategic Accounts view
+- Reset the map to show the full lower 48 US states
+- Turn off proximity overlays
 
 ---
 
@@ -128,24 +93,17 @@ Toggle proximity overlays in the sidebar:
 
 ## Data Refresh
 
-### SFDC Data
-
-1. Click **Data Refresh** > **SFDC Data**
-2. Choose data type (Strategic or Customers)
-3. Drag-and-drop or select a CSV exported from Salesforce
-4. Preview changes and click **Apply**
+1. Click **Data Refresh** (bottom-right, above the legend)
+2. Click **SFDC Data**
+3. Choose data type (Strategic or Customers)
+4. Drag-and-drop or select a CSV exported from Salesforce
+5. Preview changes and click **Apply**
 
 Smart name matching normalizes school district names:
 - "Dallas Independent School District" matches "Dallas ISD"
 - "DeSoto County School District" matches "Desoto County Schools"
 
 Notes and meeting prep links are preserved during merges.
-
-### Conference Data
-
-1. Click **Data Refresh** > **Conference Data**
-2. Select CSV or Excel file
-3. Conferences are geocoded automatically and displayed on the map
 
 ---
 
@@ -181,7 +139,7 @@ Notes and meeting prep links are preserved during merges.
 - [Leaflet.js](https://leafletjs.com/) for mapping
 - [SheetJS](https://sheetjs.com/) for Excel file reading
 - Vanilla JavaScript — no build step required
-- localStorage for persistence (notes, links, conference data, SFDC refresh timestamp)
+- localStorage for persistence (notes, links, SFDC refresh timestamp)
 
 ---
 
@@ -193,7 +151,6 @@ All data is stored in the browser's localStorage:
 |-----|----------|
 | Notes | Per-account notes |
 | Meeting Prep Links | Google Drive links |
-| Conference Data | Uploaded conference records |
 | SFDC Refresh | Last refresh timestamp |
 
 This data persists across sessions but is local to your browser.

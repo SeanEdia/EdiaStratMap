@@ -72,6 +72,28 @@ body {
   align-items: center;
   gap: 10px;
   margin-bottom: 16px;
+  position: relative;
+}
+
+.reset-view-btn {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: transparent;
+  border: 1px solid var(--panel-border);
+  border-radius: 4px;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+.reset-view-btn:hover {
+  border-color: var(--accent-strat);
+  color: var(--accent-strat);
+  background: rgba(162,155,254,0.08);
 }
 
 .brand-icon {
@@ -605,21 +627,20 @@ input[type="range"]::-webkit-slider-thumb {
   border-top: 1px solid var(--panel-border);
 }
 
-/* Floating legend — bottom-left to avoid overlapping data refresh FAB (bottom-right) */
+/* Floating legend — bottom-right corner */
 .legend {
   position: fixed;
   bottom: 24px;
-  left: 24px;
+  right: 24px;
   background: var(--panel);
   border: 1px solid var(--panel-border);
   border-radius: var(--radius);
   padding: 10px 16px;
-  z-index: 999;
-  display: none;
+  z-index: 1000;
+  display: flex;
   flex-wrap: wrap;
-  gap: 12px 18px;
+  gap: 10px 16px;
   box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-  max-width: 500px;
 }
 
 .legend-item {
@@ -641,13 +662,6 @@ input[type="range"]::-webkit-slider-thumb {
 
 .legend-dot.strat { background: var(--accent-strat); box-shadow: 0 0 6px var(--accent-strat-glow); }
 .legend-dot.cust { background: var(--accent-cust); box-shadow: 0 0 6px var(--accent-cust-glow); }
-.legend-dot.conf {
-  background: #ff9f43;
-  border-radius: 2px;
-  transform: rotate(45deg);
-  width: 9px;
-  height: 9px;
-}
 
 /* Visible count badge */
 .count-badge .cb-num { font-weight: 600; }
@@ -1001,226 +1015,6 @@ input[type="range"]::-webkit-slider-thumb {
   background: rgba(108,92,231,0.2);
   border-color: rgba(108,92,231,0.4);
 }
-/* Conference toggle — uses prox-toggle structure with orange accent */
-.conf-slider {}
-.prox-toggle input:checked + .conf-slider {
-  background: rgba(255,159,67,0.2);
-  border-color: rgba(255,159,67,0.4);
-}
-.prox-toggle input:checked + .conf-slider::after {
-  transform: translateX(15px);
-  background: #ff9f43;
-}
-.prox-toggle input:checked ~ .conf-label { color: #ff9f43; }
-
-/* Conference date range picker */
-.conf-options {
-  margin-top: 8px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-.conf-date-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.conf-date-row label {
-  font-size: 10px;
-  color: var(--text-muted);
-  width: 42px;
-  flex-shrink: 0;
-}
-.conf-date-input {
-  flex: 1;
-  padding: 4px 6px;
-  font-size: 10px;
-  font-family: 'JetBrains Mono', monospace;
-  background: var(--bg);
-  border: 1px solid var(--panel-border);
-  border-radius: 4px;
-  color: var(--text);
-  outline: none;
-}
-.conf-date-input:focus {
-  border-color: rgba(255,159,67,0.5);
-}
-.conf-quick-btns {
-  display: flex;
-  gap: 4px;
-  flex-wrap: wrap;
-}
-.conf-quick-btn {
-  font-size: 9px;
-  padding: 2px 7px;
-  border-radius: 4px;
-  border: 1px solid var(--panel-border);
-  background: transparent;
-  color: var(--text-dim);
-  cursor: pointer;
-  transition: all 0.15s;
-}
-.conf-quick-btn:hover, .conf-quick-btn.active {
-  border-color: rgba(255,159,67,0.5);
-  color: #ff9f43;
-  background: rgba(255,159,67,0.08);
-}
-.conf-stats {
-  font-size: 10px;
-  color: var(--text-muted);
-  margin-top: 4px;
-}
-.conf-stats b {
-  color: #ff9f43;
-  font-family: 'JetBrains Mono', monospace;
-}
-.conf-upload-btn {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 10px;
-  padding: 5px 10px;
-  border-radius: 4px;
-  border: 1px dashed rgba(255,159,67,0.4);
-  background: rgba(255,159,67,0.05);
-  color: #ff9f43;
-  cursor: pointer;
-  margin-top: 8px;
-  transition: all 0.15s;
-  width: 100%;
-  justify-content: center;
-}
-.conf-upload-btn:hover {
-  border-style: solid;
-  border-color: rgba(255,159,67,0.6);
-  background: rgba(255,159,67,0.1);
-}
-
-/* Conference map markers */
-.marker-conf {
-  width: 20px;
-  height: 20px;
-  background: #ff9f43;
-  border: 2px solid #fff;
-  border-radius: 4px;
-  transform: rotate(45deg);
-  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
-  position: relative;
-}
-.marker-conf::after {
-  content: '★';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%) rotate(-45deg);
-  font-size: 9px;
-  color: #fff;
-  line-height: 1;
-}
-.marker-conf.conf-past {
-  background: #636e72;
-  border-color: #b2bec3;
-  opacity: 0.6;
-}
-
-/* Conference proximity rings */
-.conf-prox-ring {
-  stroke: #ff9f43;
-  fill: rgba(255,159,67,0.06);
-}
-
-/* Conference popup */
-.popup-conf-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 8px;
-}
-.popup-conf-badge {
-  font-size: 9px;
-  font-weight: 600;
-  padding: 2px 8px;
-  border-radius: 6px;
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
-}
-.popup-conf-badge.upcoming {
-  background: rgba(255,159,67,0.15);
-  color: #ff9f43;
-}
-.popup-conf-badge.past {
-  background: rgba(99,110,114,0.15);
-  color: #b2bec3;
-}
-.popup-conf-badge.attending {
-  background: rgba(0,184,148,0.15);
-  color: #00b894;
-}
-.popup-conf-badge.exhibiting {
-  background: rgba(108,92,231,0.15);
-  color: #a29bfe;
-}
-.popup-conf-dates {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text);
-  margin-bottom: 6px;
-}
-.popup-conf-nearby {
-  margin-top: 8px;
-  padding-top: 8px;
-  border-top: 1px solid rgba(255,255,255,0.08);
-}
-.popup-conf-nearby-title {
-  font-size: 10px;
-  font-weight: 600;
-  color: #ff9f43;
-  margin-bottom: 4px;
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
-}
-.popup-conf-nearby-item {
-  font-size: 11px;
-  color: var(--text-dim);
-  padding: 2px 0;
-  cursor: pointer;
-}
-.popup-conf-nearby-item:hover {
-  color: var(--text);
-}
-.popup-conf-nearby-item .conf-dist {
-  font-size: 9px;
-  color: var(--text-muted);
-  font-family: 'JetBrains Mono', monospace;
-}
-
-/* Conference popup check indicators */
-.conf-check-indicator {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  color: var(--text-muted);
-}
-.conf-check-indicator.checked {
-  color: #00b894;
-}
-.conf-check-box {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 14px;
-  height: 14px;
-  border-radius: 3px;
-  border: 1.5px solid var(--text-muted);
-  font-size: 10px;
-  line-height: 1;
-  flex-shrink: 0;
-}
-.conf-check-indicator.checked .conf-check-box {
-  background: #00b894;
-  border-color: #00b894;
-  color: #fff;
-}
 .prox-toggle input:checked + .ada-slider::after {
   transform: translateX(15px);
   background: #6c5ce7;
@@ -1400,10 +1194,10 @@ input[type="range"]::-webkit-slider-thumb {
 }
 .notes-btn:hover { border-color: var(--text-muted); color: var(--text); }
 
-/* Data Refresh — floating bottom-right button + panel */
+/* Data Refresh — floating above legend in bottom-right */
 .data-refresh-fab {
   position: fixed;
-  bottom: 24px;
+  bottom: 68px;
   right: 24px;
   z-index: 1100;
   display: flex;
@@ -1432,7 +1226,7 @@ input[type="range"]::-webkit-slider-thumb {
 .data-refresh-panel {
   display: none;
   position: fixed;
-  bottom: 72px;
+  bottom: 116px;
   right: 24px;
   z-index: 1100;
   width: 320px;
@@ -1519,12 +1313,6 @@ input[type="range"]::-webkit-slider-thumb {
   transition: all 0.15s;
 }
 .data-refresh-btn:hover { border-color: #74b9ff; background: rgba(116,185,255,0.18); }
-.data-refresh-btn.conf-btn {
-  border-color: rgba(255,159,67,0.3);
-  background: rgba(255,159,67,0.08);
-  color: #ff9f43;
-}
-.data-refresh-btn.conf-btn:hover { border-color: #ff9f43; background: rgba(255,159,67,0.18); }
 .data-refresh-status {
   font-size: 9px;
   color: var(--text-muted);
@@ -2544,6 +2332,9 @@ input[type="range"]::-webkit-slider-thumb {
     <div class="brand">
       <img src="data:image/png;base64,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" class="brand-icon" alt="Edia">
       <h1>Territory Map<span>Edia Learning · Strategic Intelligence</span></h1>
+      <button class="reset-view-btn" onclick="resetMapView()" title="Reset view">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 1 9 9"/><polyline points="3 21 3 12 12 12"/></svg>
+      </button>
     </div>
     <div class="view-toggle">
       <button class="view-btn active-strat" data-view="strategic" onclick="setView('strategic')">Strategic Accounts</button>
@@ -2601,34 +2392,6 @@ input[type="range"]::-webkit-slider-thumb {
     </label>
   </div>
 
-  <div class="prox-control" id="confControl">
-    <label class="prox-toggle">
-      <input type="checkbox" id="confCheck" onchange="toggleConferences(this.checked)">
-      <span class="prox-slider conf-slider"></span>
-      <span class="prox-label conf-label">Conferences</span>
-    </label>
-    <div id="confOptions" class="conf-options" style="display:none;">
-      <div class="conf-quick-btns">
-        <button class="conf-quick-btn active" onclick="setConfRange('30')">30d</button>
-        <button class="conf-quick-btn" onclick="setConfRange('60')">60d</button>
-        <button class="conf-quick-btn" onclick="setConfRange('90')">90d</button>
-        <button class="conf-quick-btn" onclick="setConfRange('all')">All</button>
-        <button class="conf-quick-btn" onclick="setConfRange('custom')">Custom</button>
-      </div>
-      <div id="confCustomDates" style="display:none;">
-        <div class="conf-date-row">
-          <label>From</label>
-          <input type="date" class="conf-date-input" id="confDateFrom" onchange="applyConfDateFilter()">
-        </div>
-        <div class="conf-date-row">
-          <label>To</label>
-          <input type="date" class="conf-date-input" id="confDateTo" onchange="applyConfDateFilter()">
-        </div>
-      </div>
-      <div class="conf-stats" id="confStats"></div>
-    </div>
-  </div>
-
   <div class="filters-wrap" id="filtersWrap">
     <div class="filters-toggle" onclick="toggleFiltersPanel()">
       <span class="filters-toggle-label">Filters</span>
@@ -2680,18 +2443,13 @@ input[type="range"]::-webkit-slider-thumb {
       ondrop="event.preventDefault();this.classList.remove('drag-over');handleDataRefreshDrop(event)">
       <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
       <div class="data-refresh-dropzone-label">Drop file here or click to browse</div>
-      <div class="data-refresh-dropzone-hint">SFDC accounts/customers or Conference data<br>CSV, XLS, XLSX</div>
+      <div class="data-refresh-dropzone-hint">SFDC accounts/customers<br>CSV, XLS, XLSX</div>
     </div>
     <input type="file" id="dataRefreshFileInput" accept=".csv,.xls,.xlsx" style="display:none" onchange="handleDataRefreshFile(event)">
-    <input type="file" id="confFileInput" accept=".csv,.xls,.xlsx" style="display:none" onchange="handleConfFile(event)">
     <div class="data-refresh-btns">
       <button class="data-refresh-btn" onclick="openSfdcModal()">
         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
         SFDC Data
-      </button>
-      <button class="data-refresh-btn conf-btn" onclick="document.getElementById('confFileInput').click()">
-        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-        Conference Data
       </button>
     </div>
     <div class="data-refresh-status" id="dataRefreshStatus">
@@ -2853,16 +2611,6 @@ let accountListGroupBy = null;  // null | 'state' | 'stage'
 let accountListOpen = false;
 let collapsedGroups = {};       // track collapsed group headers
 
-// Conference state
-let CONFERENCE_DATA = [];
-let confLayer = null;
-let confProxLayer = null;
-let conferencesOn = false;
-let confRangeMode = '30'; // '30', '60', '90', 'all', 'custom'
-let confDateFrom = null;
-let confDateTo = null;
-let filteredConfData = [];
-
 // ============ INIT ============
 function initMap() {
   // Load persisted data from localStorage if available
@@ -2912,22 +2660,6 @@ function initMap() {
   stratLayer = L.layerGroup().addTo(map);
   custLayer = L.layerGroup().addTo(map);
   proxLayer = L.layerGroup().addTo(map);
-  confLayer = L.layerGroup().addTo(map);
-  confProxLayer = L.layerGroup().addTo(map);
-
-  // Load persisted conference data
-  try {
-    const savedConf = localStorage.getItem('edia_conference_data');
-    if (savedConf) {
-      const parsed = JSON.parse(savedConf);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        CONFERENCE_DATA = parsed;
-        console.log('[Persist] Loaded', CONFERENCE_DATA.length, 'conferences from localStorage');
-      }
-    }
-  } catch(e) {
-    console.error('[Persist] Failed to load conference data:', e);
-  }
 
   renderFilters();
   applyFilters();
@@ -3055,6 +2787,23 @@ function resetFilters() {
   applyFilters();
 }
 
+function resetMapView() {
+  // Reset view to Strategic Accounts
+  setView('strategic');
+  // Reset proximity toggles
+  proximityOn = false;
+  const proxCheck = document.getElementById('proxCheck');
+  if (proxCheck) proxCheck.checked = false;
+  const proxWrap = document.getElementById('proxRadiusWrap');
+  if (proxWrap) proxWrap.style.display = 'none';
+  proxLayer.clearLayers();
+  adaFilterOn = false;
+  const adaCheck = document.getElementById('adaCheck');
+  if (adaCheck) adaCheck.checked = false;
+  // Reset map to lower 48 US view
+  map.setView([39.5, -98.5], 5, { animate: true });
+}
+
 function toggleFiltersPanel() {
   document.getElementById('filtersWrap').classList.toggle('collapsed');
 }
@@ -3126,7 +2875,7 @@ function applyFilters() {
       const marker = L.marker([d.lat, d.lng], { icon }).addTo(stratLayer);
       marker.bindPopup(buildStratPopup(d), { maxWidth: 320 });
       marker.on('click', function() {
-        map.flyTo([d.lat, d.lng], Math.max(map.getZoom(), 8), { duration: 0.6 });
+        map.flyTo([d.lat, d.lng], Math.max(map.getZoom(), 7), { duration: 0.6 });
       });
       statesSet.add(d.state);
       markerLookup[d.name] = { marker, data: d, type: 'strategic' };
@@ -3167,7 +2916,7 @@ function applyFilters() {
       const marker = L.marker([d.lat, d.lng], { icon }).addTo(custLayer);
       marker.bindPopup(buildCustPopup(d), { maxWidth: 320 });
       marker.on('click', function() {
-        map.flyTo([d.lat, d.lng], Math.max(map.getZoom(), 8), { duration: 0.6 });
+        map.flyTo([d.lat, d.lng], Math.max(map.getZoom(), 7), { duration: 0.6 });
       });
       statesSet.add(d.state);
       if (!markerLookup[d.name]) {
@@ -4402,10 +4151,10 @@ function flyToAccount(name) {
   const entry = markerLookup[name];
   if (!entry || !entry.marker) return;
   const latLng = entry.marker.getLatLng();
-  map.flyTo(latLng, 10, { duration: 0.6 });
+  map.flyTo(latLng, 7, { duration: 0.6 });
   setTimeout(() => {
     entry.marker.openPopup();
-  }, 400);
+  }, 650);
 }
 
 function openAccountFromList(districtKey) {
@@ -4574,28 +4323,14 @@ function updateCountBadge(strat, cust) {
 function updateLegend() {
   const legend = document.getElementById('legend');
   let items = '';
-
-  if (currentView === 'strategic') {
-    items += `<div class="legend-item"><div class="legend-dot strat"></div>Strategic Account</div>`;
-  } else if (currentView === 'customers') {
-    items += `<div class="legend-item"><div class="legend-dot cust"></div>Customer</div>`;
-  } else {
-    // "all" view — show pipeline stages
-    items += `<div class="legend-item"><div class="legend-dot strat"></div>No Opp</div>`;
-    items += `<div class="legend-item"><div class="legend-dot" style="background:#fdcb6e;"></div>Discovery</div>`;
-    items += `<div class="legend-item"><div class="legend-dot" style="background:#74b9ff;"></div>Demo</div>`;
-    items += `<div class="legend-item"><div class="legend-dot" style="background:#e17055;"></div>Scoping</div>`;
-    items += `<div class="legend-item"><div class="legend-dot" style="background:#55efc4;"></div>Validation</div>`;
-    items += `<div class="legend-item"><div class="legend-dot cust"></div>Customer</div>`;
-  }
-
-  // Add conference marker to legend if conferences are loaded
-  if (conferencesOn && CONFERENCE_DATA.length > 0) {
-    items += `<div class="legend-item"><div class="legend-dot conf"></div>Conference</div>`;
-  }
-
+  items += `<div class="legend-item"><div class="legend-dot strat"></div>No Opp</div>`;
+  items += `<div class="legend-item"><div class="legend-dot" style="background:#fdcb6e;"></div>Discovery</div>`;
+  items += `<div class="legend-item"><div class="legend-dot" style="background:#74b9ff;"></div>Demo</div>`;
+  items += `<div class="legend-item"><div class="legend-dot" style="background:#e17055;"></div>Scoping</div>`;
+  items += `<div class="legend-item"><div class="legend-dot" style="background:#55efc4;"></div>Validation</div>`;
+  items += `<div class="legend-item"><div class="legend-dot cust"></div>Customer</div>`;
   legend.innerHTML = items;
-  legend.style.display = items ? 'flex' : 'none';
+  legend.style.display = 'flex';
 }
 
 // ============ FULL-SCREEN ACCOUNT MODAL ============
@@ -5291,25 +5026,14 @@ function handleDataRefreshDrop(event) {
     alert('Please drop a CSV or Excel file.');
     return;
   }
-  // Auto-detect: if filename hints at conference, route there; else SFDC
-  const fn = file.name.toLowerCase();
-  if (fn.includes('conf') || fn.includes('event') || fn.includes('convention') || fn.includes('trade')) {
-    processConfUpload(file);
-  } else {
-    processUploadFile(file);
-  }
+  processUploadFile(file);
   toggleDataRefreshPanel();
 }
 
 function handleDataRefreshFile(event) {
   const file = event.target.files[0];
   if (!file) return;
-  const fn = file.name.toLowerCase();
-  if (fn.includes('conf') || fn.includes('event') || fn.includes('convention') || fn.includes('trade')) {
-    processConfUpload(file);
-  } else {
-    processUploadFile(file);
-  }
+  processUploadFile(file);
   event.target.value = '';
   toggleDataRefreshPanel();
 }
@@ -6243,564 +5967,6 @@ async function confirmMerge() {
     confirmBtn.textContent = originalBtnText;
     alert(`❌ Merge failed!\n\nError: ${e.message}\n\nCheck console for details.`);
   }
-}
-
-function focusOnAccount(districtKey) {
-  const d = window.districtDataCache && window.districtDataCache[districtKey];
-  if (!d) return;
-  const entry = markerLookup[d.name];
-  if (entry && entry.marker) {
-    const latLng = entry.marker.getLatLng();
-    map.flyTo(latLng, 8, { duration: 0.6 });
-    setTimeout(() => entry.marker.openPopup(), 400);
-  } else {
-    openAccountModalByKey(districtKey);
-  }
-}
-
-// ============ CONFERENCE TRACKER ============
-
-function toggleConferences(on) {
-  conferencesOn = on;
-  document.getElementById('confOptions').style.display = on ? '' : 'none';
-  renderConferences();
-  updateLegend();
-}
-
-function setConfRange(mode) {
-  confRangeMode = mode;
-  // Update quick button active states
-  document.querySelectorAll('.conf-quick-btn').forEach(b => b.classList.remove('active'));
-  const btns = document.querySelectorAll('.conf-quick-btn');
-  btns.forEach(b => { if (b.textContent.toLowerCase().replace('d','') === mode || b.textContent.toLowerCase() === mode) b.classList.add('active'); });
-
-  const customDates = document.getElementById('confCustomDates');
-  if (mode === 'custom') {
-    customDates.style.display = '';
-  } else {
-    customDates.style.display = 'none';
-    confDateFrom = null;
-    confDateTo = null;
-  }
-  renderConferences();
-}
-
-function applyConfDateFilter() {
-  const fromEl = document.getElementById('confDateFrom');
-  const toEl = document.getElementById('confDateTo');
-  confDateFrom = fromEl.value ? new Date(fromEl.value + 'T00:00:00') : null;
-  confDateTo = toEl.value ? new Date(toEl.value + 'T23:59:59') : null;
-  renderConferences();
-}
-
-function getConfDateRange() {
-  const now = new Date();
-  now.setHours(0,0,0,0);
-  let from = null;
-  let to = null;
-
-  if (confRangeMode === 'custom') {
-    from = confDateFrom;
-    to = confDateTo;
-  } else if (confRangeMode === 'all') {
-    from = null;
-    to = null;
-  } else {
-    const days = parseInt(confRangeMode) || 30;
-    from = new Date(now);
-    from.setDate(from.getDate() - 7); // Show conferences from 1 week ago
-    to = new Date(now);
-    to.setDate(to.getDate() + days);
-  }
-  return { from, to };
-}
-
-function filterConferences() {
-  const { from, to } = getConfDateRange();
-
-  return CONFERENCE_DATA.filter(c => {
-    if (!c.lat || !c.lng) return false;
-    const startDate = parseConfDate(c.start_date);
-    const endDate = parseConfDate(c.end_date) || startDate;
-
-    // If no parseable date, include the conference (we can't date-filter it)
-    if (!startDate) return true;
-
-    if (from && endDate < from) return false;
-    if (to && startDate > to) return false;
-    return true;
-  });
-}
-
-function parseConfDate(str) {
-  if (!str) return null;
-  // Handle M/D/YYYY, MM/DD/YYYY, YYYY-MM-DD
-  if (str.includes('-')) {
-    const d = new Date(str + 'T00:00:00');
-    return isNaN(d.getTime()) ? null : d;
-  }
-  const parts = str.trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
-  if (!parts) return null;
-  let year = parseInt(parts[3]);
-  if (year < 100) year += 2000;
-  const d = new Date(year, parseInt(parts[1]) - 1, parseInt(parts[2]));
-  return isNaN(d.getTime()) ? null : d;
-}
-
-function formatConfDate(dateStr) {
-  const d = parseConfDate(dateStr);
-  if (!d) return dateStr || '—';
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-}
-
-function isConfPast(c) {
-  const endDate = parseConfDate(c.end_date) || parseConfDate(c.start_date);
-  if (!endDate) return false;
-  const now = new Date();
-  now.setHours(0,0,0,0);
-  return endDate < now;
-}
-
-function renderConferences() {
-  confLayer.clearLayers();
-  confProxLayer.clearLayers();
-  filteredConfData = [];
-
-  if (!conferencesOn || CONFERENCE_DATA.length === 0) {
-    updateConfStats();
-    return;
-  }
-
-  filteredConfData = filterConferences();
-  console.log('[Conference] Rendering', filteredConfData.length, 'of', CONFERENCE_DATA.length, 'conferences. conferencesOn:', conferencesOn, 'rangeMode:', confRangeMode);
-  if (filteredConfData.length === 0 && CONFERENCE_DATA.length > 0) {
-    console.log('[Conference] All filtered out. Sample data:', JSON.stringify(CONFERENCE_DATA.slice(0, 2).map(c => ({ name: c.name, lat: c.lat, lng: c.lng, start_date: c.start_date }))));
-  }
-
-  filteredConfData.forEach(c => {
-    const past = isConfPast(c);
-    const icon = L.divIcon({
-      className: `marker-conf${past ? ' conf-past' : ''}`,
-      iconSize: [20, 20],
-      iconAnchor: [10, 10],
-    });
-
-    const marker = L.marker([c.lat, c.lng], { icon }).addTo(confLayer);
-    marker.bindPopup(buildConfPopup(c), { maxWidth: 340 });
-    marker.on('click', function() {
-      map.flyTo([c.lat, c.lng], Math.max(map.getZoom(), 8), { duration: 0.6 });
-    });
-
-    // Draw proximity ring (100mi)
-    if (!past) {
-      const radiusMeters = 100 * 1609.34;
-      L.circle([c.lat, c.lng], {
-        radius: radiusMeters,
-        color: '#ff9f43',
-        weight: 1,
-        opacity: 0.2,
-        fillColor: '#ff9f43',
-        fillOpacity: 0.04,
-        interactive: false,
-      }).addTo(confProxLayer);
-    }
-  });
-
-  updateConfStats();
-}
-
-function updateConfStats() {
-  const statsEl = document.getElementById('confStats');
-  if (!statsEl) return;
-  if (CONFERENCE_DATA.length === 0) {
-    statsEl.innerHTML = 'No conferences loaded — upload a CSV';
-    return;
-  }
-  const showing = filteredConfData.length;
-  const total = CONFERENCE_DATA.length;
-  const upcoming = filteredConfData.filter(c => !isConfPast(c)).length;
-  let nearbyAccounts = 0;
-  filteredConfData.forEach(c => {
-    if (isConfPast(c)) return;
-    nearbyAccounts += countNearbyStrategic(c, 100);
-  });
-  statsEl.innerHTML = `<b>${showing}</b> of ${total} conferences · <b>${upcoming}</b> upcoming · <b>${nearbyAccounts}</b> strategic accounts nearby`;
-}
-
-function countNearbyStrategic(conf, radiusMiles) {
-  let count = 0;
-  STRATEGIC_DATA.forEach(s => {
-    if (!s.lat || !s.lng) return;
-    if (haversine(conf.lat, conf.lng, s.lat, s.lng) <= radiusMiles) count++;
-  });
-  return count;
-}
-
-function getNearbyStrategic(conf, radiusMiles) {
-  const results = [];
-  STRATEGIC_DATA.forEach(s => {
-    if (!s.lat || !s.lng) return;
-    const dist = haversine(conf.lat, conf.lng, s.lat, s.lng);
-    if (dist <= radiusMiles) {
-      results.push({ data: s, distance: dist });
-    }
-  });
-  return results.sort((a, b) => a.distance - b.distance);
-}
-
-function buildConfPopup(c) {
-  const past = isConfPast(c);
-  const statusLabel = past ? 'Past' : 'Upcoming';
-  const statusClass = past ? 'past' : 'upcoming';
-  let html = `<div class="popup-card">`;
-
-  // Header badge
-  html += `<div class="popup-conf-header">`;
-  html += `<span class="popup-conf-badge ${statusClass}">${statusLabel}</span>`;
-  html += `</div>`;
-
-  html += `<h3 style="margin-bottom:6px;">${c.name || 'Conference'}</h3>`;
-
-  // Dates
-  const startFmt = formatConfDate(c.start_date);
-  const endFmt = formatConfDate(c.end_date);
-  if (c.start_date && c.end_date) {
-    html += `<div class="popup-conf-dates">${startFmt} — ${endFmt}</div>`;
-  } else if (c.start_date) {
-    html += `<div class="popup-conf-dates">${startFmt}</div>`;
-  }
-
-  // Speaking / Attendee List status indicators
-  const speakingVal = (c.speaking || '').toLowerCase();
-  const speakingChecked = speakingVal === 'yes' || speakingVal === 'y' || speakingVal === 'true' || speakingVal === '1' || speakingVal === 'x';
-  const attendeeListVal = (c.attendee_list || '').toLowerCase();
-  const attendeeListChecked = attendeeListVal === 'yes' || attendeeListVal === 'y' || attendeeListVal === 'true' || attendeeListVal === '1' || attendeeListVal === 'x';
-
-  html += `<div style="margin:8px 0;display:flex;gap:16px;font-size:11px;">`;
-  html += `<span class="conf-check-indicator ${speakingChecked ? 'checked' : ''}">`;
-  html += `<span class="conf-check-box">${speakingChecked ? '&#10003;' : ''}</span> Speaking</span>`;
-  html += `<span class="conf-check-indicator ${attendeeListChecked ? 'checked' : ''}">`;
-  html += `<span class="conf-check-box">${attendeeListChecked ? '&#10003;' : ''}</span> Attendee List</span>`;
-  html += `</div>`;
-
-  if (c.edia_attendee) {
-    html += `<div class="popup-row"><span class="pk">Edia Attendee</span><span class="pv">${c.edia_attendee}</span></div>`;
-  }
-  const displayLoc = c._displayLocation || c._fullAddress || '';
-  if (displayLoc) {
-    html += `<div class="popup-row"><span class="pk">Location</span><span class="pv">${displayLoc}</span></div>`;
-  } else if (c.city || c.state) {
-    html += `<div class="popup-row"><span class="pk">Location</span><span class="pv">${[c.city, c.state].filter(Boolean).join(', ')}</span></div>`;
-  }
-
-  // Nearby strategic accounts
-  if (!past) {
-    const nearby = getNearbyStrategic(c, 100);
-    if (nearby.length > 0) {
-      html += `<div class="popup-conf-nearby">`;
-      html += `<div class="popup-conf-nearby-title">${nearby.length} strategic accounts within 100 mi</div>`;
-      const shown = nearby.slice(0, 10);
-      shown.forEach(n => {
-        const districtKey = n.data.name.replace(/[^a-zA-Z0-9]/g, '_');
-        const distMi = Math.round(n.distance);
-        const stageLbl = n.data.opp_stage ? n.data.opp_stage.replace(/^\d+\s*-\s*/, '') : '';
-        html += `<div class="popup-conf-nearby-item" onclick="focusOnAccount('${districtKey}')">`;
-        html += `${n.data.name}`;
-        if (stageLbl) html += ` <span style="font-size:9px;color:#fdcb6e;">(${stageLbl})</span>`;
-        html += ` <span class="conf-dist">${distMi}mi</span>`;
-        html += `</div>`;
-      });
-      if (nearby.length > 10) {
-        html += `<div style="font-size:10px;color:var(--text-muted);margin-top:4px;">+ ${nearby.length - 10} more</div>`;
-      }
-      html += `</div>`;
-    }
-  }
-
-  html += `</div>`;
-  return html;
-}
-
-// ============ CONFERENCE CSV IMPORT ============
-
-function handleConfFile(event) {
-  const file = event.target.files[0];
-  if (file && /\.(csv|xlsx?|xls)$/i.test(file.name)) {
-    processConfUpload(file);
-  }
-  event.target.value = '';
-}
-
-function processConfUpload(file) {
-  readSpreadsheetFile(file).then(parsed => {
-    if (parsed.length === 0) {
-      alert('No data found in file');
-      return;
-    }
-    processConfData(parsed);
-  }).catch(err => {
-    alert('Error reading file: ' + err.message);
-  });
-}
-
-function processConfData(parsed) {
-
-    // Map fields to conference schema
-    // Columns: Conference, Conference Contact, Start Date, End Date, Registered, Paid,
-    // Attendee Size, State, Edia Attendee, Actual Cost, Conference Location, Full Address,
-    // Attendee List?, Speaking?, Booth, Table, Notes, etc.
-    const conferences = parsed.map(row => {
-      const mapped = {};
-      Object.keys(row).forEach(key => {
-        const val = row[key] ? String(row[key]).trim() : '';
-        if (!val) return;
-        const lk = key.toLowerCase().replace(/[^a-z0-9]/g, '_').replace(/_+/g, '_').replace(/_$/, '');
-
-        // --- Conference name (exact match only — not "conference_location" etc) ---
-        if (lk === 'conference' || lk === 'event' || lk === 'event_name' || lk === 'conference_name') {
-          mapped.name = mapped.name || val;
-        }
-        // --- Full Address (for geocoding — pins come from this column) ---
-        else if (lk === 'full_address' || lk === 'address') {
-          mapped._fullAddress = mapped._fullAddress || val;
-        }
-        // --- Conference Location (display only, geocoding fallback) ---
-        else if (lk.includes('location') || lk.includes('venue')) {
-          mapped._location = mapped._location || val;
-        }
-        // Start date
-        else if (lk === 'start_date' || lk === 'start' || lk === 'date' || lk === 'begin' || lk === 'begin_date') {
-          mapped.start_date = mapped.start_date || val;
-        }
-        // End date
-        else if (lk === 'end_date' || lk === 'end') {
-          mapped.end_date = mapped.end_date || val;
-        }
-        // State
-        else if (lk === 'state' || lk === 'st') {
-          mapped.state = mapped.state || val;
-        }
-        // City
-        else if (lk === 'city') {
-          mapped.city = mapped.city || val;
-        }
-        // Speaking?
-        else if (lk.includes('speaking')) {
-          mapped.speaking = mapped.speaking || val;
-        }
-        // Attendee list? (check before generic attendee matches)
-        else if (lk.includes('attendee_list') || lk === 'attendee_list') {
-          mapped.attendee_list = mapped.attendee_list || val;
-        }
-        // Edia attendee (who from Edia is going)
-        else if (lk === 'edia_attendee' || (lk.includes('edia') && lk.includes('attend'))) {
-          mapped.edia_attendee = mapped.edia_attendee || val;
-        }
-        // Attendee size
-        else if (lk.includes('attendee_size') || lk === 'attendee_size' || lk.includes('size') || lk.includes('expected')) {
-          mapped.attendees = mapped.attendees || val;
-        }
-        // Booth
-        else if (lk === 'booth') {
-          mapped.booth = mapped.booth || val;
-        }
-        // Table
-        else if (lk === 'table') {
-          mapped.table = mapped.table || val;
-        }
-        // Registered / paid
-        else if (lk === 'registered') {
-          mapped.registered = mapped.registered || val;
-        }
-        else if (lk === 'paid') {
-          mapped.paid = mapped.paid || val;
-        }
-        // Notes
-        else if (lk === 'notes' || lk.includes('note') || lk.includes('comment')) {
-          mapped.notes = mapped.notes || val;
-        }
-        // Cost (Actual Cost)
-        else if (lk.includes('cost') || lk.includes('budget')) {
-          mapped.cost = mapped.cost || val;
-        }
-        // Lat/lng (if pre-geocoded)
-        else if (lk === 'lat' || lk === 'latitude') {
-          mapped.lat = parseFloat(val) || null;
-        }
-        else if (lk === 'lng' || lk === 'lon' || lk === 'longitude') {
-          mapped.lng = parseFloat(val) || null;
-        }
-        // Fallback: if key literally is just "name" or "title", use as conference name
-        else if ((lk === 'name' || lk === 'title') && !mapped.name) {
-          mapped.name = val;
-        }
-      });
-
-      // Resolve address fields: Full Address is for geocoding, Conference Location for display
-      // If only _location exists (no Full Address), use it for geocoding too
-      if (!mapped._fullAddress && mapped._location) {
-        mapped._fullAddress = mapped._location;
-      }
-      // Keep _location for display; if none, use _fullAddress
-      if (!mapped._location && mapped._fullAddress) {
-        mapped._location = mapped._fullAddress;
-      }
-
-      // Parse location for geocoding — extract city and state from address strings
-      const US_STATES = new Set(['AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','IL','IN','IA','KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ','NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT','VA','WA','WV','WI','WY','DC']);
-      const addrSource = mapped._fullAddress || mapped._location || '';
-      if (addrSource && (!mapped.city || !mapped.state)) {
-        const parts = addrSource.split(/[,;]+/).map(s => s.trim()).filter(Boolean);
-        let stateIdx = -1;
-        for (let pi = parts.length - 1; pi >= 0; pi--) {
-          const token = parts[pi].replace(/\s*\d{5}(-\d{4})?$/, '').trim();
-          if (US_STATES.has(token.toUpperCase())) {
-            stateIdx = pi;
-            break;
-          }
-        }
-        if (stateIdx >= 0) {
-          if (!mapped.state) mapped.state = parts[stateIdx].replace(/\s*\d{5}(-\d{4})?$/, '').trim();
-          if (!mapped.city && stateIdx > 0) mapped.city = parts[stateIdx - 1];
-        } else if (parts.length >= 2) {
-          if (!mapped.state) mapped.state = parts[parts.length - 1];
-          if (!mapped.city) mapped.city = parts[parts.length >= 3 ? parts.length - 2 : 0];
-        } else if (parts.length === 1 && !mapped.city) {
-          mapped.city = parts[0];
-        }
-      }
-
-      // Clean up internal field
-      mapped._fullAddress = mapped._fullAddress || '';
-      mapped._displayLocation = mapped._location || '';
-      delete mapped._location;
-
-      return mapped;
-    }).filter(c => {
-      if (!c.name) return false;
-      // Filter out quarter header rows (Q1, Q2, Q3, Q4, Q1 2025, etc.)
-      if (/^Q[1-4]\b/i.test(c.name.trim())) return false;
-      return true;
-    });
-    console.log('[Conference] Mapped', conferences.length, 'conferences. Sample:', JSON.stringify(conferences.slice(0, 2)));
-
-    if (conferences.length === 0) {
-      alert('Could not find conference names in the CSV. Make sure you have a "Name" or "Conference" column.');
-      return;
-    }
-
-    // Geocode conferences that need it
-    geocodeConferences(conferences).then(results => {
-      CONFERENCE_DATA = results;
-      localStorage.setItem('edia_conference_data', JSON.stringify(CONFERENCE_DATA));
-      console.log('[Persist] Saved', CONFERENCE_DATA.length, 'conferences to localStorage');
-
-      // Auto-enable conference layer
-      conferencesOn = true;
-      document.getElementById('confCheck').checked = true;
-      document.getElementById('confOptions').style.display = '';
-      // Show all conferences on first upload so user sees everything
-      setConfRange('all');
-
-      alert(`✓ Loaded ${results.length} conferences!\n${results.filter(r => r.lat && r.lng).length} geocoded successfully.`);
-    });
-}
-
-// ============ GEOCODE PROGRESS ============
-
-function showGeocodeProgress(label) {
-  const el = document.getElementById('geocodeProgress');
-  document.getElementById('geocodeProgressLabel').textContent = label;
-  document.getElementById('geocodeProgressFill').style.width = '0%';
-  document.getElementById('geocodeProgressDetail').textContent = '';
-  el.classList.add('show');
-}
-
-function updateGeocodeProgress(current, total, detail) {
-  const pct = total > 0 ? Math.round((current / total) * 100) : 0;
-  document.getElementById('geocodeProgressFill').style.width = pct + '%';
-  document.getElementById('geocodeProgressDetail').textContent = detail || (current + ' of ' + total);
-}
-
-function hideGeocodeProgress() {
-  document.getElementById('geocodeProgress').classList.remove('show');
-}
-
-async function geocodeConferences(conferences) {
-  const needGeocode = conferences.filter(c => !c.lat || !c.lng);
-  if (needGeocode.length === 0) return conferences;
-
-  showGeocodeProgress('Geocoding conferences...');
-  let geocoded = 0;
-  let skipped = 0;
-  const total = needGeocode.length;
-
-  for (let i = 0; i < needGeocode.length; i++) {
-    const conf = needGeocode[i];
-    updateGeocodeProgress(i + 1, total, (i + 1) + ' of ' + total + ' — ' + (conf.name || '').substring(0, 30));
-
-    // Build list of query variations to try (most reliable first)
-    const queries = [];
-
-    // 1. City + State is the most reliable for US locations
-    if (conf.city && conf.state) {
-      queries.push(`${conf.city}, ${conf.state}, USA`);
-    }
-    // 2. Full address (may include venue name — less reliable but worth trying)
-    if (conf._fullAddress) {
-      queries.push(conf._fullAddress);
-    }
-    // 3. City alone
-    if (conf.city && !conf.state) {
-      queries.push(`${conf.city}, USA`);
-    }
-    // 4. Conference name + state
-    if (conf.name && conf.state) {
-      queries.push(`${conf.name}, ${conf.state}, USA`);
-    }
-    // 5. Conference name + USA (last resort)
-    if (conf.name) {
-      queries.push(`${conf.name}, USA`);
-    }
-
-    // Remove duplicates and empty queries
-    const uniqueQueries = [...new Set(queries)].filter(q => q && q !== 'USA');
-
-    if (uniqueQueries.length === 0) { skipped++; continue; }
-
-    let found = false;
-    for (const query of uniqueQueries) {
-      try {
-        console.log('[Conference Geocode] Trying:', conf.name, '→', query);
-        const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1&countrycodes=us`;
-        const response = await fetch(url, {
-          headers: { 'User-Agent': 'EdiaStratMap/1.0' }
-        });
-        const data = await response.json();
-        if (data && data.length > 0) {
-          conf.lat = parseFloat(data[0].lat);
-          conf.lng = parseFloat(data[0].lon);
-          console.log('[Conference Geocode] Found:', conf.name, '→', conf.lat, conf.lng, '(query:', query, ')');
-          geocoded++;
-          found = true;
-          break;
-        }
-        // Rate limit between query attempts
-        await new Promise(r => setTimeout(r, 1100));
-      } catch(e) {
-        console.error('[Conference Geocode] Error for:', conf.name, query, e);
-      }
-    }
-    if (!found) {
-      console.warn('[Conference Geocode] No results for:', conf.name);
-    }
-    // Rate limit for Nominatim
-    await new Promise(r => setTimeout(r, 1100));
-  }
-  hideGeocodeProgress();
-  console.log('[Conference Geocode] Done:', geocoded, 'geocoded,', skipped, 'skipped (no location data)');
-
-  return conferences;
 }
 
 // ============ INIT ============
