@@ -627,7 +627,7 @@ input[type="range"]::-webkit-slider-thumb {
   border-top: 1px solid var(--panel-border);
 }
 
-/* Floating legend — bottom-right */
+/* Floating legend — bottom-right, lowest element */
 .legend {
   position: absolute;
   bottom: 72px;
@@ -1193,11 +1193,11 @@ input[type="range"]::-webkit-slider-thumb {
 }
 .notes-btn:hover { border-color: var(--text-muted); color: var(--text); }
 
-/* Data Refresh — floating bottom-left past sidebar */
+/* Data Refresh — floating bottom-right, stacked above legend */
 .data-refresh-fab {
   position: fixed;
-  bottom: 24px;
-  left: 380px;
+  bottom: 52px;
+  right: 24px;
   z-index: 1100;
   display: flex;
   align-items: center;
@@ -1225,8 +1225,8 @@ input[type="range"]::-webkit-slider-thumb {
 .data-refresh-panel {
   display: none;
   position: fixed;
-  bottom: 72px;
-  left: 380px;
+  bottom: 100px;
+  right: 24px;
   z-index: 1100;
   width: 320px;
   background: var(--panel);
@@ -2886,7 +2886,7 @@ function applyFilters() {
       const marker = L.marker([d.lat, d.lng], { icon }).addTo(stratLayer);
       marker.bindPopup(buildStratPopup(d), { maxWidth: 320 });
       marker.on('click', function() {
-        map.flyTo([d.lat - 0.8, d.lng], 8, { duration: 0.6 });
+        map.flyTo([d.lat - 2.5, d.lng], 5, { duration: 0.6 });
       });
       statesSet.add(d.state);
       markerLookup[d.name] = { marker, data: d, type: 'strategic' };
@@ -2937,7 +2937,7 @@ function applyFilters() {
       const marker = L.marker([d.lat, d.lng], { icon }).addTo(custLayer);
       marker.bindPopup(buildCustPopup(d), { maxWidth: 320 });
       marker.on('click', function() {
-        map.flyTo([d.lat - 0.8, d.lng], 8, { duration: 0.6 });
+        map.flyTo([d.lat - 2.5, d.lng], 5, { duration: 0.6 });
       });
       statesSet.add(d.state);
       if (!markerLookup[d.name]) {
@@ -3209,10 +3209,10 @@ function selectAutocomplete(index) {
     const entry = markerLookup[item.label];
     if (entry && entry.marker) {
       const latLng = entry.marker.getLatLng();
-      map.setView([latLng.lat - 0.8, latLng.lng], 8, { animate: true });
+      map.setView([latLng.lat - 2.5, latLng.lng], 5, { animate: true });
       setTimeout(() => entry.marker.openPopup(), 400);
     } else if (item.data && item.data.lat && item.data.lng) {
-      map.setView([item.data.lat - 0.8, item.data.lng], 8, { animate: true });
+      map.setView([item.data.lat - 2.5, item.data.lng], 5, { animate: true });
     }
   }
 }
@@ -3237,7 +3237,7 @@ function zoomToSearchResult() {
 
   if (lastSearchResults.length === 1) {
     const latLng = bestMatch.marker.getLatLng();
-    map.setView([latLng.lat - 0.8, latLng.lng], 8, { animate: true });
+    map.setView([latLng.lat - 2.5, latLng.lng], 5, { animate: true });
     setTimeout(() => bestMatch.marker.openPopup(), 300);
   } else {
     // Multiple results — fit bounds
@@ -4174,8 +4174,8 @@ function flyToAccount(name) {
   if (!entry || !entry.marker) return;
   const latLng = entry.marker.getLatLng();
   // Offset center south so the popup (which opens above the pin) is centered on screen
-  const targetZoom = 8;
-  const offsetLat = latLng.lat - 0.8;
+  const targetZoom = 5;
+  const offsetLat = latLng.lat - 2.5;
   map.flyTo([offsetLat, latLng.lng], targetZoom, { duration: 0.6 });
   setTimeout(() => {
     entry.marker.openPopup();
