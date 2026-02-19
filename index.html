@@ -627,7 +627,7 @@ input[type="range"]::-webkit-slider-thumb {
   border-top: 1px solid var(--panel-border);
 }
 
-/* Floating legend — bottom-right corner */
+/* Floating legend — bottom-right corner, below data refresh FAB */
 .legend {
   position: absolute;
   bottom: 72px;
@@ -635,19 +635,18 @@ input[type="range"]::-webkit-slider-thumb {
   background: var(--panel);
   border: 1px solid var(--panel-border);
   border-radius: var(--radius);
-  padding: 10px 16px;
+  padding: 8px 14px;
   z-index: 1000;
   display: flex;
-  flex-wrap: wrap;
-  gap: 10px 16px;
+  gap: 12px;
   box-shadow: 0 4px 20px rgba(0,0,0,0.3);
 }
 
 .legend-item {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 10px;
+  gap: 5px;
+  font-size: 9px;
   color: var(--text-dim);
   white-space: nowrap;
 }
@@ -1197,7 +1196,7 @@ input[type="range"]::-webkit-slider-thumb {
 /* Data Refresh — floating above legend in bottom-right */
 .data-refresh-fab {
   position: fixed;
-  bottom: 68px;
+  bottom: 72px;
   right: 24px;
   z-index: 1100;
   display: flex;
@@ -1226,7 +1225,7 @@ input[type="range"]::-webkit-slider-thumb {
 .data-refresh-panel {
   display: none;
   position: fixed;
-  bottom: 116px;
+  bottom: 120px;
   right: 24px;
   z-index: 1100;
   width: 320px;
@@ -2392,7 +2391,7 @@ input[type="range"]::-webkit-slider-thumb {
     </label>
   </div>
 
-  <div class="filters-wrap" id="filtersWrap">
+  <div class="filters-wrap collapsed" id="filtersWrap">
     <div class="filters-toggle" onclick="toggleFiltersPanel()">
       <span class="filters-toggle-label">Filters</span>
       <span class="filters-toggle-active" id="filtersActiveCount"></span>
@@ -2403,12 +2402,12 @@ input[type="range"]::-webkit-slider-thumb {
     </div>
   </div>
 
-  <div class="pipeline-panel" id="pipelinePanel" style="display:none;">
+  <div class="pipeline-panel pl-collapsed" id="pipelinePanel" style="display:none;">
     <div class="pipeline-toggle" onclick="togglePipelinePanel()">
       <span class="filters-toggle-label">Pipeline Summary</span>
       <span class="pipeline-chevron" id="pipelineChevron">&#9660;</span>
     </div>
-    <div id="pipelineDetail">
+    <div id="pipelineDetail" class="collapsed">
       <div id="pipelineStats"></div>
     </div>
   </div>
