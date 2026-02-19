@@ -627,11 +627,11 @@ input[type="range"]::-webkit-slider-thumb {
   border-top: 1px solid var(--panel-border);
 }
 
-/* Floating legend — bottom-right corner, below data refresh FAB */
+/* Floating legend — bottom-left corner to avoid overlapping Data Refresh FAB */
 .legend {
   position: fixed;
   bottom: 24px;
-  right: 24px;
+  left: 380px;
   background: var(--panel);
   border: 1px solid var(--panel-border);
   border-radius: var(--radius);
@@ -1193,10 +1193,10 @@ input[type="range"]::-webkit-slider-thumb {
 }
 .notes-btn:hover { border-color: var(--text-muted); color: var(--text); }
 
-/* Data Refresh — floating above legend in bottom-right */
+/* Data Refresh — floating bottom-right */
 .data-refresh-fab {
   position: fixed;
-  bottom: 72px;
+  bottom: 24px;
   right: 24px;
   z-index: 1100;
   display: flex;
@@ -1225,7 +1225,7 @@ input[type="range"]::-webkit-slider-thumb {
 .data-refresh-panel {
   display: none;
   position: fixed;
-  bottom: 120px;
+  bottom: 72px;
   right: 24px;
   z-index: 1100;
   width: 320px;
@@ -2874,7 +2874,7 @@ function applyFilters() {
       const marker = L.marker([d.lat, d.lng], { icon }).addTo(stratLayer);
       marker.bindPopup(buildStratPopup(d), { maxWidth: 320 });
       marker.on('click', function() {
-        map.flyTo([d.lat, d.lng], Math.max(map.getZoom(), 7), { duration: 0.6 });
+        map.flyTo([d.lat, d.lng], 8, { duration: 0.6 });
       });
       statesSet.add(d.state);
       markerLookup[d.name] = { marker, data: d, type: 'strategic' };
@@ -2915,7 +2915,7 @@ function applyFilters() {
       const marker = L.marker([d.lat, d.lng], { icon }).addTo(custLayer);
       marker.bindPopup(buildCustPopup(d), { maxWidth: 320 });
       marker.on('click', function() {
-        map.flyTo([d.lat, d.lng], Math.max(map.getZoom(), 7), { duration: 0.6 });
+        map.flyTo([d.lat, d.lng], 8, { duration: 0.6 });
       });
       statesSet.add(d.state);
       if (!markerLookup[d.name]) {
@@ -3186,10 +3186,10 @@ function selectAutocomplete(index) {
     const entry = markerLookup[item.label];
     if (entry && entry.marker) {
       const latLng = entry.marker.getLatLng();
-      map.setView(latLng, 7, { animate: true });
+      map.setView(latLng, 8, { animate: true });
       setTimeout(() => entry.marker.openPopup(), 400);
     } else if (item.data && item.data.lat && item.data.lng) {
-      map.setView([item.data.lat, item.data.lng], 7, { animate: true });
+      map.setView([item.data.lat, item.data.lng], 8, { animate: true });
     }
   }
 }
@@ -3214,7 +3214,7 @@ function zoomToSearchResult() {
 
   if (lastSearchResults.length === 1) {
     const latLng = bestMatch.marker.getLatLng();
-    map.setView(latLng, 7, { animate: true });
+    map.setView(latLng, 8, { animate: true });
     setTimeout(() => bestMatch.marker.openPopup(), 300);
   } else {
     // Multiple results — fit bounds
@@ -4150,7 +4150,7 @@ function flyToAccount(name) {
   const entry = markerLookup[name];
   if (!entry || !entry.marker) return;
   const latLng = entry.marker.getLatLng();
-  map.flyTo(latLng, 7, { duration: 0.6 });
+  map.flyTo(latLng, 8, { duration: 0.6 });
   setTimeout(() => {
     entry.marker.openPopup();
   }, 650);
