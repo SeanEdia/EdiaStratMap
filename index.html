@@ -608,7 +608,7 @@ input[type="range"]::-webkit-slider-thumb {
 /* Floating legend */
 .legend {
   position: absolute;
-  bottom: 24px;
+  bottom: 72px;
   right: 24px;
   background: var(--panel);
   border: 1px solid var(--panel-border);
@@ -3028,6 +3028,7 @@ function updateFiltersActiveCount() {
 
 // Track search results for zoom functionality
 let lastSearchResults = [];
+let searchExactMatch = false; // true when search is from autocomplete selection
 
 function applyFilters() {
   const search = document.getElementById('searchInput').value.toLowerCase().trim();
@@ -3046,10 +3047,21 @@ function applyFilters() {
   // Strategic accounts
   if (currentView === 'strategic' || currentView === 'all') {
     const filtered = STRATEGIC_DATA.filter(d => {
-      if (search && !d.name.toLowerCase().includes(search)
-          && !(d.state && d.state.toLowerCase().includes(search))
-          && !(d.region && d.region.toLowerCase().includes(search))
-          && !(d.ae && d.ae.toLowerCase().includes(search))) return false;
+      if (search) {
+        if (searchExactMatch) {
+          // Exact match for state/region selected from autocomplete
+          const stMatch = d.state && d.state.toLowerCase() === search;
+          const regMatch = d.region && d.region.toLowerCase() === search;
+          const nameMatch = d.name.toLowerCase() === search;
+          const aeMatch = d.ae && d.ae.toLowerCase() === search;
+          if (!stMatch && !regMatch && !nameMatch && !aeMatch) return false;
+        } else {
+          if (!d.name.toLowerCase().includes(search)
+              && !(d.state && d.state.toLowerCase().includes(search))
+              && !(d.region && d.region.toLowerCase().includes(search))
+              && !(d.ae && d.ae.toLowerCase().includes(search))) return false;
+        }
+      }
       if (filters.strat_region && d.region !== filters.strat_region) return false;
       if (filters.strat_state && d.state !== filters.strat_state) return false;
       if (filters.strat_ae && d.ae !== filters.strat_ae) return false;
@@ -3101,10 +3113,20 @@ function applyFilters() {
   // Active customers
   if (currentView === 'customers' || currentView === 'all') {
     const filtered = CUSTOMER_DATA.filter(d => {
-      if (search && !d.name.toLowerCase().includes(search)
-          && !(d.state && d.state.toLowerCase().includes(search))
-          && !(d.region && d.region.toLowerCase().includes(search))
-          && !(d.ae && d.ae.toLowerCase().includes(search))) return false;
+      if (search) {
+        if (searchExactMatch) {
+          const stMatch = d.state && d.state.toLowerCase() === search;
+          const regMatch = d.region && d.region.toLowerCase() === search;
+          const nameMatch = d.name.toLowerCase() === search;
+          const aeMatch = d.ae && d.ae.toLowerCase() === search;
+          if (!stMatch && !regMatch && !nameMatch && !aeMatch) return false;
+        } else {
+          if (!d.name.toLowerCase().includes(search)
+              && !(d.state && d.state.toLowerCase().includes(search))
+              && !(d.region && d.region.toLowerCase().includes(search))
+              && !(d.ae && d.ae.toLowerCase().includes(search))) return false;
+        }
+      }
       if (filters.cust_region && d.region !== filters.cust_region) return false;
       if (filters.cust_state && d.state !== filters.cust_state) return false;
       if (filters.cust_segment && d.segment !== filters.cust_segment) return false;
@@ -3304,16 +3326,14 @@ function renderAutocomplete(items) {
 }
 
 function onSearchInput() {
+  searchExactMatch = false; // typing resets exact match mode
   const query = document.getElementById('searchInput').value.trim();
   const items = buildAutocompleteList(query);
   renderAutocomplete(items);
   applyFilters();
-  // When search is cleared, reset map to full view
+  // When search is cleared, reset map to lower 48 US states
   if (!query && map) {
-    const bounds = [];
-    STRATEGIC_DATA.forEach(d => { if (d.lat && d.lng) bounds.push([d.lat, d.lng]); });
-    CUSTOMER_DATA.forEach(d => { if (d.lat && d.lng) bounds.push([d.lat, d.lng]); });
-    if (bounds.length > 0) map.fitBounds(bounds, { padding: [40, 40], maxZoom: 6 });
+    map.fitBounds([[24.5, -125], [49.5, -66.5]]);
   }
 }
 
@@ -3362,6 +3382,7 @@ function selectAutocomplete(index) {
   if (item.type === 'state') {
     // Filter to this state and fit bounds
     document.getElementById('searchInput').value = item.abbr.toUpperCase();
+    searchExactMatch = true;
     applyFilters();
     // Fit map to all accounts in this state
     const bounds = [];
@@ -3376,6 +3397,7 @@ function selectAutocomplete(index) {
     }
   } else if (item.type === 'region') {
     document.getElementById('searchInput').value = item.region;
+    searchExactMatch = true;
     applyFilters();
     const bounds = [];
     [...STRATEGIC_DATA, ...CUSTOMER_DATA].forEach(d => {
@@ -3389,6 +3411,7 @@ function selectAutocomplete(index) {
   } else {
     // Individual account
     document.getElementById('searchInput').value = item.label;
+    searchExactMatch = true;
     applyFilters();
     const entry = markerLookup[item.label];
     if (entry && entry.marker) {
@@ -6423,9 +6446,7 @@ function buildConfPopup(c) {
   html += `<input type="checkbox" ${attendeeListChecked ? 'checked' : ''} disabled style="pointer-events:none;"> Attendee List</label>`;
   html += `</div>`;
 
-  if (c.edia_attendee) {
-    html += `<div class="popup-row"><span class="pk">Edia Attendee</span><span class="pv">${c.edia_attendee}</span></div>`;
-  }
+  html += `<div class="popup-row"><span class="pk">Edia Attendee</span><span class="pv">${c.edia_attendee || '—'}</span></div>`;
   if (c._fullAddress) {
     html += `<div class="popup-row"><span class="pk">Location</span><span class="pv">${c._fullAddress}</span></div>`;
   } else if (c.city || c.state) {
