@@ -2276,7 +2276,7 @@ function findMarkerByDistrict(districtName) {
 }
 
 // ============ MEETING PREP ============
-const CHATGPT_PROJECT_URL = 'https://chatgpt.com/g/g-p-693073aad1948191993a5742400f59a1-meeting-research/project';
+const CHATGPT_PROJECT_URL = 'https://claude.ai/project/019c77bb-e463-765f-9c3f-487877c0d2fb';
 
 function generateMeetingPrepByKey(districtKey) {
   const d = window.districtDataCache && window.districtDataCache[districtKey];
@@ -2446,7 +2446,7 @@ function showMeetingPrepToast() {
 
   const toast = document.createElement('div');
   toast.className = 'meeting-prep-toast';
-  toast.innerHTML = `<span class="toast-icon">✓</span> District data copied! Opening ChatGPT...`;
+  toast.innerHTML = `<span class="toast-icon">✓</span> District data copied! Opening Claude...`;
   document.body.appendChild(toast);
 
   // Trigger animation
