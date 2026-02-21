@@ -86,29 +86,9 @@ let filteredConfData = [];
 
 // ============ INIT ============
 function initMap() {
-  // Load persisted data from localStorage if available
-  try {
-    const savedStrategic = localStorage.getItem('edia_strategic_data');
-    if (savedStrategic) {
-      const parsed = JSON.parse(savedStrategic);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        STRATEGIC_DATA.length = 0;
-        parsed.forEach(item => STRATEGIC_DATA.push(item));
-        console.log('[Persist] Loaded', STRATEGIC_DATA.length, 'strategic accounts from localStorage');
-      }
-    }
-    const savedCustomers = localStorage.getItem('edia_customer_data');
-    if (savedCustomers) {
-      const parsed = JSON.parse(savedCustomers);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        CUSTOMER_DATA.length = 0;
-        parsed.forEach(item => CUSTOMER_DATA.push(item));
-        console.log('[Persist] Loaded', CUSTOMER_DATA.length, 'customers from localStorage');
-      }
-    }
-  } catch (e) {
-    console.error('[Persist] Failed to load data from localStorage:', e);
-  }
+  // Data is loaded from the seed JSON files (strategic.json / customers.json).
+  // These files are the single source of truth so that all users see the same data.
+  // After a merge, updated JSON is downloaded for committing back to the repo.
 
   // Pre-populate district data cache for modal access
   window.districtDataCache = {};
@@ -1262,8 +1242,6 @@ function addNote(key, el) {
     const today = new Date();
     const dateStr = (today.getMonth() + 1) + '/' + today.getDate() + '/' + today.getFullYear();
     matchedAccount.opp_last_activity = dateStr;
-    // Persist updated data
-    localStorage.setItem('edia_strategic_data', JSON.stringify(STRATEGIC_DATA));
   }
 }
 
@@ -3570,32 +3548,53 @@ async function confirmMerge() {
 
     confirmBtn.textContent = 'Saving data...';
 
-    // Apply the merge
+    // Apply the merge to in-memory arrays
+    const filename = isStrategic ? 'strategic.json' : 'customers.json';
     if (isStrategic) {
       STRATEGIC_DATA.length = 0;
       pendingMergeData.forEach(item => STRATEGIC_DATA.push(item));
-      // Persist to localStorage
-      localStorage.setItem('edia_strategic_data', JSON.stringify(STRATEGIC_DATA));
-      console.log('[Persist] Saved', STRATEGIC_DATA.length, 'strategic accounts to localStorage');
+      console.log('[Merge] Updated', STRATEGIC_DATA.length, 'strategic accounts in memory');
     } else {
       CUSTOMER_DATA.length = 0;
       pendingMergeData.forEach(item => CUSTOMER_DATA.push(item));
-      // Persist to localStorage
-      localStorage.setItem('edia_customer_data', JSON.stringify(CUSTOMER_DATA));
-      console.log('[Persist] Saved', CUSTOMER_DATA.length, 'customers to localStorage');
+      console.log('[Merge] Updated', CUSTOMER_DATA.length, 'customers in memory');
     }
 
-    // Update last refresh timestamp
+    // Download the merged data as a JSON file so it can be committed to
+    // the repo. This replaces localStorage persistence — the seed JSON
+    // files (src/data/strategic.json and src/data/customers.json) are the
+    // single source of truth, so all users see the same data.
+    const jsonBlob = new Blob(
+      [JSON.stringify(pendingMergeData, null, 2)],
+      { type: 'application/json' }
+    );
+    const downloadLink = document.createElement('a');
+    downloadLink.href = URL.createObjectURL(jsonBlob);
+    downloadLink.download = filename;
+    downloadLink.click();
+
+    // Track when this user last ran a data refresh (per-user, informational only)
     localStorage.setItem('edia_sfdc_last_refresh', new Date().toISOString());
 
     // Close modal
     closeMergeModal();
 
-    // Show confirmation and refresh
+    // Refresh map and UI in-place (no page reload needed)
+    window.districtDataCache = {};
+    STRATEGIC_DATA.forEach(d => {
+      const key = d.name.replace(/[^a-zA-Z0-9]/g, '_');
+      window.districtDataCache[key] = d;
+    });
+    renderFilters();
+    applyFilters();
+
+    // Show confirmation
     const recordCount = isStrategic ? STRATEGIC_DATA.length : CUSTOMER_DATA.length;
-    let message = `✓ Merge complete!\n\n${recordCount} ${isStrategic ? 'strategic accounts' : 'customers'} saved.`;
+    let message = `✓ Merge complete!\n\n${recordCount} ${isStrategic ? 'strategic accounts' : 'customers'} updated on the map.`;
+    message += `\n\nThe file "${filename}" has been downloaded.`;
+    message += `\nReplace src/data/${filename} in the repo and redeploy so all users see the updated data.`;
     if (geocodedCount > 0) {
-      message += `\n${geocodedCount} new records geocoded.`;
+      message += `\n\n${geocodedCount} new records geocoded.`;
     }
     if (errors.length > 0) {
       message += `\n\n⚠ ${errors.length} warning(s):\n• ${errors.slice(0, 5).join('\n• ')}`;
@@ -3603,12 +3602,8 @@ async function confirmMerge() {
         message += `\n• ...and ${errors.length - 5} more`;
       }
     }
-    message += '\n\nPage will refresh to load new data.';
 
     alert(message);
-
-    // Refresh page to ensure all new pins and data load properly
-    window.location.reload();
 
   } catch (e) {
     console.error('[Merge] Error:', e);
@@ -4061,8 +4056,7 @@ function processConfData(parsed) {
     // Geocode conferences that need it
     geocodeConferences(conferences).then(results => {
       CONFERENCE_DATA = results;
-      localStorage.setItem('edia_conference_data', JSON.stringify(CONFERENCE_DATA));
-      console.log('[Persist] Saved', CONFERENCE_DATA.length, 'conferences to localStorage');
+      console.log('[Conference] Loaded', CONFERENCE_DATA.length, 'conferences');
 
       // Auto-enable conference layer
       conferencesOn = true;
