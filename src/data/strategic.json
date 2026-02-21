@@ -106,7 +106,7 @@
     "enrollment": 319292,
     "state": "NV",
     "region": "West",
-    "ae": "Sean Johnson",
+    "ae": "Aric Walden",
     "sis": "Infinite Campus",
     "math_products": "",
     "attendance": "",
@@ -121,8 +121,7 @@
     "org_chart_url": "https://ccsd.net/district/directory/resources/pdf/ccsd-org-chart.pdf",
     "strategic_plan_url": "https://sites.google.com/nv.ccsd.net/focus2024/the-plan",
     "lat": 36.1699,
-    "lng": -115.1398,
-    "holdout_ae": "Aric Walden"
+    "lng": -115.1398
   },
   {
     "name": "Broward County Public Schools",
@@ -247,7 +246,7 @@
     "enrollment": 187057,
     "state": "FL",
     "region": "Southeast",
-    "ae": "Sean Johnson",
+    "ae": "Andy Graham",
     "sis": "SIS Gateway (District-branded SIS)",
     "math_products": "",
     "attendance": "",
@@ -264,8 +263,7 @@
     "lat": 26.7153,
     "lng": -80.0534,
     "is_customer": true,
-    "customer_name": "The School District of Palm Beach County",
-    "holdout_ae": "Andy Graham"
+    "customer_name": "The School District of Palm Beach County"
   },
   {
     "name": "Fairfax Co Public Schools",
@@ -788,7 +786,7 @@
     "enrollment": 96068,
     "state": "FL",
     "region": "Southeast",
-    "ae": "Sean Johnson",
+    "ae": "Andy Graham",
     "sis": "Focus SIS",
     "math_products": "",
     "attendance": "",
@@ -805,8 +803,7 @@
     "lat": 27.8677,
     "lng": -82.7131,
     "is_customer": true,
-    "customer_name": "Pinellas County Schools",
-    "holdout_ae": "Andy Graham"
+    "customer_name": "Pinellas County Schools"
   },
   {
     "name": "Jefferson County",
@@ -835,7 +832,7 @@
     "enrollment": 94927,
     "state": "FL",
     "region": "Southeast",
-    "ae": "Sean Johnson",
+    "ae": "Andy Graham",
     "sis": "Focus SIS",
     "math_products": "",
     "attendance": "",
@@ -852,15 +849,14 @@
     "lat": 26.6195,
     "lng": -81.8303,
     "is_customer": true,
-    "customer_name": "The School District of Lee County",
-    "holdout_ae": "Andy Graham"
+    "customer_name": "The School District of Lee County"
   },
   {
     "name": "Dekalb County",
     "enrollment": 93470,
     "state": "GA",
     "region": "Southeast",
-    "ae": "Sean Johnson",
+    "ae": "Andy Graham",
     "sis": "Infinite Campus",
     "math_products": "",
     "attendance": "",
@@ -875,15 +871,14 @@
     "org_chart_url": "",
     "strategic_plan_url": "https://resources.finalsite.net/images/v1748876058/dekalbschoolsgaorg/hcystmluqjl9rkx837kh/DeKalb-County-Strategic-Plan-Download-Version.pdf",
     "lat": 33.7748,
-    "lng": -84.2963,
-    "holdout_ae": "Andy Graham"
+    "lng": -84.2963
   },
   {
     "name": "Fulton County Schools",
     "enrollment": 90300,
     "state": "GA",
     "region": "Southeast",
-    "ae": "Sean Johnson",
+    "ae": "Andy Graham",
     "sis": "Infinite Campus",
     "math_products": "",
     "attendance": "",
@@ -900,8 +895,7 @@
     "lat": 33.8034,
     "lng": -84.3963,
     "is_customer": true,
-    "customer_name": "Fulton County Schools",
-    "holdout_ae": "Andy Graham"
+    "customer_name": "Fulton County Schools"
   },
   {
     "name": "Prince William Co Public Schools",
@@ -930,7 +924,7 @@
     "enrollment": 89081,
     "state": "CO",
     "region": "West",
-    "ae": "Sean Johnson",
+    "ae": "Aric Walden",
     "sis": "Infinite Campus",
     "math_products": "",
     "attendance": "",
@@ -947,8 +941,7 @@
     "lat": 39.7392,
     "lng": -104.9903,
     "is_customer": true,
-    "customer_name": "School District No. 1 in the City and County of Denver and State of CO",
-    "holdout_ae": "Aric Walden"
+    "customer_name": "School District No. 1 in the City and County of Denver and State of CO"
   },
   {
     "name": "Katy ISD",
@@ -2108,7 +2101,7 @@
     "enrollment": 51790,
     "state": "CA",
     "region": "West",
-    "ae": "Sean Johnson",
+    "ae": "Aric Walden",
     "sis": "Synergy SIS",
     "math_products": "",
     "attendance": "",
@@ -2125,8 +2118,7 @@
     "lat": 37.7749,
     "lng": -122.4194,
     "is_customer": true,
-    "customer_name": "San Francisco Unified School District",
-    "holdout_ae": "Aric Walden"
+    "customer_name": "San Francisco Unified School District"
   },
   {
     "name": "Corona-Norco Unified",
@@ -2177,7 +2169,7 @@
     "enrollment": 51012,
     "state": "GA",
     "region": "Southeast",
-    "ae": "Sean Johnson",
+    "ae": "Andy Graham",
     "sis": "Infinite Campus",
     "math_products": "",
     "attendance": "",
@@ -2192,8 +2184,7 @@
     "org_chart_url": "",
     "strategic_plan_url": "https://www.atlantapublicschools.us/about/strategic-plan",
     "lat": 33.749,
-    "lng": -84.388,
-    "holdout_ae": "Andy Graham"
+    "lng": -84.388
   },
   {
     "name": "El Paso ISD",
@@ -2412,7 +2403,7 @@
     "enrollment": 48330,
     "state": "SC",
     "region": "Southeast",
-    "ae": "Sean Johnson",
+    "ae": "Andy Graham",
     "sis": "PowerSchool SIS",
     "math_products": "",
     "attendance": "",
@@ -2429,8 +2420,7 @@
     "lat": 32.7765,
     "lng": -79.9311,
     "is_customer": true,
-    "customer_name": "Charleston County School District",
-    "holdout_ae": "Andy Graham"
+    "customer_name": "Charleston County School District"
   },
   {
     "name": "Round Rock ISD",
@@ -2571,7 +2561,7 @@
     "enrollment": 46908,
     "state": "KS",
     "region": "Midwest",
-    "ae": "Sean Johnson",
+    "ae": "Aric Walden",
     "sis": "Synergy SIS",
     "math_products": "",
     "attendance": "",
@@ -2588,15 +2578,14 @@
     "lat": 37.6872,
     "lng": -97.3301,
     "is_customer": true,
-    "customer_name": "Wichita Public Schools",
-    "holdout_ae": "Aric Walden"
+    "customer_name": "Wichita Public Schools"
   },
   {
     "name": "San Bernardino City Unified",
     "enrollment": 46693,
     "state": "CA",
     "region": "West",
-    "ae": "Sean Johnson",
+    "ae": "Aric Walden",
     "sis": "Aeries SIS",
     "math_products": "",
     "attendance": "",
@@ -2611,8 +2600,7 @@
     "org_chart_url": "",
     "strategic_plan_url": "https://resources.finalsite.net/images/v1659429063/sbcusdcom/t0gh516dn3pntbdvvtho/English_VAPA_Strategic_Plan.pdf",
     "lat": 34.1083,
-    "lng": -117.2898,
-    "holdout_ae": "Aric Walden"
+    "lng": -117.2898
   },
   {
     "name": "Columbus City School District",
@@ -3615,7 +3603,7 @@
     "enrollment": 39218,
     "state": "CA",
     "region": "West",
-    "ae": "Sean Johnson",
+    "ae": "Aric Walden",
     "sis": "Q (Aequitas) SIS",
     "math_products": "",
     "attendance": "",
@@ -3630,8 +3618,7 @@
     "org_chart_url": "",
     "strategic_plan_url": "https://www.sanjuan.edu/our-district/priorities/strategic-planning",
     "lat": 38.6617,
-    "lng": -121.3256,
-    "holdout_ae": "Aric Walden"
+    "lng": -121.3256
   },
   {
     "name": "Mesquite ISD",
@@ -4458,7 +4445,7 @@
     "enrollment": 34635,
     "state": "OH",
     "region": "Midwest",
-    "ae": "Sean Johnson",
+    "ae": "Andy Graham",
     "sis": "PowerSchool SIS",
     "math_products": "",
     "attendance": "",
@@ -4475,8 +4462,7 @@
     "lat": 39.1031,
     "lng": -84.512,
     "is_customer": true,
-    "customer_name": "Cincinnati Public Schools",
-    "holdout_ae": "Andy Graham"
+    "customer_name": "Cincinnati Public Schools"
   },
   {
     "name": "Corpus Christi ISD",
@@ -4629,7 +4615,7 @@
     "enrollment": 32845,
     "state": "FL",
     "region": "Southeast",
-    "ae": "Sean Johnson",
+    "ae": "Andy Graham",
     "sis": "Focus SIS",
     "math_products": "",
     "attendance": "",
@@ -4644,8 +4630,7 @@
     "org_chart_url": "",
     "strategic_plan_url": "https://files.smartsites.parentsquare.com/10627/21-27_strategic_plan_011924_web.pdf",
     "lat": 30.4413,
-    "lng": -84.312,
-    "holdout_ae": "Andy Graham"
+    "lng": -84.312
   },
   {
     "name": "Cabarrus County Schools",
@@ -4806,7 +4791,7 @@
     "enrollment": 32423,
     "state": "UT",
     "region": "West",
-    "ae": "Sean Johnson",
+    "ae": "Aric Walden",
     "sis": "Aspire SIS (USBE)",
     "math_products": "",
     "attendance": "",
@@ -4821,8 +4806,7 @@
     "org_chart_url": "",
     "strategic_plan_url": "https://files-backend.assets.thrillshare.com/documents/asset/uploaded_file/5017/Wsd/860f5df0-e62d-450e-aaa1-550acc1f3ed6/Elevate28_-_WSD_Strategic_Plan__2_.pdf?disposition=inline",
     "lat": 41.1777,
-    "lng": -111.9519,
-    "holdout_ae": "Aric Walden"
+    "lng": -111.9519
   },
   {
     "name": "Deer Valley Unified District (4246)",
@@ -4931,7 +4915,7 @@
     "enrollment": 31614,
     "state": "FL",
     "region": "Southeast",
-    "ae": "Sean Johnson",
+    "ae": "Andy Graham",
     "sis": "Focus SIS",
     "math_products": "",
     "attendance": "",
@@ -4948,8 +4932,7 @@
     "lat": 30.4074,
     "lng": -86.6187,
     "is_customer": true,
-    "customer_name": "Okaloosa County School District",
-    "holdout_ae": "Andy Graham"
+    "customer_name": "Okaloosa County School District"
   },
   {
     "name": "Moreno Valley Unified",
