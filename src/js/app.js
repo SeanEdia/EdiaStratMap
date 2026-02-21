@@ -1321,10 +1321,12 @@ function buildStratPopup(d) {
   html += `<button class="popup-expand-btn" onclick="openAccountModalByKey('${districtKey}')" title="Full screen view">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
   </button>`;
-  html += `<div class="popup-type ${d.is_customer ? 'both' : 'strat'}">${d.is_customer ? 'Strategic Account + Customer' : 'Strategic Account'}</div>`;
+  const isHoldout = d.ae && HOLDOUT_REPS.has(d.ae);
+  let typeLabel = d.is_customer ? 'Strategic Account + Customer' : 'Strategic Account';
+  if (isHoldout) typeLabel += ` · <span class="holdout-badge">Holdout — ${d.ae}</span>`;
+  html += `<div class="popup-type ${d.is_customer ? 'both' : 'strat'}">${typeLabel}</div>`;
   html += `<h3 class="copyable" data-tooltip="Click to copy" onclick="copyText('${d.name.replace(/'/g, "\\\\'")}', this)">${d.name}</h3>`;
 
-  const isHoldout = d.ae && HOLDOUT_REPS.has(d.ae);
   const aeDisplay = d.ae ? (isHoldout ? `${d.ae} <span class="holdout-badge">Holdout</span>` : d.ae) : null;
 
   const rows = [
@@ -1928,7 +1930,7 @@ function openAccountModalWithData(d) {
     badge.parentNode.insertBefore(holdoutEl, badge.nextSibling);
   }
   if (isHoldout) {
-    holdoutEl.textContent = 'Holdout';
+    holdoutEl.textContent = `Holdout — ${d.ae}`;
     holdoutEl.style.display = '';
   } else {
     holdoutEl.style.display = 'none';
