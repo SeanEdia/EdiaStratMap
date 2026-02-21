@@ -3254,7 +3254,6 @@ function mapFieldName(csvField) {
     'next_step': 'opp_next_step',
     'next_steps': 'opp_next_step',
     'intro_meeting_next_step': 'opp_next_step',
-    'last_activity': 'opp_last_activity',
     'last_activity_date': 'opp_last_activity',
     'competition': 'opp_competition',
     'competitors': 'opp_competition',
@@ -3267,13 +3266,28 @@ function mapFieldName(csvField) {
     // Revenue
     'annual_recurring_revenue': 'arr',
     'active_arr': 'arr',
+    'total_active_arr': 'arr',
     'revenue': 'arr',
+    'total_active_arr_total_12_months_ago': 'arr_12mo_ago',
+    // State / Address (SFDC column names)
+    'billing_state_province': 'state',
+    'billing_state': 'state',
+    'shipping_state_province': 'state',
+    'shipping_state': 'state',
+    'billing_address_line_1': 'address',
+    'billing_address': 'address',
+    'shipping_address_line_1': 'address',
+    'shipping_address': 'address',
+    'billing_city': 'city',
+    'shipping_city': 'city',
+    // Customer fields
+    'last_modified_date': 'last_modified',
     // Leadership
     'superintendent': 'superintendent',
     'super': 'superintendent'
   };
 
-  const normalized = csvField.toLowerCase().replace(/\s+/g, '_');
+  const normalized = csvField.toLowerCase().replace(/[\/()]+/g, '_').replace(/\s+/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
   return mappings[normalized] || normalized;
 }
 
