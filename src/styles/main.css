@@ -2384,13 +2384,7 @@ input[type="range"]::-webkit-slider-thumb {
 [data-theme="light"] .filter-chip.active {
   color: #1a1a1a;
 }
-[data-theme="light"] .opp-stage-badge.discovery {
-  color: #7a6200;
-}
 [data-theme="light"] .al-stage-label.stage-discovery {
-  color: #7a6200;
-}
-[data-theme="light"] .account-modal-badge.strategic {
   color: #7a6200;
 }
 [data-theme="light"] .view-btn.active-strat {
@@ -2419,6 +2413,60 @@ input[type="range"]::-webkit-slider-thumb {
 }
 [data-theme="light"] .prox-toggle input:checked + .ada-slider ~ .prox-label {
   color: #1a1a1a;
+}
+/* --- Light mode: map popup & account modal text --- */
+[data-theme="light"] .popup-type.strat {
+  color: #1a1a1a;
+}
+[data-theme="light"] .popup-type.both {
+  color: #1a1a1a;
+}
+[data-theme="light"] .popup-row .pk {
+  color: #1a1a1a;
+}
+[data-theme="light"] .popup-row .pv {
+  color: #1a1a1a;
+}
+[data-theme="light"] .popup-section-label {
+  color: #1a1a1a;
+}
+[data-theme="light"] .popup-row .pv.money {
+  color: #007a5e;
+}
+[data-theme="light"] .account-tab.active {
+  color: #1a1a1a;
+  border-bottom-color: var(--accent-strat);
+}
+[data-theme="light"] .modal-section-title {
+  color: #1a1a1a;
+}
+[data-theme="light"] .modal-row .label {
+  color: #1a1a1a;
+}
+[data-theme="light"] .modal-row .value {
+  color: #1a1a1a;
+}
+[data-theme="light"] .modal-row .value a {
+  color: #9a7b00;
+}
+[data-theme="light"] .account-modal-badge.strategic {
+  color: #1a1a1a;
+  border: 1px solid var(--accent-strat);
+}
+[data-theme="light"] .contact-card .title {
+  color: #1a1a1a;
+}
+[data-theme="light"] .opp-stage-badge.discovery {
+  color: #7a6200;
+}
+[data-theme="light"] .opp-stage-badge.demo {
+  color: #1a5fa0;
+}
+[data-theme="light"] .opp-stage-badge.scoping {
+  color: #a03a20;
+}
+[data-theme="light"] .opp-stage-badge.validation {
+  color: #007a5e;
 }
 
 /* Password modal */
