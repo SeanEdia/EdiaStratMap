@@ -270,24 +270,34 @@ function renderTeamRepSelectors() {
   if (selectedTeam) {
     repRow.style.display = '';
     const reps = getAllRepsForTeam(selectedTeam);
-    repSel.innerHTML = '<option value="">All Reps</option>';
+    const info = TEAM_REP_DATA[selectedTeam];
+    repSel.innerHTML = '';
     reps.forEach(rep => {
       const sel = selectedRep === rep ? ' selected' : '';
-      const info = TEAM_REP_DATA[selectedTeam];
       const suffix = info.manager === rep ? ' (Manager)' : '';
       repSel.innerHTML += `<option value="${rep}"${sel}>${rep}${suffix}</option>`;
     });
     repSel.classList.toggle('select-active', !!selectedRep);
   } else {
     repRow.style.display = 'none';
-    repSel.innerHTML = '<option value="">All Reps</option>';
+    repSel.innerHTML = '';
     repSel.classList.remove('select-active');
   }
 }
 
+function getDefaultRepForTeam(team) {
+  const t = TEAM_REP_DATA[team];
+  if (!t) return '';
+  // If there's only one person on the team (no manager, single rep), default to them
+  const allReps = getAllRepsForTeam(team);
+  if (allReps.length === 1) return allReps[0];
+  // Otherwise default to the manager
+  return t.manager || allReps[0] || '';
+}
+
 function onTeamChange(team) {
   selectedTeam = team;
-  selectedRep = '';
+  selectedRep = team ? getDefaultRepForTeam(team) : '';
   // Clear filters that may no longer be valid for the new team scope
   delete filters.strat_region;
   delete filters.strat_state;
@@ -333,10 +343,16 @@ function onStageChange(stage) {
 
 // Returns the strategic dataset scoped to the currently selected team/rep.
 // Uses pre-built indices for O(1) lookups instead of scanning all accounts.
+// When the selected rep is the team manager, show all team accounts (team-level view).
 function getScopedStratData() {
   if (selectedRep) {
-    const indices = _repToAccounts[selectedRep];
-    return indices ? indices.map(i => STRATEGIC_DATA[i]) : [];
+    const isManager = selectedTeam && TEAM_REP_DATA[selectedTeam] &&
+      TEAM_REP_DATA[selectedTeam].manager === selectedRep;
+    if (!isManager) {
+      const indices = _repToAccounts[selectedRep];
+      return indices ? indices.map(i => STRATEGIC_DATA[i]) : [];
+    }
+    // Manager selected — fall through to team-level scoping
   }
   if (selectedTeam) {
     const indices = _teamToAccounts[selectedTeam];
@@ -616,7 +632,15 @@ function applyFilters() {
       // Holdout accounts match both the territory AE and the holdout AE
       // Uses Set-based lookup (_teamRepsSet) for O(1) instead of Array.includes O(n)
       if (selectedRep) {
-        if (territoryAE !== selectedRep && holdoutAE !== selectedRep) return false;
+        const isManager = selectedTeam && TEAM_REP_DATA[selectedTeam] &&
+          TEAM_REP_DATA[selectedTeam].manager === selectedRep;
+        if (isManager) {
+          // Manager = team-level view
+          const teamReps = _teamRepsSet[selectedTeam];
+          if (!teamReps || (!teamReps.has(territoryAE) && !(holdoutAE && teamReps.has(holdoutAE)))) return false;
+        } else {
+          if (territoryAE !== selectedRep && holdoutAE !== selectedRep) return false;
+        }
       } else if (selectedTeam) {
         const teamReps = _teamRepsSet[selectedTeam];
         if (!teamReps || (!teamReps.has(territoryAE) && !(holdoutAE && teamReps.has(holdoutAE)))) return false;
