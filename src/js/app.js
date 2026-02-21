@@ -548,7 +548,16 @@ function resetMapView() {
 }
 
 function toggleFiltersPanel() {
-  document.getElementById('filtersWrap').classList.toggle('collapsed');
+  const filtersWrap = document.getElementById('filtersWrap');
+  const isOpening = filtersWrap.classList.contains('collapsed');
+  filtersWrap.classList.toggle('collapsed');
+  // Collapse pipeline when opening filters
+  if (isOpening) {
+    const pp = document.getElementById('pipelinePanel');
+    const pd = document.getElementById('pipelineDetail');
+    if (pp) pp.classList.add('pl-collapsed');
+    if (pd) pd.classList.add('collapsed');
+  }
 }
 
 function updateFiltersActiveCount() {
@@ -1016,8 +1025,14 @@ function zoomToSearchResult() {
 function togglePipelinePanel() {
   const panel = document.getElementById('pipelinePanel');
   const detail = document.getElementById('pipelineDetail');
+  const isOpening = panel.classList.contains('pl-collapsed');
   detail.classList.toggle('collapsed');
   panel.classList.toggle('pl-collapsed');
+  // Collapse filters when opening pipeline
+  if (isOpening) {
+    const fw = document.getElementById('filtersWrap');
+    if (fw) fw.classList.add('collapsed');
+  }
 }
 
 function updatePipeline() {
@@ -1410,7 +1425,8 @@ function drawProximity() {
     if (isNearAnyCustomer(s.lat, s.lng, PROXIMITY_MILES)) nearby++;
   });
 
-  document.getElementById('proxMilesLabel').textContent = PROXIMITY_MILES + ' mi · ' + nearby + ' nearby';
+  const nearbyEl = document.getElementById('proxNearbyCount');
+  if (nearbyEl) nearbyEl.textContent = nearby + ' nearby';
 }
 
 function haversine(lat1, lng1, lat2, lng2) {
@@ -1956,12 +1972,13 @@ function buildAccountListRow(d, type) {
   const arr = !isStrat ? (parseFloat(d.arr) || 0) : 0;
   const districtKey = d.name.replace(/[^a-zA-Z0-9]/g, '_');
 
-  let moneyHtml = '';
-  if (isStrat && acv > 0) {
-    moneyHtml = `<span class="al-acv">$${formatCompactNumber(acv)}</span>`;
-  } else if (!isStrat && arr > 0) {
-    moneyHtml = `<span class="al-arr">$${formatCompactNumber(arr)}</span>`;
-  }
+  // Money column: ACV for strategic, ARR for customers
+  const moneyText = (isStrat && acv > 0) ? '$' + formatCompactNumber(acv)
+    : (!isStrat && arr > 0) ? '$' + formatCompactNumber(arr) : '';
+  const moneyCls = isStrat ? 'al-acv' : 'al-arr';
+
+  // Products column (opp_areas for strategic)
+  const products = isStrat ? (d.opp_areas || '') : '';
 
   return `<div class="account-list-item" data-name="${d.name.replace(/"/g, '&quot;')}" data-key="${districtKey}"
     onmouseenter="highlightAccountMarker('${d.name.replace(/'/g, "\\'")}')"
@@ -1973,7 +1990,8 @@ function buildAccountListRow(d, type) {
     <span class="al-name" title="${d.name}">${d.name}</span>
     <span class="al-state-badge">${d.state || ''}</span>
     <span class="al-enrollment">${enrollment > 0 ? formatCompactNumber(enrollment) : ''}</span>
-    ${moneyHtml}
+    <span class="${moneyCls}">${moneyText}</span>
+    <span class="al-products" title="${products}">${products}</span>
     <button class="al-expand-btn" onclick="event.stopPropagation();openAccountFromList('${districtKey}')" title="Open full view">&#x2197;</button>
   </div>`;
 }
