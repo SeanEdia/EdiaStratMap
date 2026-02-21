@@ -692,7 +692,7 @@ function updatePipeline() {
 
   const withOpp = STRATEGIC_DATA.filter(d => d.opp_stage);
   const stages = [
-    { key: '1', label: 'Discovery', color: '#E8853D' },
+    { key: '1', label: 'Discovery', color: '#fdcb6e' },
     { key: '2', label: 'Demo', color: '#74b9ff' },
     { key: '3', label: 'Scoping', color: '#e17055' },
     { key: '5', label: 'Validation', color: '#55efc4' },
@@ -1776,7 +1776,7 @@ function updateLegend() {
   const legend = document.getElementById('legend');
   let items = '';
   items += `<div class="legend-item"><div class="legend-dot strat"></div>No Opp</div>`;
-  items += `<div class="legend-item"><div class="legend-dot" style="background:#E8853D;"></div>Discovery</div>`;
+  items += `<div class="legend-item"><div class="legend-dot" style="background:#fdcb6e;"></div>Discovery</div>`;
   items += `<div class="legend-item"><div class="legend-dot" style="background:#74b9ff;"></div>Demo</div>`;
   items += `<div class="legend-item"><div class="legend-dot" style="background:#e17055;"></div>Scoping</div>`;
   items += `<div class="legend-item"><div class="legend-dot" style="background:#55efc4;"></div>Validation</div>`;
@@ -3975,6 +3975,94 @@ async function geocodeConferences(conferences) {
   return conferences;
 }
 
+// ============ THEME TOGGLE ============
+function toggleTheme() {
+  const html = document.documentElement;
+  const current = html.getAttribute('data-theme');
+  const next = current === 'light' ? 'dark' : 'light';
+  html.setAttribute('data-theme', next);
+  localStorage.setItem('edia_theme', next);
+}
+
+// Restore saved theme on load (default dark)
+(function() {
+  const saved = localStorage.getItem('edia_theme');
+  if (saved === 'light') {
+    document.documentElement.setAttribute('data-theme', 'light');
+  }
+})();
+
+// ============ DATA REFRESH PASSWORD PROTECTION ============
+const DATA_REFRESH_PASSWORD = 'edia2025';
+let dataRefreshAuthed = false;
+
+function promptDataRefreshPassword() {
+  return new Promise((resolve) => {
+    const backdrop = document.createElement('div');
+    backdrop.className = 'pw-modal-backdrop';
+    backdrop.innerHTML = `
+      <div class="pw-modal">
+        <h3>Data Refresh</h3>
+        <p>Enter the password to access data refresh.</p>
+        <input type="password" id="pwInput" placeholder="Password" autocomplete="off">
+        <div class="pw-modal-btns">
+          <button onclick="this.closest('.pw-modal-backdrop').remove()">Cancel</button>
+          <button class="pw-confirm" id="pwConfirmBtn">Unlock</button>
+        </div>
+        <div class="pw-error" id="pwError">Incorrect password</div>
+      </div>
+    `;
+    document.body.appendChild(backdrop);
+
+    const input = backdrop.querySelector('#pwInput');
+    const confirmBtn = backdrop.querySelector('#pwConfirmBtn');
+    const errorEl = backdrop.querySelector('#pwError');
+
+    function tryPassword() {
+      if (input.value === DATA_REFRESH_PASSWORD) {
+        dataRefreshAuthed = true;
+        backdrop.remove();
+        resolve(true);
+      } else {
+        errorEl.style.display = 'block';
+        input.value = '';
+        input.focus();
+      }
+    }
+
+    confirmBtn.addEventListener('click', tryPassword);
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') tryPassword();
+    });
+    backdrop.addEventListener('click', (e) => {
+      if (e.target === backdrop) { backdrop.remove(); resolve(false); }
+    });
+
+    input.focus();
+  });
+}
+
+const _originalToggleDataRefreshPanel = toggleDataRefreshPanel;
+function protectedToggleDataRefreshPanel() {
+  if (dataRefreshAuthed) {
+    _originalToggleDataRefreshPanel();
+    return;
+  }
+  promptDataRefreshPassword().then(ok => {
+    if (ok) _originalToggleDataRefreshPanel();
+  });
+}
+
+function protectedOpenSfdcModal() {
+  if (dataRefreshAuthed) {
+    openSfdcModal();
+    return;
+  }
+  promptDataRefreshPassword().then(ok => {
+    if (ok) openSfdcModal();
+  });
+}
+
 // ============ EXPOSE TO WINDOW (for HTML inline handlers) ============
 // These functions are referenced by onclick/onchange/oninput attributes in index.html
 Object.assign(window, {
@@ -4008,11 +4096,13 @@ Object.assign(window, {
   handleNoteKey,
   copyAccountNotes,
   copyText,
-  // Data Refresh
-  toggleDataRefreshPanel,
+  // Theme
+  toggleTheme,
+  // Data Refresh (password protected)
+  toggleDataRefreshPanel: protectedToggleDataRefreshPanel,
   handleDataRefreshDrop,
   handleDataRefreshFile,
-  openSfdcModal,
+  openSfdcModal: protectedOpenSfdcModal,
   closeSfdcModal,
   setSfdcType,
   handleSfdcFile,
