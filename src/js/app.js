@@ -718,7 +718,8 @@ function updatePipeline() {
       h += `<div id="${stageId}" class="stage-dropdown" style="display:none;">`;
       sorted.forEach(d => {
         const oppAcv = Number(d.opp_acv) || 0;
-        h += `<div class="stage-dropdown-item" onclick="event.stopPropagation(); showDetail(STRATEGIC_DATA.indexOf(STRATEGIC_DATA.find(x => x.name === '${d.name.replace(/'/g, "\\'")}')))">`;
+        const districtKey = d.name.replace(/[^a-zA-Z0-9]/g, '_');
+        h += `<div class="stage-dropdown-item" onclick="event.stopPropagation(); openAccountModalByKey('${districtKey}')">`;
         h += `<span class="dropdown-name">${d.name}</span>`;
         h += `<span class="dropdown-acv">$${oppAcv.toLocaleString()}</span>`;
         h += `</div>`;
@@ -4069,6 +4070,7 @@ Object.assign(window, {
   onSearchInput,
   onSearchKeydown,
   closeAutocomplete,
+  selectAutocomplete,
   // Filters
   toggleFiltersPanel,
   setFilter,
@@ -4107,6 +4109,8 @@ Object.assign(window, {
   confirmMerge,
   // Account List
   toggleAccountListOverlay,
+  highlightAccountMarker,
+  unhighlightAccountMarker,
   toggleAccountListGroup,
   setAccountListSort,
   toggleGroupCollapse,
