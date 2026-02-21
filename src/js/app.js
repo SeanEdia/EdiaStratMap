@@ -703,9 +703,9 @@ function onSearchInput() {
   const items = buildAutocompleteList(query);
   renderAutocomplete(items);
   applyFilters();
-  // When search is cleared, reset map to lower 48 US states
+  // When search is cleared, fly out to lower 48 US view (same as reset view button)
   if (!query && map) {
-    map.fitBounds([[24.5, -125], [49.5, -66.5]]);
+    map.setView([39.5, -98.5], 5, { animate: true });
   }
 }
 
