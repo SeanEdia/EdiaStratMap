@@ -27,23 +27,31 @@ const TEAM_REP_DATA = {
   },
 };
 
-// Holdout reps — maps holdout AE name to the territory AE who owns those accounts.
-// Accounts whose d.ae matches a key here are holdouts; the value is the assigned territory AE.
-const HOLDOUT_MAP = {
-  'Aric Walden': 'Sean Johnson',
-  'Andy Graham': 'Sean Johnson',
-};
+// Holdout detection — automatic, no manual map needed.
+// A strategic account is a holdout when its AE is NOT on the Strategic team.
+// The territory AE is the Strategic team's primary rep.
+let _strategicRepsCache = null;
+function getStrategicReps() {
+  if (!_strategicRepsCache) {
+    _strategicRepsCache = getAllRepsForTeam('Strategic');
+  }
+  return _strategicRepsCache;
+}
 
 // Helper: returns the territory (assigned) AE for an account.
-// If the account's AE is a holdout rep, returns the territory AE from the map.
-// Otherwise returns d.ae as-is.
+// If the account's AE is outside the Strategic team, the territory AE is the Strategic team rep.
 function getTerritoryAE(d) {
-  return (d.ae && HOLDOUT_MAP[d.ae]) || d.ae;
+  if (!d.ae) return d.ae;
+  const reps = getStrategicReps();
+  if (reps.includes(d.ae)) return d.ae;       // already assigned to Strategic team
+  return reps[0] || d.ae;                      // holdout — territory AE is the Strategic rep
 }
 
 // Helper: returns the holdout AE if account is a holdout, otherwise null.
 function getHoldoutAE(d) {
-  return (d.ae && HOLDOUT_MAP[d.ae]) ? d.ae : null;
+  if (!d.ae) return null;
+  const reps = getStrategicReps();
+  return reps.includes(d.ae) ? null : d.ae;    // holdout if AE is outside Strategic team
 }
 
 // ============ STATE ============
