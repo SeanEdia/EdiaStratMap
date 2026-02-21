@@ -27,9 +27,23 @@
       </button>
     </div>
     <div class="view-toggle">
-      <button class="view-btn active-strat" data-view="strategic" onclick="setView('strategic')">Strategic Accounts</button>
+      <button class="view-btn active-strat" data-view="strategic" onclick="setView('strategic')">Accounts</button>
       <button class="view-btn" data-view="customers" onclick="setView('customers')">Active Customers</button>
       <button class="view-btn" data-view="all" onclick="setView('all')">All</button>
+    </div>
+    <div class="team-rep-selectors" id="teamRepSelectors">
+      <div class="team-rep-row">
+        <label class="team-rep-label">Team</label>
+        <select class="team-rep-select" id="teamSelect" onchange="onTeamChange(this.value)">
+          <option value="">All Teams</option>
+        </select>
+      </div>
+      <div class="team-rep-row" id="repRow" style="display:none;">
+        <label class="team-rep-label">Rep</label>
+        <select class="team-rep-select" id="repSelect" onchange="onRepChange(this.value)">
+          <option value="">All Reps</option>
+        </select>
+      </div>
     </div>
   </div>
 

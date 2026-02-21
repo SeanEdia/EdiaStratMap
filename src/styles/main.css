@@ -170,6 +170,51 @@ body {
 .view-btn.active-cust { background: var(--accent-cust); color: #fff; }
 .view-btn.active-both { background: var(--accent-both); color: var(--bg); }
 
+/* Team / Rep selectors */
+.team-rep-selectors {
+  display: flex;
+  gap: 8px;
+  padding: 8px 12px 4px;
+}
+
+.team-rep-row {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.team-rep-label {
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text-dim);
+}
+
+.team-rep-select {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.team-rep-select:hover {
+  border-color: var(--accent-strat);
+}
+
+.team-rep-select:focus {
+  outline: none;
+  border-color: var(--accent-strat);
+  box-shadow: 0 0 0 2px rgba(108, 92, 231, 0.15);
+}
+
 /* Stats bar */
 .stats-bar {
   display: flex;

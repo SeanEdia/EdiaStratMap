@@ -7,8 +7,30 @@ let STRATEGIC_DATA = [...strategicData];
 let CUSTOMER_DATA = [...customerData];
 
 
+// ============ TEAM / REP DATA ============
+const TEAM_REP_DATA = {
+  'Strategic': {
+    manager: null,
+    reps: ['Sean Johnson'],
+  },
+  'ENT West': {
+    manager: 'Brad Halsey',
+    reps: ['Aric Walden', 'Lance Baretz', 'Sydney Smith', 'Ben Skillman', 'Jimmy Koerner'],
+  },
+  'ENT East': {
+    manager: 'Samantha Santucci',
+    reps: ['Andy Graham', 'David Thomas', 'Susan Speiser', 'Hannah O\'Brien', 'Ally McCready', 'Victoria Macoul'],
+  },
+  'SMB': {
+    manager: 'Christina Ceballos',
+    reps: ['Jonathan Pacheco', 'Callie Brennan', 'Paulina Famiano', 'Caroline Uhlarik', 'Daniel Way'],
+  },
+};
+
 // ============ STATE ============
 let currentView = 'strategic';
+let selectedTeam = '';   // '' = all teams
+let selectedRep = '';    // '' = all reps
 let map;
 let stratLayer, custLayer, proxLayer;
 let filters = {};
@@ -87,6 +109,7 @@ function initMap() {
   confLayer = L.layerGroup().addTo(map);
   confProxLayer = L.layerGroup().addTo(map);
 
+  renderTeamRepSelectors();
   renderFilters();
   applyFilters();
   updateNoteCount();
@@ -104,11 +127,71 @@ function setView(view) {
     }
   });
   filters = {};
+  selectedTeam = '';
+  selectedRep = '';
   document.getElementById('searchInput').value = '';
   accountListSort = (view === 'customers') ? 'arr_desc' : 'enrollment_desc';
   accountListGroupBy = null;
   collapsedGroups = {};
+  renderTeamRepSelectors();
   renderFilters();
+  applyFilters();
+}
+
+// ============ TEAM / REP SELECTORS ============
+function getAllRepsForTeam(team) {
+  const t = TEAM_REP_DATA[team];
+  if (!t) return [];
+  const reps = [...t.reps];
+  if (t.manager) reps.unshift(t.manager);
+  return reps;
+}
+
+function renderTeamRepSelectors() {
+  const wrap = document.getElementById('teamRepSelectors');
+  if (!wrap) return;
+
+  // Show selectors only in strategic or all view
+  const show = currentView === 'strategic' || currentView === 'all';
+  wrap.style.display = show ? '' : 'none';
+  if (!show) return;
+
+  // Team dropdown
+  const teamSel = document.getElementById('teamSelect');
+  teamSel.innerHTML = '<option value="">All Teams</option>';
+  Object.keys(TEAM_REP_DATA).forEach(team => {
+    const sel = selectedTeam === team ? ' selected' : '';
+    teamSel.innerHTML += `<option value="${team}"${sel}>${team}</option>`;
+  });
+
+  // Rep dropdown (visible only when team is selected)
+  const repRow = document.getElementById('repRow');
+  const repSel = document.getElementById('repSelect');
+  if (selectedTeam) {
+    repRow.style.display = '';
+    const reps = getAllRepsForTeam(selectedTeam);
+    repSel.innerHTML = '<option value="">All Reps</option>';
+    reps.forEach(rep => {
+      const sel = selectedRep === rep ? ' selected' : '';
+      const info = TEAM_REP_DATA[selectedTeam];
+      const suffix = info.manager === rep ? ' (Manager)' : '';
+      repSel.innerHTML += `<option value="${rep}"${sel}>${rep}${suffix}</option>`;
+    });
+  } else {
+    repRow.style.display = 'none';
+    repSel.innerHTML = '<option value="">All Reps</option>';
+  }
+}
+
+function onTeamChange(team) {
+  selectedTeam = team;
+  selectedRep = '';
+  renderTeamRepSelectors();
+  applyFilters();
+}
+
+function onRepChange(rep) {
+  selectedRep = rep;
   applyFilters();
 }
 
@@ -205,10 +288,13 @@ function clearFilter(key) {
 
 function resetFilters() {
   filters = {};
+  selectedTeam = '';
+  selectedRep = '';
   document.getElementById('searchInput').value = '';
   adaFilterOn = false;
   const adaCheck = document.getElementById('adaCheck');
   if (adaCheck) adaCheck.checked = false;
+  renderTeamRepSelectors();
   renderFilters();
   applyFilters();
 }
@@ -275,6 +361,13 @@ function applyFilters() {
               && !(d.region && d.region.toLowerCase().includes(search))
               && !(d.ae && d.ae.toLowerCase().includes(search))) return false;
         }
+      }
+      // Team / rep filter (applied before other filters)
+      if (selectedRep) {
+        if (d.ae !== selectedRep) return false;
+      } else if (selectedTeam) {
+        const teamReps = getAllRepsForTeam(selectedTeam);
+        if (!teamReps.includes(d.ae)) return false;
       }
       if (filters.strat_region && d.region !== filters.strat_region) return false;
       if (filters.strat_state && d.state !== filters.strat_state) return false;
@@ -4065,6 +4158,9 @@ Object.assign(window, {
   // Views
   setView,
   resetMapView,
+  // Team / Rep selectors
+  onTeamChange,
+  onRepChange,
   // Search
   onSearchInput,
   onSearchKeydown,
