@@ -2393,6 +2393,33 @@ input[type="range"]::-webkit-slider-thumb {
 [data-theme="light"] .account-modal-badge.strategic {
   color: #7a6200;
 }
+[data-theme="light"] .view-btn.active-strat {
+  color: #1a1a1a;
+}
+[data-theme="light"] .view-btn.active-both {
+  color: #1a1a1a;
+}
+[data-theme="light"] .stat-strat .num {
+  color: #1a1a1a;
+}
+[data-theme="light"] .stat-strat {
+  border: 2px solid var(--accent-strat);
+}
+[data-theme="light"] .stat-card .num {
+  color: #1a1a1a !important;
+}
+[data-theme="light"] .stat-cust {
+  border: 2px solid var(--accent-cust);
+}
+[data-theme="light"] .count-badge .cb-strat {
+  color: #1a1a1a;
+}
+[data-theme="light"] .count-badge {
+  border-color: var(--accent-strat);
+}
+[data-theme="light"] .prox-toggle input:checked + .ada-slider ~ .prox-label {
+  color: #1a1a1a;
+}
 
 /* Password modal */
 .pw-modal-backdrop {
