@@ -270,24 +270,34 @@ function renderTeamRepSelectors() {
   if (selectedTeam) {
     repRow.style.display = '';
     const reps = getAllRepsForTeam(selectedTeam);
-    repSel.innerHTML = '<option value="">All Reps</option>';
+    const info = TEAM_REP_DATA[selectedTeam];
+    repSel.innerHTML = '';
     reps.forEach(rep => {
       const sel = selectedRep === rep ? ' selected' : '';
-      const info = TEAM_REP_DATA[selectedTeam];
       const suffix = info.manager === rep ? ' (Manager)' : '';
       repSel.innerHTML += `<option value="${rep}"${sel}>${rep}${suffix}</option>`;
     });
     repSel.classList.toggle('select-active', !!selectedRep);
   } else {
     repRow.style.display = 'none';
-    repSel.innerHTML = '<option value="">All Reps</option>';
+    repSel.innerHTML = '';
     repSel.classList.remove('select-active');
   }
 }
 
+function getDefaultRepForTeam(team) {
+  const t = TEAM_REP_DATA[team];
+  if (!t) return '';
+  // If there's only one person on the team (no manager, single rep), default to them
+  const allReps = getAllRepsForTeam(team);
+  if (allReps.length === 1) return allReps[0];
+  // Otherwise default to the manager
+  return t.manager || allReps[0] || '';
+}
+
 function onTeamChange(team) {
   selectedTeam = team;
-  selectedRep = '';
+  selectedRep = team ? getDefaultRepForTeam(team) : '';
   // Clear filters that may no longer be valid for the new team scope
   delete filters.strat_region;
   delete filters.strat_state;
@@ -333,10 +343,16 @@ function onStageChange(stage) {
 
 // Returns the strategic dataset scoped to the currently selected team/rep.
 // Uses pre-built indices for O(1) lookups instead of scanning all accounts.
+// When the selected rep is the team manager, show all team accounts (team-level view).
 function getScopedStratData() {
   if (selectedRep) {
-    const indices = _repToAccounts[selectedRep];
-    return indices ? indices.map(i => STRATEGIC_DATA[i]) : [];
+    const isManager = selectedTeam && TEAM_REP_DATA[selectedTeam] &&
+      TEAM_REP_DATA[selectedTeam].manager === selectedRep;
+    if (!isManager) {
+      const indices = _repToAccounts[selectedRep];
+      return indices ? indices.map(i => STRATEGIC_DATA[i]) : [];
+    }
+    // Manager selected — fall through to team-level scoping
   }
   if (selectedTeam) {
     const indices = _teamToAccounts[selectedTeam];
@@ -548,7 +564,16 @@ function resetMapView() {
 }
 
 function toggleFiltersPanel() {
-  document.getElementById('filtersWrap').classList.toggle('collapsed');
+  const filtersWrap = document.getElementById('filtersWrap');
+  const isOpening = filtersWrap.classList.contains('collapsed');
+  filtersWrap.classList.toggle('collapsed');
+  // Collapse pipeline when opening filters
+  if (isOpening) {
+    const pp = document.getElementById('pipelinePanel');
+    const pd = document.getElementById('pipelineDetail');
+    if (pp) pp.classList.add('pl-collapsed');
+    if (pd) pd.classList.add('collapsed');
+  }
 }
 
 function updateFiltersActiveCount() {
@@ -607,7 +632,15 @@ function applyFilters() {
       // Holdout accounts match both the territory AE and the holdout AE
       // Uses Set-based lookup (_teamRepsSet) for O(1) instead of Array.includes O(n)
       if (selectedRep) {
-        if (territoryAE !== selectedRep && holdoutAE !== selectedRep) return false;
+        const isManager = selectedTeam && TEAM_REP_DATA[selectedTeam] &&
+          TEAM_REP_DATA[selectedTeam].manager === selectedRep;
+        if (isManager) {
+          // Manager = team-level view
+          const teamReps = _teamRepsSet[selectedTeam];
+          if (!teamReps || (!teamReps.has(territoryAE) && !(holdoutAE && teamReps.has(holdoutAE)))) return false;
+        } else {
+          if (territoryAE !== selectedRep && holdoutAE !== selectedRep) return false;
+        }
       } else if (selectedTeam) {
         const teamReps = _teamRepsSet[selectedTeam];
         if (!teamReps || (!teamReps.has(territoryAE) && !(holdoutAE && teamReps.has(holdoutAE)))) return false;
@@ -1016,8 +1049,14 @@ function zoomToSearchResult() {
 function togglePipelinePanel() {
   const panel = document.getElementById('pipelinePanel');
   const detail = document.getElementById('pipelineDetail');
+  const isOpening = panel.classList.contains('pl-collapsed');
   detail.classList.toggle('collapsed');
   panel.classList.toggle('pl-collapsed');
+  // Collapse filters when opening pipeline
+  if (isOpening) {
+    const fw = document.getElementById('filtersWrap');
+    if (fw) fw.classList.add('collapsed');
+  }
 }
 
 function updatePipeline() {
@@ -1410,7 +1449,8 @@ function drawProximity() {
     if (isNearAnyCustomer(s.lat, s.lng, PROXIMITY_MILES)) nearby++;
   });
 
-  document.getElementById('proxMilesLabel').textContent = PROXIMITY_MILES + ' mi · ' + nearby + ' nearby';
+  const nearbyEl = document.getElementById('proxNearbyCount');
+  if (nearbyEl) nearbyEl.textContent = nearby + ' nearby';
 }
 
 function haversine(lat1, lng1, lat2, lng2) {
@@ -1921,6 +1961,8 @@ function sortAccountListData(items) {
       case 'stage_desc': return getStageInfo(b).order - getStageInfo(a).order;
       case 'state_asc': return (a.state || '').localeCompare(b.state || '');
       case 'state_desc': return (b.state || '').localeCompare(a.state || '');
+      case 'products_asc': return (a.opp_areas || '').localeCompare(b.opp_areas || '');
+      case 'products_desc': return (b.opp_areas || '').localeCompare(a.opp_areas || '');
       case 'last_activity_desc': {
         const da = parseActivityDate(a.opp_last_activity || a.last_activity);
         const db = parseActivityDate(b.opp_last_activity || b.last_activity);
@@ -1956,12 +1998,12 @@ function buildAccountListRow(d, type) {
   const arr = !isStrat ? (parseFloat(d.arr) || 0) : 0;
   const districtKey = d.name.replace(/[^a-zA-Z0-9]/g, '_');
 
-  let moneyHtml = '';
-  if (isStrat && acv > 0) {
-    moneyHtml = `<span class="al-acv">$${formatCompactNumber(acv)}</span>`;
-  } else if (!isStrat && arr > 0) {
-    moneyHtml = `<span class="al-arr">$${formatCompactNumber(arr)}</span>`;
-  }
+  // Money column: ACV for strategic, ARR for customers
+  const moneyText = (isStrat && acv > 0) ? '$' + formatCompactNumber(acv)
+    : (!isStrat && arr > 0) ? '$' + formatCompactNumber(arr) : '';
+
+  // Products column (opp_areas for strategic)
+  const products = isStrat ? (d.opp_areas || '') : '';
 
   return `<div class="account-list-item" data-name="${d.name.replace(/"/g, '&quot;')}" data-key="${districtKey}"
     onmouseenter="highlightAccountMarker('${d.name.replace(/'/g, "\\'")}')"
@@ -1969,11 +2011,11 @@ function buildAccountListRow(d, type) {
     onclick="flyToAccount('${d.name.replace(/'/g, "\\'")}')"
     ondblclick="openAccountFromList('${districtKey}')">
     <span class="al-stage-dot ${stage.cls}" title="${stage.label}"></span>
-    <span class="al-stage-label ${stage.cls}">${stage.label}</span>
     <span class="al-name" title="${d.name}">${d.name}</span>
-    <span class="al-state-badge">${d.state || ''}</span>
-    <span class="al-enrollment">${enrollment > 0 ? formatCompactNumber(enrollment) : ''}</span>
-    ${moneyHtml}
+    <span class="al-col al-col-state">${d.state || ''}</span>
+    <span class="al-col al-col-enroll">${enrollment > 0 ? formatCompactNumber(enrollment) : ''}</span>
+    <span class="al-col al-col-acv">${moneyText}</span>
+    <span class="al-col al-col-products" title="${products}">${products}</span>
     <button class="al-expand-btn" onclick="event.stopPropagation();openAccountFromList('${districtKey}')" title="Open full view">&#x2197;</button>
   </div>`;
 }
@@ -2051,39 +2093,35 @@ function renderAccountList() {
   // Only render full list if overlay is open
   if (!accountListOpen) return;
 
-  // Render sort bar
+  // Render column header row (clickable to sort)
   const isCust = currentView === 'customers';
-  const sortBtnClass = isCust ? 'active-cust' : 'active';
-  let sortHtml = `<span class="account-list-sort-label">Sort</span>`;
-
-  const sortOptions = [
-    { key: 'name_asc', label: 'Name' },
-    { key: 'enrollment_desc', label: 'Enrollment' },
-  ];
-
-  if (showStrat && currentView !== 'customers') {
-    sortOptions.push({ key: 'acv_desc', label: 'ACV' });
-    sortOptions.push({ key: 'stage_asc', label: 'Stage' });
-  }
-  if (showCust) {
-    sortOptions.push({ key: 'arr_desc', label: 'ARR' });
-  }
-  sortOptions.push({ key: 'state_asc', label: 'State' });
-  sortOptions.push({ key: 'last_activity_desc', label: 'Activity' });
-
-  sortOptions.forEach(opt => {
-    const baseKey = opt.key.replace(/_(?:asc|desc)$/, '');
+  function colSortArrow(colKey) {
+    const baseKey = colKey.replace(/_(?:asc|desc)$/, '');
     const currentBase = accountListSort.replace(/_(?:asc|desc)$/, '');
-    const isActive = baseKey === currentBase;
-    const arrow = isActive ? (accountListSort.endsWith('_desc') ? ' ↓' : ' ↑') : '';
-    sortHtml += `<button class="account-list-sort-btn ${isActive ? sortBtnClass : ''}" onclick="setAccountListSort('${opt.key}')">${opt.label}${arrow}</button>`;
-  });
-
-  // Group buttons
-  sortHtml += `<button class="account-list-group-btn ${accountListGroupBy === 'state' ? 'active' : ''}" onclick="toggleAccountListGroup('state')">Group: State</button>`;
-  if (showStrat && currentView !== 'customers') {
-    sortHtml += `<button class="account-list-group-btn ${accountListGroupBy === 'stage' ? 'active' : ''}" onclick="toggleAccountListGroup('stage')">Group: Stage</button>`;
+    if (baseKey !== currentBase) return '';
+    return accountListSort.endsWith('_desc') ? ' ↓' : ' ↑';
   }
+  const moneyLabel = isCust ? 'ARR' : 'ACV';
+  const moneyKey = isCust ? 'arr_desc' : 'acv_desc';
+  // Group buttons row (above column headers)
+  let sortHtml = `<div class="al-group-bar">`;
+  sortHtml += `<span class="al-group-label">Group</span>`;
+  sortHtml += `<button class="account-list-group-btn ${accountListGroupBy === 'state' ? 'active' : ''}" onclick="toggleAccountListGroup('state')">State</button>`;
+  if (showStrat && currentView !== 'customers') {
+    sortHtml += `<button class="account-list-group-btn ${accountListGroupBy === 'stage' ? 'active' : ''}" onclick="toggleAccountListGroup('stage')">Stage</button>`;
+  }
+  sortHtml += `</div>`;
+
+  // Column headers
+  sortHtml += `<div class="al-header-row">`;
+  sortHtml += `<span class="al-hdr-dot-spacer"></span>`;
+  sortHtml += `<span class="al-hdr al-hdr-name" onclick="setAccountListSort('name_asc')">Name${colSortArrow('name_asc')}</span>`;
+  sortHtml += `<span class="al-hdr al-hdr-state" onclick="setAccountListSort('state_asc')">State${colSortArrow('state_asc')}</span>`;
+  sortHtml += `<span class="al-hdr al-hdr-enroll" onclick="setAccountListSort('enrollment_desc')">Students${colSortArrow('enrollment_desc')}</span>`;
+  sortHtml += `<span class="al-hdr al-hdr-acv" onclick="setAccountListSort('${moneyKey}')">${moneyLabel}${colSortArrow(moneyKey)}</span>`;
+  sortHtml += `<span class="al-hdr al-hdr-products" onclick="setAccountListSort('products_asc')">Products${colSortArrow('products_asc')}</span>`;
+  sortHtml += `<span class="al-hdr-btn-spacer"></span>`;
+  sortHtml += `</div>`;
 
   sortBar.innerHTML = sortHtml;
 
