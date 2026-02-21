@@ -1937,6 +1937,8 @@ function sortAccountListData(items) {
       case 'stage_desc': return getStageInfo(b).order - getStageInfo(a).order;
       case 'state_asc': return (a.state || '').localeCompare(b.state || '');
       case 'state_desc': return (b.state || '').localeCompare(a.state || '');
+      case 'products_asc': return (a.opp_areas || '').localeCompare(b.opp_areas || '');
+      case 'products_desc': return (b.opp_areas || '').localeCompare(a.opp_areas || '');
       case 'last_activity_desc': {
         const da = parseActivityDate(a.opp_last_activity || a.last_activity);
         const db = parseActivityDate(b.opp_last_activity || b.last_activity);
@@ -2078,11 +2080,13 @@ function renderAccountList() {
   const moneyLabel = isCust ? 'ARR' : 'ACV';
   const moneyKey = isCust ? 'arr_desc' : 'acv_desc';
   let sortHtml = `<div class="al-header-row">`;
+  sortHtml += `<span class="al-hdr-dot-spacer"></span>`;
   sortHtml += `<span class="al-hdr al-hdr-name" onclick="setAccountListSort('name_asc')">Name${colSortArrow('name_asc')}</span>`;
   sortHtml += `<span class="al-hdr al-hdr-state" onclick="setAccountListSort('state_asc')">State${colSortArrow('state_asc')}</span>`;
   sortHtml += `<span class="al-hdr al-hdr-enroll" onclick="setAccountListSort('enrollment_desc')">Students${colSortArrow('enrollment_desc')}</span>`;
   sortHtml += `<span class="al-hdr al-hdr-acv" onclick="setAccountListSort('${moneyKey}')">${moneyLabel}${colSortArrow(moneyKey)}</span>`;
-  sortHtml += `<span class="al-hdr al-hdr-products">Products</span>`;
+  sortHtml += `<span class="al-hdr al-hdr-products" onclick="setAccountListSort('products_asc')">Products${colSortArrow('products_asc')}</span>`;
+  sortHtml += `<span class="al-hdr-btn-spacer"></span>`;
   sortHtml += `</div>`;
 
   // Group buttons row

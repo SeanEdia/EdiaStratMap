@@ -2311,9 +2311,10 @@ input[type="range"]::-webkit-slider-thumb {
   align-items: center;
   gap: 6px;
   padding: 8px 16px 6px;
-  /* match row layout: dot(8) + gap(6) + name(flex) + state(34) + enroll(46) + acv(52) + products(72) + expand(20) */
-  padding-left: 30px; /* 16px padding + 8px dot + 6px gap */
 }
+/* Invisible spacers that mirror the dot and expand button in data rows */
+.al-hdr-dot-spacer { width: 7px; flex-shrink: 0; }
+.al-hdr-btn-spacer { width: 14px; flex-shrink: 0; }
 .al-hdr {
   font-size: 9px;
   font-weight: 600;
@@ -2330,7 +2331,7 @@ input[type="range"]::-webkit-slider-thumb {
 .al-hdr-state { width: 34px; text-align: center; }
 .al-hdr-enroll { width: 46px; text-align: right; }
 .al-hdr-acv { width: 52px; text-align: right; }
-.al-hdr-products { width: 72px; text-align: left; padding-right: 20px; cursor: default; }
+.al-hdr-products { width: 72px; }
 .al-group-bar {
   display: flex;
   align-items: center;
@@ -2354,7 +2355,6 @@ input[type="range"]::-webkit-slider-thumb {
   color: var(--text-muted);
   cursor: pointer;
   transition: all 0.15s;
-  margin-left: auto;
   white-space: nowrap;
 }
 .account-list-group-btn:hover { border-color: var(--text-muted); color: var(--text-dim); }
@@ -2485,6 +2485,7 @@ input[type="range"]::-webkit-slider-thumb {
   cursor: pointer;
   padding: 2px;
   font-size: 10px;
+  width: 14px;
   opacity: 0;
   transition: opacity 0.15s;
   flex-shrink: 0;
