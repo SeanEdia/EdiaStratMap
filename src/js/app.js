@@ -405,7 +405,7 @@ function applyFilters() {
     custCard.style.display = '';
     stratCard.style.display = 'none';
     overlapEl.textContent = overlapCount;
-    overlapEl.style.color = '#fdcb6e';
+    overlapEl.style.color = '#E8853D';
     overlapLabel.textContent = 'Also Strategic';
     overlapCard.style.display = '';
   } else {
@@ -415,7 +415,7 @@ function applyFilters() {
     stratCard.style.display = '';
     custCard.style.display = '';
     overlapEl.textContent = overlapCount;
-    overlapEl.style.color = '#fdcb6e';
+    overlapEl.style.color = '#E8853D';
     overlapLabel.textContent = 'Overlap';
     overlapCard.style.display = '';
   }
@@ -692,7 +692,7 @@ function updatePipeline() {
 
   const withOpp = STRATEGIC_DATA.filter(d => d.opp_stage);
   const stages = [
-    { key: '1', label: 'Discovery', color: '#fdcb6e' },
+    { key: '1', label: 'Discovery', color: '#E8853D' },
     { key: '2', label: 'Demo', color: '#74b9ff' },
     { key: '3', label: 'Scoping', color: '#e17055' },
     { key: '5', label: 'Validation', color: '#55efc4' },
@@ -1259,14 +1259,14 @@ function buildStratPopup(d) {
       const custArr = parseFloat(custMatch.arr) || 0;
       const custGdr = custMatch.gdr ? parseFloat(custMatch.gdr) : null;
       const custNdr = custMatch.ndr ? parseFloat(custMatch.ndr) : null;
-      html += `<div class="popup-section-label" style="color:#fdcb6e">💰 Active Customer Revenue</div>`;
+      html += `<div class="popup-section-label" style="color:#E8853D">💰 Active Customer Revenue</div>`;
       html += `<div class="popup-row"><span class="pk">Active ARR</span><span class="pv money" style="color:#00b894">$${custArr.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}</span></div>`;
       if (custGdr !== null) {
-        const gdrColor = custGdr >= 100 ? '#00b894' : custGdr >= 80 ? '#fdcb6e' : '#d63031';
+        const gdrColor = custGdr >= 100 ? '#00b894' : custGdr >= 80 ? '#E8853D' : '#d63031';
         html += `<div class="popup-row"><span class="pk">GDR</span><span class="pv" style="color:${gdrColor}">${custGdr.toFixed(1)}%</span></div>`;
       }
       if (custNdr !== null) {
-        const ndrColor = custNdr >= 100 ? '#00b894' : custNdr >= 80 ? '#fdcb6e' : '#d63031';
+        const ndrColor = custNdr >= 100 ? '#00b894' : custNdr >= 80 ? '#E8853D' : '#d63031';
         html += `<div class="popup-row"><span class="pk">NDR</span><span class="pv" style="color:${ndrColor}">${custNdr.toFixed(1)}%</span></div>`;
       }
       html += `<div class="popup-row"><span class="pk">CSM</span><span class="pv">${custMatch.csm || '—'}</span></div>`;
@@ -1327,8 +1327,8 @@ function buildStratPopup(d) {
   const savedPrepLink = localStorage.getItem(prepLinkKey) || d.prep_doc_url || '';
 
   const links = [];
-  if (d.org_chart_url) links.push(`<a href="${d.org_chart_url}" target="_blank" style="color:#a29bfe;text-decoration:none;font-size:11px;margin-right:12px;">📋 Org Chart</a>`);
-  if (d.strategic_plan_url) links.push(`<a href="${d.strategic_plan_url}" target="_blank" style="color:#a29bfe;text-decoration:none;font-size:11px;margin-right:12px;">📄 Strategic Plan</a>`);
+  if (d.org_chart_url) links.push(`<a href="${d.org_chart_url}" target="_blank" style="color:#FFD966;text-decoration:none;font-size:11px;margin-right:12px;">📋 Org Chart</a>`);
+  if (d.strategic_plan_url) links.push(`<a href="${d.strategic_plan_url}" target="_blank" style="color:#FFD966;text-decoration:none;font-size:11px;margin-right:12px;">📄 Strategic Plan</a>`);
 
   // Meeting Prep link - from localStorage or data
   if (savedPrepLink) {
@@ -1776,7 +1776,7 @@ function updateLegend() {
   const legend = document.getElementById('legend');
   let items = '';
   items += `<div class="legend-item"><div class="legend-dot strat"></div>No Opp</div>`;
-  items += `<div class="legend-item"><div class="legend-dot" style="background:#fdcb6e;"></div>Discovery</div>`;
+  items += `<div class="legend-item"><div class="legend-dot" style="background:#E8853D;"></div>Discovery</div>`;
   items += `<div class="legend-item"><div class="legend-dot" style="background:#74b9ff;"></div>Demo</div>`;
   items += `<div class="legend-item"><div class="legend-dot" style="background:#e17055;"></div>Scoping</div>`;
   items += `<div class="legend-item"><div class="legend-dot" style="background:#55efc4;"></div>Validation</div>`;
@@ -1935,7 +1935,7 @@ function populateInfoTab(d) {
     notes.forEach(n => {
       html += `<div class="modal-note-entry">
         <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
-          <span style="font-size:11px;font-weight:600;color:#a29bfe;">${n.author}</span>
+          <span style="font-size:11px;font-weight:600;color:#FFD966;">${n.author}</span>
           <span style="font-size:10px;color:var(--text-muted);">${formatNoteTime(n.ts)}</span>
         </div>
         <div style="font-size:12px;line-height:1.5;color:var(--text);">${n.text}</div>
@@ -3177,8 +3177,8 @@ function showMergeModal(stats) {
 
     // Show geocoding notice if needed
     if (needsGeocode > 0) {
-      html += `<div style="background:#fdcb6e22;border:1px solid #fdcb6e44;border-radius:6px;padding:8px 10px;margin-bottom:10px;font-size:11px;">
-        <strong style="color:#fdcb6e;">📍 ${needsGeocode} record${needsGeocode > 1 ? 's' : ''} will be geocoded</strong>
+      html += `<div style="background:#E8853D22;border:1px solid #E8853D44;border-radius:6px;padding:8px 10px;margin-bottom:10px;font-size:11px;">
+        <strong style="color:#E8853D;">📍 ${needsGeocode} record${needsGeocode > 1 ? 's' : ''} will be geocoded</strong>
         <div style="color:var(--text-dim);margin-top:4px;">New pins will appear on map after merge</div>
       </div>`;
     }
@@ -3678,7 +3678,7 @@ function buildConfPopup(c) {
         const stageLbl = n.data.opp_stage ? n.data.opp_stage.replace(/^\d+\s*-\s*/, '') : '';
         html += `<div class="popup-conf-nearby-item" onclick="focusOnAccount('${districtKey}')">`;
         html += `${n.data.name}`;
-        if (stageLbl) html += ` <span style="font-size:9px;color:#fdcb6e;">(${stageLbl})</span>`;
+        if (stageLbl) html += ` <span style="font-size:9px;color:#E8853D;">(${stageLbl})</span>`;
         html += ` <span class="conf-dist">${distMi}mi</span>`;
         html += `</div>`;
       });
