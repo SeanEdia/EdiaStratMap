@@ -638,6 +638,16 @@ input[type="range"]::-webkit-slider-thumb {
   font-weight: 500;
 }
 
+.popup-link {
+  color: #FFD966;
+}
+.popup-link.prep {
+  color: #55efc4;
+}
+.popup-opp-stage-pill {
+  color: var(--text-dim);
+}
+
 .popup-section-label {
   font-size: 9px;
   font-weight: 600;
@@ -1150,7 +1160,7 @@ input[type="range"]::-webkit-slider-thumb {
 .note-add-btn {
   padding: 6px 12px;
   background: var(--accent-strat);
-  color: #fff;
+  color: #1a1a1a;
   border: none;
   border-radius: var(--radius-sm);
   font-family: inherit;
@@ -2416,22 +2426,37 @@ input[type="range"]::-webkit-slider-thumb {
 }
 /* --- Light mode: map popup & account modal text --- */
 [data-theme="light"] .popup-type.strat {
-  color: #1a1a1a;
+  color: #1a1a1a !important;
 }
 [data-theme="light"] .popup-type.both {
-  color: #1a1a1a;
+  color: #1a1a1a !important;
 }
 [data-theme="light"] .popup-row .pk {
-  color: #1a1a1a;
+  color: #1a1a1a !important;
 }
 [data-theme="light"] .popup-row .pv {
-  color: #1a1a1a;
+  color: #1a1a1a !important;
 }
 [data-theme="light"] .popup-section-label {
-  color: #1a1a1a;
+  color: #1a1a1a !important;
 }
 [data-theme="light"] .popup-row .pv.money {
-  color: #007a5e;
+  color: #007a5e !important;
+}
+[data-theme="light"] .popup-card a {
+  color: #9a7b00 !important;
+}
+[data-theme="light"] .popup-card .meeting-prep-btn {
+  color: #1a1a1a !important;
+}
+[data-theme="light"] .popup-link {
+  color: #9a7b00 !important;
+}
+[data-theme="light"] .popup-link.prep {
+  color: #007a5e !important;
+}
+[data-theme="light"] .popup-opp-stage-pill {
+  color: #1a1a1a !important;
 }
 [data-theme="light"] .account-tab.active {
   color: #1a1a1a;
