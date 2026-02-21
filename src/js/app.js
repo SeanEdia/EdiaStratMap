@@ -2894,6 +2894,31 @@ function parseCSVLine(line) {
 }
 
 function previewMerge(csvData) {
+  // Auto-detect data type from CSV columns.
+  // Customer data has distinctive fields (arr, csm, segment, gdr, ndr)
+  // that strategic data never has. If we find them, override the toggle.
+  if (csvData.length > 0) {
+    const cols = new Set(Object.keys(csvData[0]).map(k => k.toLowerCase().replace(/\s+/g, '_')));
+    const customerSignals = ['arr', 'active_arr', 'annual_recurring_revenue', 'revenue',
+                             'csm', 'csm_name', 'customer_success_manager',
+                             'segment', 'gdr', 'ndr', 'lapsed_renewal', 'arr_12mo_ago'];
+    const strategicSignals = ['superintendent', 'super', 'sis', 'sis_platform', 'sis_system',
+                              'ada_adm', 'math_products', 'attendance'];
+    const custHits = customerSignals.filter(s => cols.has(s)).length;
+    const stratHits = strategicSignals.filter(s => cols.has(s)).length;
+    if (custHits > stratHits && custHits >= 2) {
+      console.log('[SFDC Merge] Auto-detected CUSTOMER data (matched columns:', customerSignals.filter(s => cols.has(s)).join(', '), ')');
+      sfdcDataType = 'customers';
+      setSfdcType('customers');
+    } else if (stratHits > custHits && stratHits >= 2) {
+      console.log('[SFDC Merge] Auto-detected STRATEGIC data (matched columns:', strategicSignals.filter(s => cols.has(s)).join(', '), ')');
+      sfdcDataType = 'strategic';
+      setSfdcType('strategic');
+    } else {
+      console.log('[SFDC Merge] Could not auto-detect type (cust signals:', custHits, ', strat signals:', stratHits, '). Using selected type:', sfdcDataType);
+    }
+  }
+
   const isStrategic = sfdcDataType === 'strategic';
   const existingData = isStrategic ? STRATEGIC_DATA : CUSTOMER_DATA;
 
