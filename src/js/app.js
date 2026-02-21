@@ -189,16 +189,41 @@ function renderTeamRepSelectors() {
 function onTeamChange(team) {
   selectedTeam = team;
   selectedRep = '';
+  // Clear filters that may no longer be valid for the new team scope
+  delete filters.strat_region;
+  delete filters.strat_state;
+  delete filters.strat_ae;
+  delete filters.strat_sis;
   renderTeamRepSelectors();
+  renderFilters();
   applyFilters();
 }
 
 function onRepChange(rep) {
   selectedRep = rep;
+  // Clear filters that may no longer be valid for the new rep scope
+  delete filters.strat_region;
+  delete filters.strat_state;
+  delete filters.strat_ae;
+  delete filters.strat_sis;
+  renderFilters();
   applyFilters();
 }
 
 // ============ FILTERS UI ============
+
+// Returns the strategic dataset scoped to the currently selected team/rep
+function getScopedStratData() {
+  let data = STRATEGIC_DATA;
+  if (selectedRep) {
+    data = data.filter(d => d.ae === selectedRep);
+  } else if (selectedTeam) {
+    const teamReps = getAllRepsForTeam(selectedTeam);
+    data = data.filter(d => teamReps.includes(d.ae));
+  }
+  return data;
+}
+
 function renderFilters() {
   const area = document.getElementById('filtersArea');
   let html = '';
