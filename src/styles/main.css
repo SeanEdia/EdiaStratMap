@@ -2420,6 +2420,18 @@ input[type="range"]::-webkit-slider-thumb {
   color: var(--text-muted);
 }
 
+.account-list-show-more {
+  padding: 10px 16px;
+  text-align: center;
+  font-size: 11px;
+  color: var(--accent-strat);
+  cursor: pointer;
+  border-top: 1px solid var(--panel-border);
+}
+.account-list-show-more:hover {
+  background: rgba(255,255,255,0.03);
+}
+
 /* Marker highlight effect on hover from account list */
 .marker-highlight {
   box-shadow: 0 0 0 4px rgba(108,92,231,0.6), 0 0 16px 6px rgba(108,92,231,0.4) !important;

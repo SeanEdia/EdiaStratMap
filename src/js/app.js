@@ -6,6 +6,91 @@ import customerData from '../data/customers.json';
 let STRATEGIC_DATA = [...strategicData];
 let CUSTOMER_DATA = [...customerData];
 
+// ============ PERFORMANCE INDICES ============
+// Pre-computed lookup structures rebuilt when data changes.
+// Converts O(n) scans into O(1) lookups for team/rep filtering.
+let _repToTeam = {};          // rep name -> team name
+let _teamRepsSet = {};        // team name -> Set of rep names
+let _repToAccounts = {};      // rep name -> [account indices]
+let _teamToAccounts = {};     // team name -> [account indices]
+let _overlapCount = 0;        // cached count of strategic accounts that are also customers
+let _uniqueCache = {};        // key -> sorted unique values (invalidated on scope change)
+let _autocompleteCache = null; // pre-built state/region counts
+
+function buildIndices() {
+  // Map reps to teams (Set-based for O(1) lookup)
+  _repToTeam = {};
+  _teamRepsSet = {};
+  Object.entries(TEAM_REP_DATA).forEach(([team, info]) => {
+    const reps = new Set(info.reps);
+    if (info.manager) reps.add(info.manager);
+    _teamRepsSet[team] = reps;
+    reps.forEach(rep => { _repToTeam[rep] = team; });
+  });
+
+  // Index strategic accounts by rep and team
+  _repToAccounts = {};
+  _teamToAccounts = {};
+  STRATEGIC_DATA.forEach((d, i) => {
+    const tAE = getTerritoryAE(d);
+    const hAE = getHoldoutAE(d);
+    // Index by territory AE
+    if (tAE) {
+      if (!_repToAccounts[tAE]) _repToAccounts[tAE] = [];
+      _repToAccounts[tAE].push(i);
+    }
+    // Index by holdout AE (if different)
+    if (hAE && hAE !== tAE) {
+      if (!_repToAccounts[hAE]) _repToAccounts[hAE] = [];
+      _repToAccounts[hAE].push(i);
+    }
+    // Index by team
+    Object.entries(_teamRepsSet).forEach(([team, reps]) => {
+      if ((tAE && reps.has(tAE)) || (hAE && reps.has(hAE))) {
+        if (!_teamToAccounts[team]) _teamToAccounts[team] = [];
+        _teamToAccounts[team].push(i);
+      }
+    });
+  });
+
+  // De-duplicate team indices (an account may be added for both territory and holdout AE)
+  Object.keys(_teamToAccounts).forEach(team => {
+    _teamToAccounts[team] = [...new Set(_teamToAccounts[team])];
+  });
+
+  // Cache overlap count
+  _overlapCount = STRATEGIC_DATA.filter(d => d.is_customer).length;
+
+  // Invalidate caches
+  _uniqueCache = {};
+  _autocompleteCache = null;
+}
+
+function invalidateCaches() {
+  _uniqueCache = {};
+  _autocompleteCache = null;
+}
+
+// Pre-build autocomplete state/region counts (called lazily on first search)
+function getAutocompleteCache() {
+  if (_autocompleteCache) return _autocompleteCache;
+
+  const stateCounts = {};
+  const regionSet = new Set();
+  const regionCounts = {};
+
+  STRATEGIC_DATA.forEach(d => {
+    if (d.state) stateCounts[d.state.toLowerCase()] = (stateCounts[d.state.toLowerCase()] || 0) + 1;
+    if (d.region) { regionSet.add(d.region); regionCounts[d.region] = (regionCounts[d.region] || 0) + 1; }
+  });
+  CUSTOMER_DATA.forEach(d => {
+    if (d.state) stateCounts[d.state.toLowerCase()] = (stateCounts[d.state.toLowerCase()] || 0) + 1;
+    if (d.region) { regionSet.add(d.region); regionCounts[d.region] = (regionCounts[d.region] || 0) + 1; }
+  });
+
+  _autocompleteCache = { stateCounts, regionSet: [...regionSet].sort(), regionCounts };
+  return _autocompleteCache;
+}
 
 // ============ TEAM / REP DATA ============
 const TEAM_REP_DATA = {
@@ -73,6 +158,7 @@ let accountListSort = 'enrollment_desc';
 let accountListGroupBy = null;  // null | 'state' | 'stage'
 let accountListOpen = false;
 let collapsedGroups = {};       // track collapsed group headers
+let accountListDisplayLimit = 200; // cap DOM rows; increased by "Show more"
 
 // Conference state
 let CONFERENCE_DATA = [];
@@ -89,6 +175,9 @@ function initMap() {
   // Data is loaded from the seed JSON files (strategic.json / customers.json).
   // These files are the single source of truth so that all users see the same data.
   // After a merge, updated JSON is downloaded for committing back to the repo.
+
+  // Build performance indices for team/rep/proximity lookups
+  buildIndices();
 
   // Pre-populate district data cache for modal access
   window.districtDataCache = {};
@@ -140,6 +229,7 @@ function setView(view) {
   accountListSort = (view === 'customers') ? 'arr_desc' : 'enrollment_desc';
   accountListGroupBy = null;
   collapsedGroups = {};
+  invalidateCaches();
   renderTeamRepSelectors();
   renderFilters();
   applyFilters();
@@ -198,6 +288,7 @@ function onTeamChange(team) {
   delete filters.strat_state;
   delete filters.strat_ae;
   delete filters.strat_sis;
+  invalidateCaches(); // Scoped unique values changed
   renderTeamRepSelectors();
   renderFilters();
   applyFilters();
@@ -210,22 +301,25 @@ function onRepChange(rep) {
   delete filters.strat_state;
   delete filters.strat_ae;
   delete filters.strat_sis;
+  invalidateCaches(); // Scoped unique values changed
   renderFilters();
   applyFilters();
 }
 
 // ============ FILTERS UI ============
 
-// Returns the strategic dataset scoped to the currently selected team/rep
+// Returns the strategic dataset scoped to the currently selected team/rep.
+// Uses pre-built indices for O(1) lookups instead of scanning all accounts.
 function getScopedStratData() {
-  let data = STRATEGIC_DATA;
   if (selectedRep) {
-    data = data.filter(d => d.ae === selectedRep);
-  } else if (selectedTeam) {
-    const teamReps = getAllRepsForTeam(selectedTeam);
-    data = data.filter(d => teamReps.includes(d.ae));
+    const indices = _repToAccounts[selectedRep];
+    return indices ? indices.map(i => STRATEGIC_DATA[i]) : [];
   }
-  return data;
+  if (selectedTeam) {
+    const indices = _teamToAccounts[selectedTeam];
+    return indices ? indices.map(i => STRATEGIC_DATA[i]) : [];
+  }
+  return STRATEGIC_DATA;
 }
 
 function renderFilters() {
@@ -306,7 +400,16 @@ function buildSliderGroup(label, key, min, max) {
 
 // ============ FILTER LOGIC ============
 function getUnique(data, field) {
-  return [...new Set(data.map(d => d[field]).filter(Boolean))].sort();
+  // Use cached result if available (cache keyed by dataset identity + field)
+  const isStrategic = data === STRATEGIC_DATA;
+  const isCustomer = data === CUSTOMER_DATA;
+  const scopeKey = isStrategic ? 'strat' : isCustomer ? 'cust' : (selectedRep || selectedTeam || 'all');
+  const cacheKey = scopeKey + ':' + field;
+  if (_uniqueCache[cacheKey]) return _uniqueCache[cacheKey];
+
+  const result = [...new Set(data.map(d => d[field]).filter(Boolean))].sort();
+  _uniqueCache[cacheKey] = result;
+  return result;
 }
 
 // Collect unique AE names — resolves territory AEs and includes holdout reps in dropdown
@@ -348,6 +451,7 @@ function resetFilters() {
   adaFilterOn = false;
   const adaCheck = document.getElementById('adaCheck');
   if (adaCheck) adaCheck.checked = false;
+  invalidateCaches();
   renderTeamRepSelectors();
   renderFilters();
   applyFilters();
@@ -390,6 +494,7 @@ function applyFilters() {
   stratLayer.clearLayers();
   custLayer.clearLayers();
   if (proximityOn) drawProximity();
+  accountListDisplayLimit = 200; // Reset pagination on filter change
 
   let stratCount = 0, custCount = 0;
   let statesSet = new Set();
@@ -422,11 +527,12 @@ function applyFilters() {
       }
       // Team / rep filter (applied before other filters)
       // Holdout accounts match both the territory AE and the holdout AE
+      // Uses Set-based lookup (_teamRepsSet) for O(1) instead of Array.includes O(n)
       if (selectedRep) {
         if (territoryAE !== selectedRep && holdoutAE !== selectedRep) return false;
       } else if (selectedTeam) {
-        const teamReps = getAllRepsForTeam(selectedTeam);
-        if (!teamReps.includes(territoryAE) && !(holdoutAE && teamReps.includes(holdoutAE))) return false;
+        const teamReps = _teamRepsSet[selectedTeam];
+        if (!teamReps || (!teamReps.has(territoryAE) && !(holdoutAE && teamReps.has(holdoutAE)))) return false;
       }
       if (filters.strat_region && d.region !== filters.strat_region) return false;
       if (filters.strat_state && d.state !== filters.strat_state) return false;
@@ -532,8 +638,8 @@ function applyFilters() {
     filteredCustData = filtered;
   }
 
-  // Update stats - context-aware
-  const overlapCount = STRATEGIC_DATA.filter(d => d.is_customer).length;
+  // Update stats - context-aware (uses cached overlap count)
+  const overlapCount = _overlapCount;
   const stratEl = document.getElementById('stat-strat-count');
   const custEl = document.getElementById('stat-cust-count');
   const overlapEl = document.getElementById('stat-overlap-count');
@@ -608,28 +714,25 @@ function buildAutocompleteList(query) {
     'va':'Virginia','wa':'Washington','wv':'West Virginia','wi':'Wisconsin','wy':'Wyoming','dc':'District of Columbia'
   };
 
-  // Match states
+  // Match states — uses pre-computed counts instead of filtering all accounts per state
+  const acCache = getAutocompleteCache();
   Object.entries(stateNames).forEach(([abbr, name]) => {
     if (abbr.startsWith(q) || name.toLowerCase().startsWith(q)) {
       const key = 'state:' + abbr;
       if (!seen.has(key)) {
         seen.add(key);
-        // Count accounts in this state
-        const stratCount = STRATEGIC_DATA.filter(d => (d.state || '').toLowerCase() === abbr || (d.state || '').toLowerCase() === name.toLowerCase()).length;
-        const custCount = CUSTOMER_DATA.filter(d => (d.state || '').toLowerCase() === abbr || (d.state || '').toLowerCase() === name.toLowerCase()).length;
-        if (stratCount + custCount > 0) {
-          results.push({ type: 'state', label: name + ' (' + abbr.toUpperCase() + ')', meta: stratCount + custCount + ' accounts', abbr, name });
+        const count = (acCache.stateCounts[abbr] || 0) + (acCache.stateCounts[name.toLowerCase()] || 0);
+        if (count > 0) {
+          results.push({ type: 'state', label: name + ' (' + abbr.toUpperCase() + ')', meta: count + ' accounts', abbr, name });
         }
       }
     }
   });
 
-  // Match regions
-  const regionSet = new Set();
-  [...STRATEGIC_DATA, ...CUSTOMER_DATA].forEach(d => { if (d.region) regionSet.add(d.region); });
-  regionSet.forEach(region => {
+  // Match regions — uses pre-computed counts instead of filtering all accounts per region
+  acCache.regionSet.forEach(region => {
     if (region.toLowerCase().includes(q)) {
-      const count = [...STRATEGIC_DATA, ...CUSTOMER_DATA].filter(d => d.region === region).length;
+      const count = acCache.regionCounts[region] || 0;
       results.push({ type: 'region', label: region, meta: count + ' accounts', region });
     }
   });
@@ -697,16 +800,22 @@ function renderAutocomplete(items) {
   dropdown.classList.add('open');
 }
 
+let _searchDebounceTimer = null;
 function onSearchInput() {
   searchExactMatch = false; // typing resets exact match mode
   const query = document.getElementById('searchInput').value.trim();
+  // Autocomplete renders immediately for responsiveness
   const items = buildAutocompleteList(query);
   renderAutocomplete(items);
-  applyFilters();
-  // When search is cleared, fly out to lower 48 US view (same as reset view button)
-  if (!query && map) {
-    map.setView([39.5, -98.5], 5, { animate: true });
-  }
+  // Debounce the expensive filter + marker rebuild (150ms)
+  clearTimeout(_searchDebounceTimer);
+  _searchDebounceTimer = setTimeout(() => {
+    applyFilters();
+    // When search is cleared, fly out to lower 48 US view (same as reset view button)
+    if (!query && map) {
+      map.setView([39.5, -98.5], 5, { animate: true });
+    }
+  }, 150);
 }
 
 function onSearchKeydown(e) {
@@ -1146,11 +1255,52 @@ function updateProxRadius(val) {
   if (proximityOn) drawProximity();
 }
 
+// Spatial grid for fast proximity lookups.
+// Divides the map into ~1° cells and only checks neighbors instead of all accounts.
+let _custGrid = null;
+let _custGridMiles = null;
+
+function buildCustGrid() {
+  if (_custGrid && _custGridMiles === PROXIMITY_MILES) return _custGrid;
+  const cellSize = Math.max(1, PROXIMITY_MILES / 50); // ~1° cells for 50mi radius
+  const grid = {};
+  CUSTOMER_DATA.forEach(c => {
+    if (!c.lat || !c.lng) return;
+    const gx = Math.floor(c.lng / cellSize);
+    const gy = Math.floor(c.lat / cellSize);
+    const key = gx + ':' + gy;
+    if (!grid[key]) grid[key] = [];
+    grid[key].push(c);
+  });
+  _custGrid = grid;
+  _custGridMiles = PROXIMITY_MILES;
+  return grid;
+}
+
+function isNearAnyCustomer(lat, lng, miles) {
+  const grid = buildCustGrid();
+  const cellSize = Math.max(1, miles / 50);
+  const gx = Math.floor(lng / cellSize);
+  const gy = Math.floor(lat / cellSize);
+  // Check surrounding cells (3x3 grid covers all possible neighbors)
+  for (let dx = -1; dx <= 1; dx++) {
+    for (let dy = -1; dy <= 1; dy++) {
+      const cell = grid[(gx + dx) + ':' + (gy + dy)];
+      if (!cell) continue;
+      for (let i = 0; i < cell.length; i++) {
+        if (haversine(lat, lng, cell[i].lat, cell[i].lng) <= miles) return true;
+      }
+    }
+  }
+  return false;
+}
+
 function drawProximity() {
   proxLayer.clearLayers();
   if (!proximityOn) return;
 
   const milesToMeters = PROXIMITY_MILES * 1609.34;
+  _custGrid = null; // Invalidate grid when radius changes
 
   CUSTOMER_DATA.forEach(c => {
     if (!c.lat || !c.lng) return;
@@ -1165,15 +1315,11 @@ function drawProximity() {
     }).addTo(proxLayer);
   });
 
-  // Count strategic accounts inside any customer radius
+  // Count strategic accounts inside any customer radius — uses spatial grid
   let nearby = 0;
   STRATEGIC_DATA.forEach(s => {
     if (!s.lat || !s.lng) return;
-    const isNear = CUSTOMER_DATA.some(c => {
-      if (!c.lat || !c.lng) return false;
-      return haversine(s.lat, s.lng, c.lat, c.lng) <= PROXIMITY_MILES;
-    });
-    if (isNear) nearby++;
+    if (isNearAnyCustomer(s.lat, s.lng, PROXIMITY_MILES)) nearby++;
   });
 
   document.getElementById('proxMilesLabel').textContent = PROXIMITY_MILES + ' mi · ' + nearby + ' nearby';
@@ -1862,15 +2008,29 @@ function renderAccountList() {
     return;
   }
 
+  // Cap DOM rows to prevent browser slowdown with thousands of accounts.
+  // Shows a "Show more" button to load additional batches.
+  const ACCOUNT_LIST_PAGE_SIZE = 200;
+  const displayLimit = accountListDisplayLimit || ACCOUNT_LIST_PAGE_SIZE;
+
   if (accountListGroupBy) {
     body.innerHTML = renderGroupedList(sortedData, itemTypeMap);
   } else {
     let html = '';
-    sortedData.forEach(d => {
+    const visible = sortedData.slice(0, displayLimit);
+    visible.forEach(d => {
       html += buildAccountListRow(d, itemTypeMap[d.name] || 'strategic');
     });
+    if (sortedData.length > displayLimit) {
+      html += `<div class="account-list-show-more" onclick="showMoreAccounts()">Show more (${sortedData.length - displayLimit} remaining)</div>`;
+    }
     body.innerHTML = html;
   }
+}
+
+function showMoreAccounts() {
+  accountListDisplayLimit += 200;
+  renderAccountList();
 }
 
 function renderGroupedList(sortedData, itemTypeMap) {
@@ -3618,6 +3778,10 @@ async function confirmMerge() {
     // Close modal
     closeMergeModal();
 
+    // Rebuild performance indices after data change
+    buildIndices();
+    _custGrid = null; // Invalidate spatial grid
+
     // Refresh map and UI in-place (no page reload needed)
     window.districtDataCache = {};
     STRATEGIC_DATA.forEach(d => {
@@ -4351,6 +4515,7 @@ Object.assign(window, {
   setAccountListSort,
   toggleGroupCollapse,
   openAccountFromList,
+  showMoreAccounts,
   // Account Modal
   openAccountModal,
   openAccountModalByKey,
