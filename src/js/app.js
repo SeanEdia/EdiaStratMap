@@ -7,8 +7,33 @@ let STRATEGIC_DATA = [...strategicData];
 let CUSTOMER_DATA = [...customerData];
 
 
+// ============ TEAM / REP DATA ============
+const TEAM_REP_DATA = {
+  'Strategic': {
+    manager: null,
+    reps: ['Sean Johnson'],
+  },
+  'ENT West': {
+    manager: 'Brad Halsey',
+    reps: ['Aric Walden', 'Lance Baretz', 'Sydney Smith', 'Ben Skillman', 'Jimmy Koerner'],
+  },
+  'ENT East': {
+    manager: 'Samantha Santucci',
+    reps: ['Andy Graham', 'David Thomas', 'Susan Speiser', 'Hannah O\'Brien', 'Ally McCready', 'Victoria Macoul'],
+  },
+  'SMB': {
+    manager: 'Christina Ceballos',
+    reps: ['Jonathan Pacheco', 'Callie Brennan', 'Paulina Famiano', 'Caroline Uhlarik', 'Daniel Way'],
+  },
+};
+
+// Holdout reps — accounts currently assigned to these AEs are holdouts from prior assignments
+const HOLDOUT_REPS = new Set(['Aric Walden', 'Andy Graham']);
+
 // ============ STATE ============
 let currentView = 'strategic';
+let selectedTeam = '';   // '' = all teams
+let selectedRep = '';    // '' = all reps
 let map;
 let stratLayer, custLayer, proxLayer;
 let filters = {};
@@ -87,6 +112,7 @@ function initMap() {
   confLayer = L.layerGroup().addTo(map);
   confProxLayer = L.layerGroup().addTo(map);
 
+  renderTeamRepSelectors();
   renderFilters();
   applyFilters();
   updateNoteCount();
@@ -104,11 +130,71 @@ function setView(view) {
     }
   });
   filters = {};
+  selectedTeam = '';
+  selectedRep = '';
   document.getElementById('searchInput').value = '';
   accountListSort = (view === 'customers') ? 'arr_desc' : 'enrollment_desc';
   accountListGroupBy = null;
   collapsedGroups = {};
+  renderTeamRepSelectors();
   renderFilters();
+  applyFilters();
+}
+
+// ============ TEAM / REP SELECTORS ============
+function getAllRepsForTeam(team) {
+  const t = TEAM_REP_DATA[team];
+  if (!t) return [];
+  const reps = [...t.reps];
+  if (t.manager) reps.unshift(t.manager);
+  return reps;
+}
+
+function renderTeamRepSelectors() {
+  const wrap = document.getElementById('teamRepSelectors');
+  if (!wrap) return;
+
+  // Show selectors only in strategic or all view
+  const show = currentView === 'strategic' || currentView === 'all';
+  wrap.style.display = show ? '' : 'none';
+  if (!show) return;
+
+  // Team dropdown
+  const teamSel = document.getElementById('teamSelect');
+  teamSel.innerHTML = '<option value="">All Teams</option>';
+  Object.keys(TEAM_REP_DATA).forEach(team => {
+    const sel = selectedTeam === team ? ' selected' : '';
+    teamSel.innerHTML += `<option value="${team}"${sel}>${team}</option>`;
+  });
+
+  // Rep dropdown (visible only when team is selected)
+  const repRow = document.getElementById('repRow');
+  const repSel = document.getElementById('repSelect');
+  if (selectedTeam) {
+    repRow.style.display = '';
+    const reps = getAllRepsForTeam(selectedTeam);
+    repSel.innerHTML = '<option value="">All Reps</option>';
+    reps.forEach(rep => {
+      const sel = selectedRep === rep ? ' selected' : '';
+      const info = TEAM_REP_DATA[selectedTeam];
+      const suffix = info.manager === rep ? ' (Manager)' : '';
+      repSel.innerHTML += `<option value="${rep}"${sel}>${rep}${suffix}</option>`;
+    });
+  } else {
+    repRow.style.display = 'none';
+    repSel.innerHTML = '<option value="">All Reps</option>';
+  }
+}
+
+function onTeamChange(team) {
+  selectedTeam = team;
+  selectedRep = '';
+  renderTeamRepSelectors();
+  applyFilters();
+}
+
+function onRepChange(rep) {
+  selectedRep = rep;
   applyFilters();
 }
 
@@ -205,10 +291,13 @@ function clearFilter(key) {
 
 function resetFilters() {
   filters = {};
+  selectedTeam = '';
+  selectedRep = '';
   document.getElementById('searchInput').value = '';
   adaFilterOn = false;
   const adaCheck = document.getElementById('adaCheck');
   if (adaCheck) adaCheck.checked = false;
+  renderTeamRepSelectors();
   renderFilters();
   applyFilters();
 }
@@ -275,6 +364,13 @@ function applyFilters() {
               && !(d.region && d.region.toLowerCase().includes(search))
               && !(d.ae && d.ae.toLowerCase().includes(search))) return false;
         }
+      }
+      // Team / rep filter (applied before other filters)
+      if (selectedRep) {
+        if (d.ae !== selectedRep) return false;
+      } else if (selectedTeam) {
+        const teamReps = getAllRepsForTeam(selectedTeam);
+        if (!teamReps.includes(d.ae)) return false;
       }
       if (filters.strat_region && d.region !== filters.strat_region) return false;
       if (filters.strat_state && d.state !== filters.strat_state) return false;
@@ -1226,14 +1322,19 @@ function buildStratPopup(d) {
   html += `<button class="popup-expand-btn" onclick="openAccountModalByKey('${districtKey}')" title="Full screen view">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
   </button>`;
-  html += `<div class="popup-type ${d.is_customer ? 'both' : 'strat'}">${d.is_customer ? 'Strategic Account + Customer' : 'Strategic Account'}</div>`;
+  const isHoldout = d.ae && HOLDOUT_REPS.has(d.ae);
+  let typeLabel = d.is_customer ? 'Strategic Account + Customer' : 'Strategic Account';
+  if (isHoldout) typeLabel += ` · <span class="holdout-badge">Holdout — ${d.ae}</span>`;
+  html += `<div class="popup-type ${d.is_customer ? 'both' : 'strat'}">${typeLabel}</div>`;
   html += `<h3 class="copyable" data-tooltip="Click to copy" onclick="copyText('${d.name.replace(/'/g, "\\\\'")}', this)">${d.name}</h3>`;
+
+  const aeDisplay = d.ae ? (isHoldout ? `${d.ae} <span class="holdout-badge">Holdout</span>` : d.ae) : null;
 
   const rows = [
     ['State', d.state],
     ['Region', d.region],
     ['Enrollment', d.enrollment ? parseInt(d.enrollment).toLocaleString() : '—'],
-    ['Account Exec', d.ae],
+    ['Account Exec', aeDisplay],
     ['SIS Platform', d.sis],
     ['SFDC Type', d.type || 'Prospect'],
   ];
@@ -1813,12 +1914,27 @@ function openAccountModalWithData(d) {
 
   // Set badge
   const badge = document.getElementById('modalAccountBadge');
+  const isHoldout = d.ae && HOLDOUT_REPS.has(d.ae);
   if (d.is_customer) {
     badge.textContent = 'Strategic + Customer';
     badge.className = 'account-modal-badge both';
   } else {
     badge.textContent = 'Strategic Account';
     badge.className = 'account-modal-badge strategic';
+  }
+  // Show holdout indicator in modal header
+  let holdoutEl = document.getElementById('modalHoldoutBadge');
+  if (!holdoutEl) {
+    holdoutEl = document.createElement('span');
+    holdoutEl.id = 'modalHoldoutBadge';
+    holdoutEl.className = 'holdout-badge modal-holdout';
+    badge.parentNode.insertBefore(holdoutEl, badge.nextSibling);
+  }
+  if (isHoldout) {
+    holdoutEl.textContent = `Holdout — ${d.ae}`;
+    holdoutEl.style.display = '';
+  } else {
+    holdoutEl.style.display = 'none';
   }
 
   // Populate tabs
@@ -1865,7 +1981,7 @@ function populateInfoTab(d) {
     ${modalRow('Enrollment', d.enrollment ? parseInt(d.enrollment).toLocaleString() : '—')}
     ${modalRow('State', d.state)}
     ${modalRow('Region', d.region)}
-    ${modalRow('Account Executive', d.ae || '—')}
+    ${modalRow('Account Executive', d.ae ? (HOLDOUT_REPS.has(d.ae) ? d.ae + ' <span class="holdout-badge">Holdout</span>' : d.ae) : '—')}
     ${modalRow('ADA/ADM', d.ada_adm || '—')}
   </div>`;
 
@@ -4066,6 +4182,9 @@ Object.assign(window, {
   // Views
   setView,
   resetMapView,
+  // Team / Rep selectors
+  onTeamChange,
+  onRepChange,
   // Search
   onSearchInput,
   onSearchKeydown,
