@@ -1259,15 +1259,13 @@ function buildStratPopup(d) {
       const custArr = parseFloat(custMatch.arr) || 0;
       const custGdr = custMatch.gdr ? parseFloat(custMatch.gdr) : null;
       const custNdr = custMatch.ndr ? parseFloat(custMatch.ndr) : null;
-      html += `<div class="popup-section-label" style="color:#E8853D">💰 Active Customer Revenue</div>`;
-      html += `<div class="popup-row"><span class="pk">Active ARR</span><span class="pv money" style="color:#00b894">$${custArr.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}</span></div>`;
+      html += `<div class="popup-section-label">💰 Active Customer Revenue</div>`;
+      html += `<div class="popup-row"><span class="pk">Active ARR</span><span class="pv money">$${custArr.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}</span></div>`;
       if (custGdr !== null) {
-        const gdrColor = custGdr >= 100 ? '#00b894' : custGdr >= 80 ? '#E8853D' : '#d63031';
-        html += `<div class="popup-row"><span class="pk">GDR</span><span class="pv" style="color:${gdrColor}">${custGdr.toFixed(1)}%</span></div>`;
+        html += `<div class="popup-row"><span class="pk">GDR</span><span class="pv">${custGdr.toFixed(1)}%</span></div>`;
       }
       if (custNdr !== null) {
-        const ndrColor = custNdr >= 100 ? '#00b894' : custNdr >= 80 ? '#E8853D' : '#d63031';
-        html += `<div class="popup-row"><span class="pk">NDR</span><span class="pv" style="color:${ndrColor}">${custNdr.toFixed(1)}%</span></div>`;
+        html += `<div class="popup-row"><span class="pk">NDR</span><span class="pv">${custNdr.toFixed(1)}%</span></div>`;
       }
       html += `<div class="popup-row"><span class="pk">CSM</span><span class="pv">${custMatch.csm || '—'}</span></div>`;
     }
@@ -1299,7 +1297,7 @@ function buildStratPopup(d) {
     const stageColors = {'1':'#a0a0a0','2':'#74b9ff','3':'#ffeaa7','4':'#fab1a0','5':'#55efc4'};
     const stageNum = d.opp_stage.charAt(0);
     const sc = stageColors[stageNum] || '#ccc';
-    html += `<div class="popup-section-label" style="display:flex;align-items:center;gap:8px;">Opportunity <span style="font-size:10px;background:${sc}22;color:${sc};padding:1px 7px;border-radius:8px;border:1px solid ${sc}44;">${d.opp_stage}</span></div>`;
+    html += `<div class="popup-section-label" style="display:flex;align-items:center;gap:8px;">Opportunity <span class="popup-opp-stage-pill" style="font-size:10px;background:${sc}22;padding:1px 7px;border-radius:8px;border:1px solid ${sc}44;">${d.opp_stage}</span></div>`;
     const oppRows = [
       ['Forecast', d.opp_forecast, false],
       ['Areas', d.opp_areas, false],
@@ -1327,22 +1325,22 @@ function buildStratPopup(d) {
   const savedPrepLink = localStorage.getItem(prepLinkKey) || d.prep_doc_url || '';
 
   const links = [];
-  if (d.org_chart_url) links.push(`<a href="${d.org_chart_url}" target="_blank" style="color:#FFD966;text-decoration:none;font-size:11px;margin-right:12px;">📋 Org Chart</a>`);
-  if (d.strategic_plan_url) links.push(`<a href="${d.strategic_plan_url}" target="_blank" style="color:#FFD966;text-decoration:none;font-size:11px;margin-right:12px;">📄 Strategic Plan</a>`);
+  if (d.org_chart_url) links.push(`<a href="${d.org_chart_url}" target="_blank" class="popup-link" style="text-decoration:none;font-size:11px;margin-right:12px;">📋 Org Chart</a>`);
+  if (d.strategic_plan_url) links.push(`<a href="${d.strategic_plan_url}" target="_blank" class="popup-link" style="text-decoration:none;font-size:11px;margin-right:12px;">📄 Strategic Plan</a>`);
 
   // Meeting Prep link - from localStorage or data
   if (savedPrepLink) {
-    links.push(`<a href="${savedPrepLink}" target="_blank" style="color:#55efc4;text-decoration:none;font-size:11px;" id="prepLink_${prepLinkKey}">📝 Meeting Prep</a>`);
+    links.push(`<a href="${savedPrepLink}" target="_blank" class="popup-link prep" style="text-decoration:none;font-size:11px;" id="prepLink_${prepLinkKey}">📝 Meeting Prep</a>`);
   }
 
   // Always show the links row (with add option if no prep link)
-  html += `<div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.08);display:flex;flex-wrap:wrap;align-items:center;gap:4px;" id="linksRow_${prepLinkKey}">`;
+  html += `<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--panel-border);display:flex;flex-wrap:wrap;align-items:center;gap:4px;" id="linksRow_${prepLinkKey}">`;
   html += links.join('');
 
   // Add Meeting Prep input/add button
   if (!savedPrepLink) {
     html += `<span id="prepAddBtn_${prepLinkKey}" style="display:inline-flex;align-items:center;gap:4px;">
-      <span style="color:#55efc4;text-decoration:none;font-size:11px;cursor:pointer;opacity:0.7;" onclick="showPrepInput('${prepLinkKey}')">+ Add Meeting Prep</span>
+      <span class="popup-link prep" style="text-decoration:none;font-size:11px;cursor:pointer;opacity:0.7;" onclick="showPrepInput('${prepLinkKey}')">+ Add Meeting Prep</span>
     </span>
     <span id="prepInputWrap_${prepLinkKey}" style="display:none;align-items:center;gap:4px;">
       <input type="text" id="prepInput_${prepLinkKey}" placeholder="Paste link..."
@@ -1429,12 +1427,10 @@ function buildCustPopup(d) {
   html += `<div class="popup-row"><span class="pk">ARR 12mo Ago</span><span class="pv">$${arr12.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}</span></div>`;
 
   if (gdr !== null) {
-    const gdrColor = gdr >= 100 ? 'var(--accent-cust)' : gdr >= 80 ? 'var(--accent-both)' : 'var(--danger)';
-    html += `<div class="popup-row"><span class="pk">GDR</span><span class="pv" style="color:${gdrColor}">${gdr.toFixed(1)}%</span></div>`;
+    html += `<div class="popup-row"><span class="pk">GDR</span><span class="pv">${gdr.toFixed(1)}%</span></div>`;
   }
   if (ndr !== null) {
-    const ndrColor = ndr >= 100 ? 'var(--accent-cust)' : ndr >= 80 ? 'var(--accent-both)' : 'var(--danger)';
-    html += `<div class="popup-row"><span class="pk">NDR</span><span class="pv" style="color:${ndrColor}">${ndr.toFixed(1)}%</span></div>`;
+    html += `<div class="popup-row"><span class="pk">NDR</span><span class="pv">${ndr.toFixed(1)}%</span></div>`;
   }
 
   html += `<div class="popup-section-label">Team</div>`;
@@ -3678,7 +3674,7 @@ function buildConfPopup(c) {
         const stageLbl = n.data.opp_stage ? n.data.opp_stage.replace(/^\d+\s*-\s*/, '') : '';
         html += `<div class="popup-conf-nearby-item" onclick="focusOnAccount('${districtKey}')">`;
         html += `${n.data.name}`;
-        if (stageLbl) html += ` <span style="font-size:9px;color:#E8853D;">(${stageLbl})</span>`;
+        if (stageLbl) html += ` <span style="font-size:9px;color:var(--text-dim);">(${stageLbl})</span>`;
         html += ` <span class="conf-dist">${distMi}mi</span>`;
         html += `</div>`;
       });
