@@ -1975,7 +1975,6 @@ function buildAccountListRow(d, type) {
   // Money column: ACV for strategic, ARR for customers
   const moneyText = (isStrat && acv > 0) ? '$' + formatCompactNumber(acv)
     : (!isStrat && arr > 0) ? '$' + formatCompactNumber(arr) : '';
-  const moneyCls = isStrat ? 'al-acv' : 'al-arr';
 
   // Products column (opp_areas for strategic)
   const products = isStrat ? (d.opp_areas || '') : '';
@@ -1986,12 +1985,11 @@ function buildAccountListRow(d, type) {
     onclick="flyToAccount('${d.name.replace(/'/g, "\\'")}')"
     ondblclick="openAccountFromList('${districtKey}')">
     <span class="al-stage-dot ${stage.cls}" title="${stage.label}"></span>
-    <span class="al-stage-label ${stage.cls}">${stage.label}</span>
     <span class="al-name" title="${d.name}">${d.name}</span>
-    <span class="al-state-badge">${d.state || ''}</span>
-    <span class="al-enrollment">${enrollment > 0 ? formatCompactNumber(enrollment) : ''}</span>
-    <span class="${moneyCls}">${moneyText}</span>
-    <span class="al-products" title="${products}">${products}</span>
+    <span class="al-col al-col-state">${d.state || ''}</span>
+    <span class="al-col al-col-enroll">${enrollment > 0 ? formatCompactNumber(enrollment) : ''}</span>
+    <span class="al-col al-col-acv">${moneyText}</span>
+    <span class="al-col al-col-products" title="${products}">${products}</span>
     <button class="al-expand-btn" onclick="event.stopPropagation();openAccountFromList('${districtKey}')" title="Open full view">&#x2197;</button>
   </div>`;
 }
@@ -2069,39 +2067,32 @@ function renderAccountList() {
   // Only render full list if overlay is open
   if (!accountListOpen) return;
 
-  // Render sort bar
+  // Render column header row (clickable to sort)
   const isCust = currentView === 'customers';
-  const sortBtnClass = isCust ? 'active-cust' : 'active';
-  let sortHtml = `<span class="account-list-sort-label">Sort</span>`;
-
-  const sortOptions = [
-    { key: 'name_asc', label: 'Name' },
-    { key: 'enrollment_desc', label: 'Enrollment' },
-  ];
-
-  if (showStrat && currentView !== 'customers') {
-    sortOptions.push({ key: 'acv_desc', label: 'ACV' });
-    sortOptions.push({ key: 'stage_asc', label: 'Stage' });
-  }
-  if (showCust) {
-    sortOptions.push({ key: 'arr_desc', label: 'ARR' });
-  }
-  sortOptions.push({ key: 'state_asc', label: 'State' });
-  sortOptions.push({ key: 'last_activity_desc', label: 'Activity' });
-
-  sortOptions.forEach(opt => {
-    const baseKey = opt.key.replace(/_(?:asc|desc)$/, '');
+  function colSortArrow(colKey) {
+    const baseKey = colKey.replace(/_(?:asc|desc)$/, '');
     const currentBase = accountListSort.replace(/_(?:asc|desc)$/, '');
-    const isActive = baseKey === currentBase;
-    const arrow = isActive ? (accountListSort.endsWith('_desc') ? ' ↓' : ' ↑') : '';
-    sortHtml += `<button class="account-list-sort-btn ${isActive ? sortBtnClass : ''}" onclick="setAccountListSort('${opt.key}')">${opt.label}${arrow}</button>`;
-  });
-
-  // Group buttons
-  sortHtml += `<button class="account-list-group-btn ${accountListGroupBy === 'state' ? 'active' : ''}" onclick="toggleAccountListGroup('state')">Group: State</button>`;
-  if (showStrat && currentView !== 'customers') {
-    sortHtml += `<button class="account-list-group-btn ${accountListGroupBy === 'stage' ? 'active' : ''}" onclick="toggleAccountListGroup('stage')">Group: Stage</button>`;
+    if (baseKey !== currentBase) return '';
+    return accountListSort.endsWith('_desc') ? ' ↓' : ' ↑';
   }
+  const moneyLabel = isCust ? 'ARR' : 'ACV';
+  const moneyKey = isCust ? 'arr_desc' : 'acv_desc';
+  let sortHtml = `<div class="al-header-row">`;
+  sortHtml += `<span class="al-hdr al-hdr-name" onclick="setAccountListSort('name_asc')">Name${colSortArrow('name_asc')}</span>`;
+  sortHtml += `<span class="al-hdr al-hdr-state" onclick="setAccountListSort('state_asc')">State${colSortArrow('state_asc')}</span>`;
+  sortHtml += `<span class="al-hdr al-hdr-enroll" onclick="setAccountListSort('enrollment_desc')">Students${colSortArrow('enrollment_desc')}</span>`;
+  sortHtml += `<span class="al-hdr al-hdr-acv" onclick="setAccountListSort('${moneyKey}')">${moneyLabel}${colSortArrow(moneyKey)}</span>`;
+  sortHtml += `<span class="al-hdr al-hdr-products">Products</span>`;
+  sortHtml += `</div>`;
+
+  // Group buttons row
+  sortHtml += `<div class="al-group-bar">`;
+  sortHtml += `<span class="al-group-label">Group</span>`;
+  sortHtml += `<button class="account-list-group-btn ${accountListGroupBy === 'state' ? 'active' : ''}" onclick="toggleAccountListGroup('state')">State</button>`;
+  if (showStrat && currentView !== 'customers') {
+    sortHtml += `<button class="account-list-group-btn ${accountListGroupBy === 'stage' ? 'active' : ''}" onclick="toggleAccountListGroup('stage')">Stage</button>`;
+  }
+  sortHtml += `</div>`;
 
   sortBar.innerHTML = sortHtml;
 
