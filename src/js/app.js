@@ -27,8 +27,8 @@ const TEAM_REP_DATA = {
   },
 };
 
-// Holdout reps — accounts currently assigned to these AEs are holdouts from prior assignments
-const HOLDOUT_REPS = new Set(['Aric Walden', 'Andy Graham']);
+// Holdout accounts now carry a `holdout_ae` field in strategic.json.
+// An account is a holdout if d.holdout_ae is truthy.
 
 // ============ STATE ============
 let currentView = 'strategic';
@@ -229,12 +229,10 @@ function renderFilters() {
   let html = '';
 
   if (currentView === 'strategic' || currentView === 'all') {
-    // Scope filter options to the selected team/rep
-    const scopedStrat = getScopedStratData();
-    html += buildFilterGroup('Region', 'strat_region', getUnique(scopedStrat, 'region'), 'chips');
-    html += buildFilterGroup('State', 'strat_state', getUnique(scopedStrat, 'state'), 'select');
-    html += buildFilterGroup('Account Executive', 'strat_ae', getUnique(scopedStrat, 'ae'), 'select');
-    html += buildFilterGroup('SIS Platform', 'strat_sis', getUnique(scopedStrat, 'sis'), 'select');
+    html += buildFilterGroup('Region', 'strat_region', getUnique(STRATEGIC_DATA, 'region'), 'chips');
+    html += buildFilterGroup('State', 'strat_state', getUnique(STRATEGIC_DATA, 'state'), 'select');
+    html += buildFilterGroup('Account Executive', 'strat_ae', getUniqueAEs(STRATEGIC_DATA), 'select');
+    html += buildFilterGroup('SIS Platform', 'strat_sis', getUnique(STRATEGIC_DATA, 'sis'), 'select');
     html += buildFilterGroup('Opp Stage', 'strat_opp_stage', ['Has Open Opp', '1 - Discovery', '2 - Demo', '3 - Scoping', '5 - Validation & Negotiation'], 'select');
     html += buildSliderGroup('Min Enrollment', 'strat_enrollment', 0, 1100000);
   }
@@ -295,6 +293,16 @@ function buildSliderGroup(label, key, min, max) {
 // ============ FILTER LOGIC ============
 function getUnique(data, field) {
   return [...new Set(data.map(d => d[field]).filter(Boolean))].sort();
+}
+
+// Collect unique AE names including holdout_ae so holdout reps appear in the dropdown
+function getUniqueAEs(data) {
+  const s = new Set();
+  data.forEach(d => {
+    if (d.ae) s.add(d.ae);
+    if (d.holdout_ae) s.add(d.holdout_ae);
+  });
+  return [...s].sort();
 }
 
 function setFilter(key, val) {
@@ -384,24 +392,27 @@ function applyFilters() {
           const regMatch = d.region && d.region.toLowerCase() === search;
           const nameMatch = d.name.toLowerCase() === search;
           const aeMatch = d.ae && d.ae.toLowerCase() === search;
-          if (!stMatch && !regMatch && !nameMatch && !aeMatch) return false;
+          const holdoutMatch = d.holdout_ae && d.holdout_ae.toLowerCase() === search;
+          if (!stMatch && !regMatch && !nameMatch && !aeMatch && !holdoutMatch) return false;
         } else {
           if (!d.name.toLowerCase().includes(search)
               && !(d.state && d.state.toLowerCase().includes(search))
               && !(d.region && d.region.toLowerCase().includes(search))
-              && !(d.ae && d.ae.toLowerCase().includes(search))) return false;
+              && !(d.ae && d.ae.toLowerCase().includes(search))
+              && !(d.holdout_ae && d.holdout_ae.toLowerCase().includes(search))) return false;
         }
       }
       // Team / rep filter (applied before other filters)
+      // Holdout accounts match both the assigned AE and the holdout AE
       if (selectedRep) {
-        if (d.ae !== selectedRep) return false;
+        if (d.ae !== selectedRep && d.holdout_ae !== selectedRep) return false;
       } else if (selectedTeam) {
         const teamReps = getAllRepsForTeam(selectedTeam);
-        if (!teamReps.includes(d.ae)) return false;
+        if (!teamReps.includes(d.ae) && !(d.holdout_ae && teamReps.includes(d.holdout_ae))) return false;
       }
       if (filters.strat_region && d.region !== filters.strat_region) return false;
       if (filters.strat_state && d.state !== filters.strat_state) return false;
-      if (filters.strat_ae && d.ae !== filters.strat_ae) return false;
+      if (filters.strat_ae && d.ae !== filters.strat_ae && d.holdout_ae !== filters.strat_ae) return false;
       if (filters.strat_sis && d.sis !== filters.strat_sis) return false;
       if (filters.strat_opp_stage) {
         if (filters.strat_opp_stage === 'Has Open Opp') { if (!d.opp_stage) return false; }
@@ -1349,13 +1360,19 @@ function buildStratPopup(d) {
   html += `<button class="popup-expand-btn" onclick="openAccountModalByKey('${districtKey}')" title="Full screen view">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
   </button>`;
-  const isHoldout = d.ae && HOLDOUT_REPS.has(d.ae);
+  const isHoldout = !!d.holdout_ae;
   let typeLabel = d.is_customer ? 'Strategic Account + Customer' : 'Strategic Account';
-  if (isHoldout) typeLabel += ` · <span class="holdout-badge">Holdout — ${d.ae}</span>`;
+  if (isHoldout) typeLabel += ` · <span class="holdout-badge">Holdout — ${d.holdout_ae}</span>`;
   html += `<div class="popup-type ${d.is_customer ? 'both' : 'strat'}">${typeLabel}</div>`;
   html += `<h3 class="copyable" data-tooltip="Click to copy" onclick="copyText('${d.name.replace(/'/g, "\\\\'")}', this)">${d.name}</h3>`;
 
-  const aeDisplay = d.ae ? (isHoldout ? `${d.ae} <span class="holdout-badge">Holdout</span>` : d.ae) : null;
+  // Build Account Exec display: show assigned AE, and holdout AE on second line if applicable
+  let aeDisplay = null;
+  if (d.ae) {
+    aeDisplay = isHoldout
+      ? `${d.ae} <span class="ae-role">(Assigned)</span><br>${d.holdout_ae} <span class="ae-role">(Holdout)</span>`
+      : d.ae;
+  }
 
   const rows = [
     ['State', d.state],
@@ -1941,7 +1958,7 @@ function openAccountModalWithData(d) {
 
   // Set badge
   const badge = document.getElementById('modalAccountBadge');
-  const isHoldout = d.ae && HOLDOUT_REPS.has(d.ae);
+  const isHoldout = !!d.holdout_ae;
   if (d.is_customer) {
     badge.textContent = 'Strategic + Customer';
     badge.className = 'account-modal-badge both';
@@ -1958,7 +1975,7 @@ function openAccountModalWithData(d) {
     badge.parentNode.insertBefore(holdoutEl, badge.nextSibling);
   }
   if (isHoldout) {
-    holdoutEl.textContent = `Holdout — ${d.ae}`;
+    holdoutEl.textContent = `Holdout — ${d.holdout_ae}`;
     holdoutEl.style.display = '';
   } else {
     holdoutEl.style.display = 'none';
@@ -2008,7 +2025,7 @@ function populateInfoTab(d) {
     ${modalRow('Enrollment', d.enrollment ? parseInt(d.enrollment).toLocaleString() : '—')}
     ${modalRow('State', d.state)}
     ${modalRow('Region', d.region)}
-    ${modalRow('Account Executive', d.ae ? (HOLDOUT_REPS.has(d.ae) ? d.ae + ' <span class="holdout-badge">Holdout</span>' : d.ae) : '—')}
+    ${modalRow('Account Executive', d.ae ? (d.holdout_ae ? d.ae + ' <span class="ae-role">(Assigned)</span><br>' + d.holdout_ae + ' <span class="ae-role">(Holdout)</span>' : d.ae) : '—')}
     ${modalRow('ADA/ADM', d.ada_adm || '—')}
   </div>`;
 
@@ -2479,7 +2496,7 @@ function formatMeetingPrepPrompt(d) {
   prompt += `State: ${d.state || 'Unknown'}\n`;
   prompt += `Region: ${d.region || 'Unknown'}\n`;
   prompt += `Enrollment: ${d.enrollment ? parseInt(d.enrollment).toLocaleString() : 'Unknown'}\n`;
-  prompt += `Account Executive: ${d.ae || 'Unassigned'}\n`;
+  prompt += `Account Executive: ${d.ae || 'Unassigned'}${d.holdout_ae ? ' (Assigned), ' + d.holdout_ae + ' (Holdout)' : ''}\n`;
   prompt += `SIS Platform: ${d.sis || 'Unknown'}\n`;
 
   if (d.type) prompt += `Account Type: ${d.type}\n`;
