@@ -189,25 +189,52 @@ function renderTeamRepSelectors() {
 function onTeamChange(team) {
   selectedTeam = team;
   selectedRep = '';
+  // Clear filters that may no longer be valid for the new team scope
+  delete filters.strat_region;
+  delete filters.strat_state;
+  delete filters.strat_ae;
+  delete filters.strat_sis;
   renderTeamRepSelectors();
+  renderFilters();
   applyFilters();
 }
 
 function onRepChange(rep) {
   selectedRep = rep;
+  // Clear filters that may no longer be valid for the new rep scope
+  delete filters.strat_region;
+  delete filters.strat_state;
+  delete filters.strat_ae;
+  delete filters.strat_sis;
+  renderFilters();
   applyFilters();
 }
 
 // ============ FILTERS UI ============
+
+// Returns the strategic dataset scoped to the currently selected team/rep
+function getScopedStratData() {
+  let data = STRATEGIC_DATA;
+  if (selectedRep) {
+    data = data.filter(d => d.ae === selectedRep);
+  } else if (selectedTeam) {
+    const teamReps = getAllRepsForTeam(selectedTeam);
+    data = data.filter(d => teamReps.includes(d.ae));
+  }
+  return data;
+}
+
 function renderFilters() {
   const area = document.getElementById('filtersArea');
   let html = '';
 
   if (currentView === 'strategic' || currentView === 'all') {
-    html += buildFilterGroup('Region', 'strat_region', getUnique(STRATEGIC_DATA, 'region'), 'chips');
-    html += buildFilterGroup('State', 'strat_state', getUnique(STRATEGIC_DATA, 'state'), 'select');
-    html += buildFilterGroup('Account Executive', 'strat_ae', getUnique(STRATEGIC_DATA, 'ae'), 'select');
-    html += buildFilterGroup('SIS Platform', 'strat_sis', getUnique(STRATEGIC_DATA, 'sis'), 'select');
+    // Scope filter options to the selected team/rep
+    const scopedStrat = getScopedStratData();
+    html += buildFilterGroup('Region', 'strat_region', getUnique(scopedStrat, 'region'), 'chips');
+    html += buildFilterGroup('State', 'strat_state', getUnique(scopedStrat, 'state'), 'select');
+    html += buildFilterGroup('Account Executive', 'strat_ae', getUnique(scopedStrat, 'ae'), 'select');
+    html += buildFilterGroup('SIS Platform', 'strat_sis', getUnique(scopedStrat, 'sis'), 'select');
     html += buildFilterGroup('Opp Stage', 'strat_opp_stage', ['Has Open Opp', '1 - Discovery', '2 - Demo', '3 - Scoping', '5 - Validation & Negotiation'], 'select');
     html += buildSliderGroup('Min Enrollment', 'strat_enrollment', 0, 1100000);
   }
