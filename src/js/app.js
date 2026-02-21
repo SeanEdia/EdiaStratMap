@@ -27,6 +27,9 @@ const TEAM_REP_DATA = {
   },
 };
 
+// Holdout reps — accounts currently assigned to these AEs are holdouts from prior assignments
+const HOLDOUT_REPS = new Set(['Aric Walden', 'Andy Graham']);
+
 // ============ STATE ============
 let currentView = 'strategic';
 let selectedTeam = '';   // '' = all teams
@@ -1321,11 +1324,14 @@ function buildStratPopup(d) {
   html += `<div class="popup-type ${d.is_customer ? 'both' : 'strat'}">${d.is_customer ? 'Strategic Account + Customer' : 'Strategic Account'}</div>`;
   html += `<h3 class="copyable" data-tooltip="Click to copy" onclick="copyText('${d.name.replace(/'/g, "\\\\'")}', this)">${d.name}</h3>`;
 
+  const isHoldout = d.ae && HOLDOUT_REPS.has(d.ae);
+  const aeDisplay = d.ae ? (isHoldout ? `${d.ae} <span class="holdout-badge">Holdout</span>` : d.ae) : null;
+
   const rows = [
     ['State', d.state],
     ['Region', d.region],
     ['Enrollment', d.enrollment ? parseInt(d.enrollment).toLocaleString() : '—'],
-    ['Account Exec', d.ae],
+    ['Account Exec', aeDisplay],
     ['SIS Platform', d.sis],
     ['SFDC Type', d.type || 'Prospect'],
   ];
@@ -1905,12 +1911,27 @@ function openAccountModalWithData(d) {
 
   // Set badge
   const badge = document.getElementById('modalAccountBadge');
+  const isHoldout = d.ae && HOLDOUT_REPS.has(d.ae);
   if (d.is_customer) {
     badge.textContent = 'Strategic + Customer';
     badge.className = 'account-modal-badge both';
   } else {
     badge.textContent = 'Strategic Account';
     badge.className = 'account-modal-badge strategic';
+  }
+  // Show holdout indicator in modal header
+  let holdoutEl = document.getElementById('modalHoldoutBadge');
+  if (!holdoutEl) {
+    holdoutEl = document.createElement('span');
+    holdoutEl.id = 'modalHoldoutBadge';
+    holdoutEl.className = 'holdout-badge modal-holdout';
+    badge.parentNode.insertBefore(holdoutEl, badge.nextSibling);
+  }
+  if (isHoldout) {
+    holdoutEl.textContent = 'Holdout';
+    holdoutEl.style.display = '';
+  } else {
+    holdoutEl.style.display = 'none';
   }
 
   // Populate tabs
@@ -1957,7 +1978,7 @@ function populateInfoTab(d) {
     ${modalRow('Enrollment', d.enrollment ? parseInt(d.enrollment).toLocaleString() : '—')}
     ${modalRow('State', d.state)}
     ${modalRow('Region', d.region)}
-    ${modalRow('Account Executive', d.ae || '—')}
+    ${modalRow('Account Executive', d.ae ? (HOLDOUT_REPS.has(d.ae) ? d.ae + ' <span class="holdout-badge">Holdout</span>' : d.ae) : '—')}
     ${modalRow('ADA/ADM', d.ada_adm || '—')}
   </div>`;
 
