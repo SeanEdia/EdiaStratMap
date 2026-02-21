@@ -27,8 +27,32 @@ const TEAM_REP_DATA = {
   },
 };
 
-// Holdout reps — accounts currently assigned to these AEs are holdouts from prior assignments
-const HOLDOUT_REPS = new Set(['Aric Walden', 'Andy Graham']);
+// Holdout detection — automatic, no manual map needed.
+// A strategic account is a holdout when its AE is NOT on the Strategic team.
+// The territory AE is the Strategic team's primary rep.
+let _strategicRepsCache = null;
+function getStrategicReps() {
+  if (!_strategicRepsCache) {
+    _strategicRepsCache = getAllRepsForTeam('Strategic');
+  }
+  return _strategicRepsCache;
+}
+
+// Helper: returns the territory (assigned) AE for an account.
+// If the account's AE is outside the Strategic team, the territory AE is the Strategic team rep.
+function getTerritoryAE(d) {
+  if (!d.ae) return d.ae;
+  const reps = getStrategicReps();
+  if (reps.includes(d.ae)) return d.ae;       // already assigned to Strategic team
+  return reps[0] || d.ae;                      // holdout — territory AE is the Strategic rep
+}
+
+// Helper: returns the holdout AE if account is a holdout, otherwise null.
+function getHoldoutAE(d) {
+  if (!d.ae) return null;
+  const reps = getStrategicReps();
+  return reps.includes(d.ae) ? null : d.ae;    // holdout if AE is outside Strategic team
+}
 
 // ============ STATE ============
 let currentView = 'strategic';
@@ -305,6 +329,18 @@ function getUnique(data, field) {
   return [...new Set(data.map(d => d[field]).filter(Boolean))].sort();
 }
 
+// Collect unique AE names — resolves territory AEs and includes holdout reps in dropdown
+function getUniqueAEs(data) {
+  const s = new Set();
+  data.forEach(d => {
+    const tAE = getTerritoryAE(d);
+    const hAE = getHoldoutAE(d);
+    if (tAE) s.add(tAE);
+    if (hAE) s.add(hAE);
+  });
+  return [...s].sort();
+}
+
 function setFilter(key, val) {
   if (!val || val === '') delete filters[key];
   else filters[key] = val;
@@ -385,31 +421,36 @@ function applyFilters() {
   // Strategic accounts
   if (currentView === 'strategic' || currentView === 'all') {
     const filtered = STRATEGIC_DATA.filter(d => {
+      const territoryAE = getTerritoryAE(d);
+      const holdoutAE = getHoldoutAE(d);
       if (search) {
         if (searchExactMatch) {
           // Exact match for state/region selected from autocomplete
           const stMatch = d.state && d.state.toLowerCase() === search;
           const regMatch = d.region && d.region.toLowerCase() === search;
           const nameMatch = d.name.toLowerCase() === search;
-          const aeMatch = d.ae && d.ae.toLowerCase() === search;
-          if (!stMatch && !regMatch && !nameMatch && !aeMatch) return false;
+          const aeMatch = territoryAE && territoryAE.toLowerCase() === search;
+          const holdoutMatch = holdoutAE && holdoutAE.toLowerCase() === search;
+          if (!stMatch && !regMatch && !nameMatch && !aeMatch && !holdoutMatch) return false;
         } else {
           if (!d.name.toLowerCase().includes(search)
               && !(d.state && d.state.toLowerCase().includes(search))
               && !(d.region && d.region.toLowerCase().includes(search))
-              && !(d.ae && d.ae.toLowerCase().includes(search))) return false;
+              && !(territoryAE && territoryAE.toLowerCase().includes(search))
+              && !(holdoutAE && holdoutAE.toLowerCase().includes(search))) return false;
         }
       }
       // Team / rep filter (applied before other filters)
+      // Holdout accounts match both the territory AE and the holdout AE
       if (selectedRep) {
-        if (d.ae !== selectedRep) return false;
+        if (territoryAE !== selectedRep && holdoutAE !== selectedRep) return false;
       } else if (selectedTeam) {
         const teamReps = getAllRepsForTeam(selectedTeam);
-        if (!teamReps.includes(d.ae)) return false;
+        if (!teamReps.includes(territoryAE) && !(holdoutAE && teamReps.includes(holdoutAE))) return false;
       }
       if (filters.strat_region && d.region !== filters.strat_region) return false;
       if (filters.strat_state && d.state !== filters.strat_state) return false;
-      if (filters.strat_ae && d.ae !== filters.strat_ae) return false;
+      if (filters.strat_ae && territoryAE !== filters.strat_ae && holdoutAE !== filters.strat_ae) return false;
       if (filters.strat_sis && d.sis !== filters.strat_sis) return false;
       if (filters.strat_opp_stage) {
         if (filters.strat_opp_stage === 'Has Open Opp') { if (!d.opp_stage) return false; }
@@ -1358,13 +1399,20 @@ function buildStratPopup(d) {
   html += `<button class="popup-expand-btn" onclick="openAccountModalByKey('${districtKey}')" title="Full screen view">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
   </button>`;
-  const isHoldout = d.ae && HOLDOUT_REPS.has(d.ae);
+  const territoryAE = getTerritoryAE(d);
+  const holdoutAE = getHoldoutAE(d);
   let typeLabel = d.is_customer ? 'Strategic Account + Customer' : 'Strategic Account';
-  if (isHoldout) typeLabel += ` · <span class="holdout-badge">Holdout — ${d.ae}</span>`;
+  if (holdoutAE) typeLabel += ` · <span class="holdout-badge">Holdout — ${holdoutAE}</span>`;
   html += `<div class="popup-type ${d.is_customer ? 'both' : 'strat'}">${typeLabel}</div>`;
   html += `<h3 class="copyable" data-tooltip="Click to copy" onclick="copyText('${d.name.replace(/'/g, "\\\\'")}', this)">${d.name}</h3>`;
 
-  const aeDisplay = d.ae ? (isHoldout ? `${d.ae} <span class="holdout-badge">Holdout</span>` : d.ae) : null;
+  // Build Account Exec display: show territory AE (Assigned) and holdout AE on second line
+  let aeDisplay = null;
+  if (territoryAE) {
+    aeDisplay = holdoutAE
+      ? `${territoryAE} <span class="ae-role">(Assigned)</span><br>${holdoutAE} <span class="ae-role">(Holdout)</span>`
+      : territoryAE;
+  }
 
   const rows = [
     ['State', d.state],
@@ -1950,7 +1998,7 @@ function openAccountModalWithData(d) {
 
   // Set badge
   const badge = document.getElementById('modalAccountBadge');
-  const isHoldout = d.ae && HOLDOUT_REPS.has(d.ae);
+  const holdoutAE = getHoldoutAE(d);
   if (d.is_customer) {
     badge.textContent = 'Strategic + Customer';
     badge.className = 'account-modal-badge both';
@@ -1966,8 +2014,8 @@ function openAccountModalWithData(d) {
     holdoutEl.className = 'holdout-badge modal-holdout';
     badge.parentNode.insertBefore(holdoutEl, badge.nextSibling);
   }
-  if (isHoldout) {
-    holdoutEl.textContent = `Holdout — ${d.ae}`;
+  if (holdoutAE) {
+    holdoutEl.textContent = `Holdout — ${holdoutAE}`;
     holdoutEl.style.display = '';
   } else {
     holdoutEl.style.display = 'none';
@@ -2017,7 +2065,7 @@ function populateInfoTab(d) {
     ${modalRow('Enrollment', d.enrollment ? parseInt(d.enrollment).toLocaleString() : '—')}
     ${modalRow('State', d.state)}
     ${modalRow('Region', d.region)}
-    ${modalRow('Account Executive', d.ae ? (HOLDOUT_REPS.has(d.ae) ? d.ae + ' <span class="holdout-badge">Holdout</span>' : d.ae) : '—')}
+    ${modalRow('Account Executive', (() => { const tAE = getTerritoryAE(d); const hAE = getHoldoutAE(d); return tAE ? (hAE ? tAE + ' <span class="ae-role">(Assigned)</span><br>' + hAE + ' <span class="ae-role">(Holdout)</span>' : tAE) : '—'; })())}
     ${modalRow('ADA/ADM', d.ada_adm || '—')}
   </div>`;
 
@@ -2488,7 +2536,7 @@ function formatMeetingPrepPrompt(d) {
   prompt += `State: ${d.state || 'Unknown'}\n`;
   prompt += `Region: ${d.region || 'Unknown'}\n`;
   prompt += `Enrollment: ${d.enrollment ? parseInt(d.enrollment).toLocaleString() : 'Unknown'}\n`;
-  prompt += `Account Executive: ${d.ae || 'Unassigned'}\n`;
+  prompt += `Account Executive: ${getTerritoryAE(d) || 'Unassigned'}${getHoldoutAE(d) ? ' (Assigned), ' + getHoldoutAE(d) + ' (Holdout)' : ''}\n`;
   prompt += `SIS Platform: ${d.sis || 'Unknown'}\n`;
 
   if (d.type) prompt += `Account Type: ${d.type}\n`;
