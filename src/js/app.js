@@ -235,7 +235,15 @@ function renderFilters() {
     html += buildFilterGroup('State', 'strat_state', getUnique(scopedStrat, 'state'), 'select');
     html += buildFilterGroup('Account Executive', 'strat_ae', getUnique(scopedStrat, 'ae'), 'select');
     html += buildFilterGroup('SIS Platform', 'strat_sis', getUnique(scopedStrat, 'sis'), 'select');
-    html += buildFilterGroup('Opp Stage', 'strat_opp_stage', ['Has Open Opp', '1 - Discovery', '2 - Demo', '3 - Scoping', '5 - Validation & Negotiation'], 'select');
+    // Scope Opp Stage options to stages that exist in the scoped data
+    const allOppStages = ['Has Open Opp', '1 - Discovery', '2 - Demo', '3 - Scoping', '5 - Validation & Negotiation'];
+    const scopedOppStages = allOppStages.filter(stage => {
+      if (stage === 'Has Open Opp') return scopedStrat.some(d => d.opp_stage);
+      return scopedStrat.some(d => d.opp_stage === stage);
+    });
+    if (scopedOppStages.length > 0) {
+      html += buildFilterGroup('Opp Stage', 'strat_opp_stage', scopedOppStages, 'select');
+    }
     html += buildSliderGroup('Min Enrollment', 'strat_enrollment', 0, 1100000);
   }
 
@@ -813,7 +821,8 @@ function updatePipeline() {
   if (currentView === 'customers') { panel.style.display = 'none'; return; }
   panel.style.display = 'block';
 
-  const withOpp = STRATEGIC_DATA.filter(d => d.opp_stage);
+  // Scope pipeline to selected team/rep
+  const withOpp = getScopedStratData().filter(d => d.opp_stage);
   const stages = [
     { key: '1', label: 'Discovery', color: '#fdcb6e' },
     { key: '2', label: 'Demo', color: '#74b9ff' },
