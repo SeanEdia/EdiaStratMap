@@ -2079,7 +2079,17 @@ function renderAccountList() {
   }
   const moneyLabel = isCust ? 'ARR' : 'ACV';
   const moneyKey = isCust ? 'arr_desc' : 'acv_desc';
-  let sortHtml = `<div class="al-header-row">`;
+  // Group buttons row (above column headers)
+  let sortHtml = `<div class="al-group-bar">`;
+  sortHtml += `<span class="al-group-label">Group</span>`;
+  sortHtml += `<button class="account-list-group-btn ${accountListGroupBy === 'state' ? 'active' : ''}" onclick="toggleAccountListGroup('state')">State</button>`;
+  if (showStrat && currentView !== 'customers') {
+    sortHtml += `<button class="account-list-group-btn ${accountListGroupBy === 'stage' ? 'active' : ''}" onclick="toggleAccountListGroup('stage')">Stage</button>`;
+  }
+  sortHtml += `</div>`;
+
+  // Column headers
+  sortHtml += `<div class="al-header-row">`;
   sortHtml += `<span class="al-hdr-dot-spacer"></span>`;
   sortHtml += `<span class="al-hdr al-hdr-name" onclick="setAccountListSort('name_asc')">Name${colSortArrow('name_asc')}</span>`;
   sortHtml += `<span class="al-hdr al-hdr-state" onclick="setAccountListSort('state_asc')">State${colSortArrow('state_asc')}</span>`;
@@ -2087,15 +2097,6 @@ function renderAccountList() {
   sortHtml += `<span class="al-hdr al-hdr-acv" onclick="setAccountListSort('${moneyKey}')">${moneyLabel}${colSortArrow(moneyKey)}</span>`;
   sortHtml += `<span class="al-hdr al-hdr-products" onclick="setAccountListSort('products_asc')">Products${colSortArrow('products_asc')}</span>`;
   sortHtml += `<span class="al-hdr-btn-spacer"></span>`;
-  sortHtml += `</div>`;
-
-  // Group buttons row
-  sortHtml += `<div class="al-group-bar">`;
-  sortHtml += `<span class="al-group-label">Group</span>`;
-  sortHtml += `<button class="account-list-group-btn ${accountListGroupBy === 'state' ? 'active' : ''}" onclick="toggleAccountListGroup('state')">State</button>`;
-  if (showStrat && currentView !== 'customers') {
-    sortHtml += `<button class="account-list-group-btn ${accountListGroupBy === 'stage' ? 'active' : ''}" onclick="toggleAccountListGroup('stage')">Stage</button>`;
-  }
   sortHtml += `</div>`;
 
   sortBar.innerHTML = sortHtml;
