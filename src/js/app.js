@@ -1325,8 +1325,8 @@ function buildStratPopup(d) {
   const savedPrepLink = localStorage.getItem(prepLinkKey) || d.prep_doc_url || '';
 
   const links = [];
-  if (d.org_chart_url) links.push(`<a href="${d.org_chart_url}" target="_blank" class="popup-link" style="text-decoration:none;font-size:11px;margin-right:12px;">📋 Org Chart</a>`);
-  if (d.strategic_plan_url) links.push(`<a href="${d.strategic_plan_url}" target="_blank" class="popup-link" style="text-decoration:none;font-size:11px;margin-right:12px;">📄 Strategic Plan</a>`);
+  if (d.org_chart_url) links.push(`<a href="${d.org_chart_url}" target="_blank" style="color:#FFFF66;text-decoration:none;font-size:11px;margin-right:12px;">📋 Org Chart</a>`);
+  if (d.strategic_plan_url) links.push(`<a href="${d.strategic_plan_url}" target="_blank" style="color:#FFFF66;text-decoration:none;font-size:11px;margin-right:12px;">📄 Strategic Plan</a>`);
 
   // Meeting Prep link - from localStorage or data
   if (savedPrepLink) {
@@ -1931,7 +1931,7 @@ function populateInfoTab(d) {
     notes.forEach(n => {
       html += `<div class="modal-note-entry">
         <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
-          <span style="font-size:11px;font-weight:600;color:#FFD966;">${n.author}</span>
+          <span style="font-size:11px;font-weight:600;color:#FFFF66;">${n.author}</span>
           <span style="font-size:10px;color:var(--text-muted);">${formatNoteTime(n.ts)}</span>
         </div>
         <div style="font-size:12px;line-height:1.5;color:var(--text);">${n.text}</div>
