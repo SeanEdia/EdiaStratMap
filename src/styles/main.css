@@ -2378,6 +2378,21 @@ input[type="range"]::-webkit-slider-thumb {
 [data-theme="light"] .meeting-prep-btn {
   color: #1a1a1a;
 }
+[data-theme="light"] .leaflet-tile-pane {
+  filter: none;
+}
+[data-theme="light"] .filter-chip.active {
+  color: #1a1a1a;
+}
+[data-theme="light"] .opp-stage-badge.discovery {
+  color: #7a6200;
+}
+[data-theme="light"] .al-stage-label.stage-discovery {
+  color: #7a6200;
+}
+[data-theme="light"] .account-modal-badge.strategic {
+  color: #7a6200;
+}
 
 /* Password modal */
 .pw-modal-backdrop {
