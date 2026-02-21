@@ -215,6 +215,72 @@ body {
   box-shadow: 0 0 0 2px rgba(108, 92, 231, 0.15);
 }
 
+/* Stage Selector */
+.stage-selector {
+  padding: 6px 12px 2px;
+}
+
+.stage-selector-row {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.stage-pills {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.stage-pill {
+  padding: 4px 10px;
+  border: 1px solid var(--panel-border);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.stage-pill:hover {
+  border-color: var(--text-dim);
+  color: var(--text);
+}
+
+.stage-pill.active {
+  color: #fff;
+  border-color: transparent;
+  background: var(--accent-strat);
+}
+
+.stage-pill.stage-has-opp.active {
+  background: #6c5ce7;
+}
+
+.stage-pill.stage-discovery.active {
+  background: #b38f00;
+  color: #fdcb6e;
+}
+
+.stage-pill.stage-demo.active {
+  background: #2d6cb4;
+  color: #74b9ff;
+}
+
+.stage-pill.stage-scoping.active {
+  background: #c0392b;
+  color: #fdd;
+}
+
+.stage-pill.stage-validation.active {
+  background: #0f8a65;
+  color: #55efc4;
+}
+
 /* Holdout badge */
 .holdout-badge {
   display: inline-block;

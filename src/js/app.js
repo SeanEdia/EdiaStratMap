@@ -143,6 +143,7 @@ function getHoldoutAE(d) {
 let currentView = 'strategic';
 let selectedTeam = '';   // '' = all teams
 let selectedRep = '';    // '' = all reps
+let selectedStage = '';  // '' = all stages (top-level stage filter)
 let map;
 let stratLayer, custLayer, proxLayer;
 let filters = {};
@@ -206,6 +207,7 @@ function initMap() {
   confProxLayer = L.layerGroup().addTo(map);
 
   renderTeamRepSelectors();
+  renderStageSelector();
   renderFilters();
   applyFilters();
   updateNoteCount();
@@ -225,12 +227,14 @@ function setView(view) {
   filters = {};
   selectedTeam = '';
   selectedRep = '';
+  selectedStage = '';
   document.getElementById('searchInput').value = '';
   accountListSort = (view === 'customers') ? 'arr_desc' : 'enrollment_desc';
   accountListGroupBy = null;
   collapsedGroups = {};
   invalidateCaches();
   renderTeamRepSelectors();
+  renderStageSelector();
   renderFilters();
   applyFilters();
 }
@@ -306,6 +310,38 @@ function onRepChange(rep) {
   applyFilters();
 }
 
+// ============ STAGE SELECTOR ============
+const STAGE_OPTIONS = [
+  { value: '', label: 'All', cls: '' },
+  { value: 'Has Open Opp', label: 'Has Opp', cls: 'stage-has-opp' },
+  { value: '1 - Discovery', label: 'Discovery', cls: 'stage-discovery' },
+  { value: '2 - Demo', label: 'Demo', cls: 'stage-demo' },
+  { value: '3 - Scoping', label: 'Scoping', cls: 'stage-scoping' },
+  { value: '5 - Validation & Negotiation', label: 'Validation', cls: 'stage-validation' },
+];
+
+function renderStageSelector() {
+  const wrap = document.getElementById('stageSelector');
+  if (!wrap) return;
+  const show = currentView === 'strategic' || currentView === 'all';
+  wrap.style.display = show ? '' : 'none';
+  if (!show) return;
+
+  const pills = document.getElementById('stagePills');
+  pills.innerHTML = STAGE_OPTIONS.map(opt => {
+    const active = selectedStage === opt.value ? ' active' : '';
+    return `<button class="stage-pill ${opt.cls}${active}" onclick="onStageChange('${opt.value}')">${opt.label}</button>`;
+  }).join('');
+}
+
+function onStageChange(stage) {
+  selectedStage = (selectedStage === stage) ? '' : stage;
+  // Don't clear team/rep — stage works as an independent cross-team filter
+  renderStageSelector();
+  renderFilters();
+  applyFilters();
+}
+
 // ============ FILTERS UI ============
 
 // Returns the strategic dataset scoped to the currently selected team/rep.
@@ -333,15 +369,6 @@ function renderFilters() {
     html += buildFilterGroup('State', 'strat_state', getUnique(scopedStrat, 'state'), 'select');
     html += buildFilterGroup('Account Executive', 'strat_ae', getUnique(scopedStrat, 'ae'), 'select');
     html += buildFilterGroup('SIS Platform', 'strat_sis', getUnique(scopedStrat, 'sis'), 'select');
-    // Scope Opp Stage options to stages that exist in the scoped data
-    const allOppStages = ['Has Open Opp', '1 - Discovery', '2 - Demo', '3 - Scoping', '5 - Validation & Negotiation'];
-    const scopedOppStages = allOppStages.filter(stage => {
-      if (stage === 'Has Open Opp') return scopedStrat.some(d => d.opp_stage);
-      return scopedStrat.some(d => d.opp_stage === stage);
-    });
-    if (scopedOppStages.length > 0) {
-      html += buildFilterGroup('Opp Stage', 'strat_opp_stage', scopedOppStages, 'select');
-    }
     html += buildSliderGroup('Min Enrollment', 'strat_enrollment', 0, 1100000);
   }
 
@@ -447,12 +474,14 @@ function resetFilters() {
   filters = {};
   selectedTeam = '';
   selectedRep = '';
+  selectedStage = '';
   document.getElementById('searchInput').value = '';
   adaFilterOn = false;
   const adaCheck = document.getElementById('adaCheck');
   if (adaCheck) adaCheck.checked = false;
   invalidateCaches();
   renderTeamRepSelectors();
+  renderStageSelector();
   renderFilters();
   applyFilters();
 }
@@ -525,6 +554,11 @@ function applyFilters() {
               && !(holdoutAE && holdoutAE.toLowerCase().includes(search))) return false;
         }
       }
+      // Stage filter (top-level, applied before team/rep for cross-team visibility)
+      if (selectedStage) {
+        if (selectedStage === 'Has Open Opp') { if (!d.opp_stage) return false; }
+        else { if (d.opp_stage !== selectedStage) return false; }
+      }
       // Team / rep filter (applied before other filters)
       // Holdout accounts match both the territory AE and the holdout AE
       // Uses Set-based lookup (_teamRepsSet) for O(1) instead of Array.includes O(n)
@@ -538,10 +572,6 @@ function applyFilters() {
       if (filters.strat_state && d.state !== filters.strat_state) return false;
       if (filters.strat_ae && territoryAE !== filters.strat_ae && holdoutAE !== filters.strat_ae) return false;
       if (filters.strat_sis && d.sis !== filters.strat_sis) return false;
-      if (filters.strat_opp_stage) {
-        if (filters.strat_opp_stage === 'Has Open Opp') { if (!d.opp_stage) return false; }
-        else { if (d.opp_stage !== filters.strat_opp_stage) return false; }
-      }
       if (filters.strat_enrollment && parseInt(d.enrollment) < parseInt(filters.strat_enrollment)) return false;
       if (adaFilterOn && !d.ada_adm) return false;
       return true;
@@ -4471,6 +4501,8 @@ Object.assign(window, {
   onSearchKeydown,
   closeAutocomplete,
   selectAutocomplete,
+  // Stage selector
+  onStageChange,
   // Filters
   toggleFiltersPanel,
   setFilter,
