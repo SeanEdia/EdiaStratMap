@@ -143,7 +143,7 @@ function getHoldoutAE(d) {
 let currentView = 'strategic';
 let selectedTeam = '';   // '' = all teams
 let selectedRep = '';    // '' = all reps
-let selectedStage = '';  // '' = all stages (top-level stage filter)
+let selectedStages = new Set();  // multi-select stage filter
 let map;
 let stratLayer, custLayer, proxLayer;
 let filters = {};
@@ -207,7 +207,6 @@ function initMap() {
   confProxLayer = L.layerGroup().addTo(map);
 
   renderTeamRepSelectors();
-  renderStageSelector();
   renderFilters();
   applyFilters();
   updateNoteCount();
@@ -227,14 +226,13 @@ function setView(view) {
   filters = {};
   selectedTeam = '';
   selectedRep = '';
-  selectedStage = '';
+  selectedStages = new Set();
   document.getElementById('searchInput').value = '';
   accountListSort = (view === 'customers') ? 'arr_desc' : 'enrollment_desc';
   accountListGroupBy = null;
   collapsedGroups = {};
   invalidateCaches();
   renderTeamRepSelectors();
-  renderStageSelector();
   renderFilters();
   applyFilters();
 }
@@ -264,6 +262,7 @@ function renderTeamRepSelectors() {
     const sel = selectedTeam === team ? ' selected' : '';
     teamSel.innerHTML += `<option value="${team}"${sel}>${team}</option>`;
   });
+  teamSel.classList.toggle('select-active', !!selectedTeam);
 
   // Rep dropdown (visible only when team is selected)
   const repRow = document.getElementById('repRow');
@@ -278,9 +277,11 @@ function renderTeamRepSelectors() {
       const suffix = info.manager === rep ? ' (Manager)' : '';
       repSel.innerHTML += `<option value="${rep}"${sel}>${rep}${suffix}</option>`;
     });
+    repSel.classList.toggle('select-active', !!selectedRep);
   } else {
     repRow.style.display = 'none';
     repSel.innerHTML = '<option value="">All Reps</option>';
+    repSel.classList.remove('select-active');
   }
 }
 
@@ -290,7 +291,7 @@ function onTeamChange(team) {
   // Clear filters that may no longer be valid for the new team scope
   delete filters.strat_region;
   delete filters.strat_state;
-  delete filters.strat_ae;
+
   delete filters.strat_sis;
   invalidateCaches(); // Scoped unique values changed
   renderTeamRepSelectors();
@@ -303,41 +304,27 @@ function onRepChange(rep) {
   // Clear filters that may no longer be valid for the new rep scope
   delete filters.strat_region;
   delete filters.strat_state;
-  delete filters.strat_ae;
+
   delete filters.strat_sis;
   invalidateCaches(); // Scoped unique values changed
   renderFilters();
   applyFilters();
 }
 
-// ============ STAGE SELECTOR ============
+// ============ STAGE FILTER ============
 const STAGE_OPTIONS = [
-  { value: '', label: 'All', cls: '' },
   { value: 'Has Open Opp', label: 'Has Opp', cls: 'stage-has-opp' },
   { value: '1 - Discovery', label: 'Discovery', cls: 'stage-discovery' },
   { value: '2 - Demo', label: 'Demo', cls: 'stage-demo' },
   { value: '3 - Scoping', label: 'Scoping', cls: 'stage-scoping' },
+  { value: '4 - Proposal', label: 'Proposal', cls: 'stage-proposal' },
   { value: '5 - Validation & Negotiation', label: 'Validation', cls: 'stage-validation' },
+  { value: '6 - Procurement', label: 'Procurement', cls: 'stage-procurement' },
 ];
 
-function renderStageSelector() {
-  const wrap = document.getElementById('stageSelector');
-  if (!wrap) return;
-  const show = currentView === 'strategic' || currentView === 'all';
-  wrap.style.display = show ? '' : 'none';
-  if (!show) return;
-
-  const pills = document.getElementById('stagePills');
-  pills.innerHTML = STAGE_OPTIONS.map(opt => {
-    const active = selectedStage === opt.value ? ' active' : '';
-    return `<button class="stage-pill ${opt.cls}${active}" onclick="onStageChange('${opt.value}')">${opt.label}</button>`;
-  }).join('');
-}
-
 function onStageChange(stage) {
-  selectedStage = (selectedStage === stage) ? '' : stage;
-  // Don't clear team/rep — stage works as an independent cross-team filter
-  renderStageSelector();
+  if (selectedStages.has(stage)) selectedStages.delete(stage);
+  else selectedStages.add(stage);
   renderFilters();
   applyFilters();
 }
@@ -363,11 +350,20 @@ function renderFilters() {
   let html = '';
 
   if (currentView === 'strategic' || currentView === 'all') {
+    // Stage pills (multi-select)
+    html += `<div class="filter-group"><div class="filter-label">Opp Stage`;
+    if (selectedStages.size > 0) html += `<span class="clear-btn" onclick="clearStages()">clear</span>`;
+    html += `</div><div class="filter-chips">`;
+    STAGE_OPTIONS.forEach(opt => {
+      const active = selectedStages.has(opt.value) ? ' active' : '';
+      html += `<div class="filter-chip stage-chip ${opt.cls}${active}" onclick="onStageChange('${opt.value}')">${opt.label}</div>`;
+    });
+    html += `</div></div>`;
+
     // Scope filter options to the selected team/rep
     const scopedStrat = getScopedStratData();
     html += buildFilterGroup('Region', 'strat_region', getUnique(scopedStrat, 'region'), 'chips');
     html += buildFilterGroup('State', 'strat_state', getUnique(scopedStrat, 'state'), 'select');
-    html += buildFilterGroup('Account Executive', 'strat_ae', getUnique(scopedStrat, 'ae'), 'select');
     html += buildFilterGroup('SIS Platform', 'strat_sis', getUnique(scopedStrat, 'sis'), 'select');
     html += buildSliderGroup('Min Enrollment', 'strat_enrollment', 0, 1100000);
   }
@@ -470,25 +466,43 @@ function clearFilter(key) {
   applyFilters();
 }
 
+function clearStages() {
+  selectedStages = new Set();
+  renderFilters();
+  applyFilters();
+}
+
 function resetFilters() {
   filters = {};
   selectedTeam = '';
   selectedRep = '';
-  selectedStage = '';
+  selectedStages = new Set();
   document.getElementById('searchInput').value = '';
   adaFilterOn = false;
   const adaCheck = document.getElementById('adaCheck');
   if (adaCheck) adaCheck.checked = false;
   invalidateCaches();
   renderTeamRepSelectors();
-  renderStageSelector();
   renderFilters();
   applyFilters();
 }
 
 function resetMapView() {
-  // Reset view to Strategic Accounts
-  setView('strategic');
+  // Reset view to Strategic Accounts (keeps team/rep selection)
+  currentView = 'strategic';
+  document.querySelectorAll('.view-btn').forEach(btn => {
+    btn.className = 'view-btn';
+    if (btn.dataset.view === 'strategic') btn.classList.add('active-strat');
+  });
+
+  // Clear all filters and stages but keep team/rep
+  filters = {};
+  selectedStages = new Set();
+  document.getElementById('searchInput').value = '';
+  accountListSort = 'enrollment_desc';
+  accountListGroupBy = null;
+  collapsedGroups = {};
+
   // Reset proximity toggles
   proximityOn = false;
   const proxCheck = document.getElementById('proxCheck');
@@ -499,6 +513,36 @@ function resetMapView() {
   adaFilterOn = false;
   const adaCheck = document.getElementById('adaCheck');
   if (adaCheck) adaCheck.checked = false;
+
+  // Collapse all panels
+  const filtersWrap = document.getElementById('filtersWrap');
+  if (filtersWrap) filtersWrap.classList.add('collapsed');
+  const pipelinePanel = document.getElementById('pipelinePanel');
+  if (pipelinePanel) pipelinePanel.classList.add('pl-collapsed');
+  const pipelineDetail = document.getElementById('pipelineDetail');
+  if (pipelineDetail) pipelineDetail.classList.add('collapsed');
+
+  // Close overlays
+  if (accountListOpen) {
+    accountListOpen = false;
+    const alOverlay = document.getElementById('alOverlay');
+    const badge = document.getElementById('countBadge');
+    if (alOverlay) alOverlay.classList.remove('open');
+    if (badge) badge.classList.remove('active');
+  }
+  if (actionDashboardOpen) {
+    actionDashboardOpen = false;
+    const adOverlay = document.getElementById('adOverlay');
+    const adTrigger = document.getElementById('adTrigger');
+    if (adOverlay) adOverlay.classList.remove('open');
+    if (adTrigger) adTrigger.classList.remove('active');
+  }
+
+  invalidateCaches();
+  renderTeamRepSelectors();
+  renderFilters();
+  applyFilters();
+
   // Reset map to lower 48 US view
   map.setView([39.5, -98.5], 5, { animate: true });
 }
@@ -508,7 +552,7 @@ function toggleFiltersPanel() {
 }
 
 function updateFiltersActiveCount() {
-  const count = Object.keys(filters).length;
+  const count = Object.keys(filters).length + selectedStages.size;
   const el = document.getElementById('filtersActiveCount');
   if (el) el.textContent = count > 0 ? count + ' active' : '';
 }
@@ -554,10 +598,10 @@ function applyFilters() {
               && !(holdoutAE && holdoutAE.toLowerCase().includes(search))) return false;
         }
       }
-      // Stage filter (top-level, applied before team/rep for cross-team visibility)
-      if (selectedStage) {
-        if (selectedStage === 'Has Open Opp') { if (!d.opp_stage) return false; }
-        else { if (d.opp_stage !== selectedStage) return false; }
+      // Stage filter (multi-select, applied before team/rep for cross-team visibility)
+      if (selectedStages.size > 0) {
+        if (!d.opp_stage) return false;
+        if (!selectedStages.has('Has Open Opp') && !selectedStages.has(d.opp_stage)) return false;
       }
       // Team / rep filter (applied before other filters)
       // Holdout accounts match both the territory AE and the holdout AE
@@ -570,7 +614,6 @@ function applyFilters() {
       }
       if (filters.strat_region && d.region !== filters.strat_region) return false;
       if (filters.strat_state && d.state !== filters.strat_state) return false;
-      if (filters.strat_ae && territoryAE !== filters.strat_ae && holdoutAE !== filters.strat_ae) return false;
       if (filters.strat_sis && d.sis !== filters.strat_sis) return false;
       if (filters.strat_enrollment && parseInt(d.enrollment) < parseInt(filters.strat_enrollment)) return false;
       if (adaFilterOn && !d.ada_adm) return false;
@@ -586,7 +629,9 @@ function applyFilters() {
         if (d.opp_stage.startsWith('1')) oppClass = ' opp-discovery';
         else if (d.opp_stage.startsWith('2')) oppClass = ' opp-demo';
         else if (d.opp_stage.startsWith('3')) oppClass = ' opp-scoping';
+        else if (d.opp_stage.startsWith('4')) oppClass = ' opp-proposal';
         else if (d.opp_stage.startsWith('5')) oppClass = ' opp-validation';
+        else if (d.opp_stage.startsWith('6')) oppClass = ' opp-procurement';
         else oppClass = ' has-opp';
       }
       const noteKey = 'edia_notes_' + d.name.replace(/[^a-zA-Z0-9]/g, '_');
@@ -987,7 +1032,9 @@ function updatePipeline() {
     { key: '1', label: 'Discovery', color: '#fdcb6e' },
     { key: '2', label: 'Demo', color: '#74b9ff' },
     { key: '3', label: 'Scoping', color: '#e17055' },
+    { key: '4', label: 'Proposal', color: '#a29bfe' },
     { key: '5', label: 'Validation', color: '#55efc4' },
+    { key: '6', label: 'Procurement', color: '#fd79a8' },
   ];
 
   let h = '';
@@ -1281,7 +1328,18 @@ function toggleAdaFilter(on) {
 
 function updateProxRadius(val) {
   PROXIMITY_MILES = parseInt(val);
-  document.getElementById('proxMilesLabel').textContent = val + ' mi';
+  const miInput = document.getElementById('proxMilesInput');
+  if (miInput) miInput.value = PROXIMITY_MILES;
+  if (proximityOn) drawProximity();
+}
+
+function setProxRadiusFromInput(val) {
+  let n = parseInt(val);
+  if (isNaN(n) || n < 10) n = 10;
+  if (n > 150) n = 150;
+  PROXIMITY_MILES = n;
+  const slider = document.getElementById('proxRadius');
+  if (slider) slider.value = n;
   if (proximityOn) drawProximity();
 }
 
@@ -1634,7 +1692,7 @@ function buildStratPopup(d) {
 
   // Opportunity section
   if (d.opp_stage) {
-    const stageColors = {'1':'#a0a0a0','2':'#74b9ff','3':'#ffeaa7','4':'#fab1a0','5':'#55efc4'};
+    const stageColors = {'1':'#fdcb6e','2':'#74b9ff','3':'#e17055','4':'#a29bfe','5':'#55efc4','6':'#fd79a8'};
     const stageNum = d.opp_stage.charAt(0);
     const sc = stageColors[stageNum] || '#ccc';
     html += `<div class="popup-section-label" style="display:flex;align-items:center;gap:8px;">Opportunity <span class="popup-opp-stage-pill" style="font-size:10px;background:${sc}22;padding:1px 7px;border-radius:8px;border:1px solid ${sc}44;">${d.opp_stage}</span></div>`;
@@ -1805,7 +1863,9 @@ function getStageInfo(d) {
     if (d.opp_stage.startsWith('1')) return { cls: 'stage-discovery', label: 'Discovery', order: 1 };
     if (d.opp_stage.startsWith('2')) return { cls: 'stage-demo', label: 'Demo', order: 2 };
     if (d.opp_stage.startsWith('3')) return { cls: 'stage-scoping', label: 'Scoping', order: 3 };
-    if (d.opp_stage.startsWith('5')) return { cls: 'stage-validation', label: 'Validation', order: 4 };
+    if (d.opp_stage.startsWith('4')) return { cls: 'stage-proposal', label: 'Proposal', order: 4 };
+    if (d.opp_stage.startsWith('5')) return { cls: 'stage-validation', label: 'Validation', order: 5 };
+    if (d.opp_stage.startsWith('6')) return { cls: 'stage-procurement', label: 'Procurement', order: 6 };
     return { cls: 'stage-none', label: 'Opp', order: 0 };
   }
   return { cls: 'stage-none', label: 'No Opp', order: 0 };
@@ -2129,7 +2189,9 @@ function updateLegend() {
   items += `<div class="legend-item"><div class="legend-dot" style="background:#fdcb6e;"></div>Discovery</div>`;
   items += `<div class="legend-item"><div class="legend-dot" style="background:#74b9ff;"></div>Demo</div>`;
   items += `<div class="legend-item"><div class="legend-dot" style="background:#e17055;"></div>Scoping</div>`;
+  items += `<div class="legend-item"><div class="legend-dot" style="background:#a29bfe;"></div>Proposal</div>`;
   items += `<div class="legend-item"><div class="legend-dot" style="background:#55efc4;"></div>Validation</div>`;
+  items += `<div class="legend-item"><div class="legend-dot" style="background:#fd79a8;"></div>Procurement</div>`;
   items += `<div class="legend-item"><div class="legend-dot cust"></div>Customer</div>`;
   legend.innerHTML = items;
   legend.style.display = 'flex';
@@ -2260,7 +2322,9 @@ function populateInfoTab(d) {
     let stageClass = 'discovery';
     if (d.opp_stage.includes('Demo')) stageClass = 'demo';
     else if (d.opp_stage.includes('Scoping')) stageClass = 'scoping';
+    else if (d.opp_stage.includes('Proposal')) stageClass = 'proposal';
     else if (d.opp_stage.includes('Validation')) stageClass = 'validation';
+    else if (d.opp_stage.includes('Procurement')) stageClass = 'procurement';
 
     html += `<div class="modal-section opp-card">
       <div class="modal-section-title"><span class="icon">💼</span> Opportunity</div>
@@ -4501,8 +4565,9 @@ Object.assign(window, {
   onSearchKeydown,
   closeAutocomplete,
   selectAutocomplete,
-  // Stage selector
+  // Stage filter
   onStageChange,
+  clearStages,
   // Filters
   toggleFiltersPanel,
   setFilter,
@@ -4512,6 +4577,7 @@ Object.assign(window, {
   // Proximity & ADA
   toggleProximity,
   updateProxRadius,
+  setProxRadiusFromInput,
   toggleAdaFilter,
   // Pipeline
   togglePipelinePanel,
