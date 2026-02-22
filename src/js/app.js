@@ -4202,6 +4202,38 @@ function closeMergeModal() {
   pendingMergeStats = null;
 }
 
+// State abbreviation to full name mapping (for validating geocode results)
+const STATE_FULL_NAMES = {
+  'AL': 'Alabama', 'AK': 'Alaska', 'AZ': 'Arizona', 'AR': 'Arkansas', 'CA': 'California',
+  'CO': 'Colorado', 'CT': 'Connecticut', 'DE': 'Delaware', 'FL': 'Florida', 'GA': 'Georgia',
+  'HI': 'Hawaii', 'ID': 'Idaho', 'IL': 'Illinois', 'IN': 'Indiana', 'IA': 'Iowa',
+  'KS': 'Kansas', 'KY': 'Kentucky', 'LA': 'Louisiana', 'ME': 'Maine', 'MD': 'Maryland',
+  'MA': 'Massachusetts', 'MI': 'Michigan', 'MN': 'Minnesota', 'MS': 'Mississippi', 'MO': 'Missouri',
+  'MT': 'Montana', 'NE': 'Nebraska', 'NV': 'Nevada', 'NH': 'New Hampshire', 'NJ': 'New Jersey',
+  'NM': 'New Mexico', 'NY': 'New York', 'NC': 'North Carolina', 'ND': 'North Dakota', 'OH': 'Ohio',
+  'OK': 'Oklahoma', 'OR': 'Oregon', 'PA': 'Pennsylvania', 'RI': 'Rhode Island', 'SC': 'South Carolina',
+  'SD': 'South Dakota', 'TN': 'Tennessee', 'TX': 'Texas', 'UT': 'Utah', 'VT': 'Vermont',
+  'VA': 'Virginia', 'WA': 'Washington', 'WV': 'West Virginia', 'WI': 'Wisconsin', 'WY': 'Wyoming',
+  'DC': 'District of Columbia'
+};
+
+// Check if a Nominatim result is in the expected state
+function isResultInState(result, expectedState) {
+  if (!result || !expectedState) return true; // Can't validate, accept the result
+  const displayName = (result.display_name || '').toLowerCase();
+  const stateAbbr = expectedState.toUpperCase().trim();
+  const stateFull = (STATE_FULL_NAMES[stateAbbr] || '').toLowerCase();
+  // Check display_name contains either the abbreviation or full state name
+  if (stateFull && displayName.includes(stateFull)) return true;
+  // Also check addressdetails if available
+  if (result.address) {
+    const resultState = (result.address.state || '').toLowerCase();
+    if (stateFull && resultState.includes(stateFull)) return true;
+    if (resultState.includes(stateAbbr.toLowerCase())) return true;
+  }
+  return false;
+}
+
 // Geocode a district using OpenStreetMap Nominatim API
 async function geocodeDistrict(name, state, record) {
   // Check for address fields in the record (most accurate if available)
@@ -4212,37 +4244,58 @@ async function geocodeDistrict(name, state, record) {
   // Build list of query variations to try
   const baseName = name.replace(/\s*(Independent School District|School District|Public Schools|County Schools|City Schools|Parish Schools|ISD|USD|CSD|Schools|District).*$/i, '').trim();
 
-  const queries = [];
+  // Try structured search first (more accurate for address-based lookups)
+  const structuredQueries = [];
+  const stateFull = STATE_FULL_NAMES[(state || '').toUpperCase().trim()] || state;
 
-  // If we have address + city, try that first (most accurate)
   if (address && city && state) {
-    queries.push(`${address}, ${city}, ${state}, USA`);
+    structuredQueries.push({ street: address, city: city, state: stateFull, country: 'US' });
     console.log('[Geocode] Using address from CSV:', address, city, state);
   }
-  // If we have just city, try that
   if (city && state) {
-    queries.push(`${city}, ${state}, USA`);
+    structuredQueries.push({ city: city, state: stateFull, country: 'US' });
   }
 
-  // Add name-based fallback queries
+  // Try structured queries first
+  for (const sq of structuredQueries) {
+    const params = new URLSearchParams({ format: 'json', limit: '1', countrycodes: 'us', addressdetails: '1' });
+    if (sq.street) params.set('street', sq.street);
+    if (sq.city) params.set('city', sq.city);
+    if (sq.state) params.set('state', sq.state);
+    if (sq.country) params.set('country', sq.country);
+    const url = `https://nominatim.openstreetmap.org/search?${params.toString()}`;
+
+    try {
+      console.log('[Geocode] Structured query:', sq);
+      const response = await fetch(url, { headers: { 'User-Agent': 'EdiaStratMap/1.0' } });
+      const data = await response.json();
+      if (data && data.length > 0 && isResultInState(data[0], state)) {
+        console.log('[Geocode] Found (structured):', name, '→', data[0].lat, data[0].lon);
+        return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+      }
+      if (data && data.length > 0) {
+        console.log('[Geocode] Structured result REJECTED (wrong state):', data[0].display_name, '- expected:', state);
+      }
+      await new Promise(resolve => setTimeout(resolve, 1100));
+    } catch (err) {
+      console.error('[Geocode] Structured query error:', err);
+    }
+  }
+
+  // Fall back to free-text queries with state validation
+  const queries = [];
   queries.push(
-    // Try the base name as a city
     `${baseName}, ${state}, USA`,
-    // Try as a county
     `${baseName} County, ${state}, USA`,
-    // Try the full name
     `${name}, ${state}, USA`,
-    // Try adding "city" explicitly
     `${baseName} city, ${state}, USA`,
-    // For names that might be school districts, search for the school district HQ
     `${name} school district, ${state}, USA`
   );
 
-  // Remove duplicates and empty queries
   const uniqueQueries = [...new Set(queries)].filter(q => q && !q.includes('undefined'));
 
   for (const query of uniqueQueries) {
-    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1&countrycodes=us`;
+    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=3&countrycodes=us&addressdetails=1`;
 
     try {
       console.log('[Geocode] Trying:', query);
@@ -4251,8 +4304,13 @@ async function geocodeDistrict(name, state, record) {
       });
       const data = await response.json();
       if (data && data.length > 0) {
-        console.log('[Geocode] Found:', name, '→', data[0].lat, data[0].lon, '(query:', query, ')');
-        return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+        // Find the first result that's actually in the correct state
+        const match = data.find(r => isResultInState(r, state));
+        if (match) {
+          console.log('[Geocode] Found:', name, '→', match.lat, match.lon, '(query:', query, ')');
+          return { lat: parseFloat(match.lat), lng: parseFloat(match.lon) };
+        }
+        console.log('[Geocode] All results for', query, 'were in wrong state (expected:', state, ')');
       }
       // Rate limit between query attempts
       await new Promise(resolve => setTimeout(resolve, 1100));
@@ -4264,7 +4322,7 @@ async function geocodeDistrict(name, state, record) {
   // Last resort: try to at least place it somewhere in the state
   console.warn('[Geocode] Trying state-level fallback for:', name, state);
   try {
-    const stateUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(state + ', USA')}&limit=1&countrycodes=us`;
+    const stateUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent((stateFull || state) + ', USA')}&limit=1&countrycodes=us`;
     const response = await fetch(stateUrl, {
       headers: { 'User-Agent': 'EdiaStratMap/1.0' }
     });
