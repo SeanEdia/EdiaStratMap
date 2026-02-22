@@ -4383,6 +4383,7 @@ async function confirmMerge() {
       localStorage.setItem('edia_sfdc_last_refresh', new Date().toISOString());
 
       // Store detected conflicts (append to existing, deduplicate by name)
+      const mergeConflicts = pendingMergeStats && pendingMergeStats.conflicts ? pendingMergeStats.conflicts : [];
       storeNewConflicts(pendingMergeStats);
 
       // Close modal and refresh UI
@@ -4401,7 +4402,6 @@ async function confirmMerge() {
       updateConflictsBadge();
 
       // Show confirmation
-      const conflictCount = pendingMergeStats.conflicts ? pendingMergeStats.conflicts.length : 0;
       let message = `✓ Merge complete!\n\n${ACCOUNT_DATA.length} accounts + ${CUSTOMER_DATA.length} customers updated on the map.`;
       message += `\n\nData saved to this browser — it will persist across page refreshes.`;
       message += `\n\nTwo files downloaded: accounts.json and customers.json`;
@@ -4409,8 +4409,8 @@ async function confirmMerge() {
       if (geocodedCount > 0) {
         message += `\n\n${geocodedCount} new records geocoded.`;
       }
-      if (conflictCount > 0) {
-        message += `\n\n⚠ ${conflictCount} ownership conflict(s) detected — review in the Conflicts dropdown.`;
+      if (mergeConflicts.length > 0) {
+        message += `\n\n⚠ ${mergeConflicts.length} ownership conflict(s) detected — review in the Conflicts dropdown.`;
       }
       if (errors.length > 0) {
         message += `\n\n⚠ ${errors.length} warning(s):\n• ${errors.slice(0, 5).join('\n• ')}`;
@@ -4457,6 +4457,7 @@ async function confirmMerge() {
       localStorage.setItem('edia_sfdc_last_refresh', new Date().toISOString());
 
       // Store detected conflicts (append to existing, deduplicate by name)
+      const mergeConflicts2 = pendingMergeStats && pendingMergeStats.conflicts ? pendingMergeStats.conflicts : [];
       storeNewConflicts(pendingMergeStats);
 
       // Close modal
@@ -4479,7 +4480,6 @@ async function confirmMerge() {
       updateConflictsBadge();
 
       // Show confirmation
-      const conflictCount2 = pendingMergeStats.conflicts ? pendingMergeStats.conflicts.length : 0;
       const recordCount = isAccountType ? ACCOUNT_DATA.length : CUSTOMER_DATA.length;
       let message = `✓ Merge complete!\n\n${recordCount} ${isAccountType ? 'accounts' : 'customers'} updated on the map.`;
       message += `\n\nData saved to this browser — it will persist across page refreshes.`;
@@ -4488,8 +4488,8 @@ async function confirmMerge() {
       if (geocodedCount > 0) {
         message += `\n\n${geocodedCount} new records geocoded.`;
       }
-      if (conflictCount2 > 0) {
-        message += `\n\n⚠ ${conflictCount2} ownership conflict(s) detected — review in the Conflicts dropdown.`;
+      if (mergeConflicts2.length > 0) {
+        message += `\n\n⚠ ${mergeConflicts2.length} ownership conflict(s) detected — review in the Conflicts dropdown.`;
       }
       if (errors.length > 0) {
         message += `\n\n⚠ ${errors.length} warning(s):\n• ${errors.slice(0, 5).join('\n• ')}`;
