@@ -100,6 +100,15 @@ if (_persisted) {
     }
   });
   if (_repaired) console.log(`[Persist] Repaired enrollment for ${_repaired} account(s) from bundled data`);
+  // Migrate flat opp fields into opps array for existing localStorage data
+  let _migrated = 0;
+  ACCOUNT_DATA.forEach(d => {
+    if (!d.opps && (d.opp_stage || d.opp_areas)) {
+      migrateToOppsArray(d);
+      _migrated++;
+    }
+  });
+  if (_migrated) console.log(`[Persist] Migrated ${_migrated} account(s) from flat opp fields to opps array`);
 }
 
 // ============ PERFORMANCE INDICES ============
@@ -1292,7 +1301,16 @@ function updatePipeline() {
   panel.style.display = 'block';
 
   // Scope pipeline to selected team/rep
-  const withOpp = getScopedStratData().filter(d => d.opp_stage);
+  // Flatten individual opps from the opps array so each opp is counted separately
+  const scopedData = getScopedStratData();
+  const allOpps = [];
+  scopedData.forEach(d => {
+    const opps = d.opps && d.opps.length > 0 ? d.opps : (d.opp_stage ? [buildOppEntry(d)] : []);
+    opps.forEach(opp => {
+      if (opp.stage) allOpps.push({ account: d, opp });
+    });
+  });
+
   const stages = [
     { key: '1', label: 'Discovery', color: '#fdcb6e' },
     { key: '2', label: 'Demo', color: '#74b9ff' },
@@ -1306,13 +1324,13 @@ function updatePipeline() {
   let totalACV = 0;
   let totalCount = 0;
   stages.forEach((s, idx) => {
-    const inStage = withOpp.filter(d => d.opp_stage && d.opp_stage.startsWith(s.key));
-    const acv = inStage.reduce((sum, d) => sum + (Number(d.opp_acv) || 0), 0);
+    const inStage = allOpps.filter(item => item.opp.stage && item.opp.stage.startsWith(s.key));
+    const acv = inStage.reduce((sum, item) => sum + (Number(item.opp.acv) || 0), 0);
     totalACV += acv;
     totalCount += inStage.length;
     if (inStage.length > 0) {
       // Sort by ACV descending to show largest first
-      const sorted = [...inStage].sort((a, b) => (Number(b.opp_acv) || 0) - (Number(a.opp_acv) || 0));
+      const sorted = [...inStage].sort((a, b) => (Number(b.opp.acv) || 0) - (Number(a.opp.acv) || 0));
       const stageId = `stage-dropdown-${idx}`;
       h += `<div class="pipeline-stage-container">`;
       h += `<div class="pipeline-detail-row pipeline-clickable" onclick="toggleStageDropdown('${stageId}')">`;
@@ -1320,11 +1338,12 @@ function updatePipeline() {
       h += `<span class="value">$${acv.toLocaleString()} <span class="dropdown-arrow">▼</span></span>`;
       h += `</div>`;
       h += `<div id="${stageId}" class="stage-dropdown" style="display:none;">`;
-      sorted.forEach(d => {
-        const oppAcv = Number(d.opp_acv) || 0;
-        const districtKey = d.name.replace(/[^a-zA-Z0-9]/g, '_');
+      sorted.forEach(item => {
+        const oppAcv = Number(item.opp.acv) || 0;
+        const districtKey = item.account.name.replace(/[^a-zA-Z0-9]/g, '_');
+        const areaLabel = item.opp.area ? ' — ' + item.opp.area : '';
         h += `<div class="stage-dropdown-item" onclick="event.stopPropagation(); openAccountModalByKey('${districtKey}')">`;
-        h += `<span class="dropdown-name">${d.name}</span>`;
+        h += `<span class="dropdown-name">${item.account.name}${areaLabel}</span>`;
         h += `<span class="dropdown-acv">$${oppAcv.toLocaleString()}</span>`;
         h += `</div>`;
       });
@@ -1966,24 +1985,25 @@ function buildStratPopup(d) {
     });
   }
 
-  // Opportunity section
-  if (d.opp_stage) {
+  // Opportunity section — render one card per opp in the opps array
+  const popupOpps = d.opps && d.opps.length > 0 ? d.opps : (d.opp_stage ? [buildOppEntry(d)] : []);
+  popupOpps.forEach(opp => {
     const stageColors = {'1':'#fdcb6e','2':'#74b9ff','3':'#e17055','4':'#a29bfe','5':'#55efc4','6':'#fd79a8'};
-    const stageNum = d.opp_stage.charAt(0);
+    const stageNum = (opp.stage || '').charAt(0);
     const sc = stageColors[stageNum] || '#ccc';
-    html += `<div class="popup-section-label" style="display:flex;align-items:center;gap:8px;">Opportunity <span class="popup-opp-stage-pill" style="font-size:10px;background:${sc}22;padding:1px 7px;border-radius:8px;border:1px solid ${sc}44;">${d.opp_stage}</span></div>`;
+    const areaLabel = opp.area || 'Opportunity';
+    html += `<div class="popup-section-label" style="display:flex;align-items:center;gap:8px;">${areaLabel} <span class="popup-opp-stage-pill" style="font-size:10px;background:${sc}22;padding:1px 7px;border-radius:8px;border:1px solid ${sc}44;">${opp.stage || ''}</span></div>`;
     const oppRows = [
-      ['Forecast', d.opp_forecast, false],
-      ['Areas', d.opp_areas, false],
-      ['Year 1 ACV', d.opp_acv ? '$' + Number(d.opp_acv).toLocaleString() : '', false],
-      ['Probability', d.opp_probability ? d.opp_probability + '%' : '', false],
-      ['Contact', d.opp_contact ? (d.opp_contact + (d.opp_contact_title ? ' (' + d.opp_contact_title + ')' : '')) : '', d.opp_contact],
-      ['Next Step', d.opp_next_step, false],
-      ['Last Activity', d.opp_last_activity, false],
-      ['SDR', d.opp_sdr, false],
-      ['Champion', d.opp_champion, d.opp_champion],
-      ['Econ. Buyer', d.opp_economic_buyer, d.opp_economic_buyer],
-      ['Competition', d.opp_competition, false],
+      ['Forecast', opp.forecast, false],
+      ['Year 1 ACV', opp.acv ? '$' + Number(opp.acv).toLocaleString() : '', false],
+      ['Probability', opp.probability ? opp.probability + '%' : '', false],
+      ['Contact', opp.contact ? (opp.contact + (opp.contact_title ? ' (' + opp.contact_title + ')' : '')) : '', opp.contact],
+      ['Next Step', opp.next_step, false],
+      ['Last Activity', opp.last_activity, false],
+      ['SDR', opp.sdr, false],
+      ['Champion', opp.champion, opp.champion],
+      ['Econ. Buyer', opp.economic_buyer, opp.economic_buyer],
+      ['Competition', opp.competition, false],
     ].filter(([_, v]) => v);
     oppRows.forEach(([k, v, copyVal]) => {
       if (copyVal) {
@@ -1992,7 +2012,7 @@ function buildStratPopup(d) {
         html += `<div class="popup-row"><span class="pk">${k}</span><span class="pv">${v}</span></div>`;
       }
     });
-  }
+  });
 
   // Research links (including Meeting Prep)
   const prepLinkKey = 'edia_prep_' + d.name.replace(/[^a-zA-Z0-9]/g, '_');
@@ -2571,6 +2591,7 @@ function openAccountModalWithData(d) {
   populateSchoolsTab(d);
   populateMathTab(d);
   populateAttendanceTab(d);
+  populateDistrictIntelTab(d);
 
   // Reset to Info tab
   switchTab('info', document.querySelector('.account-tab'));
@@ -2637,27 +2658,30 @@ function populateInfoTab(d) {
     html += `</div>`;
   }
 
-  // Opportunity Section
-  if (d.opp_stage) {
+  // Opportunity Section — render one card per opp
+  const infoOpps = d.opps && d.opps.length > 0 ? d.opps : (d.opp_stage ? [buildOppEntry(d)] : []);
+  infoOpps.forEach(opp => {
     let stageClass = 'discovery';
-    if (d.opp_stage.includes('Demo')) stageClass = 'demo';
-    else if (d.opp_stage.includes('Scoping')) stageClass = 'scoping';
-    else if (d.opp_stage.includes('Proposal')) stageClass = 'proposal';
-    else if (d.opp_stage.includes('Validation')) stageClass = 'validation';
-    else if (d.opp_stage.includes('Procurement')) stageClass = 'procurement';
+    const stage = opp.stage || '';
+    if (stage.includes('Demo')) stageClass = 'demo';
+    else if (stage.includes('Scoping')) stageClass = 'scoping';
+    else if (stage.includes('Proposal')) stageClass = 'proposal';
+    else if (stage.includes('Validation')) stageClass = 'validation';
+    else if (stage.includes('Procurement')) stageClass = 'procurement';
 
+    const areaLabel = opp.area || 'Opportunity';
     html += `<div class="modal-section opp-card">
-      <div class="modal-section-title"><span class="icon">💼</span> Opportunity</div>
-      <span class="opp-stage-badge ${stageClass}">${d.opp_stage}</span>
-      ${modalRow('Forecast', d.opp_forecast || '—')}
-      ${modalRow('Areas', d.opp_areas || '—')}
-      ${modalRow('Probability', d.opp_probability ? d.opp_probability + '%' : '—')}
-      ${modalRow('Contact', d.opp_contact ? d.opp_contact + (d.opp_contact_title ? ' (' + d.opp_contact_title + ')' : '') : '—')}
-      ${modalRow('Next Step', d.opp_next_step || '—')}
-      ${modalRow('Last Activity', d.opp_last_activity || '—')}
-      ${modalRow('SDR', d.opp_sdr || '—')}
+      <div class="modal-section-title"><span class="icon">💼</span> ${areaLabel}</div>
+      <span class="opp-stage-badge ${stageClass}">${stage}</span>
+      ${modalRow('Forecast', opp.forecast || '—')}
+      ${modalRow('Probability', opp.probability ? opp.probability + '%' : '—')}
+      ${modalRow('Year 1 ACV', opp.acv ? '$' + Number(opp.acv).toLocaleString() : '—')}
+      ${modalRow('Contact', opp.contact ? opp.contact + (opp.contact_title ? ' (' + opp.contact_title + ')' : '') : '—')}
+      ${modalRow('Next Step', opp.next_step || '—')}
+      ${modalRow('Last Activity', opp.last_activity || '—')}
+      ${modalRow('SDR', opp.sdr || '—')}
     </div>`;
-  }
+  });
 
   // Resources Section
   html += `<div class="modal-section">
@@ -2723,11 +2747,12 @@ function populateMathTab(d) {
     </div>`;
   }
 
-  // Math-related opportunity info
-  if (d.opp_areas && d.opp_areas.toLowerCase().includes('math')) {
+  // Math-related opportunity info — find Math opp from opps array
+  const mathOpp = (d.opps || []).find(o => (o.area || '').toLowerCase().includes('math'));
+  if (mathOpp) {
     html += `<div class="product-highlight math" style="border-color:#55efc4;">
       <div class="label">Active Math Opportunity</div>
-      <div class="value">${d.opp_stage || 'In Progress'}</div>
+      <div class="value">${mathOpp.stage || 'In Progress'}</div>
     </div>`;
   }
   html += `</div>`;
@@ -2750,26 +2775,25 @@ function populateMathTab(d) {
     html += `<div style="color:var(--text-muted);font-size:12px;">No math-specific contacts recorded</div>`;
   }
 
-  // Opp contact if math-related
-  if (d.opp_contact && d.opp_areas && d.opp_areas.toLowerCase().includes('math')) {
+  // Opp contact from Math opp entry
+  if (mathOpp && mathOpp.contact) {
     html += `<div class="contact-card" style="border-left:3px solid #55efc4;">
-      <div class="name">${d.opp_contact}</div>
-      <div class="title">${d.opp_contact_title || 'Opportunity Contact'}</div>
+      <div class="name">${mathOpp.contact}</div>
+      <div class="title">${mathOpp.contact_title || 'Opportunity Contact'}</div>
     </div>`;
   }
   html += `</div>`;
 
-  // Competition/Intel - only show if this is a Math opp
-  const isMathOpp = d.opp_areas && d.opp_areas.toLowerCase().includes('math');
-  if (isMathOpp && (d.opp_competition || d.opp_economic_buyer || d.opp_champion)) {
+  // Competition/Intel - only show if Math opp exists
+  if (mathOpp && (mathOpp.competition || mathOpp.economic_buyer || mathOpp.champion)) {
     html += `<div class="modal-section">
       <div class="modal-section-title"><span class="icon">🎯</span> Math Opp Intel</div>
-      ${d.opp_stage ? modalRow('Stage', d.opp_stage) : ''}
-      ${d.opp_acv ? modalRow('Year 1 ACV', '$' + Number(d.opp_acv).toLocaleString()) : ''}
-      ${modalRow('Competition', d.opp_competition || '—')}
-      ${modalRow('Economic Buyer', d.opp_economic_buyer || '—')}
-      ${modalRow('Champion', d.opp_champion || '—')}
-      ${d.opp_next_step ? modalRow('Next Step', d.opp_next_step) : ''}
+      ${mathOpp.stage ? modalRow('Stage', mathOpp.stage) : ''}
+      ${mathOpp.acv ? modalRow('Year 1 ACV', '$' + Number(mathOpp.acv).toLocaleString()) : ''}
+      ${modalRow('Competition', mathOpp.competition || '—')}
+      ${modalRow('Economic Buyer', mathOpp.economic_buyer || '—')}
+      ${modalRow('Champion', mathOpp.champion || '—')}
+      ${mathOpp.next_step ? modalRow('Next Step', mathOpp.next_step) : ''}
     </div>`;
   }
 
@@ -2802,11 +2826,12 @@ function populateAttendanceTab(d) {
     html += `<div style="color:var(--text-muted);font-size:12px;">No attendance/SIS info recorded</div>`;
   }
 
-  // Attendance opportunity info
-  if (d.opp_areas && d.opp_areas.toLowerCase().includes('attendance')) {
+  // Attendance opportunity info — find Attendance opp from opps array
+  const attendanceOpp = (d.opps || []).find(o => (o.area || '').toLowerCase().includes('attendance'));
+  if (attendanceOpp) {
     html += `<div class="product-highlight attendance" style="border-color:#55efc4;margin-top:12px;">
       <div class="label">Active Attendance Opportunity</div>
-      <div class="value">${d.opp_stage || 'In Progress'}</div>
+      <div class="value">${attendanceOpp.stage || 'In Progress'}</div>
     </div>`;
   }
   html += `</div>`;
@@ -2829,26 +2854,25 @@ function populateAttendanceTab(d) {
     html += `<div style="color:var(--text-muted);font-size:12px;">No attendance-specific contacts recorded</div>`;
   }
 
-  // Opp contact if attendance-related
-  if (d.opp_contact && d.opp_areas && d.opp_areas.toLowerCase().includes('attendance')) {
+  // Opp contact from Attendance opp entry
+  if (attendanceOpp && attendanceOpp.contact) {
     html += `<div class="contact-card" style="border-left:3px solid #55efc4;">
-      <div class="name">${d.opp_contact}</div>
-      <div class="title">${d.opp_contact_title || 'Opportunity Contact'}</div>
+      <div class="name">${attendanceOpp.contact}</div>
+      <div class="title">${attendanceOpp.contact_title || 'Opportunity Contact'}</div>
     </div>`;
   }
   html += `</div>`;
 
-  // Attendance Opp Intel - only show if this is an Attendance opp
-  const isAttendanceOpp = d.opp_areas && d.opp_areas.toLowerCase().includes('attendance');
-  if (isAttendanceOpp && (d.opp_competition || d.opp_economic_buyer || d.opp_champion || d.opp_stage)) {
+  // Attendance Opp Intel - only show if Attendance opp exists
+  if (attendanceOpp && (attendanceOpp.competition || attendanceOpp.economic_buyer || attendanceOpp.champion || attendanceOpp.stage)) {
     html += `<div class="modal-section">
       <div class="modal-section-title"><span class="icon">🎯</span> Attendance Opp Intel</div>
-      ${d.opp_stage ? modalRow('Stage', d.opp_stage) : ''}
-      ${d.opp_acv ? modalRow('Year 1 ACV', '$' + Number(d.opp_acv).toLocaleString()) : ''}
-      ${modalRow('Competition', d.opp_competition || '—')}
-      ${modalRow('Economic Buyer', d.opp_economic_buyer || '—')}
-      ${modalRow('Champion', d.opp_champion || '—')}
-      ${d.opp_next_step ? modalRow('Next Step', d.opp_next_step) : ''}
+      ${attendanceOpp.stage ? modalRow('Stage', attendanceOpp.stage) : ''}
+      ${attendanceOpp.acv ? modalRow('Year 1 ACV', '$' + Number(attendanceOpp.acv).toLocaleString()) : ''}
+      ${modalRow('Competition', attendanceOpp.competition || '—')}
+      ${modalRow('Economic Buyer', attendanceOpp.economic_buyer || '—')}
+      ${modalRow('Champion', attendanceOpp.champion || '—')}
+      ${attendanceOpp.next_step ? modalRow('Next Step', attendanceOpp.next_step) : ''}
     </div>`;
   }
 
@@ -2861,6 +2885,63 @@ function populateAttendanceTab(d) {
 
   html += `</div>`;
   document.getElementById('tabAttendance').innerHTML = html;
+}
+
+function populateDistrictIntelTab(d) {
+  let html = `<div class="modal-grid">`;
+
+  // District Intelligence opp from opps array
+  const diOpp = (d.opps || []).find(o => (o.area || '').toLowerCase().includes('district intelligence'));
+
+  html += `<div class="modal-section">
+    <div class="modal-section-title"><span class="icon">📊</span> District Intelligence</div>`;
+
+  if (diOpp) {
+    let stageClass = 'discovery';
+    if (diOpp.stage.includes('Demo')) stageClass = 'demo';
+    else if (diOpp.stage.includes('Scoping')) stageClass = 'scoping';
+    else if (diOpp.stage.includes('Proposal')) stageClass = 'proposal';
+    else if (diOpp.stage.includes('Validation')) stageClass = 'validation';
+    else if (diOpp.stage.includes('Procurement')) stageClass = 'procurement';
+
+    html += `<div class="product-highlight" style="border-color:#a29bfe;">
+      <div class="label">Active District Intelligence Opportunity</div>
+      <div class="value"><span class="opp-stage-badge ${stageClass}">${diOpp.stage || 'In Progress'}</span></div>
+    </div>`;
+    html += modalRow('Forecast', diOpp.forecast || '—');
+    html += modalRow('Year 1 ACV', diOpp.acv ? '$' + Number(diOpp.acv).toLocaleString() : '—');
+    html += modalRow('Probability', diOpp.probability ? diOpp.probability + '%' : '—');
+    html += modalRow('Next Step', diOpp.next_step || '—');
+    html += modalRow('Last Activity', diOpp.last_activity || '—');
+  } else {
+    html += `<div style="color:var(--text-muted);font-size:12px;">No District Intelligence opportunity recorded</div>`;
+  }
+  html += `</div>`;
+
+  // DI Contacts
+  if (diOpp && diOpp.contact) {
+    html += `<div class="modal-section">
+      <div class="modal-section-title"><span class="icon">👤</span> DI Contacts</div>`;
+    html += `<div class="contact-card" style="border-left:3px solid #a29bfe;">
+      <div class="name">${diOpp.contact}</div>
+      <div class="title">${diOpp.contact_title || 'Opportunity Contact'}</div>
+    </div>`;
+    html += `</div>`;
+  }
+
+  // DI Opp Intel
+  if (diOpp && (diOpp.competition || diOpp.economic_buyer || diOpp.champion)) {
+    html += `<div class="modal-section">
+      <div class="modal-section-title"><span class="icon">🎯</span> DI Opp Intel</div>
+      ${modalRow('Competition', diOpp.competition || '—')}
+      ${modalRow('Economic Buyer', diOpp.economic_buyer || '—')}
+      ${modalRow('Champion', diOpp.champion || '—')}
+      ${diOpp.sdr ? modalRow('SDR', diOpp.sdr) : ''}
+    </div>`;
+  }
+
+  html += `</div>`;
+  document.getElementById('tabDistrictIntel').innerHTML = html;
 }
 
 function populateSchoolsTab(d) {
@@ -3117,11 +3198,16 @@ function formatMeetingPrepPrompt(d) {
   if (d.ada_adm) prompt += `ADA/ADM: ${d.ada_adm}\n`;
 
   // Opportunity info
-  if (d.opp_stage) {
-    prompt += `\n=== OPPORTUNITY ===\n`;
-    prompt += `Stage: ${d.opp_stage}\n`;
-    if (d.opp_amount) prompt += `Amount: $${parseFloat(d.opp_amount).toLocaleString()}\n`;
-    if (d.opp_close_date) prompt += `Expected Close: ${d.opp_close_date}\n`;
+  const promptOpps = d.opps && d.opps.length > 0 ? d.opps : (d.opp_stage ? [buildOppEntry(d)] : []);
+  if (promptOpps.length > 0) {
+    promptOpps.forEach(opp => {
+      prompt += `\n=== OPPORTUNITY: ${opp.area || 'Unknown'} ===\n`;
+      prompt += `Stage: ${opp.stage}\n`;
+      if (opp.acv) prompt += `Year 1 ACV: $${parseFloat(opp.acv).toLocaleString()}\n`;
+      if (opp.forecast) prompt += `Forecast: ${opp.forecast}\n`;
+      if (opp.next_step) prompt += `Next Step: ${opp.next_step}\n`;
+      if (opp.competition) prompt += `Competition: ${opp.competition}\n`;
+    });
   }
 
   // Leadership
@@ -3829,30 +3915,43 @@ function runMerge(csvData, existingData) {
     // If this account was already merged from a previous CSV row, update that record (multiple opps scenario)
     if (alreadyMerged) {
       console.log('[SFDC Merge] Multiple opps for:', name, '- updating existing merged record');
-      // Increment opp_count to reflect additional opportunities
-      alreadyMerged.opp_count = (parseInt(alreadyMerged.opp_count) || 1) + 1;
-      // Only fill in opp fields that are currently empty (first opp's details win)
+      // Separate opp fields from account fields, then upsert each opp by product area
+      const csvOppFields = {};
       Object.keys(csvRow).forEach(key => {
         const val = csvRow[key];
         if (typeof val !== 'string') {
-          // Preserve non-string values (e.g. _schools array) as-is
           if (val) alreadyMerged[key] = val;
           return;
         }
         if (val && val.trim()) {
           const mappedKey = mapFieldName(key);
-          // Don't overwrite name
           if (mappedKey === 'name') return;
-          // For opp-specific fields, only fill if empty (preserve first opp's details)
-          const oppFields = ['opp_stage', 'opp_forecast', 'opp_areas', 'opp_acv', 'opp_probability',
-                             'opp_contact', 'opp_contact_title', 'opp_next_step', 'opp_last_activity',
-                             'opp_sdr', 'opp_champion', 'opp_economic_buyer', 'opp_competition'];
-          if (oppFields.includes(mappedKey) && alreadyMerged[mappedKey]) return;
-          // For non-opp fields, update if the CSV has a value (e.g. account-level fields like ae, region)
-          alreadyMerged[mappedKey] = val.trim();
+          if (OPP_ENTRY_FIELDS.has(mappedKey)) {
+            csvOppFields[mappedKey] = val.trim();
+          } else {
+            // For non-opp fields, update if the CSV has a value (e.g. ae, region)
+            alreadyMerged[mappedKey] = val.trim();
+          }
         }
       });
+      // Upsert this opp into the opps array (each product area gets its own entry)
+      if (Object.keys(csvOppFields).length > 0) {
+        const oppEntry = buildOppEntry(csvOppFields);
+        upsertOpp(alreadyMerged, oppEntry);
+      }
       parseNumericFields(alreadyMerged);
+      (alreadyMerged.opps || []).forEach(o => {
+        if (o.acv !== undefined && o.acv !== '') {
+          const cleaned = String(o.acv).replace(/[$,]/g, '');
+          const val = parseFloat(cleaned);
+          if (!isNaN(val)) o.acv = val;
+        }
+        if (o.probability !== undefined && o.probability !== '') {
+          const cleaned = String(o.probability).replace(/[$,]/g, '');
+          const val = parseFloat(cleaned);
+          if (!isNaN(val)) o.probability = val;
+        }
+      });
       return; // Skip to next CSV row (return in forEach acts like continue)
     }
 
@@ -3873,12 +3972,8 @@ function runMerge(csvData, existingData) {
       }
 
       // Update with CSV data, mapping common field variations
-      // Opp-specific fields are only written if the existing record doesn't
-      // already have a value — this prevents a schools-only CSV upload from
-      // overwriting manually-entered opportunity data.
-      const oppFields = ['opp_stage', 'opp_forecast', 'opp_areas', 'opp_acv', 'opp_probability',
-                         'opp_contact', 'opp_contact_title', 'opp_next_step', 'opp_last_activity',
-                         'opp_sdr', 'opp_champion', 'opp_economic_buyer', 'opp_competition'];
+      // Separate opp fields from account fields — opp fields go into opps array
+      const csvOppFields = {};
       Object.keys(csvRow).forEach(key => {
         const val = csvRow[key];
         if (typeof val !== 'string') {
@@ -3889,14 +3984,35 @@ function runMerge(csvData, existingData) {
         if (val && val.trim()) {
           // Map common CSV column names to our field names
           const mappedKey = mapFieldName(key);
-          // For opp-specific fields, only fill if empty (preserve existing opp data)
-          if (oppFields.includes(mappedKey) && merged[mappedKey]) return;
-          merged[mappedKey] = val.trim();
+          if (OPP_ENTRY_FIELDS.has(mappedKey)) {
+            csvOppFields[mappedKey] = val.trim();
+          } else {
+            merged[mappedKey] = val.trim();
+          }
         }
       });
 
-      // Parse numeric fields
+      // Migrate any existing flat opp data into opps array, then upsert new opp
+      migrateToOppsArray(merged);
+      if (Object.keys(csvOppFields).length > 0) {
+        const oppEntry = buildOppEntry(csvOppFields);
+        upsertOpp(merged, oppEntry);
+      }
+
+      // Parse numeric fields (account-level + opp acv/probability inside opps)
       parseNumericFields(merged);
+      (merged.opps || []).forEach(o => {
+        if (o.acv !== undefined && o.acv !== '') {
+          const cleaned = String(o.acv).replace(/[$,]/g, '');
+          const val = parseFloat(cleaned);
+          if (!isNaN(val)) o.acv = val;
+        }
+        if (o.probability !== undefined && o.probability !== '') {
+          const cleaned = String(o.probability).replace(/[$,]/g, '');
+          const val = parseFloat(cleaned);
+          if (!isNaN(val)) o.probability = val;
+        }
+      });
 
       // Strip ownership from DOE accounts
       if (isDOE(merged.name)) { delete merged.ae; delete merged.csm; }
@@ -3983,18 +4099,42 @@ function runMerge(csvData, existingData) {
       }
 
       const newRecord = {};
+      const newOppFields = {};
       Object.keys(csvRow).forEach(key => {
         if (typeof csvRow[key] !== 'string') {
           if (csvRow[key]) newRecord[key] = csvRow[key];
           return;
         }
         const mappedKey = mapFieldName(key);
-        newRecord[mappedKey] = (csvRow[key] || '').trim();
+        const trimmed = (csvRow[key] || '').trim();
+        if (OPP_ENTRY_FIELDS.has(mappedKey)) {
+          newOppFields[mappedKey] = trimmed;
+        } else {
+          newRecord[mappedKey] = trimmed;
+        }
       });
       newRecord.name = name;
 
+      // Build opps array for new record
+      if (Object.keys(newOppFields).length > 0) {
+        const oppEntry = buildOppEntry(newOppFields);
+        upsertOpp(newRecord, oppEntry);
+      }
+
       // Parse numeric fields
       parseNumericFields(newRecord);
+      (newRecord.opps || []).forEach(o => {
+        if (o.acv !== undefined && o.acv !== '') {
+          const cleaned = String(o.acv).replace(/[$,]/g, '');
+          const val = parseFloat(cleaned);
+          if (!isNaN(val)) o.acv = val;
+        }
+        if (o.probability !== undefined && o.probability !== '') {
+          const cleaned = String(o.probability).replace(/[$,]/g, '');
+          const val = parseFloat(cleaned);
+          if (!isNaN(val)) o.probability = val;
+        }
+      });
 
       // Strip ownership from DOE accounts
       if (isDOE(newRecord.name)) { delete newRecord.ae; delete newRecord.csm; }
@@ -4220,6 +4360,112 @@ function mapFieldName(csvField) {
 
   const normalized = csvField.toLowerCase().replace(/[\/()&]+/g, '_').replace(/\s+/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
   return mappings[normalized] || normalized;
+}
+
+// ============ MULTI-OPP HELPERS ============
+
+// Fields that belong on individual opportunity entries, not on the account
+const OPP_ENTRY_FIELDS = new Set([
+  'opp_stage', 'opp_forecast', 'opp_areas', 'opp_acv', 'opp_probability',
+  'opp_contact', 'opp_contact_title', 'opp_next_step', 'opp_last_activity',
+  'opp_sdr', 'opp_champion', 'opp_economic_buyer', 'opp_competition'
+]);
+
+// Normalize opportunity product area — swap MTSS for District Intelligence
+function normalizeOppArea(area) {
+  if (!area) return '';
+  return area.replace(/\bMTSS\b/gi, 'District Intelligence').trim();
+}
+
+// Build an opp entry object from a set of flat opp fields
+function buildOppEntry(oppFields) {
+  return {
+    area: normalizeOppArea(oppFields.opp_areas || ''),
+    stage: oppFields.opp_stage || '',
+    forecast: oppFields.opp_forecast || '',
+    acv: oppFields.opp_acv || '',
+    probability: oppFields.opp_probability || '',
+    contact: oppFields.opp_contact || '',
+    contact_title: oppFields.opp_contact_title || '',
+    next_step: oppFields.opp_next_step || '',
+    last_activity: oppFields.opp_last_activity || '',
+    sdr: oppFields.opp_sdr || '',
+    champion: oppFields.opp_champion || '',
+    economic_buyer: oppFields.opp_economic_buyer || '',
+    competition: oppFields.opp_competition || '',
+  };
+}
+
+// Upsert an opp entry into an account's opps array, keyed by product area
+function upsertOpp(record, oppEntry) {
+  if (!record.opps) record.opps = [];
+  if (!oppEntry.area && !oppEntry.stage) return; // nothing to add
+  const areaKey = (oppEntry.area || 'Unknown').toLowerCase();
+  const existingIdx = record.opps.findIndex(o => (o.area || '').toLowerCase() === areaKey);
+  if (existingIdx >= 0) {
+    record.opps[existingIdx] = oppEntry;
+  } else {
+    record.opps.push(oppEntry);
+  }
+  deriveOppSummary(record);
+}
+
+// Derive flat summary fields from the opps array for backwards compatibility
+// (marker coloring, stage filter, sort by ACV, etc.)
+function deriveOppSummary(record) {
+  const opps = record.opps || [];
+  if (opps.length === 0) {
+    record.opp_count = 0;
+    record.opp_stage = '';
+    record.opp_acv = 0;
+    record.opp_areas = '';
+    return;
+  }
+  record.opp_count = opps.length;
+  record.opp_areas = opps.map(o => o.area).filter(Boolean).join(', ');
+  // Sum ACV across all opps
+  record.opp_acv = opps.reduce((sum, o) => sum + (Number(o.acv) || 0), 0);
+  // Most advanced stage (highest stage number) drives marker color & filter
+  let maxStageNum = 0;
+  let primaryOpp = opps[0];
+  opps.forEach(o => {
+    const num = parseInt(o.stage) || 0;
+    if (num > maxStageNum) {
+      maxStageNum = num;
+      primaryOpp = o;
+    }
+  });
+  record.opp_stage = primaryOpp.stage || '';
+  record.opp_forecast = primaryOpp.forecast || '';
+  record.opp_probability = primaryOpp.probability || '';
+  record.opp_next_step = primaryOpp.next_step || '';
+  record.opp_contact = primaryOpp.contact || '';
+  record.opp_contact_title = primaryOpp.contact_title || '';
+  record.opp_sdr = primaryOpp.sdr || '';
+  record.opp_champion = primaryOpp.champion || '';
+  record.opp_economic_buyer = primaryOpp.economic_buyer || '';
+  record.opp_competition = primaryOpp.competition || '';
+  // Most recent last_activity across all opps
+  let mostRecent = '';
+  opps.forEach(o => {
+    if (o.last_activity && (!mostRecent || o.last_activity > mostRecent)) {
+      mostRecent = o.last_activity;
+    }
+  });
+  record.opp_last_activity = mostRecent;
+}
+
+// Migrate flat opp fields into opps array (for existing localStorage data)
+function migrateToOppsArray(record) {
+  if (record.opps && record.opps.length > 0) return; // already migrated
+  if (!record.opp_stage && !record.opp_areas) return; // no opp data to migrate
+  const oppFields = {};
+  OPP_ENTRY_FIELDS.forEach(f => {
+    if (record[f]) oppFields[f] = record[f];
+  });
+  if (Object.keys(oppFields).length > 0) {
+    record.opps = [buildOppEntry(oppFields)];
+  }
 }
 
 function normalizeDistrictName(name) {
