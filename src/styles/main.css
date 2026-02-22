@@ -670,7 +670,7 @@ input[type="range"]::-webkit-slider-thumb {
 
 .marker-cust:hover { transform: scale(1.6); }
 
-.marker-cust.also-strategic {
+.marker-cust.also-account {
   background: #00b894;
   border: 2px solid #00a381;
   box-shadow: 0 0 6px rgba(0, 184, 148, 0.6);
@@ -722,6 +722,7 @@ input[type="range"]::-webkit-slider-thumb {
 .popup-type.strat { color: var(--accent-strat); }
 .popup-type.cust { color: var(--accent-cust); }
 .popup-type.both { color: #E8853D; }
+.popup-type.inactive { color: #ff6b6b; }
 
 .popup-card h3 {
   font-size: 15px;
@@ -2001,9 +2002,10 @@ input[type="range"]::-webkit-slider-thumb {
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
-.account-modal-badge.strategic { background: rgba(255,255,0,0.2); color: var(--accent-strat); }
+.account-modal-badge.accounts { background: rgba(255,255,0,0.2); color: var(--accent-strat); }
 .account-modal-badge.customer { background: rgba(0,184,148,0.2); color: var(--accent-cust); }
 .account-modal-badge.both { background: rgba(232,133,61,0.2); color: var(--accent-both); }
+.account-modal-badge.inactive { background: rgba(255,100,100,0.2); color: #ff6b6b; }
 .account-modal-close {
   background: var(--surface);
   border: 1px solid var(--panel-border);
@@ -2652,7 +2654,7 @@ input[type="range"]::-webkit-slider-thumb {
 [data-theme="light"] .modal-row .value a {
   color: #9a7b00;
 }
-[data-theme="light"] .account-modal-badge.strategic {
+[data-theme="light"] .account-modal-badge.accounts {
   color: #1a1a1a;
   border: 1px solid var(--accent-strat);
 }
