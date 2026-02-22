@@ -2,6 +2,14 @@
 import accountData from '../data/accounts.json';
 import customerData from '../data/customers.json';
 
+// Import per-team config files
+// To move a rep between teams, edit only the two affected team JSON files.
+// Accounts follow automatically via the "ae" field — no need to touch accounts.json.
+import strategicTeam from '../data/teams/strategic.json';
+import entWestTeam from '../data/teams/ent-west.json';
+import entEastTeam from '../data/teams/ent-east.json';
+import smbTeam from '../data/teams/smb.json';
+
 // ============ LOCAL STORAGE PERSISTENCE ============
 // Keys used to store merged data so it survives page refreshes.
 const LS_ACCOUNTS_KEY = 'edia_account_data';
@@ -181,24 +189,16 @@ function getAutocompleteCache() {
 }
 
 // ============ TEAM / REP DATA ============
-const TEAM_REP_DATA = {
-  'Strategic': {
-    manager: null,
-    reps: ['Sean Johnson'],
-  },
-  'ENT West': {
-    manager: 'Brad Halsey',
-    reps: ['Aric Walden', 'Lance Baretz', 'Sydney Smith', 'Ben Skillman', 'Jimmy Koerner'],
-  },
-  'ENT East': {
-    manager: 'Samantha Santucci',
-    reps: ['Andy Graham', 'David Thomas', 'Susan Speiser', 'Hannah O\'Brien', 'Ally McCready', 'Victoria Macoul'],
-  },
-  'SMB': {
-    manager: 'Christina Ceballos',
-    reps: ['Jonathan Pacheco', 'Callie Brennan', 'Paulina Famiano', 'Caroline Uhlarik', 'Daniel Way'],
-  },
-};
+// Built from per-team JSON configs in src/data/teams/.
+// To move a rep (e.g. Aric from West to East), edit only the two team JSON files.
+const TEAM_CONFIGS = [strategicTeam, entWestTeam, entEastTeam, smbTeam];
+const TEAM_REP_DATA = {};
+TEAM_CONFIGS.forEach(cfg => {
+  TEAM_REP_DATA[cfg.team] = {
+    manager: cfg.manager || null,
+    reps: [...cfg.reps],
+  };
+});
 
 // ============ ACCOUNT ASSIGNMENT RULES ============
 // Rule 1: Districts with 30,000+ students → Strategic (Sean Johnson territory), holdout = actual AE
