@@ -689,20 +689,20 @@ input[type="range"]::-webkit-slider-thumb {
   background: rgba(255, 255, 0, 0.06);
 }
 
-.welcome-show-all-btn {
-  padding: 6px 16px;
-  border: none;
-  border-radius: var(--radius-sm);
+.welcome-opps-btn {
+  padding: 8px 22px;
+  border: 1px solid var(--accent-both);
+  border-radius: var(--radius);
   background: transparent;
-  color: var(--text-muted);
+  color: var(--accent-both);
   font-family: inherit;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
   cursor: pointer;
-  transition: color 0.15s;
+  transition: all 0.15s;
 }
-.welcome-show-all-btn:hover {
-  color: var(--text);
+.welcome-opps-btn:hover {
+  background: rgba(232, 133, 61, 0.1);
 }
 
 /* Dark map tiles override */
