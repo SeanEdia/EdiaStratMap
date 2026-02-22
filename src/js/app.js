@@ -2984,7 +2984,7 @@ function readSpreadsheetFile(file) {
           const rows = rawRows.map(row => {
             const mapped = {};
             Object.keys(row).forEach(key => {
-              const normKey = key.trim().toLowerCase().replace(/\s+/g, '_');
+              const normKey = key.trim().toLowerCase().replace(/[\/()]+/g, '_').replace(/\s+/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
               const val = row[key];
               // Handle Date objects from Excel (cellDates: true)
               if (val instanceof Date && !isNaN(val.getTime())) {
@@ -3140,8 +3140,8 @@ function parseCSV(text) {
     if (values.length === headers.length) {
       const row = {};
       headers.forEach((h, idx) => {
-        // Normalize header names (lowercase, trim, replace spaces with underscores)
-        const key = h.trim().toLowerCase().replace(/\s+/g, '_');
+        // Normalize header names to match mapFieldName format
+        const key = h.trim().toLowerCase().replace(/[\/()]+/g, '_').replace(/\s+/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
         row[key] = values[idx].trim();
       });
       data.push(row);
@@ -3306,10 +3306,18 @@ function previewMerge(csvData) {
   const processedNames = new Set();
   const mergedByName = new Map(); // Track already-merged records to handle duplicate CSV rows
 
-  // Helper to get name from CSV row - checks all name field variations
+  // Helper to get name from CSV row - checks all name field variations.
+  // account_name is checked BEFORE name because Salesforce CSVs often have both
+  // a "Name" column (record/opp name) and "Account Name" — we want the account name.
   function getNameFromRow(row) {
-    return row.name || row.district_name || row.account_name ||
-           row.district || row.organization || row.org_name || row.account || '';
+    return row.account_name || row.district_name || row.district ||
+           row.organization || row.org_name || row.account || row.name || '';
+  }
+
+  // Helper to get state from CSV row - checks all state field variations
+  function getStateFromRow(row) {
+    return row.state || row.billing_state_province || row.billing_state ||
+           row.shipping_state_province || row.shipping_state || '';
   }
 
   // Debug: Find all Dallas rows in CSV
@@ -3359,7 +3367,7 @@ function previewMerge(csvData) {
     }
     // Fallback: try state + name contains match
     if (!existing) {
-      const csvState = csvRow.state || '';
+      const csvState = getStateFromRow(csvRow);
       existing = findByStateAndName(name, csvState);
       // If we found a match, also add to processedNames to avoid duplicates
       if (existing) {
