@@ -4210,7 +4210,7 @@ function runMerge(csvData, existingData) {
       // Log ALL new records so we can debug matching issues
       console.log('[SFDC Merge] NEW RECORD (no match):', name);
       console.log('  - Normalized key tried:', normalizedKey);
-      console.log('  - State:', csvRow.state || 'NOT SET');
+      console.log('  - State:', getStateFromRow(csvRow) || 'NOT SET');
       if (possibleMatch) {
         console.log('  - Possible match found:', possibleMatch);
       }
@@ -4222,8 +4222,9 @@ function runMerge(csvData, existingData) {
           if (csvRow[key]) newRecord[key] = csvRow[key];
           return;
         }
-        const mappedKey = mapFieldName(key);
         const trimmed = (csvRow[key] || '').trim();
+        if (!trimmed) return; // Skip empty values so they don't overwrite non-empty ones (e.g. empty shipping overwrites billing)
+        const mappedKey = mapFieldName(key);
         if (OPP_ENTRY_FIELDS.has(mappedKey)) {
           newOppFields[mappedKey] = trimmed;
         } else {
@@ -4454,6 +4455,7 @@ function mapFieldName(csvField) {
     'areas_of_interest': 'opp_areas',
     // Revenue
     'annual_recurring_revenue': 'arr',
+    'active_arr': 'arr',
     'total_active_arr': 'arr',
     'revenue': 'arr',
     'total_active_arr_total_12_months_ago': 'arr_12mo_ago',
