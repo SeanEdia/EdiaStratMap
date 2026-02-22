@@ -152,6 +152,50 @@ if (_persisted) {
     }
   });
   if (_migrated) console.log(`[Persist] Migrated ${_migrated} account(s) from flat opp fields to opps array`);
+
+  // Repair unmapped SFDC field names from earlier CSV merges.
+  // Old code didn't map "Billing State/Province" → state, "Active ARR" → arr, etc.
+  // Records saved to localStorage still have the raw normalized keys.
+  const _sfdcFieldRepairs = {
+    'billing_state_province': 'state',
+    'billing_state': 'state',
+    'shipping_state_province': 'state',
+    'shipping_state': 'state',
+    'billing_address_line_1': 'address',
+    'billing_address': 'address',
+    'shipping_address_line_1': 'address',
+    'shipping_address': 'address',
+    'billing_city': 'city',
+    'shipping_city': 'city',
+    'active_arr': 'arr',
+    'total_active_arr': 'arr',
+    'account_owner': 'ae',
+    'customer_success_manager': 'csm',
+    'account_name': 'name',
+    'students_in_district': 'enrollment',
+  };
+  let _fieldRepairs = 0;
+  const _repairRecords = (records) => {
+    records.forEach(d => {
+      Object.entries(_sfdcFieldRepairs).forEach(([raw, mapped]) => {
+        if (d[raw] !== undefined && d[raw] !== '') {
+          // Only set the mapped field if it's empty (don't overwrite existing values)
+          if (!d[mapped]) {
+            d[mapped] = d[raw];
+            _fieldRepairs++;
+          }
+          delete d[raw];
+        }
+      });
+    });
+  };
+  _repairRecords(ACCOUNT_DATA);
+  _repairRecords(CUSTOMER_DATA);
+  if (_fieldRepairs) {
+    console.log(`[Persist] Repaired ${_fieldRepairs} unmapped SFDC field(s) in localStorage data`);
+    // Save repaired data back to localStorage so this migration only runs once
+    saveDataToLocalStorage(ACCOUNT_DATA, CUSTOMER_DATA);
+  }
 }
 
 // ============ PERFORMANCE INDICES ============
@@ -478,6 +522,20 @@ function initMap() {
   updateNoteCount();
   updateDataSourceIndicator();
   updateConflictsBadge();
+
+  // Auto-geocode any localStorage records that were repaired (now have state but lack lat/lng)
+  if (_dataSource === 'localStorage') {
+    const allRecords = [...ACCOUNT_DATA, ...CUSTOMER_DATA];
+    const needsGeocode = allRecords.filter(r => (!r.lat || !r.lng) && r.state);
+    if (needsGeocode.length > 0) {
+      console.log(`[Persist] ${needsGeocode.length} record(s) have state but no coordinates — auto-geocoding`);
+      geocodeMissingRecords(allRecords).then(() => {
+        saveDataToLocalStorage(ACCOUNT_DATA, CUSTOMER_DATA);
+        buildIndices();
+        applyFilters();
+      });
+    }
+  }
 }
 
 // ============ VIEWS ============
