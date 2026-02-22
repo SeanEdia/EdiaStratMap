@@ -165,6 +165,7 @@ let filters = {};
 let proximityOn = false;
 let PROXIMITY_MILES = 50;
 let adaFilterOn = false;
+let welcomeActive = true;  // Show welcome prompt until user selects a filter
 
 // Account list state
 let markerLookup = {};          // name -> { marker, data, type }
@@ -185,6 +186,46 @@ let confDateTo = null;
 let confLayer = null;
 let confProxLayer = null;
 let filteredConfData = [];
+
+// ============ WELCOME GATE ============
+// Prevents rendering all pins on initial load. The map stays empty until
+// the user selects a team, filter, or clicks "Show All Accounts".
+
+function hasActiveFilter() {
+  return selectedTeam !== '' ||
+    selectedRep !== '' ||
+    selectedStages.size > 0 ||
+    Object.keys(filters).length > 0 ||
+    (document.getElementById('searchInput') && document.getElementById('searchInput').value.trim() !== '') ||
+    adaFilterOn ||
+    proximityOn ||
+    currentView !== 'accounts';
+}
+
+function dismissWelcome() {
+  welcomeActive = false;
+  const overlay = document.getElementById('welcomeOverlay');
+  if (overlay) {
+    overlay.classList.add('hidden');
+    setTimeout(() => { overlay.style.display = 'none'; }, 300);
+  }
+  applyFilters();
+}
+
+function quickFilterTeam(team) {
+  welcomeActive = false;
+  const overlay = document.getElementById('welcomeOverlay');
+  if (overlay) {
+    overlay.classList.add('hidden');
+    setTimeout(() => { overlay.style.display = 'none'; }, 300);
+  }
+  selectedTeam = team;
+  selectedRep = getDefaultRepForTeam(team);
+  invalidateCaches();
+  renderTeamRepSelectors();
+  renderFilters();
+  applyFilters();
+}
 
 // ============ INIT ============
 function initMap() {
@@ -223,7 +264,9 @@ function initMap() {
 
   renderTeamRepSelectors();
   renderFilters();
-  applyFilters();
+
+  // Don't render pins on initial load — show welcome overlay instead.
+  // applyFilters() will be called when the user selects a filter.
   updateNoteCount();
 }
 
@@ -602,6 +645,16 @@ let lastSearchResults = [];
 let searchExactMatch = false; // true when search is from autocomplete selection
 
 function applyFilters() {
+  // If welcome overlay is active, dismiss it once the user applies any filter.
+  // Otherwise skip rendering to avoid loading all pins on initial load.
+  if (welcomeActive) {
+    if (hasActiveFilter()) {
+      dismissWelcome();
+      return; // dismissWelcome() calls applyFilters() after clearing the flag
+    }
+    return; // No filter yet — keep welcome visible, don't render pins
+  }
+
   const search = document.getElementById('searchInput').value.toLowerCase().trim();
 
   stratLayer.clearLayers();
@@ -4873,6 +4926,9 @@ function protectedOpenSfdcModal() {
 // ============ EXPOSE TO WINDOW (for HTML inline handlers) ============
 // These functions are referenced by onclick/onchange/oninput attributes in index.html
 Object.assign(window, {
+  // Welcome
+  dismissWelcome,
+  quickFilterTeam,
   // Views
   setView,
   resetMapView,

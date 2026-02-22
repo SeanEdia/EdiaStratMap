@@ -264,6 +264,28 @@
 <!-- MAP -->
 <div class="map-container">
   <div id="map"></div>
+
+  <!-- Welcome Overlay (shown until user selects a filter) -->
+  <div class="welcome-overlay" id="welcomeOverlay">
+    <div class="welcome-card">
+      <div class="welcome-icon">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="12" cy="10" r="3"/><path d="M12 21.7C17.3 17 20 13 20 10a8 8 0 1 0-16 0c0 3 2.7 7 8 11.7z"/>
+        </svg>
+      </div>
+      <h2 class="welcome-title">Edia Territory Map</h2>
+      <p class="welcome-subtitle">Strategic Intelligence Dashboard</p>
+      <p class="welcome-msg">Select a team or filter from the sidebar to populate the map, or choose a quick view below.</p>
+      <div class="welcome-teams">
+        <button class="welcome-team-btn" onclick="quickFilterTeam('Strategic')">Strategic</button>
+        <button class="welcome-team-btn" onclick="quickFilterTeam('ENT West')">ENT West</button>
+        <button class="welcome-team-btn" onclick="quickFilterTeam('ENT East')">ENT East</button>
+        <button class="welcome-team-btn" onclick="quickFilterTeam('SMB')">SMB</button>
+      </div>
+      <button class="welcome-show-all-btn" onclick="dismissWelcome()">Show All Accounts</button>
+    </div>
+  </div>
+
   <div class="ad-trigger-wrap">
     <button class="ad-trigger" id="adTrigger" onclick="toggleActionDashboard()">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="4" rx="1"/><rect x="14" y="10" width="7" height="4" rx="1"/><rect x="3" y="13" width="7" height="8" rx="1"/><rect x="14" y="17" width="7" height="4" rx="1"/></svg>
