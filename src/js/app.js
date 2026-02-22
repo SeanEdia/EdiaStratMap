@@ -272,6 +272,9 @@ let PROXIMITY_MILES = 50;
 let adaFilterOn = false;
 let welcomeActive = true;  // Show welcome prompt until user selects a filter
 
+// Saved filter state per view — preserves context when switching between views
+let savedViewState = {};
+
 // Account list state
 let markerLookup = {};          // name -> { marker, data, type }
 let filteredAccountData = [];     // current filtered account data
@@ -416,6 +419,20 @@ function initMap() {
 
 // ============ VIEWS ============
 function setView(view) {
+  // Save current view's filter state before switching
+  savedViewState[currentView] = {
+    filters: { ...filters },
+    selectedTeam,
+    selectedRep,
+    selectedStages: new Set(selectedStages),
+    searchValue: document.getElementById('searchInput').value,
+    accountListSort,
+    accountListGroupBy,
+    collapsedGroups: { ...collapsedGroups },
+    adaFilterOn,
+  };
+
+  const previousView = currentView;
   currentView = view;
   document.querySelectorAll('.view-btn').forEach(btn => {
     btn.className = 'view-btn';
@@ -425,14 +442,50 @@ function setView(view) {
       else btn.classList.add('active-both');
     }
   });
-  filters = {};
-  selectedTeam = '';
-  selectedRep = '';
-  selectedStages = new Set();
-  document.getElementById('searchInput').value = '';
-  accountListSort = (view === 'customers') ? 'arr_desc' : 'enrollment_desc';
-  accountListGroupBy = null;
-  collapsedGroups = {};
+
+  // Restore saved state for the target view, or start fresh
+  const saved = savedViewState[view];
+  if (saved) {
+    filters = { ...saved.filters };
+    selectedTeam = saved.selectedTeam;
+    selectedRep = saved.selectedRep;
+    selectedStages = new Set(saved.selectedStages);
+    document.getElementById('searchInput').value = saved.searchValue;
+    accountListSort = saved.accountListSort;
+    accountListGroupBy = saved.accountListGroupBy;
+    collapsedGroups = { ...saved.collapsedGroups };
+    adaFilterOn = saved.adaFilterOn;
+    const adaCheck = document.getElementById('adaCheck');
+    if (adaCheck) adaCheck.checked = adaFilterOn;
+  } else {
+    // No saved state — carry over applicable filters from the previous view.
+    // Region and state filters map between accounts (strat_*) and customers (cust_*).
+    const prevFilters = savedViewState[previousView];
+    const newFilters = {};
+    if (prevFilters && (view === 'customers' || view === 'accounts')) {
+      const fromPrefix = previousView === 'accounts' ? 'strat_' : 'cust_';
+      const toPrefix = view === 'accounts' ? 'strat_' : 'cust_';
+      ['region', 'state'].forEach(dim => {
+        if (prevFilters.filters[fromPrefix + dim]) {
+          newFilters[toPrefix + dim] = prevFilters.filters[fromPrefix + dim];
+        }
+      });
+    }
+    filters = newFilters;
+    selectedTeam = '';
+    selectedRep = '';
+    selectedStages = new Set();
+    // Carry over search text so the search context persists across views
+    if (prevFilters && prevFilters.searchValue) {
+      document.getElementById('searchInput').value = prevFilters.searchValue;
+    } else {
+      document.getElementById('searchInput').value = '';
+    }
+    accountListSort = (view === 'customers') ? 'arr_desc' : 'enrollment_desc';
+    accountListGroupBy = null;
+    collapsedGroups = {};
+  }
+
   invalidateCaches();
   renderTeamRepSelectors();
   renderFilters();
@@ -700,6 +753,7 @@ function resetFilters() {
   adaFilterOn = false;
   const adaCheck = document.getElementById('adaCheck');
   if (adaCheck) adaCheck.checked = false;
+  savedViewState = {}; // Clear all saved view state
   invalidateCaches();
 
   // Bring back the welcome overlay so the user must pick a filter again
@@ -732,6 +786,7 @@ function resetMapView() {
   accountListSort = 'enrollment_desc';
   accountListGroupBy = null;
   collapsedGroups = {};
+  savedViewState = {}; // Clear all saved view state
 
   // Reset proximity toggles
   proximityOn = false;
