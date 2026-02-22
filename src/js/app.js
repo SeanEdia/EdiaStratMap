@@ -2,9 +2,61 @@
 import accountData from '../data/accounts.json';
 import customerData from '../data/customers.json';
 
+// ============ LOCAL STORAGE PERSISTENCE ============
+// Keys used to store merged data so it survives page refreshes.
+const LS_ACCOUNTS_KEY = 'edia_account_data';
+const LS_CUSTOMERS_KEY = 'edia_customer_data';
+const LS_DATA_SAVED_KEY = 'edia_data_saved_at';
+
+/** Save account and/or customer data to localStorage. */
+function saveDataToLocalStorage(accounts, customers) {
+  try {
+    if (accounts) localStorage.setItem(LS_ACCOUNTS_KEY, JSON.stringify(accounts));
+    if (customers) localStorage.setItem(LS_CUSTOMERS_KEY, JSON.stringify(customers));
+    localStorage.setItem(LS_DATA_SAVED_KEY, new Date().toISOString());
+    console.log('[Persist] Data saved to localStorage');
+  } catch (e) {
+    console.warn('[Persist] Could not save to localStorage:', e.message);
+  }
+}
+
+/** Load data from localStorage, returning null if nothing saved. */
+function loadDataFromLocalStorage() {
+  try {
+    const acct = localStorage.getItem(LS_ACCOUNTS_KEY);
+    const cust = localStorage.getItem(LS_CUSTOMERS_KEY);
+    if (acct || cust) {
+      console.log('[Persist] Loading data from localStorage');
+      return {
+        accounts: acct ? JSON.parse(acct) : null,
+        customers: cust ? JSON.parse(cust) : null,
+        savedAt: localStorage.getItem(LS_DATA_SAVED_KEY),
+      };
+    }
+  } catch (e) {
+    console.warn('[Persist] Could not load from localStorage:', e.message);
+  }
+  return null;
+}
+
+/** Clear persisted data so the app falls back to bundled JSON. */
+function clearPersistedData() {
+  localStorage.removeItem(LS_ACCOUNTS_KEY);
+  localStorage.removeItem(LS_CUSTOMERS_KEY);
+  localStorage.removeItem(LS_DATA_SAVED_KEY);
+  console.log('[Persist] Cleared saved data — will use bundled JSON on next load');
+}
+
+// ============ DATA INITIALIZATION ============
+// On startup, prefer localStorage data (from a previous merge) over the bundled JSON.
+// This ensures that a CSV merge persists across page refreshes without redeploying.
+const _persisted = loadDataFromLocalStorage();
+let _dataSource = 'bundled'; // 'bundled' or 'localStorage'
+
 // Mutable data arrays (can be replaced on refresh)
-let ACCOUNT_DATA = [...accountData];
-let CUSTOMER_DATA = [...customerData];
+let ACCOUNT_DATA = _persisted && _persisted.accounts ? [..._persisted.accounts] : [...accountData];
+let CUSTOMER_DATA = _persisted && _persisted.customers ? [..._persisted.customers] : [...customerData];
+if (_persisted) _dataSource = 'localStorage';
 
 // ============ PERFORMANCE INDICES ============
 // Pre-computed lookup structures rebuilt when data changes.
@@ -227,11 +279,34 @@ function quickFilterTeam(team) {
   applyFilters();
 }
 
+// ============ RESET TO BASELINE ============
+function resetToBaselineData() {
+  if (!confirm('Reset to baseline data?\n\nThis will clear your saved merge and reload data from the last deploy.\nYour notes will NOT be affected.')) return;
+  clearPersistedData();
+  location.reload();
+}
+
+function updateDataSourceIndicator() {
+  const el = document.getElementById('dataSourceStatus');
+  const btn = document.getElementById('resetDataBtn');
+  if (!el) return;
+  if (_dataSource === 'localStorage') {
+    const savedAt = localStorage.getItem(LS_DATA_SAVED_KEY);
+    const when = savedAt ? new Date(savedAt).toLocaleDateString() : 'unknown date';
+    el.textContent = `Data source: saved merge (${when})`;
+    if (btn) btn.style.display = '';
+  } else {
+    el.textContent = 'Data source: baseline (deployed)';
+    if (btn) btn.style.display = 'none';
+  }
+}
+
 // ============ INIT ============
 function initMap() {
-  // Data is loaded from the seed JSON files (accounts.json / customers.json).
-  // These files are the single source of truth so that all users see the same data.
-  // After a merge, updated JSON is downloaded for committing back to the repo.
+  // On startup, data is loaded from localStorage if a merge was saved,
+  // otherwise from the bundled JSON files (accounts.json / customers.json).
+  // After a merge, updated JSON is also downloaded for committing to the repo
+  // so all users get the update on the next deploy.
 
   // Build performance indices for team/rep/proximity lookups
   buildIndices();
@@ -268,6 +343,7 @@ function initMap() {
   // Don't render pins on initial load — show welcome overlay instead.
   // applyFilters() will be called when the user selects a filter.
   updateNoteCount();
+  updateDataSourceIndicator();
 }
 
 // ============ VIEWS ============
@@ -4175,7 +4251,11 @@ async function confirmMerge() {
       pendingCustomerMerge.forEach(item => CUSTOMER_DATA.push(item));
       console.log('[Merge] Updated', CUSTOMER_DATA.length, 'customers in memory');
 
-      // Download both files
+      // Persist merged data to localStorage so it survives page refreshes
+      saveDataToLocalStorage(ACCOUNT_DATA, CUSTOMER_DATA);
+      _dataSource = 'localStorage';
+
+      // Download both files (for committing to repo so all users get the update)
       downloadJsonFile(pendingAccountMerge, 'accounts.json');
       // Small delay so browser handles both downloads
       await new Promise(resolve => setTimeout(resolve, 500));
@@ -4195,11 +4275,13 @@ async function confirmMerge() {
       });
       renderFilters();
       applyFilters();
+      updateDataSourceIndicator();
 
       // Show confirmation
       let message = `✓ Merge complete!\n\n${ACCOUNT_DATA.length} accounts + ${CUSTOMER_DATA.length} customers updated on the map.`;
+      message += `\n\nData saved to this browser — it will persist across page refreshes.`;
       message += `\n\nTwo files downloaded: accounts.json and customers.json`;
-      message += `\nReplace both in src/data/ and redeploy so all users see the updated data.`;
+      message += `\nReplace both in src/data/ and redeploy so ALL users see the updated data.`;
       if (geocodedCount > 0) {
         message += `\n\n${geocodedCount} new records geocoded.`;
       }
@@ -4234,7 +4316,14 @@ async function confirmMerge() {
         console.log('[Merge] Updated', CUSTOMER_DATA.length, 'customers in memory');
       }
 
-      // Download the merged data as a JSON file
+      // Persist merged data to localStorage so it survives page refreshes
+      saveDataToLocalStorage(
+        isAccountType ? ACCOUNT_DATA : null,
+        isAccountType ? null : CUSTOMER_DATA
+      );
+      _dataSource = 'localStorage';
+
+      // Download the merged data as a JSON file (for committing to repo so all users get the update)
       downloadJsonFile(pendingMergeData, filename);
 
       // Track when this user last ran a data refresh
@@ -4255,12 +4344,14 @@ async function confirmMerge() {
       });
       renderFilters();
       applyFilters();
+      updateDataSourceIndicator();
 
       // Show confirmation
       const recordCount = isAccountType ? ACCOUNT_DATA.length : CUSTOMER_DATA.length;
       let message = `✓ Merge complete!\n\n${recordCount} ${isAccountType ? 'accounts' : 'customers'} updated on the map.`;
+      message += `\n\nData saved to this browser — it will persist across page refreshes.`;
       message += `\n\nThe file "${filename}" has been downloaded.`;
-      message += `\nReplace src/data/${filename} in the repo and redeploy so all users see the updated data.`;
+      message += `\nReplace src/data/${filename} in the repo and redeploy so ALL users see the updated data.`;
       if (geocodedCount > 0) {
         message += `\n\n${geocodedCount} new records geocoded.`;
       }
@@ -5013,6 +5104,8 @@ Object.assign(window, {
   // Popups
   flyToAccount,
   focusOnAccount,
+  // Data persistence
+  resetToBaselineData,
   // Init
   initMap,
 });
