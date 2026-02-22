@@ -279,6 +279,20 @@ function quickFilterTeam(team) {
   applyFilters();
 }
 
+function quickFilterOpps() {
+  welcomeActive = false;
+  const overlay = document.getElementById('welcomeOverlay');
+  if (overlay) {
+    overlay.classList.add('hidden');
+    setTimeout(() => { overlay.style.display = 'none'; }, 300);
+  }
+  selectedStages = new Set(['Has Open Opp']);
+  invalidateCaches();
+  renderTeamRepSelectors();
+  renderFilters();
+  applyFilters();
+}
+
 // ============ RESET TO BASELINE ============
 function resetToBaselineData() {
   if (!confirm('Reset to baseline data?\n\nThis will clear your saved merge and reload data from the last deploy.\nYour notes will NOT be affected.')) return;
