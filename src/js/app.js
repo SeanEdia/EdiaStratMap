@@ -839,8 +839,9 @@ function applyFilters() {
     filteredCustData = filtered;
   }
 
-  // Update stats - context-aware (uses cached overlap count)
-  const overlapCount = _overlapCount;
+  // Update stats - context-aware
+  // For accounts view, compute overlap dynamically from the filtered set
+  const dynamicOverlapCount = filteredAccountData.filter(d => d.is_customer).length;
   const stratEl = document.getElementById('stat-strat-count');
   const custEl = document.getElementById('stat-cust-count');
   const overlapEl = document.getElementById('stat-overlap-count');
@@ -850,11 +851,11 @@ function applyFilters() {
   const overlapCard = document.getElementById('stat-card-overlap');
 
   if (currentView === 'accounts') {
-    // Show: Accounts | Overlap | Opps | States
+    // Show: Accounts | Customers (dynamic from filtered) | Opps | States
     stratEl.textContent = stratCount;
     stratCard.style.display = '';
     custCard.style.display = 'none';
-    overlapEl.textContent = overlapCount;
+    overlapEl.textContent = dynamicOverlapCount;
     overlapEl.style.color = '#00b894';
     overlapLabel.textContent = 'Customers';
     overlapCard.style.display = '';
