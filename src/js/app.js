@@ -3915,6 +3915,7 @@ function runMerge(csvData, existingData) {
       const changedFields = [];
 
       const hasChanges = Object.keys(csvRow).some(key => {
+        if (typeof csvRow[key] !== 'string') return false;
         const mappedKey = mapFieldName(key);
         const oldVal = existing.item[mappedKey];
         const newVal = (csvRow[key] || '').trim();
@@ -3975,6 +3976,10 @@ function runMerge(csvData, existingData) {
 
       const newRecord = {};
       Object.keys(csvRow).forEach(key => {
+        if (typeof csvRow[key] !== 'string') {
+          if (csvRow[key]) newRecord[key] = csvRow[key];
+          return;
+        }
         const mappedKey = mapFieldName(key);
         newRecord[mappedKey] = (csvRow[key] || '').trim();
       });
