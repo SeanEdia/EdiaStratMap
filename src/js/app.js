@@ -3201,7 +3201,19 @@ function previewMerge(csvData) {
                              'csm', 'csm_name', 'customer_success_manager',
                              'segment', 'gdr', 'ndr', 'lapsed_renewal', 'arr_12mo_ago'];
     const strategicSignals = ['superintendent', 'super', 'sis', 'sis_platform', 'sis_system',
-                              'ada_adm', 'math_products', 'attendance'];
+                              'ada_adm', 'math_products', 'attendance',
+                              'enrollment', 'enrollment_count', 'student_count', 'total_enrollment', 'students_in_d',
+                              'opp_stage', 'stage', 'opportunity_stage',
+                              'opp_acv', 'acv', 'year_1_acv', 'amount',
+                              'opp_forecast', 'forecast', 'forecast_category',
+                              'opp_probability', 'probability',
+                              'opp_areas', 'areas', 'product_areas', 'areas_of_interest',
+                              'opp_next_step', 'next_step', 'next_steps',
+                              'opp_contact', 'primary_contact', 'contact_name',
+                              'opp_sdr', 'sdr_name',
+                              'opp_champion', 'champion',
+                              'opp_economic_buyer', 'economic_buyer',
+                              'opp_competition', 'competition', 'competitors'];
     const custHits = customerSignals.filter(s => cols.has(s)).length;
     const stratHits = strategicSignals.filter(s => cols.has(s)).length;
     if (custHits > stratHits && custHits >= 2) {
@@ -3363,15 +3375,22 @@ function previewMerge(csvData) {
     // If this account was already merged from a previous CSV row, update that record (multiple opps scenario)
     if (alreadyMerged) {
       console.log('[SFDC Merge] Multiple opps for:', name, '- updating existing merged record');
-      // Update with this row's opp data (later row wins, or we could aggregate)
+      // Increment opp_count to reflect additional opportunities
+      alreadyMerged.opp_count = (parseInt(alreadyMerged.opp_count) || 1) + 1;
+      // Only fill in opp fields that are currently empty (first opp's details win)
       Object.keys(csvRow).forEach(key => {
         const val = csvRow[key];
         if (val && val.trim()) {
           const mappedKey = mapFieldName(key);
-          // Don't overwrite name with opportunity_name
-          if (mappedKey !== 'name' || !alreadyMerged.name) {
-            alreadyMerged[mappedKey] = val.trim();
-          }
+          // Don't overwrite name
+          if (mappedKey === 'name') return;
+          // For opp-specific fields, only fill if empty (preserve first opp's details)
+          const oppFields = ['opp_stage', 'opp_forecast', 'opp_areas', 'opp_acv', 'opp_probability',
+                             'opp_contact', 'opp_contact_title', 'opp_next_step', 'opp_last_activity',
+                             'opp_sdr', 'opp_champion', 'opp_economic_buyer', 'opp_competition'];
+          if (oppFields.includes(mappedKey) && alreadyMerged[mappedKey]) return;
+          // For non-opp fields, update if the CSV has a value (e.g. account-level fields like ae, region)
+          alreadyMerged[mappedKey] = val.trim();
         }
       });
       parseNumericFields(alreadyMerged);
