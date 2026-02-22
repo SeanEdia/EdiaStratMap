@@ -76,6 +76,49 @@ function saveConflicts(conflicts) {
 // Active conflicts (loaded on startup, updated during merges)
 let CONFLICTS = loadConflicts();
 
+// ============ OPP HELPERS (must be above DATA INITIALIZATION for migration) ============
+// These are needed at module-load time when migrating localStorage data.
+const OPP_ENTRY_FIELDS = new Set([
+  'opp_stage', 'opp_forecast', 'opp_areas', 'opp_acv', 'opp_probability',
+  'opp_contact', 'opp_contact_title', 'opp_next_step', 'opp_last_activity',
+  'opp_sdr', 'opp_champion', 'opp_economic_buyer', 'opp_competition'
+]);
+
+function normalizeOppArea(area) {
+  if (!area) return '';
+  return area.replace(/\bMTSS\b/gi, 'District Intelligence').trim();
+}
+
+function buildOppEntry(oppFields) {
+  return {
+    area: normalizeOppArea(oppFields.opp_areas || ''),
+    stage: oppFields.opp_stage || '',
+    forecast: oppFields.opp_forecast || '',
+    acv: oppFields.opp_acv || '',
+    probability: oppFields.opp_probability || '',
+    contact: oppFields.opp_contact || '',
+    contact_title: oppFields.opp_contact_title || '',
+    next_step: oppFields.opp_next_step || '',
+    last_activity: oppFields.opp_last_activity || '',
+    sdr: oppFields.opp_sdr || '',
+    champion: oppFields.opp_champion || '',
+    economic_buyer: oppFields.opp_economic_buyer || '',
+    competition: oppFields.opp_competition || '',
+  };
+}
+
+function migrateToOppsArray(record) {
+  if (record.opps && record.opps.length > 0) return;
+  if (!record.opp_stage && !record.opp_areas) return;
+  const oppFields = {};
+  OPP_ENTRY_FIELDS.forEach(f => {
+    if (record[f]) oppFields[f] = record[f];
+  });
+  if (Object.keys(oppFields).length > 0) {
+    record.opps = [buildOppEntry(oppFields)];
+  }
+}
+
 // ============ DATA INITIALIZATION ============
 // On startup, prefer localStorage data (from a previous merge) over the bundled JSON.
 // This ensures that a CSV merge persists across page refreshes without redeploying.
@@ -4437,38 +4480,9 @@ function mapFieldName(csvField) {
 }
 
 // ============ MULTI-OPP HELPERS ============
-
-// Fields that belong on individual opportunity entries, not on the account
-const OPP_ENTRY_FIELDS = new Set([
-  'opp_stage', 'opp_forecast', 'opp_areas', 'opp_acv', 'opp_probability',
-  'opp_contact', 'opp_contact_title', 'opp_next_step', 'opp_last_activity',
-  'opp_sdr', 'opp_champion', 'opp_economic_buyer', 'opp_competition'
-]);
-
-// Normalize opportunity product area — swap MTSS for District Intelligence
-function normalizeOppArea(area) {
-  if (!area) return '';
-  return area.replace(/\bMTSS\b/gi, 'District Intelligence').trim();
-}
-
-// Build an opp entry object from a set of flat opp fields
-function buildOppEntry(oppFields) {
-  return {
-    area: normalizeOppArea(oppFields.opp_areas || ''),
-    stage: oppFields.opp_stage || '',
-    forecast: oppFields.opp_forecast || '',
-    acv: oppFields.opp_acv || '',
-    probability: oppFields.opp_probability || '',
-    contact: oppFields.opp_contact || '',
-    contact_title: oppFields.opp_contact_title || '',
-    next_step: oppFields.opp_next_step || '',
-    last_activity: oppFields.opp_last_activity || '',
-    sdr: oppFields.opp_sdr || '',
-    champion: oppFields.opp_champion || '',
-    economic_buyer: oppFields.opp_economic_buyer || '',
-    competition: oppFields.opp_competition || '',
-  };
-}
+// OPP_ENTRY_FIELDS, normalizeOppArea, buildOppEntry, and migrateToOppsArray
+// are defined near the top of the file (before DATA INITIALIZATION) so they
+// are available during the localStorage migration at startup.
 
 // Upsert an opp entry into an account's opps array, keyed by product area
 function upsertOpp(record, oppEntry) {
@@ -4527,19 +4541,6 @@ function deriveOppSummary(record) {
     }
   });
   record.opp_last_activity = mostRecent;
-}
-
-// Migrate flat opp fields into opps array (for existing localStorage data)
-function migrateToOppsArray(record) {
-  if (record.opps && record.opps.length > 0) return; // already migrated
-  if (!record.opp_stage && !record.opp_areas) return; // no opp data to migrate
-  const oppFields = {};
-  OPP_ENTRY_FIELDS.forEach(f => {
-    if (record[f]) oppFields[f] = record[f];
-  });
-  if (Object.keys(oppFields).length > 0) {
-    record.opps = [buildOppEntry(oppFields)];
-  }
 }
 
 function normalizeDistrictName(name) {
