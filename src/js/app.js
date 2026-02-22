@@ -127,9 +127,18 @@ function getAccountReps() {
   return _accountRepsCache;
 }
 
+// Helper: detect Department of Education accounts by name.
+// DOE accounts have no ownership and get a distinct marker.
+function isDOE(name) {
+  if (!name) return false;
+  const n = name.toLowerCase();
+  return n.includes('department of education') || /\bdoe\b/.test(n);
+}
+
 // Helper: returns the territory (assigned) AE for an account.
-// Accounts always have Sean Johnson as territory AE.
+// Accounts always have Sean Johnson as territory AE. DOE accounts have no AE.
 function getTerritoryAE(d) {
+  if (isDOE(d.name)) return null;
   if (!d.ae) return d.ae;
   const reps = getAccountReps();
   if (reps.includes(d.ae)) return d.ae;              // already on Strategic team
@@ -140,7 +149,7 @@ function getTerritoryAE(d) {
 // Helper: returns the holdout AE if account is a recognized holdout, otherwise null.
 // Only Aric Walden and Andy Graham are valid holdout AEs.
 function getHoldoutAE(d) {
-  if (!d.ae) return null;
+  if (!d.ae || isDOE(d.name)) return null;
   if (ACCOUNT_HOLDOUT_AES.has(d.ae)) return d.ae;  // recognized holdout
   return null;                                         // not a holdout (including unknown AEs)
 }
@@ -676,8 +685,9 @@ function applyFilters() {
       const noteKey = 'edia_notes_' + d.name.replace(/[^a-zA-Z0-9]/g, '_');
       const hasNote = (() => { try { return JSON.parse(localStorage.getItem(noteKey) || '[]').length > 0; } catch(e) { return false; } })() ? ' has-note' : '';
       const isCust = d.is_customer ? ' is-customer' : '';
+      const doeClass = isDOE(d.name) ? ' is-doe' : '';
       const icon = L.divIcon({
-        className: `marker-strat${oppClass}${hasNote}${isCust} ${isLarge ? 'large' : ''}`,
+        className: `marker-strat${oppClass}${hasNote}${isCust}${doeClass} ${isLarge ? 'large' : ''}`,
         iconSize: isLarge ? [18, 18] : [14, 14],
         iconAnchor: isLarge ? [9, 9] : [7, 7],
       });
@@ -1659,9 +1669,16 @@ function buildStratPopup(d) {
   </button>`;
   const territoryAE = getTerritoryAE(d);
   const holdoutAE = getHoldoutAE(d);
-  let typeLabel = d.is_customer ? 'Account + Customer' : (d.type === 'Inactive Customer' ? 'Inactive Customer' : 'Account');
+  const doeAccount = isDOE(d.name);
+  let typeLabel = doeAccount ? 'Dept. of Education'
+    : d.is_customer ? 'Account + Customer'
+    : d.type === 'Inactive Customer' ? 'Inactive Customer'
+    : 'Account';
   if (holdoutAE) typeLabel += ` · <span class="holdout-badge">Holdout — ${holdoutAE}</span>`;
-  const typeClass = d.is_customer ? 'both' : (d.type === 'Inactive Customer' ? 'inactive' : 'strat');
+  const typeClass = doeAccount ? 'doe'
+    : d.is_customer ? 'both'
+    : d.type === 'Inactive Customer' ? 'inactive'
+    : 'strat';
   html += `<div class="popup-type ${typeClass}">${typeLabel}</div>`;
   html += `<h3 class="copyable" data-tooltip="Click to copy" onclick="copyText('${d.name.replace(/'/g, "\\\\'")}', this)">${d.name}</h3>`;
 
@@ -2274,7 +2291,10 @@ function openAccountModalWithData(d) {
   // Set badge
   const badge = document.getElementById('modalAccountBadge');
   const holdoutAE = getHoldoutAE(d);
-  if (d.is_customer) {
+  if (isDOE(d.name)) {
+    badge.textContent = 'Dept. of Education';
+    badge.className = 'account-modal-badge doe';
+  } else if (d.is_customer) {
     badge.textContent = 'Account + Customer';
     badge.className = 'account-modal-badge both';
   } else if (d.type === 'Inactive Customer') {
@@ -3402,6 +3422,9 @@ function runMerge(csvData, existingData) {
       // Parse numeric fields
       parseNumericFields(merged);
 
+      // Strip ownership from DOE accounts
+      if (isDOE(merged.name)) { delete merged.ae; delete merged.csm; }
+
       // Check if anything actually changed - compare key opp fields
       const keyFields = ['opp_stage', 'opp_acv', 'opp_probability', 'opp_forecast', 'opp_next_step'];
       const changedFields = [];
@@ -3468,6 +3491,9 @@ function runMerge(csvData, existingData) {
 
       // Parse numeric fields
       parseNumericFields(newRecord);
+
+      // Strip ownership from DOE accounts
+      if (isDOE(newRecord.name)) { delete newRecord.ae; delete newRecord.csm; }
 
       stats.newRecords++;
       if (!possibleMatch) {
