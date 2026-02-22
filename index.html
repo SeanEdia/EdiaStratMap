@@ -247,6 +247,9 @@
       <button class="account-tab active" onclick="switchTab('info', this)">
         <span class="tab-icon">📋</span>Info
       </button>
+      <button class="account-tab" onclick="switchTab('schools', this)" id="schoolsTabBtn" style="display:none;">
+        <span class="tab-icon">🏫</span>Schools
+      </button>
       <button class="account-tab" onclick="switchTab('math', this)">
         <span class="tab-icon">📐</span>Math
       </button>
@@ -257,6 +260,8 @@
     <div class="account-modal-body">
       <!-- INFO TAB -->
       <div class="tab-content active" id="tabInfo"></div>
+      <!-- SCHOOLS TAB -->
+      <div class="tab-content" id="tabSchools"></div>
       <!-- MATH TAB -->
       <div class="tab-content" id="tabMath"></div>
       <!-- ATTENDANCE TAB -->

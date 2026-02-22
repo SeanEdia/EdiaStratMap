@@ -2560,8 +2560,15 @@ function openAccountModalWithData(d) {
     conflictBanner.style.display = 'none';
   }
 
+  // Show/hide Schools tab based on whether this district has schools
+  const schoolsTabBtn = document.getElementById('schoolsTabBtn');
+  if (schoolsTabBtn) {
+    schoolsTabBtn.style.display = (d._schools && d._schools.length > 0) ? '' : 'none';
+  }
+
   // Populate tabs
   populateInfoTab(d);
+  populateSchoolsTab(d);
   populateMathTab(d);
   populateAttendanceTab(d);
 
@@ -2599,9 +2606,11 @@ function populateInfoTab(d) {
   html += `<div class="modal-grid">`;
 
   // Basic Info Section
+  const schoolCount = (d._schools && d._schools.length) || 0;
   html += `<div class="modal-section">
     <div class="modal-section-title"><span class="icon">🏫</span> District Overview</div>
     ${modalRow('Enrollment', d.enrollment ? parseInt(d.enrollment).toLocaleString() : '—')}
+    ${schoolCount > 0 ? modalRow('Schools', schoolCount.toLocaleString()) : ''}
     ${modalRow('State', d.state)}
     ${modalRow('Region', d.region)}
     ${modalRow('Account Executive', (() => { const tAE = getTerritoryAE(d); const hAE = getHoldoutAE(d); return tAE ? (hAE ? tAE + ' <span class="ae-role">(Assigned)</span><br>' + hAE + ' <span class="ae-role">(Holdout)</span>' : tAE) : '—'; })())}
@@ -2852,6 +2861,21 @@ function populateAttendanceTab(d) {
 
   html += `</div>`;
   document.getElementById('tabAttendance').innerHTML = html;
+}
+
+function populateSchoolsTab(d) {
+  const schools = d._schools || [];
+  let html = '';
+  if (schools.length === 0) {
+    html = '<div style="color:var(--text-muted);font-size:13px;padding:20px;">No schools associated with this district.</div>';
+  } else {
+    html += '<div class="schools-list">';
+    schools.forEach(name => {
+      html += `<div class="school-list-item">${escapeHtml(name)}</div>`;
+    });
+    html += '</div>';
+  }
+  document.getElementById('tabSchools').innerHTML = html;
 }
 
 function modalRow(label, value) {
@@ -3541,6 +3565,18 @@ function consolidateParentAccounts(csvData) {
 
       parentRows.push(synthetic);
       console.log('[SFDC Merge] Created synthetic district row for:', parentName, '(from', children.length, 'school records)');
+    }
+  });
+
+  // Attach school names (_schools) to each parent row from their child rows
+  parentRows.forEach(row => {
+    const rowName = getNameFromRow(row);
+    if (!rowName) return;
+    const key = rowName.toLowerCase().trim();
+    const children = childrenByParent.get(key);
+    if (children && children.length > 0) {
+      row._schools = children.map(c => getNameFromRow(c)).filter(Boolean).sort();
+      console.log('[SFDC Merge] Attached', row._schools.length, 'schools to:', rowName);
     }
   });
 
