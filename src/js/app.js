@@ -319,23 +319,32 @@ function hasActiveFilter() {
     currentView !== 'accounts';
 }
 
-function dismissWelcome() {
-  welcomeActive = false;
+function hideWelcomeOverlay() {
   const overlay = document.getElementById('welcomeOverlay');
   if (overlay) {
     overlay.classList.add('hidden');
-    setTimeout(() => { overlay.style.display = 'none'; }, 300);
+    setTimeout(() => {
+      // Guard against race: don't hide if welcome was re-activated (e.g. by resetFilters)
+      if (!welcomeActive) overlay.style.display = 'none';
+    }, 300);
   }
+}
+
+function dismissWelcome() {
+  welcomeActive = false;
+  hideWelcomeOverlay();
   applyFilters();
 }
 
 function quickFilterTeam(team) {
   welcomeActive = false;
-  const overlay = document.getElementById('welcomeOverlay');
-  if (overlay) {
-    overlay.classList.add('hidden');
-    setTimeout(() => { overlay.style.display = 'none'; }, 300);
-  }
+  hideWelcomeOverlay();
+  // Ensure we're in accounts view so team filtering works
+  currentView = 'accounts';
+  document.querySelectorAll('.view-btn').forEach(btn => {
+    btn.className = 'view-btn';
+    if (btn.dataset.view === 'accounts') btn.classList.add('active-strat');
+  });
   selectedTeam = team;
   selectedRep = getDefaultRepForTeam(team);
   invalidateCaches();
@@ -346,11 +355,13 @@ function quickFilterTeam(team) {
 
 function quickFilterOpps() {
   welcomeActive = false;
-  const overlay = document.getElementById('welcomeOverlay');
-  if (overlay) {
-    overlay.classList.add('hidden');
-    setTimeout(() => { overlay.style.display = 'none'; }, 300);
-  }
+  hideWelcomeOverlay();
+  // Ensure we're in accounts view so opp filtering works
+  currentView = 'accounts';
+  document.querySelectorAll('.view-btn').forEach(btn => {
+    btn.className = 'view-btn';
+    if (btn.dataset.view === 'accounts') btn.classList.add('active-strat');
+  });
   selectedStages = new Set(['Has Open Opp']);
   invalidateCaches();
   renderTeamRepSelectors();
@@ -763,6 +774,14 @@ function resetFilters() {
   const adaCheck = document.getElementById('adaCheck');
   if (adaCheck) adaCheck.checked = false;
   savedViewState = {}; // Clear all saved view state
+
+  // Reset view to Accounts so the welcome overlay works correctly
+  currentView = 'accounts';
+  document.querySelectorAll('.view-btn').forEach(btn => {
+    btn.className = 'view-btn';
+    if (btn.dataset.view === 'accounts') btn.classList.add('active-strat');
+  });
+
   invalidateCaches();
 
   // Bring back the welcome overlay so the user must pick a filter again
