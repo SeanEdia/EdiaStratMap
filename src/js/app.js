@@ -112,9 +112,13 @@ const TEAM_REP_DATA = {
   },
 };
 
-// Holdout detection — automatic, no manual map needed.
-// A strategic account is a holdout when its AE is NOT on the Strategic team.
-// The territory AE is the Strategic team's primary rep.
+// ============ STRATEGIC ACCOUNT ASSIGNMENT RULES ============
+// All strategic accounts (districts >= 30,000 students) are assigned to Sean Johnson
+// EXCEPT holdouts: accounts whose AE is Aric Walden or Andy Graham retain their owner.
+// Any other AE (e.g. Ben Foley) is reassigned to Sean Johnson — they are NOT holdouts.
+const STRATEGIC_PRIMARY_AE = 'Sean Johnson';
+const STRATEGIC_HOLDOUT_AES = new Set(['Aric Walden', 'Andy Graham']);
+
 let _strategicRepsCache = null;
 function getStrategicReps() {
   if (!_strategicRepsCache) {
@@ -124,19 +128,21 @@ function getStrategicReps() {
 }
 
 // Helper: returns the territory (assigned) AE for an account.
-// If the account's AE is outside the Strategic team, the territory AE is the Strategic team rep.
+// Strategic accounts always have Sean Johnson as territory AE.
 function getTerritoryAE(d) {
   if (!d.ae) return d.ae;
   const reps = getStrategicReps();
-  if (reps.includes(d.ae)) return d.ae;       // already assigned to Strategic team
-  return reps[0] || d.ae;                      // holdout — territory AE is the Strategic rep
+  if (reps.includes(d.ae)) return d.ae;              // already on Strategic team
+  if (STRATEGIC_HOLDOUT_AES.has(d.ae)) return reps[0] || STRATEGIC_PRIMARY_AE; // holdout — territory AE is Strategic rep
+  return reps[0] || STRATEGIC_PRIMARY_AE;             // not a valid holdout — reassign to Strategic rep
 }
 
-// Helper: returns the holdout AE if account is a holdout, otherwise null.
+// Helper: returns the holdout AE if account is a recognized holdout, otherwise null.
+// Only Aric Walden and Andy Graham are valid holdout AEs.
 function getHoldoutAE(d) {
   if (!d.ae) return null;
-  const reps = getStrategicReps();
-  return reps.includes(d.ae) ? null : d.ae;    // holdout if AE is outside Strategic team
+  if (STRATEGIC_HOLDOUT_AES.has(d.ae)) return d.ae;  // recognized holdout
+  return null;                                         // not a holdout (including unknown AEs)
 }
 
 // ============ STATE ============
