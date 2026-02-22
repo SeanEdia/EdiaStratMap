@@ -3873,6 +3873,12 @@ function runMerge(csvData, existingData) {
       }
 
       // Update with CSV data, mapping common field variations
+      // Opp-specific fields are only written if the existing record doesn't
+      // already have a value — this prevents a schools-only CSV upload from
+      // overwriting manually-entered opportunity data.
+      const oppFields = ['opp_stage', 'opp_forecast', 'opp_areas', 'opp_acv', 'opp_probability',
+                         'opp_contact', 'opp_contact_title', 'opp_next_step', 'opp_last_activity',
+                         'opp_sdr', 'opp_champion', 'opp_economic_buyer', 'opp_competition'];
       Object.keys(csvRow).forEach(key => {
         const val = csvRow[key];
         if (typeof val !== 'string') {
@@ -3883,6 +3889,8 @@ function runMerge(csvData, existingData) {
         if (val && val.trim()) {
           // Map common CSV column names to our field names
           const mappedKey = mapFieldName(key);
+          // For opp-specific fields, only fill if empty (preserve existing opp data)
+          if (oppFields.includes(mappedKey) && merged[mappedKey]) return;
           merged[mappedKey] = val.trim();
         }
       });
