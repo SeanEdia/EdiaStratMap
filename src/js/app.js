@@ -7,6 +7,7 @@ import customerData from '../data/customers.json';
 const LS_ACCOUNTS_KEY = 'edia_account_data';
 const LS_CUSTOMERS_KEY = 'edia_customer_data';
 const LS_DATA_SAVED_KEY = 'edia_data_saved_at';
+const LS_CONFLICTS_KEY = 'edia_conflicts';
 
 /** Save account and/or customer data to localStorage. */
 function saveDataToLocalStorage(accounts, customers) {
@@ -46,6 +47,26 @@ function clearPersistedData() {
   localStorage.removeItem(LS_DATA_SAVED_KEY);
   console.log('[Persist] Cleared saved data — will use bundled JSON on next load');
 }
+
+/** Load conflict records from localStorage. */
+function loadConflicts() {
+  try {
+    const data = localStorage.getItem(LS_CONFLICTS_KEY);
+    return data ? JSON.parse(data) : [];
+  } catch (e) { return []; }
+}
+
+/** Save conflict records to localStorage. */
+function saveConflicts(conflicts) {
+  try {
+    localStorage.setItem(LS_CONFLICTS_KEY, JSON.stringify(conflicts));
+  } catch (e) {
+    console.warn('[Conflicts] Could not save:', e.message);
+  }
+}
+
+// Active conflicts (loaded on startup, updated during merges)
+let CONFLICTS = loadConflicts();
 
 // ============ DATA INITIALIZATION ============
 // On startup, prefer localStorage data (from a previous merge) over the bundled JSON.
@@ -165,11 +186,18 @@ const TEAM_REP_DATA = {
 };
 
 // ============ ACCOUNT ASSIGNMENT RULES ============
-// All accounts (districts >= 30,000 students) are assigned to Sean Johnson
-// EXCEPT holdouts: accounts whose AE is Aric Walden or Andy Graham retain their owner.
-// Any other AE (e.g. Ben Foley) is reassigned to Sean Johnson — they are NOT holdouts.
+// Rule 1: Districts with 30,000+ students → Strategic (Sean Johnson territory), holdout = actual AE
+// Rule 2: Districts with <30,000 students → assigned to account owner from data
 const ACCOUNT_PRIMARY_AE = 'Sean Johnson';
-const ACCOUNT_HOLDOUT_AES = new Set(['Aric Walden', 'Andy Graham']);
+const STRATEGIC_ENROLLMENT_THRESHOLD = 30000;
+
+// Build holdout AEs dynamically from all non-Strategic teams
+const ACCOUNT_HOLDOUT_AES = new Set();
+Object.entries(TEAM_REP_DATA).forEach(([team, info]) => {
+  if (team === 'Strategic') return;
+  info.reps.forEach(rep => ACCOUNT_HOLDOUT_AES.add(rep));
+  if (info.manager) ACCOUNT_HOLDOUT_AES.add(info.manager);
+});
 
 let _accountRepsCache = null;
 function getAccountReps() {
@@ -188,22 +216,25 @@ function isDOE(name) {
 }
 
 // Helper: returns the territory (assigned) AE for an account.
-// Accounts always have Sean Johnson as territory AE. DOE accounts have no AE.
+// 30k+ enrollment → Strategic (Sean Johnson). <30k → account owner.
 function getTerritoryAE(d) {
   if (isDOE(d.name)) return null;
   if (!d.ae) return d.ae;
-  const reps = getAccountReps();
-  if (reps.includes(d.ae)) return d.ae;              // already on Strategic team
-  if (ACCOUNT_HOLDOUT_AES.has(d.ae)) return reps[0] || ACCOUNT_PRIMARY_AE; // holdout — territory AE is Strategic rep
-  return reps[0] || ACCOUNT_PRIMARY_AE;             // not a valid holdout — reassign to Strategic rep
+  const enrollment = parseInt(d.enrollment) || 0;
+  if (enrollment >= STRATEGIC_ENROLLMENT_THRESHOLD) {
+    return ACCOUNT_PRIMARY_AE; // strategic account
+  }
+  return d.ae; // <30k — assigned to account owner
 }
 
-// Helper: returns the holdout AE if account is a recognized holdout, otherwise null.
-// Only Aric Walden and Andy Graham are valid holdout AEs.
+// Helper: returns the holdout AE for 30k+ accounts whose AE is not the Strategic default.
 function getHoldoutAE(d) {
   if (!d.ae || isDOE(d.name)) return null;
-  if (ACCOUNT_HOLDOUT_AES.has(d.ae)) return d.ae;  // recognized holdout
-  return null;                                         // not a holdout (including unknown AEs)
+  const enrollment = parseInt(d.enrollment) || 0;
+  if (enrollment >= STRATEGIC_ENROLLMENT_THRESHOLD && d.ae !== ACCOUNT_PRIMARY_AE) {
+    return d.ae; // holdout on a strategic account
+  }
+  return null;
 }
 
 // ============ STATE ============
@@ -358,6 +389,7 @@ function initMap() {
   // applyFilters() will be called when the user selects a filter.
   updateNoteCount();
   updateDataSourceIndicator();
+  updateConflictsBadge();
 }
 
 // ============ VIEWS ============
@@ -2477,6 +2509,35 @@ function openAccountModalWithData(d) {
     holdoutEl.style.display = 'none';
   }
 
+  // Show conflict banner if this account has an active conflict
+  let conflictBanner = document.getElementById('modalConflictBanner');
+  if (!conflictBanner) {
+    conflictBanner = document.createElement('div');
+    conflictBanner.id = 'modalConflictBanner';
+    conflictBanner.className = 'modal-conflict-banner';
+    const tabsEl = document.querySelector('.account-tabs');
+    if (tabsEl) tabsEl.parentNode.insertBefore(conflictBanner, tabsEl);
+  }
+  const conflict = getConflictForAccount(d.name);
+  if (conflict) {
+    const cidx = CONFLICTS.indexOf(conflict);
+    conflictBanner.innerHTML = `
+      <div class="modal-conflict-inner">
+        <span class="modal-conflict-icon">&#9888;</span>
+        <div class="modal-conflict-text">
+          <strong>Ownership conflict</strong>
+          <div>${escapeHtml(conflict.oldAE)} vs ${escapeHtml(conflict.newAE)}</div>
+        </div>
+        <div class="modal-conflict-btns">
+          <button onclick="resolveConflict(${cidx}, '${escapeAttr(conflict.oldAE)}');closeAccountModal()">Keep ${escapeHtml(conflict.oldAE.split(' ')[0])}</button>
+          <button onclick="resolveConflict(${cidx}, '${escapeAttr(conflict.newAE)}');closeAccountModal()">Assign ${escapeHtml(conflict.newAE.split(' ')[0])}</button>
+        </div>
+      </div>`;
+    conflictBanner.style.display = '';
+  } else {
+    conflictBanner.style.display = 'none';
+  }
+
   // Populate tabs
   populateInfoTab(d);
   populateMathTab(d);
@@ -3534,7 +3595,8 @@ function runMerge(csvData, existingData) {
     newRecords: 0,
     updatedRecords: 0,
     notesPreserved: notesCount,
-    changes: []
+    changes: [],
+    conflicts: []
   };
 
   const mergedData = [];
@@ -3655,6 +3717,23 @@ function runMerge(csvData, existingData) {
 
       // Strip ownership from DOE accounts
       if (isDOE(merged.name)) { delete merged.ae; delete merged.csm; }
+
+      // Conflict detection: if AE is changing from a real rep to a different rep
+      const oldAE = (existing.item.ae || '').trim();
+      const newAE = (merged.ae || '').trim();
+      if (oldAE && newAE && oldAE !== newAE && oldAE !== ACCOUNT_PRIMARY_AE) {
+        const isRealRep = ACCOUNT_HOLDOUT_AES.has(oldAE);
+        if (isRealRep) {
+          console.log('[SFDC Merge] CONFLICT:', merged.name, '- was', oldAE, ', CSV says', newAE);
+          stats.conflicts.push({
+            name: merged.name,
+            enrollment: parseInt(merged.enrollment) || 0,
+            state: merged.state || '',
+            oldAE: oldAE,
+            newAE: newAE,
+          });
+        }
+      }
 
       // Check if anything actually changed - compare key opp fields
       const keyFields = ['opp_stage', 'opp_acv', 'opp_probability', 'opp_forecast', 'opp_next_step'];
@@ -3786,7 +3865,8 @@ function previewMerge(csvData) {
       newRecords: accountResult.stats.newRecords + customerResult.stats.newRecords,
       updatedRecords: accountResult.stats.updatedRecords + customerResult.stats.updatedRecords,
       notesPreserved: accountResult.stats.notesPreserved + customerResult.stats.notesPreserved,
-      changes: [...accountResult.stats.changes, ...customerResult.stats.changes]
+      changes: [...accountResult.stats.changes, ...customerResult.stats.changes],
+      conflicts: [...(accountResult.stats.conflicts || []), ...(customerResult.stats.conflicts || [])]
     };
 
     pendingMergeStats = combinedStats;
@@ -4044,9 +4124,20 @@ function showMergeModal(stats) {
 
   // Show change list
   const changesList = document.getElementById('mergeChangesList');
-  if (stats.changes.length > 0 || needsGeocode > 0) {
+  const conflictCount = stats.conflicts ? stats.conflicts.length : 0;
+  if (stats.changes.length > 0 || needsGeocode > 0 || conflictCount > 0) {
     const maxShow = 30;
     let html = '';
+
+    // Show conflict notice if needed
+    if (conflictCount > 0) {
+      html += `<div style="background:#d6336c22;border:1px solid #d6336c44;border-radius:6px;padding:8px 10px;margin-bottom:10px;font-size:11px;">
+        <strong style="color:#d6336c;">&#9888; ${conflictCount} ownership conflict${conflictCount > 1 ? 's' : ''} detected</strong>
+        <div style="color:var(--text-dim);margin-top:4px;">Accounts assigned to multiple reps. Resolve via the Conflicts dropdown after merge.</div>
+        ${stats.conflicts.slice(0, 5).map(c => `<div style="margin-top:4px;font-size:10px;color:var(--text-dim);">&bull; ${c.name}: ${c.oldAE} &rarr; ${c.newAE}</div>`).join('')}
+        ${conflictCount > 5 ? `<div style="margin-top:4px;font-size:10px;color:var(--text-muted);font-style:italic;">...and ${conflictCount - 5} more</div>` : ''}
+      </div>`;
+    }
 
     // Show geocoding notice if needed
     if (needsGeocode > 0) {
@@ -4291,6 +4382,9 @@ async function confirmMerge() {
       // Track refresh
       localStorage.setItem('edia_sfdc_last_refresh', new Date().toISOString());
 
+      // Store detected conflicts (append to existing, deduplicate by name)
+      storeNewConflicts(pendingMergeStats);
+
       // Close modal and refresh UI
       closeMergeModal();
       buildIndices();
@@ -4303,14 +4397,20 @@ async function confirmMerge() {
       renderFilters();
       applyFilters();
       updateDataSourceIndicator();
+      renderConflictsOverlay();
+      updateConflictsBadge();
 
       // Show confirmation
+      const conflictCount = pendingMergeStats.conflicts ? pendingMergeStats.conflicts.length : 0;
       let message = `✓ Merge complete!\n\n${ACCOUNT_DATA.length} accounts + ${CUSTOMER_DATA.length} customers updated on the map.`;
       message += `\n\nData saved to this browser — it will persist across page refreshes.`;
       message += `\n\nTwo files downloaded: accounts.json and customers.json`;
       message += `\nReplace both in src/data/ and redeploy so ALL users see the updated data.`;
       if (geocodedCount > 0) {
         message += `\n\n${geocodedCount} new records geocoded.`;
+      }
+      if (conflictCount > 0) {
+        message += `\n\n⚠ ${conflictCount} ownership conflict(s) detected — review in the Conflicts dropdown.`;
       }
       if (errors.length > 0) {
         message += `\n\n⚠ ${errors.length} warning(s):\n• ${errors.slice(0, 5).join('\n• ')}`;
@@ -4356,6 +4456,9 @@ async function confirmMerge() {
       // Track when this user last ran a data refresh
       localStorage.setItem('edia_sfdc_last_refresh', new Date().toISOString());
 
+      // Store detected conflicts (append to existing, deduplicate by name)
+      storeNewConflicts(pendingMergeStats);
+
       // Close modal
       closeMergeModal();
 
@@ -4372,8 +4475,11 @@ async function confirmMerge() {
       renderFilters();
       applyFilters();
       updateDataSourceIndicator();
+      renderConflictsOverlay();
+      updateConflictsBadge();
 
       // Show confirmation
+      const conflictCount2 = pendingMergeStats.conflicts ? pendingMergeStats.conflicts.length : 0;
       const recordCount = isAccountType ? ACCOUNT_DATA.length : CUSTOMER_DATA.length;
       let message = `✓ Merge complete!\n\n${recordCount} ${isAccountType ? 'accounts' : 'customers'} updated on the map.`;
       message += `\n\nData saved to this browser — it will persist across page refreshes.`;
@@ -4381,6 +4487,9 @@ async function confirmMerge() {
       message += `\nReplace src/data/${filename} in the repo and redeploy so ALL users see the updated data.`;
       if (geocodedCount > 0) {
         message += `\n\n${geocodedCount} new records geocoded.`;
+      }
+      if (conflictCount2 > 0) {
+        message += `\n\n⚠ ${conflictCount2} ownership conflict(s) detected — review in the Conflicts dropdown.`;
       }
       if (errors.length > 0) {
         message += `\n\n⚠ ${errors.length} warning(s):\n• ${errors.slice(0, 5).join('\n• ')}`;
@@ -4970,6 +5079,177 @@ function toggleTheme() {
   }
 })();
 
+// ============ CONFLICT MANAGEMENT ============
+let conflictsOverlayOpen = false;
+
+/** Append newly detected conflicts, deduplicating by district name. */
+function storeNewConflicts(mergeStats) {
+  const newConflicts = mergeStats && mergeStats.conflicts ? mergeStats.conflicts : [];
+  if (newConflicts.length === 0) return;
+  const existingNames = new Set(CONFLICTS.map(c => c.name));
+  newConflicts.forEach(c => {
+    if (existingNames.has(c.name)) {
+      // Update existing conflict with new AE info
+      const idx = CONFLICTS.findIndex(x => x.name === c.name);
+      if (idx !== -1) CONFLICTS[idx] = c;
+    } else {
+      CONFLICTS.push(c);
+    }
+  });
+  saveConflicts(CONFLICTS);
+  console.log('[Conflicts] Stored', CONFLICTS.length, 'total conflicts');
+}
+
+/** Find active conflict for a given district name. */
+function getConflictForAccount(name) {
+  return CONFLICTS.find(c => c.name === name) || null;
+}
+
+/** Toggle Conflicts overlay panel. */
+function toggleConflictsOverlay() {
+  conflictsOverlayOpen = !conflictsOverlayOpen;
+  const overlay = document.getElementById('conflictsOverlay');
+  const trigger = document.getElementById('conflictsTrigger');
+  if (overlay) overlay.classList.toggle('open', conflictsOverlayOpen);
+  if (trigger) trigger.classList.toggle('active', conflictsOverlayOpen);
+  if (conflictsOverlayOpen) renderConflictsOverlay();
+}
+
+/** Update the conflict count badge. */
+function updateConflictsBadge() {
+  const wrap = document.getElementById('conflictsTriggerWrap');
+  const badge = document.getElementById('conflictsCount');
+  if (!wrap || !badge) return;
+  if (CONFLICTS.length > 0) {
+    wrap.style.display = '';
+    badge.textContent = CONFLICTS.length;
+  } else {
+    wrap.style.display = 'none';
+    conflictsOverlayOpen = false;
+    const overlay = document.getElementById('conflictsOverlay');
+    if (overlay) overlay.classList.remove('open');
+  }
+}
+
+/** Render the conflicts list in the overlay panel. */
+function renderConflictsOverlay() {
+  const body = document.getElementById('conflictsBody');
+  if (!body) return;
+
+  if (CONFLICTS.length === 0) {
+    body.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:20px;font-size:12px;">No conflicts to resolve</div>';
+    return;
+  }
+
+  let html = `<div style="font-size:10px;color:var(--text-dim);margin-bottom:10px;">
+    ${CONFLICTS.length} account${CONFLICTS.length !== 1 ? 's' : ''} with conflicting ownership. Click to navigate, then resolve.
+  </div>`;
+  CONFLICTS.forEach((c, idx) => {
+    const enrollment = c.enrollment ? parseInt(c.enrollment).toLocaleString() : '—';
+    const isStrategic = (parseInt(c.enrollment) || 0) >= STRATEGIC_ENROLLMENT_THRESHOLD;
+    const stratBadge = isStrategic ? '<span class="conflict-strategic-badge">Strategic</span>' : '';
+    html += `<div class="conflict-item">
+      <div class="conflict-item-header" onclick="navigateToConflict(${idx})">
+        <div class="conflict-name">${c.name} ${stratBadge}</div>
+        <div class="conflict-detail">${c.state || '—'} &bull; ${enrollment} students</div>
+      </div>
+      <div class="conflict-ae-row">
+        <span class="conflict-ae conflict-ae-old" title="Previously assigned">${escapeHtml(c.oldAE)}</span>
+        <span class="conflict-vs">vs</span>
+        <span class="conflict-ae conflict-ae-new" title="From latest upload">${escapeHtml(c.newAE)}</span>
+      </div>
+      <div class="conflict-actions">
+        <button class="conflict-resolve-btn" onclick="resolveConflict(${idx}, '${escapeAttr(c.oldAE)}')">Keep ${escapeHtml(c.oldAE.split(' ')[0])}</button>
+        <button class="conflict-resolve-btn conflict-resolve-new" onclick="resolveConflict(${idx}, '${escapeAttr(c.newAE)}')">Assign ${escapeHtml(c.newAE.split(' ')[0])}</button>
+      </div>
+    </div>`;
+  });
+  body.innerHTML = html;
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function escapeAttr(str) {
+  return str.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+}
+
+/** Navigate map to a conflicted account. */
+function navigateToConflict(idx) {
+  const c = CONFLICTS[idx];
+  if (!c) return;
+  const districtKey = c.name.replace(/[^a-zA-Z0-9]/g, '_');
+  // Try markerLookup first (visible pins)
+  const entry = markerLookup[c.name];
+  if (entry && entry.marker) {
+    const latLng = entry.marker.getLatLng();
+    map.flyTo(latLng, 8, { duration: 0.6 });
+    setTimeout(() => entry.marker.openPopup(), 400);
+  } else {
+    // Account may not be visible with current filters — open modal directly
+    const d = ACCOUNT_DATA.find(a => a.name === c.name) || (window.districtDataCache && window.districtDataCache[districtKey]);
+    if (d) openAccountModalWithData(d);
+  }
+}
+
+/** Resolve a conflict — password-protected. */
+function resolveConflict(idx, chosenAE) {
+  if (!dataRefreshAuthed) {
+    promptDataRefreshPassword().then(ok => {
+      if (ok) resolveConflictConfirmed(idx, chosenAE);
+    });
+    return;
+  }
+  resolveConflictConfirmed(idx, chosenAE);
+}
+
+/** Apply conflict resolution after authentication. */
+function resolveConflictConfirmed(idx, chosenAE) {
+  const c = CONFLICTS[idx];
+  if (!c) return;
+
+  // Update account in ACCOUNT_DATA
+  const account = ACCOUNT_DATA.find(a => a.name === c.name);
+  if (account) {
+    account.ae = chosenAE;
+    console.log('[Conflicts] Resolved:', c.name, '→', chosenAE);
+  }
+
+  // Remove from conflicts
+  CONFLICTS.splice(idx, 1);
+  saveConflicts(CONFLICTS);
+
+  // Persist updated account data
+  saveDataToLocalStorage(ACCOUNT_DATA, null);
+
+  // Update district data cache
+  if (account) {
+    const key = account.name.replace(/[^a-zA-Z0-9]/g, '_');
+    window.districtDataCache[key] = account;
+  }
+
+  // Refresh UI
+  buildIndices();
+  renderConflictsOverlay();
+  updateConflictsBadge();
+  applyFilters();
+}
+
+// Close conflicts overlay when clicking outside
+document.addEventListener('click', function(e) {
+  if (!conflictsOverlayOpen) return;
+  const overlay = document.getElementById('conflictsOverlay');
+  const trigger = document.getElementById('conflictsTrigger');
+  if (overlay && trigger && !overlay.contains(e.target) && !trigger.contains(e.target)) {
+    conflictsOverlayOpen = false;
+    overlay.classList.remove('open');
+    trigger.classList.remove('active');
+  }
+});
+
 // ============ DATA REFRESH PASSWORD PROTECTION ============
 const DATA_REFRESH_PASSWORD = 'edia2025';
 let dataRefreshAuthed = false;
@@ -5078,6 +5358,10 @@ Object.assign(window, {
   toggleStageDropdown,
   // Action Dashboard
   toggleActionDashboard,
+  // Conflicts
+  toggleConflictsOverlay,
+  navigateToConflict,
+  resolveConflict,
   // Notes
   copyAllNotes,
   exportNotes,

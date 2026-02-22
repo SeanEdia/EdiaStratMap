@@ -1138,6 +1138,161 @@ input[type="range"]::-webkit-slider-thumb {
 .ad-overlay-body::-webkit-scrollbar-track { background: transparent; }
 .ad-overlay-body::-webkit-scrollbar-thumb { background: var(--panel-border); border-radius: 2px; }
 
+/* Conflicts trigger button accent */
+.conflicts-trigger { border-color: #d6336c44 !important; }
+.conflicts-trigger:hover { border-color: #d6336c !important; }
+.conflicts-trigger.active { border-color: #d6336c !important; background: var(--surface) !important; }
+.conflicts-trigger .ad-alert { background: #d6336c; }
+
+/* Conflicts overlay positioning — appears below the Conflicts button */
+.conflicts-overlay { right: auto; left: auto; }
+
+/* Conflict list items */
+.conflict-item {
+  background: var(--surface);
+  border: 1px solid var(--panel-border);
+  border-radius: 6px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+}
+.conflict-item:last-child { margin-bottom: 0; }
+.conflict-item-header { cursor: pointer; }
+.conflict-item-header:hover .conflict-name { color: var(--accent-strat); }
+.conflict-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  transition: color 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.conflict-detail {
+  font-size: 10px;
+  color: var(--text-dim);
+  margin-top: 2px;
+}
+.conflict-strategic-badge {
+  font-size: 9px;
+  font-weight: 600;
+  background: var(--accent-strat);
+  color: #fff;
+  padding: 1px 5px;
+  border-radius: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+.conflict-ae-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+.conflict-ae {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 3px 8px;
+  border-radius: 4px;
+  flex: 1;
+  text-align: center;
+}
+.conflict-ae-old {
+  background: #74b9ff22;
+  color: #74b9ff;
+  border: 1px solid #74b9ff44;
+}
+.conflict-ae-new {
+  background: #a29bfe22;
+  color: #a29bfe;
+  border: 1px solid #a29bfe44;
+}
+.conflict-vs {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.conflict-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+.conflict-resolve-btn {
+  flex: 1;
+  background: none;
+  border: 1px solid var(--panel-border);
+  border-radius: 4px;
+  padding: 5px 8px;
+  font-size: 10px;
+  font-weight: 500;
+  font-family: inherit;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.conflict-resolve-btn:hover {
+  border-color: var(--accent-strat);
+  color: var(--text);
+  background: var(--accent-strat-bg, rgba(116,185,255,0.08));
+}
+.conflict-resolve-new:hover {
+  border-color: #a29bfe;
+  background: rgba(162,155,254,0.08);
+}
+
+/* Conflict banner in account modal */
+.modal-conflict-banner {
+  margin: 0;
+}
+.modal-conflict-inner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #d6336c18;
+  border: 1px solid #d6336c44;
+  border-radius: 6px;
+  padding: 10px 14px;
+  margin: 0 16px 8px;
+}
+.modal-conflict-icon {
+  font-size: 18px;
+  color: #d6336c;
+  flex-shrink: 0;
+}
+.modal-conflict-text {
+  flex: 1;
+  font-size: 11px;
+  color: var(--text-dim);
+}
+.modal-conflict-text strong {
+  color: #d6336c;
+  display: block;
+  margin-bottom: 2px;
+  font-size: 12px;
+}
+.modal-conflict-btns {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.modal-conflict-btns button {
+  background: none;
+  border: 1px solid var(--panel-border);
+  border-radius: 4px;
+  padding: 4px 10px;
+  font-size: 10px;
+  font-weight: 500;
+  font-family: inherit;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.modal-conflict-btns button:hover {
+  border-color: #d6336c;
+  color: var(--text);
+}
+
 .ad-section {
   margin-bottom: 14px;
 }
@@ -2659,7 +2814,8 @@ input[type="range"]::-webkit-slider-thumb {
   box-shadow: 0 20px 60px rgba(0,0,0,0.15);
 }
 [data-theme="light"] .ad-overlay,
-[data-theme="light"] .al-overlay {
+[data-theme="light"] .al-overlay,
+[data-theme="light"] .conflicts-overlay {
   box-shadow: 0 8px 32px rgba(0,0,0,0.12);
 }
 [data-theme="light"] .al-hdr:hover { color: #1a1a2e; }
