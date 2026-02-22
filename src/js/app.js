@@ -3834,6 +3834,11 @@ function runMerge(csvData, existingData) {
       // Only fill in opp fields that are currently empty (first opp's details win)
       Object.keys(csvRow).forEach(key => {
         const val = csvRow[key];
+        if (typeof val !== 'string') {
+          // Preserve non-string values (e.g. _schools array) as-is
+          if (val) alreadyMerged[key] = val;
+          return;
+        }
         if (val && val.trim()) {
           const mappedKey = mapFieldName(key);
           // Don't overwrite name
@@ -3870,6 +3875,11 @@ function runMerge(csvData, existingData) {
       // Update with CSV data, mapping common field variations
       Object.keys(csvRow).forEach(key => {
         const val = csvRow[key];
+        if (typeof val !== 'string') {
+          // Preserve non-string values (e.g. _schools array) as-is
+          if (val) merged[key] = val;
+          return;
+        }
         if (val && val.trim()) {
           // Map common CSV column names to our field names
           const mappedKey = mapFieldName(key);
