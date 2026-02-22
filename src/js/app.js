@@ -3622,7 +3622,7 @@ function runMerge(csvData, existingData) {
   };
 
   const mergedData = [];
-  const processedNames = new Set();
+  const matchedIndices = new Set(); // Track which existing-data indices were matched (by index, not name)
   const mergedByName = new Map(); // Track already-merged records to handle duplicate CSV rows
 
   // Debug: Find all Dallas rows in CSV
@@ -3644,8 +3644,6 @@ function runMerge(csvData, existingData) {
 
     const nameKey = name.toLowerCase().trim();
     const normalizedKey = normalizeDistrictName(name);
-    processedNames.add(nameKey);
-    processedNames.add(normalizedKey);
 
     // Special logging for Dallas
     if (name.toLowerCase().includes('dallas')) {
@@ -3674,10 +3672,7 @@ function runMerge(csvData, existingData) {
     if (!existing) {
       const csvState = getStateFromRow(csvRow);
       existing = findByStateAndName(name, csvState);
-      // If we found a match, also add to processedNames to avoid duplicates
       if (existing) {
-        processedNames.add(existing.item.name.toLowerCase().trim());
-        processedNames.add(normalizeDistrictName(existing.item.name));
         alreadyMerged = alreadyMerged || mergedByName.get(existing.item.name.toLowerCase().trim());
       }
     }
@@ -3711,6 +3706,8 @@ function runMerge(csvData, existingData) {
     }
 
     if (existing) {
+      // Mark this existing account as matched so it won't be re-added in the preservation step
+      matchedIndices.add(existing.idx);
       // Update existing record but preserve certain local fields
       const merged = { ...existing.item };
 
@@ -3838,11 +3835,9 @@ function runMerge(csvData, existingData) {
     }
   });
 
-  // Keep existing records not in CSV (preserve them)
-  existingData.forEach(item => {
-    const nameKey = item.name.toLowerCase().trim();
-    const normalizedKey = normalizeDistrictName(item.name);
-    if (!processedNames.has(nameKey) && !processedNames.has(normalizedKey)) {
+  // Keep existing records that were NOT matched by any CSV row
+  existingData.forEach((item, idx) => {
+    if (!matchedIndices.has(idx)) {
       mergedData.push(item);
     }
   });
