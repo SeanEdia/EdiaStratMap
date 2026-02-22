@@ -189,7 +189,7 @@ let filteredConfData = [];
 
 // ============ WELCOME GATE ============
 // Prevents rendering all pins on initial load. The map stays empty until
-// the user selects a team, filter, or clicks "Show All Accounts".
+// the user selects a team, applies a filter, or clicks "Show Opps".
 
 function hasActiveFilter() {
   return selectedTeam !== '' ||
@@ -223,6 +223,18 @@ function quickFilterTeam(team) {
   selectedRep = getDefaultRepForTeam(team);
   invalidateCaches();
   renderTeamRepSelectors();
+  renderFilters();
+  applyFilters();
+}
+
+function quickFilterOpps() {
+  welcomeActive = false;
+  const overlay = document.getElementById('welcomeOverlay');
+  if (overlay) {
+    overlay.classList.add('hidden');
+    setTimeout(() => { overlay.style.display = 'none'; }, 300);
+  }
+  selectedStages.add('Has Open Opp');
   renderFilters();
   applyFilters();
 }
@@ -313,9 +325,10 @@ function renderTeamRepSelectors() {
   wrap.style.display = show ? '' : 'none';
   if (!show) return;
 
-  // Team dropdown
+  // Team dropdown (no "All Teams" — user must pick a specific team)
   const teamSel = document.getElementById('teamSelect');
-  teamSel.innerHTML = '<option value="">All Teams</option>';
+  const noTeam = !selectedTeam;
+  teamSel.innerHTML = noTeam ? '<option value="" disabled selected>Select a team…</option>' : '';
   Object.keys(TEAM_REP_DATA).forEach(team => {
     const sel = selectedTeam === team ? ' selected' : '';
     teamSel.innerHTML += `<option value="${team}"${sel}>${team}</option>`;
@@ -556,9 +569,20 @@ function resetFilters() {
   const adaCheck = document.getElementById('adaCheck');
   if (adaCheck) adaCheck.checked = false;
   invalidateCaches();
+
+  // Bring back the welcome overlay so the user must pick a filter again
+  welcomeActive = true;
+  const overlay = document.getElementById('welcomeOverlay');
+  if (overlay) {
+    overlay.style.display = '';
+    overlay.classList.remove('hidden');
+  }
+  stratLayer.clearLayers();
+  custLayer.clearLayers();
+  proxLayer.clearLayers();
+
   renderTeamRepSelectors();
   renderFilters();
-  applyFilters();
 }
 
 function resetMapView() {
@@ -4840,6 +4864,7 @@ Object.assign(window, {
   // Welcome
   dismissWelcome,
   quickFilterTeam,
+  quickFilterOpps,
   // Views
   setView,
   resetMapView,
