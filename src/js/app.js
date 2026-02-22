@@ -215,12 +215,19 @@ function isDOE(name) {
   return n.includes('department of education') || /\bdoe\b/.test(n);
 }
 
+// Helper: robustly parse enrollment (handles comma-formatted strings like "30,210")
+function parseEnrollment(val) {
+  if (typeof val === 'number') return val;
+  if (!val) return 0;
+  return parseInt(String(val).replace(/,/g, '')) || 0;
+}
+
 // Helper: returns the territory (assigned) AE for an account.
 // 30k+ enrollment → Strategic (Sean Johnson). <30k → account owner.
 function getTerritoryAE(d) {
   if (isDOE(d.name)) return null;
   if (!d.ae) return d.ae;
-  const enrollment = parseInt(d.enrollment) || 0;
+  const enrollment = parseEnrollment(d.enrollment);
   if (enrollment >= STRATEGIC_ENROLLMENT_THRESHOLD) {
     return ACCOUNT_PRIMARY_AE; // strategic account
   }
@@ -230,7 +237,7 @@ function getTerritoryAE(d) {
 // Helper: returns the holdout AE for 30k+ accounts whose AE is not the Strategic default.
 function getHoldoutAE(d) {
   if (!d.ae || isDOE(d.name)) return null;
-  const enrollment = parseInt(d.enrollment) || 0;
+  const enrollment = parseEnrollment(d.enrollment);
   if (enrollment >= STRATEGIC_ENROLLMENT_THRESHOLD && d.ae !== ACCOUNT_PRIMARY_AE) {
     return d.ae; // holdout on a strategic account
   }
@@ -4078,10 +4085,12 @@ function normalizeDistrictName(name) {
 
 function parseNumericFields(record) {
   // Convert numeric fields from strings to numbers
+  // Strip commas/currency symbols first (CSV exports often format "30,210" or "$1,500")
   const numericFields = ['lat', 'lng', 'enrollment', 'students', 'opp_acv', 'opp_probability', 'arr', 'gdr', 'ndr', 'opp_count'];
   numericFields.forEach(field => {
     if (record[field] !== undefined && record[field] !== '') {
-      const val = parseFloat(record[field]);
+      const cleaned = String(record[field]).replace(/[$,]/g, '');
+      const val = parseFloat(cleaned);
       if (!isNaN(val)) record[field] = val;
     }
   });
