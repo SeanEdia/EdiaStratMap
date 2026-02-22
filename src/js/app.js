@@ -864,7 +864,7 @@ function applyFilters() {
     custEl.textContent = custCount;
     custCard.style.display = '';
     stratCard.style.display = 'none';
-    overlapEl.textContent = overlapCount;
+    overlapEl.textContent = _overlapCount;
     overlapEl.style.color = '#E8853D';
     overlapLabel.textContent = 'Also Account';
     overlapCard.style.display = '';
@@ -874,7 +874,7 @@ function applyFilters() {
     custEl.textContent = custCount;
     stratCard.style.display = '';
     custCard.style.display = '';
-    overlapEl.textContent = overlapCount;
+    overlapEl.textContent = _overlapCount;
     overlapEl.style.color = '#E8853D';
     overlapLabel.textContent = 'Overlap';
     overlapCard.style.display = '';
