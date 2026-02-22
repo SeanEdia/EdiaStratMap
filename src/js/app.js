@@ -4296,6 +4296,11 @@ async function geocodeMissingRecords(records) {
 
     if (!record.state) continue;
 
+    // Rate limit between records (Nominatim allows 1 req/sec)
+    if (i > 0) {
+      await new Promise(resolve => setTimeout(resolve, 1200));
+    }
+
     const coords = await geocodeDistrict(record.name, record.state, record);
     if (coords) {
       record.lat = coords.lat;
@@ -4324,16 +4329,57 @@ async function geocodePendingRecords(records, confirmBtn) {
   const errors = [];
   let geocodedCount = 0;
   const needsGeocoding = records.filter(r => !r.lat || !r.lng);
-  if (needsGeocoding.length > 0) {
-    showGeocodeProgress('Geocoding accounts...');
-    for (let i = 0; i < needsGeocoding.length; i++) {
-      const record = needsGeocoding[i];
-      confirmBtn.textContent = `Geocoding ${i + 1}/${needsGeocoding.length}...`;
-      updateGeocodeProgress(i + 1, needsGeocoding.length, (i + 1) + ' of ' + needsGeocoding.length + ' — ' + (record.name || '').substring(0, 30));
-      if (!record.state) {
-        errors.push(`No state for: ${record.name}`);
-        continue;
+  if (needsGeocoding.length === 0) return { geocodedCount, errors };
+
+  showGeocodeProgress('Geocoding accounts...');
+  const failedRecords = [];
+
+  for (let i = 0; i < needsGeocoding.length; i++) {
+    const record = needsGeocoding[i];
+    confirmBtn.textContent = `Geocoding ${i + 1}/${needsGeocoding.length}...`;
+    updateGeocodeProgress(i + 1, needsGeocoding.length, (i + 1) + ' of ' + needsGeocoding.length + ' — ' + (record.name || '').substring(0, 30));
+    if (!record.state) {
+      errors.push(`No state for: ${record.name}`);
+      continue;
+    }
+
+    // Rate limit between records (Nominatim allows 1 req/sec)
+    if (i > 0) {
+      await new Promise(resolve => setTimeout(resolve, 1200));
+    }
+
+    try {
+      const coords = await geocodeDistrict(record.name, record.state, record);
+      if (coords) {
+        record.lat = coords.lat;
+        record.lng = coords.lng;
+        geocodedCount++;
+      } else {
+        failedRecords.push(record);
       }
+    } catch (e) {
+      failedRecords.push(record);
+    }
+  }
+
+  // Retry pass for failed records (rate limiting may have caused empty results)
+  if (failedRecords.length > 0) {
+    console.log('[Geocode] Retrying', failedRecords.length, 'failed records after cooldown...');
+    confirmBtn.textContent = `Retrying ${failedRecords.length} failed...`;
+    updateGeocodeProgress(0, failedRecords.length, 'Cooling down before retry...');
+    // Wait 5 seconds before retry pass to reset any rate limiting
+    await new Promise(resolve => setTimeout(resolve, 5000));
+
+    for (let i = 0; i < failedRecords.length; i++) {
+      const record = failedRecords[i];
+      confirmBtn.textContent = `Retry ${i + 1}/${failedRecords.length}...`;
+      updateGeocodeProgress(i + 1, failedRecords.length, 'Retry ' + (i + 1) + ' of ' + failedRecords.length + ' — ' + (record.name || '').substring(0, 30));
+
+      // Longer delay between retries
+      if (i > 0) {
+        await new Promise(resolve => setTimeout(resolve, 1500));
+      }
+
       try {
         const coords = await geocodeDistrict(record.name, record.state, record);
         if (coords) {
@@ -4347,8 +4393,9 @@ async function geocodePendingRecords(records, confirmBtn) {
         errors.push(`Geocode error for ${record.name}: ${e.message}`);
       }
     }
-    hideGeocodeProgress();
   }
+
+  hideGeocodeProgress();
   return { geocodedCount, errors };
 }
 
