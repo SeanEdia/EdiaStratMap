@@ -27,7 +27,7 @@
       </button>
     </div>
     <div class="view-toggle">
-      <button class="view-btn active-strat" data-view="strategic" onclick="setView('strategic')">Accounts</button>
+      <button class="view-btn active-strat" data-view="accounts" onclick="setView('accounts')">Accounts</button>
       <button class="view-btn" data-view="customers" onclick="setView('customers')">Active Customers</button>
       <button class="view-btn" data-view="all" onclick="setView('all')">All</button>
     </div>
@@ -213,7 +213,7 @@
     </div>
     <div class="sfdc-modal-body">
       <div class="sfdc-type-btns">
-        <button class="sfdc-type-btn active-strat" id="sfdcTypeStrat" onclick="setSfdcType('strategic')">Strategic</button>
+        <button class="sfdc-type-btn active-strat" id="sfdcTypeStrat" onclick="setSfdcType('accounts')">Accounts</button>
         <button class="sfdc-type-btn" id="sfdcTypeCust" onclick="setSfdcType('customers')">Customers</button>
       </div>
       <div class="sfdc-dropzone" id="sfdcDropzone" onclick="document.getElementById('sfdcFileInput').click()">
@@ -236,7 +236,7 @@
         <h2 id="modalAccountName">District Name</h2>
         <div class="subtitle" id="modalAccountSubtitle">State • Region • Enrollment</div>
       </div>
-      <span class="account-modal-badge strategic" id="modalAccountBadge">Strategic</span>
+      <span class="account-modal-badge accounts" id="modalAccountBadge">Account</span>
       <button class="account-modal-close" onclick="closeAccountModal()">&times;</button>
     </div>
     <div class="account-tabs">

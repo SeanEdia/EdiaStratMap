@@ -1,9 +1,9 @@
 // Import data
-import strategicData from '../data/strategic.json';
+import accountData from '../data/accounts.json';
 import customerData from '../data/customers.json';
 
 // Mutable data arrays (can be replaced on refresh)
-let STRATEGIC_DATA = [...strategicData];
+let ACCOUNT_DATA = [...accountData];
 let CUSTOMER_DATA = [...customerData];
 
 // ============ PERFORMANCE INDICES ============
@@ -13,7 +13,7 @@ let _repToTeam = {};          // rep name -> team name
 let _teamRepsSet = {};        // team name -> Set of rep names
 let _repToAccounts = {};      // rep name -> [account indices]
 let _teamToAccounts = {};     // team name -> [account indices]
-let _overlapCount = 0;        // cached count of strategic accounts that are also customers
+let _overlapCount = 0;        // cached count of accounts that are also customers
 let _uniqueCache = {};        // key -> sorted unique values (invalidated on scope change)
 let _autocompleteCache = null; // pre-built state/region counts
 
@@ -28,10 +28,10 @@ function buildIndices() {
     reps.forEach(rep => { _repToTeam[rep] = team; });
   });
 
-  // Index strategic accounts by rep and team
+  // Index accounts by rep and team
   _repToAccounts = {};
   _teamToAccounts = {};
-  STRATEGIC_DATA.forEach((d, i) => {
+  ACCOUNT_DATA.forEach((d, i) => {
     const tAE = getTerritoryAE(d);
     const hAE = getHoldoutAE(d);
     // Index by territory AE
@@ -59,7 +59,7 @@ function buildIndices() {
   });
 
   // Cache overlap count
-  _overlapCount = STRATEGIC_DATA.filter(d => d.is_customer).length;
+  _overlapCount = ACCOUNT_DATA.filter(d => d.is_customer).length;
 
   // Invalidate caches
   _uniqueCache = {};
@@ -79,7 +79,7 @@ function getAutocompleteCache() {
   const regionSet = new Set();
   const regionCounts = {};
 
-  STRATEGIC_DATA.forEach(d => {
+  ACCOUNT_DATA.forEach(d => {
     if (d.state) stateCounts[d.state.toLowerCase()] = (stateCounts[d.state.toLowerCase()] || 0) + 1;
     if (d.region) { regionSet.add(d.region); regionCounts[d.region] = (regionCounts[d.region] || 0) + 1; }
   });
@@ -112,41 +112,50 @@ const TEAM_REP_DATA = {
   },
 };
 
-// ============ STRATEGIC ACCOUNT ASSIGNMENT RULES ============
-// All strategic accounts (districts >= 30,000 students) are assigned to Sean Johnson
+// ============ ACCOUNT ASSIGNMENT RULES ============
+// All accounts (districts >= 30,000 students) are assigned to Sean Johnson
 // EXCEPT holdouts: accounts whose AE is Aric Walden or Andy Graham retain their owner.
 // Any other AE (e.g. Ben Foley) is reassigned to Sean Johnson — they are NOT holdouts.
-const STRATEGIC_PRIMARY_AE = 'Sean Johnson';
-const STRATEGIC_HOLDOUT_AES = new Set(['Aric Walden', 'Andy Graham']);
+const ACCOUNT_PRIMARY_AE = 'Sean Johnson';
+const ACCOUNT_HOLDOUT_AES = new Set(['Aric Walden', 'Andy Graham']);
 
-let _strategicRepsCache = null;
-function getStrategicReps() {
-  if (!_strategicRepsCache) {
-    _strategicRepsCache = getAllRepsForTeam('Strategic');
+let _accountRepsCache = null;
+function getAccountReps() {
+  if (!_accountRepsCache) {
+    _accountRepsCache = getAllRepsForTeam('Strategic');
   }
-  return _strategicRepsCache;
+  return _accountRepsCache;
+}
+
+// Helper: detect Department of Education accounts by name.
+// DOE accounts have no ownership and get a distinct marker.
+function isDOE(name) {
+  if (!name) return false;
+  const n = name.toLowerCase();
+  return n.includes('department of education') || /\bdoe\b/.test(n);
 }
 
 // Helper: returns the territory (assigned) AE for an account.
-// Strategic accounts always have Sean Johnson as territory AE.
+// Accounts always have Sean Johnson as territory AE. DOE accounts have no AE.
 function getTerritoryAE(d) {
+  if (isDOE(d.name)) return null;
   if (!d.ae) return d.ae;
-  const reps = getStrategicReps();
+  const reps = getAccountReps();
   if (reps.includes(d.ae)) return d.ae;              // already on Strategic team
-  if (STRATEGIC_HOLDOUT_AES.has(d.ae)) return reps[0] || STRATEGIC_PRIMARY_AE; // holdout — territory AE is Strategic rep
-  return reps[0] || STRATEGIC_PRIMARY_AE;             // not a valid holdout — reassign to Strategic rep
+  if (ACCOUNT_HOLDOUT_AES.has(d.ae)) return reps[0] || ACCOUNT_PRIMARY_AE; // holdout — territory AE is Strategic rep
+  return reps[0] || ACCOUNT_PRIMARY_AE;             // not a valid holdout — reassign to Strategic rep
 }
 
 // Helper: returns the holdout AE if account is a recognized holdout, otherwise null.
 // Only Aric Walden and Andy Graham are valid holdout AEs.
 function getHoldoutAE(d) {
-  if (!d.ae) return null;
-  if (STRATEGIC_HOLDOUT_AES.has(d.ae)) return d.ae;  // recognized holdout
+  if (!d.ae || isDOE(d.name)) return null;
+  if (ACCOUNT_HOLDOUT_AES.has(d.ae)) return d.ae;  // recognized holdout
   return null;                                         // not a holdout (including unknown AEs)
 }
 
 // ============ STATE ============
-let currentView = 'strategic';
+let currentView = 'accounts';
 let selectedTeam = '';   // '' = all teams
 let selectedRep = '';    // '' = all reps
 let selectedStages = new Set();  // multi-select stage filter
@@ -159,7 +168,7 @@ let adaFilterOn = false;
 
 // Account list state
 let markerLookup = {};          // name -> { marker, data, type }
-let filteredStratData = [];     // current filtered strategic data
+let filteredAccountData = [];     // current filtered account data
 let filteredCustData = [];      // current filtered customer data
 let accountListSort = 'enrollment_desc';
 let accountListGroupBy = null;  // null | 'state' | 'stage'
@@ -179,7 +188,7 @@ let filteredConfData = [];
 
 // ============ INIT ============
 function initMap() {
-  // Data is loaded from the seed JSON files (strategic.json / customers.json).
+  // Data is loaded from the seed JSON files (accounts.json / customers.json).
   // These files are the single source of truth so that all users see the same data.
   // After a merge, updated JSON is downloaded for committing back to the repo.
 
@@ -188,7 +197,7 @@ function initMap() {
 
   // Pre-populate district data cache for modal access
   window.districtDataCache = {};
-  STRATEGIC_DATA.forEach(d => {
+  ACCOUNT_DATA.forEach(d => {
     const key = d.name.replace(/[^a-zA-Z0-9]/g, '_');
     window.districtDataCache[key] = d;
   });
@@ -224,7 +233,7 @@ function setView(view) {
   document.querySelectorAll('.view-btn').forEach(btn => {
     btn.className = 'view-btn';
     if (btn.dataset.view === view) {
-      if (view === 'strategic') btn.classList.add('active-strat');
+      if (view === 'accounts') btn.classList.add('active-strat');
       else if (view === 'customers') btn.classList.add('active-cust');
       else btn.classList.add('active-both');
     }
@@ -256,8 +265,8 @@ function renderTeamRepSelectors() {
   const wrap = document.getElementById('teamRepSelectors');
   if (!wrap) return;
 
-  // Show selectors only in strategic or all view
-  const show = currentView === 'strategic' || currentView === 'all';
+  // Show selectors only in accounts or all view
+  const show = currentView === 'accounts' || currentView === 'all';
   wrap.style.display = show ? '' : 'none';
   if (!show) return;
 
@@ -347,7 +356,7 @@ function onStageChange(stage) {
 
 // ============ FILTERS UI ============
 
-// Returns the strategic dataset scoped to the currently selected team/rep.
+// Returns the account dataset scoped to the currently selected team/rep.
 // Uses pre-built indices for O(1) lookups instead of scanning all accounts.
 // When the selected rep is the team manager, show all team accounts (team-level view).
 function getScopedStratData() {
@@ -356,22 +365,22 @@ function getScopedStratData() {
       TEAM_REP_DATA[selectedTeam].manager === selectedRep;
     if (!isManager) {
       const indices = _repToAccounts[selectedRep];
-      return indices ? indices.map(i => STRATEGIC_DATA[i]) : [];
+      return indices ? indices.map(i => ACCOUNT_DATA[i]) : [];
     }
     // Manager selected — fall through to team-level scoping
   }
   if (selectedTeam) {
     const indices = _teamToAccounts[selectedTeam];
-    return indices ? indices.map(i => STRATEGIC_DATA[i]) : [];
+    return indices ? indices.map(i => ACCOUNT_DATA[i]) : [];
   }
-  return STRATEGIC_DATA;
+  return ACCOUNT_DATA;
 }
 
 function renderFilters() {
   const area = document.getElementById('filtersArea');
   let html = '';
 
-  if (currentView === 'strategic' || currentView === 'all') {
+  if (currentView === 'accounts' || currentView === 'all') {
     // Stage pills (multi-select)
     html += `<div class="filter-group"><div class="filter-label">Opp Stage`;
     if (selectedStages.size > 0) html += `<span class="clear-btn" onclick="clearStages()">clear</span>`;
@@ -446,9 +455,9 @@ function buildSliderGroup(label, key, min, max) {
 // ============ FILTER LOGIC ============
 function getUnique(data, field) {
   // Use cached result if available (cache keyed by dataset identity + field)
-  const isStrategic = data === STRATEGIC_DATA;
+  const isAccountType = data === ACCOUNT_DATA;
   const isCustomer = data === CUSTOMER_DATA;
-  const scopeKey = isStrategic ? 'strat' : isCustomer ? 'cust' : (selectedRep || selectedTeam || 'all');
+  const scopeKey = isAccountType ? 'strat' : isCustomer ? 'cust' : (selectedRep || selectedTeam || 'all');
   const cacheKey = scopeKey + ':' + field;
   if (_uniqueCache[cacheKey]) return _uniqueCache[cacheKey];
 
@@ -510,11 +519,11 @@ function resetFilters() {
 }
 
 function resetMapView() {
-  // Reset view to Strategic Accounts (keeps team/rep selection)
-  currentView = 'strategic';
+  // Reset view to Accounts (keeps team/rep selection)
+  currentView = 'accounts';
   document.querySelectorAll('.view-btn').forEach(btn => {
     btn.className = 'view-btn';
-    if (btn.dataset.view === 'strategic') btn.classList.add('active-strat');
+    if (btn.dataset.view === 'accounts') btn.classList.add('active-strat');
   });
 
   // Clear all filters and stages but keep team/rep
@@ -604,12 +613,12 @@ function applyFilters() {
   let statesSet = new Set();
   lastSearchResults = []; // Reset search results
   markerLookup = {};            // Reset marker lookup
-  filteredStratData = [];       // Reset filtered data
+  filteredAccountData = [];       // Reset filtered data
   filteredCustData = [];
 
-  // Strategic accounts
-  if (currentView === 'strategic' || currentView === 'all') {
-    const filtered = STRATEGIC_DATA.filter(d => {
+  // Accounts
+  if (currentView === 'accounts' || currentView === 'all') {
+    const filtered = ACCOUNT_DATA.filter(d => {
       const territoryAE = getTerritoryAE(d);
       const holdoutAE = getHoldoutAE(d);
       if (search) {
@@ -676,8 +685,9 @@ function applyFilters() {
       const noteKey = 'edia_notes_' + d.name.replace(/[^a-zA-Z0-9]/g, '_');
       const hasNote = (() => { try { return JSON.parse(localStorage.getItem(noteKey) || '[]').length > 0; } catch(e) { return false; } })() ? ' has-note' : '';
       const isCust = d.is_customer ? ' is-customer' : '';
+      const doeClass = isDOE(d.name) ? ' is-doe' : '';
       const icon = L.divIcon({
-        className: `marker-strat${oppClass}${hasNote}${isCust} ${isLarge ? 'large' : ''}`,
+        className: `marker-strat${oppClass}${hasNote}${isCust}${doeClass} ${isLarge ? 'large' : ''}`,
         iconSize: isLarge ? [18, 18] : [14, 14],
         iconAnchor: isLarge ? [9, 9] : [7, 7],
       });
@@ -688,15 +698,15 @@ function applyFilters() {
         map.flyTo([d.lat + 2.5, d.lng], 7, { duration: 0.6 });
       });
       statesSet.add(d.state);
-      markerLookup[d.name] = { marker, data: d, type: 'strategic' };
+      markerLookup[d.name] = { marker, data: d, type: 'accounts' };
 
       // Track for search zoom functionality
       if (search) {
-        lastSearchResults.push({ marker, data: d, type: 'strategic' });
+        lastSearchResults.push({ marker, data: d, type: 'accounts' });
       }
     });
     stratCount = filtered.length;
-    filteredStratData = filtered;
+    filteredAccountData = filtered;
   }
 
   // Active customers
@@ -726,11 +736,11 @@ function applyFilters() {
 
     filtered.forEach(d => {
       if (!d.lat || !d.lng) return;
-      const isAlsoStrat = d.also_strategic ? ' also-strategic' : '';
+      const isAlsoAcct = d.also_account ? ' also-account' : '';
       const icon = L.divIcon({
-        className: `marker-cust${isAlsoStrat}`,
-        iconSize: d.also_strategic ? [14, 14] : [10, 10],
-        iconAnchor: d.also_strategic ? [7, 7] : [5, 5],
+        className: `marker-cust${isAlsoAcct}`,
+        iconSize: d.also_account ? [14, 14] : [10, 10],
+        iconAnchor: d.also_account ? [7, 7] : [5, 5],
       });
 
       const marker = L.marker([d.lat, d.lng], { icon }).addTo(custLayer);
@@ -762,8 +772,8 @@ function applyFilters() {
   const custCard = custEl.parentElement;
   const overlapCard = document.getElementById('stat-card-overlap');
 
-  if (currentView === 'strategic') {
-    // Show: Strategic | Overlap | Opps | States
+  if (currentView === 'accounts') {
+    // Show: Accounts | Overlap | Opps | States
     stratEl.textContent = stratCount;
     stratCard.style.display = '';
     custCard.style.display = 'none';
@@ -778,10 +788,10 @@ function applyFilters() {
     stratCard.style.display = 'none';
     overlapEl.textContent = overlapCount;
     overlapEl.style.color = '#E8853D';
-    overlapLabel.textContent = 'Also Strategic';
+    overlapLabel.textContent = 'Also Account';
     overlapCard.style.display = '';
   } else {
-    // All view: Strategic | Customers | Overlap | States
+    // All view: Accounts | Customers | Overlap | States
     stratEl.textContent = stratCount;
     custEl.textContent = custCount;
     stratCard.style.display = '';
@@ -851,8 +861,8 @@ function buildAutocompleteList(query) {
     }
   });
 
-  // Match districts (strategic accounts)
-  STRATEGIC_DATA.forEach(d => {
+  // Match districts (accounts)
+  ACCOUNT_DATA.forEach(d => {
     const nameMatch = d.name && d.name.toLowerCase().includes(q);
     if (nameMatch && !seen.has('strat:' + d.name)) {
       seen.add('strat:' + d.name);
@@ -981,7 +991,7 @@ function selectAutocomplete(index) {
     applyFilters();
     // Fit map to all accounts in this state
     const bounds = [];
-    [...STRATEGIC_DATA, ...CUSTOMER_DATA].forEach(d => {
+    [...ACCOUNT_DATA, ...CUSTOMER_DATA].forEach(d => {
       const st = (d.state || '').toLowerCase();
       if ((st === item.abbr || st === item.name.toLowerCase()) && d.lat && d.lng) {
         bounds.push([d.lat, d.lng]);
@@ -995,7 +1005,7 @@ function selectAutocomplete(index) {
     searchExactMatch = true;
     applyFilters();
     const bounds = [];
-    [...STRATEGIC_DATA, ...CUSTOMER_DATA].forEach(d => {
+    [...ACCOUNT_DATA, ...CUSTOMER_DATA].forEach(d => {
       if (d.region === item.region && d.lat && d.lng) {
         bounds.push([d.lat, d.lng]);
       }
@@ -1237,8 +1247,8 @@ function updateActionDashboard() {
   window.districtDataCache = window.districtDataCache || {};
 
   // Gather accounts based on current view
-  if (currentView === 'strategic' || currentView === 'all') {
-    STRATEGIC_DATA.forEach(d => {
+  if (currentView === 'accounts' || currentView === 'all') {
+    ACCOUNT_DATA.forEach(d => {
       const key = d.name.replace(/[^a-zA-Z0-9]/g, '_');
       window.districtDataCache[key] = d;
       allAccounts.push({
@@ -1246,7 +1256,7 @@ function updateActionDashboard() {
         key: key,
         lastActivity: d.opp_last_activity || '',
         nextStep: d.opp_next_step || '',
-        type: 'strategic',
+        type: 'accounts',
         data: d
       });
     });
@@ -1448,9 +1458,9 @@ function drawProximity() {
     }).addTo(proxLayer);
   });
 
-  // Count strategic accounts inside any customer radius — uses spatial grid
+  // Count accounts inside any customer radius — uses spatial grid
   let nearby = 0;
-  STRATEGIC_DATA.forEach(s => {
+  ACCOUNT_DATA.forEach(s => {
     if (!s.lat || !s.lng) return;
     if (isNearAnyCustomer(s.lat, s.lng, PROXIMITY_MILES)) nearby++;
   });
@@ -1517,7 +1527,7 @@ function addNote(key, el) {
 
   // Update last activity date to today (resets staleness clock)
   const districtName = key.replace('edia_notes_', '').replace(/_/g, ' ');
-  const matchedAccount = STRATEGIC_DATA.find(d => d.name.replace(/[^a-zA-Z0-9]/g, '_') === key.replace('edia_notes_', ''));
+  const matchedAccount = ACCOUNT_DATA.find(d => d.name.replace(/[^a-zA-Z0-9]/g, '_') === key.replace('edia_notes_', ''));
   if (matchedAccount) {
     const today = new Date();
     const dateStr = (today.getMonth() + 1) + '/' + today.getDate() + '/' + today.getFullYear();
@@ -1659,9 +1669,17 @@ function buildStratPopup(d) {
   </button>`;
   const territoryAE = getTerritoryAE(d);
   const holdoutAE = getHoldoutAE(d);
-  let typeLabel = d.is_customer ? 'Strategic Account + Customer' : 'Strategic Account';
+  const doeAccount = isDOE(d.name);
+  let typeLabel = doeAccount ? 'Dept. of Education'
+    : d.is_customer ? 'Account + Customer'
+    : d.type === 'Inactive Customer' ? 'Inactive Customer'
+    : 'Account';
   if (holdoutAE) typeLabel += ` · <span class="holdout-badge">Holdout — ${holdoutAE}</span>`;
-  html += `<div class="popup-type ${d.is_customer ? 'both' : 'strat'}">${typeLabel}</div>`;
+  const typeClass = doeAccount ? 'doe'
+    : d.is_customer ? 'both'
+    : d.type === 'Inactive Customer' ? 'inactive'
+    : 'strat';
+  html += `<div class="popup-type ${typeClass}">${typeLabel}</div>`;
   html += `<h3 class="copyable" data-tooltip="Click to copy" onclick="copyText('${d.name.replace(/'/g, "\\\\'")}', this)">${d.name}</h3>`;
 
   // Build Account Exec display: show territory AE (Assigned) and holdout AE on second line
@@ -1842,8 +1860,8 @@ function buildStratPopup(d) {
 
 function buildCustPopup(d) {
   let html = `<div class="popup-card">`;
-  if (d.also_strategic) {
-    html += `<div class="popup-type both">Active Customer + Strategic</div>`;
+  if (d.also_account) {
+    html += `<div class="popup-type both">Active Customer + Account</div>`;
   } else {
     html += `<div class="popup-type cust">Active Customer</div>`;
   }
@@ -1997,18 +2015,18 @@ function formatCompactNumber(n) {
 }
 
 function buildAccountListRow(d, type) {
-  const isStrat = type === 'strategic';
+  const isStrat = type === 'accounts';
   const stage = isStrat ? getStageInfo(d) : { cls: 'stage-customer', label: 'Customer', order: 99 };
   const enrollment = parseInt(isStrat ? d.enrollment : d.students) || 0;
   const acv = isStrat ? (Number(d.opp_acv) || 0) : 0;
   const arr = !isStrat ? (parseFloat(d.arr) || 0) : 0;
   const districtKey = d.name.replace(/[^a-zA-Z0-9]/g, '_');
 
-  // Money column: ACV for strategic, ARR for customers
+  // Money column: ACV for accounts, ARR for customers
   const moneyText = (isStrat && acv > 0) ? '$' + formatCompactNumber(acv)
     : (!isStrat && arr > 0) ? '$' + formatCompactNumber(arr) : '';
 
-  // Products column (opp_areas for strategic)
+  // Products column (opp_areas for accounts)
   const products = isStrat ? (d.opp_areas || '') : '';
 
   return `<div class="account-list-item" data-name="${d.name.replace(/"/g, '&quot;')}" data-key="${districtKey}"
@@ -2073,19 +2091,19 @@ function renderAccountList() {
 
   // Build unified list of items to show
   let items = [];
-  const showStrat = currentView === 'strategic' || currentView === 'all';
+  const showStrat = currentView === 'accounts' || currentView === 'all';
   const showCust = currentView === 'customers' || currentView === 'all';
 
   if (showStrat) {
-    filteredStratData.forEach(d => {
-      if (d.lat && d.lng) items.push({ data: d, type: 'strategic' });
+    filteredAccountData.forEach(d => {
+      if (d.lat && d.lng) items.push({ data: d, type: 'accounts' });
     });
   }
   if (showCust) {
     filteredCustData.forEach(d => {
       if (d.lat && d.lng) {
-        // Avoid duplicates if already in strategic
-        if (!showStrat || !markerLookup[d.name] || markerLookup[d.name].type !== 'strategic') {
+        // Avoid duplicates if already in accounts
+        if (!showStrat || !markerLookup[d.name] || markerLookup[d.name].type !== 'accounts') {
           items.push({ data: d, type: 'customer' });
         }
       }
@@ -2093,7 +2111,7 @@ function renderAccountList() {
   }
 
   // Total counts
-  const totalCount = (showStrat ? STRATEGIC_DATA.length : 0) + (showCust ? CUSTOMER_DATA.length : 0);
+  const totalCount = (showStrat ? ACCOUNT_DATA.length : 0) + (showCust ? CUSTOMER_DATA.length : 0);
   if (countEl) countEl.textContent = `Showing ${items.length} of ${totalCount} accounts`;
 
   // Only render full list if overlay is open
@@ -2153,7 +2171,7 @@ function renderAccountList() {
     let html = '';
     const visible = sortedData.slice(0, displayLimit);
     visible.forEach(d => {
-      html += buildAccountListRow(d, itemTypeMap[d.name] || 'strategic');
+      html += buildAccountListRow(d, itemTypeMap[d.name] || 'accounts');
     });
     if (sortedData.length > displayLimit) {
       html += `<div class="account-list-show-more" onclick="showMoreAccounts()">Show more (${sortedData.length - displayLimit} remaining)</div>`;
@@ -2206,7 +2224,7 @@ function renderGroupedList(sortedData, itemTypeMap) {
     </div>`;
     html += `<div class="account-list-group-items ${isCollapsed ? 'collapsed-group' : ''}" id="alg-items-${safeKey}">`;
     items.forEach(d => {
-      html += buildAccountListRow(d, itemTypeMap[d.name] || 'strategic');
+      html += buildAccountListRow(d, itemTypeMap[d.name] || 'accounts');
     });
     html += `</div>`;
   });
@@ -2217,12 +2235,12 @@ function renderGroupedList(sortedData, itemTypeMap) {
 // ============ UI HELPERS ============
 function updateCountBadge(strat, cust) {
   const badge = document.getElementById('countBadge');
-  if (currentView === 'strategic') {
+  if (currentView === 'accounts') {
     badge.innerHTML = `<span class="cb-num cb-strat">${strat}</span> accounts`;
   } else if (currentView === 'customers') {
     badge.innerHTML = `<span class="cb-num cb-cust">${cust}</span> customers`;
   } else {
-    badge.innerHTML = `<span class="cb-num cb-strat">${strat}</span> strategic · <span class="cb-num cb-cust">${cust}</span> customers`;
+    badge.innerHTML = `<span class="cb-num cb-strat">${strat}</span> accounts · <span class="cb-num cb-cust">${cust}</span> customers`;
   }
 }
 
@@ -2273,12 +2291,18 @@ function openAccountModalWithData(d) {
   // Set badge
   const badge = document.getElementById('modalAccountBadge');
   const holdoutAE = getHoldoutAE(d);
-  if (d.is_customer) {
-    badge.textContent = 'Strategic + Customer';
+  if (isDOE(d.name)) {
+    badge.textContent = 'Dept. of Education';
+    badge.className = 'account-modal-badge doe';
+  } else if (d.is_customer) {
+    badge.textContent = 'Account + Customer';
     badge.className = 'account-modal-badge both';
+  } else if (d.type === 'Inactive Customer') {
+    badge.textContent = 'Inactive Customer';
+    badge.className = 'account-modal-badge inactive';
   } else {
-    badge.textContent = 'Strategic Account';
-    badge.className = 'account-modal-badge strategic';
+    badge.textContent = 'Account';
+    badge.className = 'account-modal-badge accounts';
   }
   // Show holdout indicator in modal header
   let holdoutEl = document.getElementById('modalHoldoutBadge');
@@ -3016,9 +3040,13 @@ function readSpreadsheetFile(file) {
 }
 
 // ============ SFDC DATA REFRESH ============
-let sfdcDataType = 'strategic';
+let sfdcDataType = 'accounts';
 let pendingMergeData = null;
 let pendingMergeStats = null;
+// Type-split state: when CSV has a 'type' column, rows are split into accounts + customers
+let pendingAccountMerge = null;
+let pendingCustomerMerge = null;
+let mergeHasTypeSplit = false;
 
 function openSfdcModal() {
   document.getElementById('sfdcModal').classList.add('open');
@@ -3029,7 +3057,7 @@ function closeSfdcModal() {
 
 function setSfdcType(type) {
   sfdcDataType = type;
-  document.getElementById('sfdcTypeStrat').className = 'sfdc-type-btn' + (type === 'strategic' ? ' active-strat' : '');
+  document.getElementById('sfdcTypeStrat').className = 'sfdc-type-btn' + (type === 'accounts' ? ' active-strat' : '');
   document.getElementById('sfdcTypeCust').className = 'sfdc-type-btn' + (type === 'customers' ? ' active-cust' : '');
 }
 
@@ -3191,47 +3219,23 @@ function parseCSVLine(line) {
   return result;
 }
 
-function previewMerge(csvData) {
-  // Auto-detect data type from CSV columns.
-  // Customer data has distinctive fields (arr, csm, segment, gdr, ndr)
-  // that strategic data never has. If we find them, override the toggle.
-  if (csvData.length > 0) {
-    const cols = new Set(Object.keys(csvData[0]).map(k => k.toLowerCase().replace(/\s+/g, '_')));
-    const customerSignals = ['arr', 'active_arr', 'annual_recurring_revenue', 'revenue',
-                             'csm', 'csm_name', 'customer_success_manager',
-                             'segment', 'gdr', 'ndr', 'lapsed_renewal', 'arr_12mo_ago'];
-    const strategicSignals = ['superintendent', 'super', 'sis', 'sis_platform', 'sis_system',
-                              'ada_adm', 'math_products', 'attendance',
-                              'enrollment', 'enrollment_count', 'student_count', 'total_enrollment', 'students_in_d',
-                              'opp_stage', 'stage', 'opportunity_stage',
-                              'opp_acv', 'acv', 'year_1_acv', 'amount',
-                              'opp_forecast', 'forecast', 'forecast_category',
-                              'opp_probability', 'probability',
-                              'opp_areas', 'areas', 'product_areas', 'areas_of_interest',
-                              'opp_next_step', 'next_step', 'next_steps',
-                              'opp_contact', 'primary_contact', 'contact_name',
-                              'opp_sdr', 'sdr_name',
-                              'opp_champion', 'champion',
-                              'opp_economic_buyer', 'economic_buyer',
-                              'opp_competition', 'competition', 'competitors'];
-    const custHits = customerSignals.filter(s => cols.has(s)).length;
-    const stratHits = strategicSignals.filter(s => cols.has(s)).length;
-    if (custHits > stratHits && custHits >= 2) {
-      console.log('[SFDC Merge] Auto-detected CUSTOMER data (matched columns:', customerSignals.filter(s => cols.has(s)).join(', '), ')');
-      sfdcDataType = 'customers';
-      setSfdcType('customers');
-    } else if (stratHits > custHits && stratHits >= 2) {
-      console.log('[SFDC Merge] Auto-detected STRATEGIC data (matched columns:', strategicSignals.filter(s => cols.has(s)).join(', '), ')');
-      sfdcDataType = 'strategic';
-      setSfdcType('strategic');
-    } else {
-      console.log('[SFDC Merge] Could not auto-detect type (cust signals:', custHits, ', strat signals:', stratHits, '). Using selected type:', sfdcDataType);
-    }
-  }
+// Helper to get name from CSV row - checks all name field variations.
+// account_name is checked BEFORE name because Salesforce CSVs often have both
+// a "Name" column (record/opp name) and "Account Name" — we want the account name.
+function getNameFromRow(row) {
+  return row.account_name || row.district_name || row.district ||
+         row.organization || row.org_name || row.account || row.name || '';
+}
 
-  const isStrategic = sfdcDataType === 'strategic';
-  const existingData = isStrategic ? STRATEGIC_DATA : CUSTOMER_DATA;
+// Helper to get state from CSV row - checks all state field variations
+function getStateFromRow(row) {
+  return row.state || row.billing_state_province || row.billing_state ||
+         row.shipping_state_province || row.shipping_state || '';
+}
 
+// Core merge logic: merges csvData rows against an existing dataset.
+// Returns { mergedData, stats }.
+function runMerge(csvData, existingData) {
   // Log CSV columns for debugging
   if (csvData.length > 0) {
     console.log('[SFDC Merge] CSV columns:', Object.keys(csvData[0]));
@@ -3305,20 +3309,6 @@ function previewMerge(csvData) {
   const mergedData = [];
   const processedNames = new Set();
   const mergedByName = new Map(); // Track already-merged records to handle duplicate CSV rows
-
-  // Helper to get name from CSV row - checks all name field variations.
-  // account_name is checked BEFORE name because Salesforce CSVs often have both
-  // a "Name" column (record/opp name) and "Account Name" — we want the account name.
-  function getNameFromRow(row) {
-    return row.account_name || row.district_name || row.district ||
-           row.organization || row.org_name || row.account || row.name || '';
-  }
-
-  // Helper to get state from CSV row - checks all state field variations
-  function getStateFromRow(row) {
-    return row.state || row.billing_state_province || row.billing_state ||
-           row.shipping_state_province || row.shipping_state || '';
-  }
 
   // Debug: Find all Dallas rows in CSV
   const dallasRows = csvData.filter(r => {
@@ -3432,6 +3422,9 @@ function previewMerge(csvData) {
       // Parse numeric fields
       parseNumericFields(merged);
 
+      // Strip ownership from DOE accounts
+      if (isDOE(merged.name)) { delete merged.ae; delete merged.csm; }
+
       // Check if anything actually changed - compare key opp fields
       const keyFields = ['opp_stage', 'opp_acv', 'opp_probability', 'opp_forecast', 'opp_next_step'];
       const changedFields = [];
@@ -3499,6 +3492,9 @@ function previewMerge(csvData) {
       // Parse numeric fields
       parseNumericFields(newRecord);
 
+      // Strip ownership from DOE accounts
+      if (isDOE(newRecord.name)) { delete newRecord.ae; delete newRecord.csm; }
+
       stats.newRecords++;
       if (!possibleMatch) {
         stats.changes.push({ name, action: 'new' });
@@ -3519,10 +3515,99 @@ function previewMerge(csvData) {
     }
   });
 
-  pendingMergeData = mergedData;
-  pendingMergeStats = stats;
+  return { mergedData, stats };
+}
 
-  showMergeModal(stats);
+function previewMerge(csvData) {
+  // Check if CSV has a 'type' column for per-row customer/account splitting.
+  // Type values: "Customer" → customer dataset, "Inactive Customer"/blank/"Prospect" → account dataset.
+  const hasTypeColumn = csvData.length > 0 && csvData[0].hasOwnProperty('type');
+
+  if (hasTypeColumn) {
+    // Split rows by type
+    const customerRows = [];
+    const accountRows = [];
+    csvData.forEach(row => {
+      const rowType = (row.type || '').trim().toLowerCase();
+      if (rowType === 'customer') {
+        customerRows.push(row);
+      } else {
+        // Prospect, blank, or Inactive Customer → account dataset
+        // The type field is preserved on each record for display purposes
+        accountRows.push(row);
+      }
+    });
+
+    console.log('[SFDC Merge] Type column detected — splitting:', customerRows.length, 'customer rows,', accountRows.length, 'account rows');
+
+    mergeHasTypeSplit = true;
+    const accountResult = runMerge(accountRows, ACCOUNT_DATA);
+    const customerResult = runMerge(customerRows, CUSTOMER_DATA);
+
+    pendingAccountMerge = accountResult.mergedData;
+    pendingCustomerMerge = customerResult.mergedData;
+    pendingMergeData = null; // Clear single-mode state
+
+    // Combined stats for the modal
+    const combinedStats = {
+      total: csvData.length,
+      newRecords: accountResult.stats.newRecords + customerResult.stats.newRecords,
+      updatedRecords: accountResult.stats.updatedRecords + customerResult.stats.updatedRecords,
+      notesPreserved: accountResult.stats.notesPreserved + customerResult.stats.notesPreserved,
+      changes: [...accountResult.stats.changes, ...customerResult.stats.changes]
+    };
+
+    pendingMergeStats = combinedStats;
+    showMergeModal(combinedStats);
+    return;
+  }
+
+  // No type column — use auto-detection (existing behavior)
+  mergeHasTypeSplit = false;
+  pendingAccountMerge = null;
+  pendingCustomerMerge = null;
+
+  // Auto-detect data type from CSV columns.
+  // Customer data has distinctive fields (arr, csm, segment, gdr, ndr)
+  // that account data never has. If we find them, override the toggle.
+  if (csvData.length > 0) {
+    const cols = new Set(Object.keys(csvData[0]).map(k => k.toLowerCase().replace(/\s+/g, '_')));
+    const customerSignals = ['arr', 'active_arr', 'annual_recurring_revenue', 'revenue',
+                             'csm', 'csm_name', 'customer_success_manager',
+                             'segment', 'gdr', 'ndr', 'lapsed_renewal', 'arr_12mo_ago'];
+    const accountSignals = ['superintendent', 'super', 'sis', 'sis_platform', 'sis_system',
+                              'ada_adm', 'math_products', 'attendance',
+                              'enrollment', 'enrollment_count', 'student_count', 'total_enrollment', 'students_in_d',
+                              'opp_stage', 'stage', 'opportunity_stage',
+                              'opp_acv', 'acv', 'year_1_acv', 'amount',
+                              'opp_forecast', 'forecast', 'forecast_category',
+                              'opp_probability', 'probability',
+                              'opp_areas', 'areas', 'product_areas', 'areas_of_interest',
+                              'opp_next_step', 'next_step', 'next_steps',
+                              'opp_contact', 'primary_contact', 'contact_name',
+                              'opp_sdr', 'sdr_name',
+                              'opp_champion', 'champion',
+                              'opp_economic_buyer', 'economic_buyer',
+                              'opp_competition', 'competition', 'competitors'];
+    const custHits = customerSignals.filter(s => cols.has(s)).length;
+    const accountHits = accountSignals.filter(s => cols.has(s)).length;
+    if (custHits > accountHits && custHits >= 2) {
+      console.log('[SFDC Merge] Auto-detected CUSTOMER data (matched columns:', customerSignals.filter(s => cols.has(s)).join(', '), ')');
+      sfdcDataType = 'customers';
+      setSfdcType('customers');
+    } else if (accountHits > custHits && accountHits >= 2) {
+      console.log('[SFDC Merge] Auto-detected ACCOUNT data (matched columns:', accountSignals.filter(s => cols.has(s)).join(', '), ')');
+      sfdcDataType = 'accounts';
+      setSfdcType('accounts');
+    } else {
+      console.log('[SFDC Merge] Could not auto-detect type (cust signals:', custHits, ', acct signals:', accountHits, '). Using selected type:', sfdcDataType);
+    }
+  }
+
+  const result = runMerge(csvData, sfdcDataType === 'accounts' ? ACCOUNT_DATA : CUSTOMER_DATA);
+  pendingMergeData = result.mergedData;
+  pendingMergeStats = result.stats;
+  showMergeModal(result.stats);
 }
 
 function mapFieldName(csvField) {
@@ -3590,7 +3675,6 @@ function mapFieldName(csvField) {
     'areas_of_interest': 'opp_areas',
     // Revenue
     'annual_recurring_revenue': 'arr',
-    'active_arr': 'arr',
     'total_active_arr': 'arr',
     'revenue': 'arr',
     'total_active_arr_total_12_months_ago': 'arr_12mo_ago',
@@ -3698,15 +3782,20 @@ function findPartialMatch(name, existingByName) {
 }
 
 function showMergeModal(stats) {
-  document.getElementById('mergeModalTitle').textContent =
-    `Merge Preview: ${sfdcDataType === 'strategic' ? 'Strategic Accounts' : 'Customers'}`;
+  const mergeTitle = mergeHasTypeSplit
+    ? 'Merge Preview: Accounts + Customers (split by Type)'
+    : `Merge Preview: ${sfdcDataType === 'accounts' ? 'Accounts' : 'Customers'}`;
+  document.getElementById('mergeModalTitle').textContent = mergeTitle;
   document.getElementById('mergeTotalRecords').textContent = stats.total;
   document.getElementById('mergeNewRecords').textContent = stats.newRecords;
   document.getElementById('mergeUpdatedRecords').textContent = stats.updatedRecords;
   document.getElementById('mergeNotesPreserved').textContent = stats.notesPreserved;
 
   // Count records needing geocoding
-  const needsGeocode = pendingMergeData ? pendingMergeData.filter(r => !r.lat || !r.lng).length : 0;
+  const allPendingRecords = mergeHasTypeSplit
+    ? [...(pendingAccountMerge || []), ...(pendingCustomerMerge || [])]
+    : (pendingMergeData || []);
+  const needsGeocode = allPendingRecords.filter(r => !r.lat || !r.lng).length;
 
   // Show change list
   const changesList = document.getElementById('mergeChangesList');
@@ -3863,8 +3952,53 @@ async function geocodeMissingRecords(records) {
   console.log('[Geocode] Completed - geocoded', geocoded, 'of', total, 'records');
 }
 
+// Helper: download a JSON array as a file
+function downloadJsonFile(data, filename) {
+  const jsonBlob = new Blob(
+    [JSON.stringify(data, null, 2)],
+    { type: 'application/json' }
+  );
+  const downloadLink = document.createElement('a');
+  downloadLink.href = URL.createObjectURL(jsonBlob);
+  downloadLink.download = filename;
+  downloadLink.click();
+}
+
+// Helper: geocode records missing lat/lng, updating confirmBtn text. Returns { geocodedCount, errors }.
+async function geocodePendingRecords(records, confirmBtn) {
+  const errors = [];
+  let geocodedCount = 0;
+  const needsGeocoding = records.filter(r => !r.lat || !r.lng);
+  if (needsGeocoding.length > 0) {
+    showGeocodeProgress('Geocoding accounts...');
+    for (let i = 0; i < needsGeocoding.length; i++) {
+      const record = needsGeocoding[i];
+      confirmBtn.textContent = `Geocoding ${i + 1}/${needsGeocoding.length}...`;
+      updateGeocodeProgress(i + 1, needsGeocoding.length, (i + 1) + ' of ' + needsGeocoding.length + ' — ' + (record.name || '').substring(0, 30));
+      if (!record.state) {
+        errors.push(`No state for: ${record.name}`);
+        continue;
+      }
+      try {
+        const coords = await geocodeDistrict(record.name, record.state, record);
+        if (coords) {
+          record.lat = coords.lat;
+          record.lng = coords.lng;
+          geocodedCount++;
+        } else {
+          errors.push(`Could not geocode: ${record.name}`);
+        }
+      } catch (e) {
+        errors.push(`Geocode error for ${record.name}: ${e.message}`);
+      }
+    }
+    hideGeocodeProgress();
+  }
+  return { geocodedCount, errors };
+}
+
 async function confirmMerge() {
-  if (!pendingMergeData) return;
+  if (!pendingMergeData && !mergeHasTypeSplit) return;
 
   const confirmBtn = document.querySelector('.merge-btn-confirm');
   const originalBtnText = confirmBtn.textContent;
@@ -3876,102 +4010,127 @@ async function confirmMerge() {
     confirmBtn.disabled = true;
     confirmBtn.textContent = 'Processing...';
 
-    const isStrategic = sfdcDataType === 'strategic';
+    if (mergeHasTypeSplit) {
+      // Type-split merge: process both accounts and customers
+      // Geocode account records
+      const acctGeo = await geocodePendingRecords(pendingAccountMerge, confirmBtn);
+      geocodedCount += acctGeo.geocodedCount;
+      errors.push(...acctGeo.errors);
 
-    // Check for records needing geocoding
-    const needsGeocoding = pendingMergeData.filter(r => !r.lat || !r.lng);
-    if (needsGeocoding.length > 0) {
-      showGeocodeProgress('Geocoding accounts...');
+      // Geocode customer records
+      const custGeo = await geocodePendingRecords(pendingCustomerMerge, confirmBtn);
+      geocodedCount += custGeo.geocodedCount;
+      errors.push(...custGeo.errors);
+
+      confirmBtn.textContent = 'Saving data...';
+
+      // Update in-memory arrays
+      ACCOUNT_DATA.length = 0;
+      pendingAccountMerge.forEach(item => ACCOUNT_DATA.push(item));
+      console.log('[Merge] Updated', ACCOUNT_DATA.length, 'accounts in memory');
+
+      CUSTOMER_DATA.length = 0;
+      pendingCustomerMerge.forEach(item => CUSTOMER_DATA.push(item));
+      console.log('[Merge] Updated', CUSTOMER_DATA.length, 'customers in memory');
+
+      // Download both files
+      downloadJsonFile(pendingAccountMerge, 'accounts.json');
+      // Small delay so browser handles both downloads
+      await new Promise(resolve => setTimeout(resolve, 500));
+      downloadJsonFile(pendingCustomerMerge, 'customers.json');
+
+      // Track refresh
+      localStorage.setItem('edia_sfdc_last_refresh', new Date().toISOString());
+
+      // Close modal and refresh UI
+      closeMergeModal();
+      buildIndices();
+      _custGrid = null;
+      window.districtDataCache = {};
+      ACCOUNT_DATA.forEach(d => {
+        const key = d.name.replace(/[^a-zA-Z0-9]/g, '_');
+        window.districtDataCache[key] = d;
+      });
+      renderFilters();
+      applyFilters();
+
+      // Show confirmation
+      let message = `✓ Merge complete!\n\n${ACCOUNT_DATA.length} accounts + ${CUSTOMER_DATA.length} customers updated on the map.`;
+      message += `\n\nTwo files downloaded: accounts.json and customers.json`;
+      message += `\nReplace both in src/data/ and redeploy so all users see the updated data.`;
+      if (geocodedCount > 0) {
+        message += `\n\n${geocodedCount} new records geocoded.`;
+      }
+      if (errors.length > 0) {
+        message += `\n\n⚠ ${errors.length} warning(s):\n• ${errors.slice(0, 5).join('\n• ')}`;
+        if (errors.length > 5) {
+          message += `\n• ...and ${errors.length - 5} more`;
+        }
+      }
+      alert(message);
+
+    } else {
+      // Single-dataset merge (no type column)
+      const isAccountType = sfdcDataType === 'accounts';
 
       // Geocode missing records
-      for (let i = 0; i < needsGeocoding.length; i++) {
-        const record = needsGeocoding[i];
-        confirmBtn.textContent = `Geocoding ${i + 1}/${needsGeocoding.length}...`;
-        updateGeocodeProgress(i + 1, needsGeocoding.length, (i + 1) + ' of ' + needsGeocoding.length + ' — ' + (record.name || '').substring(0, 30));
+      const geo = await geocodePendingRecords(pendingMergeData, confirmBtn);
+      geocodedCount = geo.geocodedCount;
+      errors = geo.errors;
 
-        if (!record.state) {
-          errors.push(`No state for: ${record.name}`);
-          continue;
-        }
+      confirmBtn.textContent = 'Saving data...';
 
-        try {
-          const coords = await geocodeDistrict(record.name, record.state, record);
-          if (coords) {
-            record.lat = coords.lat;
-            record.lng = coords.lng;
-            geocodedCount++;
-          } else {
-            errors.push(`Could not geocode: ${record.name}`);
-          }
-        } catch (e) {
-          errors.push(`Geocode error for ${record.name}: ${e.message}`);
+      // Apply the merge to in-memory arrays
+      const filename = isAccountType ? 'accounts.json' : 'customers.json';
+      if (isAccountType) {
+        ACCOUNT_DATA.length = 0;
+        pendingMergeData.forEach(item => ACCOUNT_DATA.push(item));
+        console.log('[Merge] Updated', ACCOUNT_DATA.length, 'accounts in memory');
+      } else {
+        CUSTOMER_DATA.length = 0;
+        pendingMergeData.forEach(item => CUSTOMER_DATA.push(item));
+        console.log('[Merge] Updated', CUSTOMER_DATA.length, 'customers in memory');
+      }
+
+      // Download the merged data as a JSON file
+      downloadJsonFile(pendingMergeData, filename);
+
+      // Track when this user last ran a data refresh
+      localStorage.setItem('edia_sfdc_last_refresh', new Date().toISOString());
+
+      // Close modal
+      closeMergeModal();
+
+      // Rebuild performance indices after data change
+      buildIndices();
+      _custGrid = null;
+
+      // Refresh map and UI in-place
+      window.districtDataCache = {};
+      ACCOUNT_DATA.forEach(d => {
+        const key = d.name.replace(/[^a-zA-Z0-9]/g, '_');
+        window.districtDataCache[key] = d;
+      });
+      renderFilters();
+      applyFilters();
+
+      // Show confirmation
+      const recordCount = isAccountType ? ACCOUNT_DATA.length : CUSTOMER_DATA.length;
+      let message = `✓ Merge complete!\n\n${recordCount} ${isAccountType ? 'accounts' : 'customers'} updated on the map.`;
+      message += `\n\nThe file "${filename}" has been downloaded.`;
+      message += `\nReplace src/data/${filename} in the repo and redeploy so all users see the updated data.`;
+      if (geocodedCount > 0) {
+        message += `\n\n${geocodedCount} new records geocoded.`;
+      }
+      if (errors.length > 0) {
+        message += `\n\n⚠ ${errors.length} warning(s):\n• ${errors.slice(0, 5).join('\n• ')}`;
+        if (errors.length > 5) {
+          message += `\n• ...and ${errors.length - 5} more`;
         }
       }
-      hideGeocodeProgress();
+
+      alert(message);
     }
-
-    confirmBtn.textContent = 'Saving data...';
-
-    // Apply the merge to in-memory arrays
-    const filename = isStrategic ? 'strategic.json' : 'customers.json';
-    if (isStrategic) {
-      STRATEGIC_DATA.length = 0;
-      pendingMergeData.forEach(item => STRATEGIC_DATA.push(item));
-      console.log('[Merge] Updated', STRATEGIC_DATA.length, 'strategic accounts in memory');
-    } else {
-      CUSTOMER_DATA.length = 0;
-      pendingMergeData.forEach(item => CUSTOMER_DATA.push(item));
-      console.log('[Merge] Updated', CUSTOMER_DATA.length, 'customers in memory');
-    }
-
-    // Download the merged data as a JSON file so it can be committed to
-    // the repo. This replaces localStorage persistence — the seed JSON
-    // files (src/data/strategic.json and src/data/customers.json) are the
-    // single source of truth, so all users see the same data.
-    const jsonBlob = new Blob(
-      [JSON.stringify(pendingMergeData, null, 2)],
-      { type: 'application/json' }
-    );
-    const downloadLink = document.createElement('a');
-    downloadLink.href = URL.createObjectURL(jsonBlob);
-    downloadLink.download = filename;
-    downloadLink.click();
-
-    // Track when this user last ran a data refresh (per-user, informational only)
-    localStorage.setItem('edia_sfdc_last_refresh', new Date().toISOString());
-
-    // Close modal
-    closeMergeModal();
-
-    // Rebuild performance indices after data change
-    buildIndices();
-    _custGrid = null; // Invalidate spatial grid
-
-    // Refresh map and UI in-place (no page reload needed)
-    window.districtDataCache = {};
-    STRATEGIC_DATA.forEach(d => {
-      const key = d.name.replace(/[^a-zA-Z0-9]/g, '_');
-      window.districtDataCache[key] = d;
-    });
-    renderFilters();
-    applyFilters();
-
-    // Show confirmation
-    const recordCount = isStrategic ? STRATEGIC_DATA.length : CUSTOMER_DATA.length;
-    let message = `✓ Merge complete!\n\n${recordCount} ${isStrategic ? 'strategic accounts' : 'customers'} updated on the map.`;
-    message += `\n\nThe file "${filename}" has been downloaded.`;
-    message += `\nReplace src/data/${filename} in the repo and redeploy so all users see the updated data.`;
-    if (geocodedCount > 0) {
-      message += `\n\n${geocodedCount} new records geocoded.`;
-    }
-    if (errors.length > 0) {
-      message += `\n\n⚠ ${errors.length} warning(s):\n• ${errors.slice(0, 5).join('\n• ')}`;
-      if (errors.length > 5) {
-        message += `\n• ...and ${errors.length - 5} more`;
-      }
-    }
-
-    alert(message);
 
   } catch (e) {
     console.error('[Merge] Error:', e);
@@ -4157,23 +4316,23 @@ function updateConfStats() {
   let nearbyAccounts = 0;
   filteredConfData.forEach(c => {
     if (isConfPast(c)) return;
-    nearbyAccounts += countNearbyStrategic(c, 100);
+    nearbyAccounts += countNearbyAccounts(c, 100);
   });
-  statsEl.innerHTML = `<b>${showing}</b> of ${total} conferences · <b>${upcoming}</b> upcoming · <b>${nearbyAccounts}</b> strategic accounts nearby`;
+  statsEl.innerHTML = `<b>${showing}</b> of ${total} conferences · <b>${upcoming}</b> upcoming · <b>${nearbyAccounts}</b> accounts nearby`;
 }
 
-function countNearbyStrategic(conf, radiusMiles) {
+function countNearbyAccounts(conf, radiusMiles) {
   let count = 0;
-  STRATEGIC_DATA.forEach(s => {
+  ACCOUNT_DATA.forEach(s => {
     if (!s.lat || !s.lng) return;
     if (haversine(conf.lat, conf.lng, s.lat, s.lng) <= radiusMiles) count++;
   });
   return count;
 }
 
-function getNearbyStrategic(conf, radiusMiles) {
+function getNearbyAccounts(conf, radiusMiles) {
   const results = [];
-  STRATEGIC_DATA.forEach(s => {
+  ACCOUNT_DATA.forEach(s => {
     if (!s.lat || !s.lng) return;
     const dist = haversine(conf.lat, conf.lng, s.lat, s.lng);
     if (dist <= radiusMiles) {
@@ -4225,12 +4384,12 @@ function buildConfPopup(c) {
     html += `<div class="popup-row"><span class="pk">Location</span><span class="pv">${[c.city, c.state].filter(Boolean).join(', ')}</span></div>`;
   }
 
-  // Nearby strategic accounts
+  // Nearby accounts
   if (!past) {
-    const nearby = getNearbyStrategic(c, 100);
+    const nearby = getNearbyAccounts(c, 100);
     if (nearby.length > 0) {
       html += `<div class="popup-conf-nearby">`;
-      html += `<div class="popup-conf-nearby-title">${nearby.length} strategic accounts within 100 mi</div>`;
+      html += `<div class="popup-conf-nearby-title">${nearby.length} accounts within 100 mi</div>`;
       const shown = nearby.slice(0, 10);
       shown.forEach(n => {
         const districtKey = n.data.name.replace(/[^a-zA-Z0-9]/g, '_');
