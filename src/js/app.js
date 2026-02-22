@@ -1696,6 +1696,7 @@ function buildStratPopup(d) {
     ['Enrollment', d.enrollment ? parseInt(d.enrollment).toLocaleString() : '—'],
     ['Account Exec', aeDisplay],
     ['SIS Platform', d.sis],
+    ['Website', d.website ? `<a href="${d.website.startsWith('http') ? d.website : 'https://' + d.website}" target="_blank" style="color:#FFFF66;text-decoration:none;">${d.website}</a>` : null],
     ['SFDC Type', d.type || 'Prospect'],
   ];
 
@@ -1742,8 +1743,9 @@ function buildStratPopup(d) {
 
   // Products section
   const products = [
-    ['Math Products', d.math_products],
-    ['Attendance', d.attendance],
+    ['Core Math Curriculum', d.math_curriculum],
+    ['Math Supplemental', d.math_supplemental],
+    ['Attendance & Comms', d.attendance_comms],
     ['ADA/ADM', d.ada_adm],
   ].filter(([_, v]) => v);
 
@@ -2364,6 +2366,8 @@ function populateInfoTab(d) {
     ${modalRow('State', d.state)}
     ${modalRow('Region', d.region)}
     ${modalRow('Account Executive', (() => { const tAE = getTerritoryAE(d); const hAE = getHoldoutAE(d); return tAE ? (hAE ? tAE + ' <span class="ae-role">(Assigned)</span><br>' + hAE + ' <span class="ae-role">(Holdout)</span>' : tAE) : '—'; })())}
+    ${modalRow('SIS Platform', d.sis || '—')}
+    ${modalRow('Website', d.website ? `<a href="${d.website.startsWith('http') ? d.website : 'https://' + d.website}" target="_blank" style="color:var(--accent-cust);">${d.website}</a>` : '—')}
     ${modalRow('ADA/ADM', d.ada_adm || '—')}
   </div>`;
 
@@ -2455,13 +2459,20 @@ function populateMathTab(d) {
   html += `<div class="modal-section">
     <div class="modal-section-title"><span class="icon">📐</span> Math Overview</div>`;
 
-  if (d.math_products) {
+  if (d.math_curriculum) {
     html += `<div class="product-highlight math">
-      <div class="label">Current Math Products</div>
-      <div class="value">${d.math_products}</div>
+      <div class="label">Core Math Curriculum</div>
+      <div class="value">${d.math_curriculum}</div>
     </div>`;
   } else {
-    html += `<div style="color:var(--text-muted);font-size:12px;margin-bottom:12px;">No math products recorded</div>`;
+    html += `<div style="color:var(--text-muted);font-size:12px;margin-bottom:12px;">No core math curriculum recorded</div>`;
+  }
+
+  if (d.math_supplemental) {
+    html += `<div class="product-highlight math" style="border-color:#fdcb6e;">
+      <div class="label">Math Supplemental</div>
+      <div class="value">${d.math_supplemental}</div>
+    </div>`;
   }
 
   // Math-related opportunity info
@@ -2532,14 +2543,14 @@ function populateAttendanceTab(d) {
     </div>`;
   }
 
-  if (d.attendance) {
+  if (d.attendance_comms) {
     html += `<div class="product-highlight attendance">
-      <div class="label">Attendance System</div>
-      <div class="value">${d.attendance}</div>
+      <div class="label">Attendance & Comms Tools</div>
+      <div class="value">${d.attendance_comms}</div>
     </div>`;
   }
 
-  if (!d.sis && !d.attendance) {
+  if (!d.sis && !d.attendance_comms) {
     html += `<div style="color:var(--text-muted);font-size:12px;">No attendance/SIS info recorded</div>`;
   }
 
@@ -2870,8 +2881,9 @@ function formatMeetingPrepPrompt(d) {
 
   // Products/Curriculum
   const products = [
-    ['Math Products', d.math_products],
-    ['Attendance System', d.attendance],
+    ['Core Math Curriculum', d.math_curriculum],
+    ['Math Supplemental', d.math_supplemental],
+    ['Attendance & Comms', d.attendance_comms],
   ].filter(([_, v]) => v);
 
   if (products.length) {
@@ -3169,7 +3181,7 @@ function parseCSV(text) {
       const row = {};
       headers.forEach((h, idx) => {
         // Normalize header names to match mapFieldName format
-        const key = h.trim().toLowerCase().replace(/[\/()]+/g, '_').replace(/\s+/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
+        const key = h.trim().toLowerCase().replace(/[\/()&]+/g, '_').replace(/\s+/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
         row[key] = values[idx].trim();
       });
       data.push(row);
@@ -3231,6 +3243,69 @@ function getNameFromRow(row) {
 function getStateFromRow(row) {
   return row.state || row.billing_state_province || row.billing_state ||
          row.shipping_state_province || row.shipping_state || '';
+}
+
+// Consolidate parent/child account rows into district-level records.
+// - Rows with no parent_account are districts → keep as-is with their enrollment.
+// - Rows with a parent_account are schools → skip them. Enrollment comes from the parent row only.
+// - If a child's parent doesn't have its own row, create a synthetic district row (no enrollment).
+function consolidateParentAccounts(csvData) {
+  const parentRows = [];
+  const childRows = [];
+
+  csvData.forEach(row => {
+    const parentAccount = (row.parent_account || '').trim();
+    if (parentAccount) {
+      childRows.push(row);
+    } else {
+      parentRows.push(row);
+    }
+  });
+
+  if (childRows.length === 0) return csvData; // no parent account relationships
+
+  console.log('[SFDC Merge] Parent account consolidation:', parentRows.length, 'districts,', childRows.length, 'schools');
+
+  // Build a set of parent row names (lowered) for quick lookup
+  const parentNames = new Set();
+  parentRows.forEach(row => {
+    const name = getNameFromRow(row);
+    if (name) parentNames.add(name.toLowerCase().trim());
+  });
+
+  // Group children by parent account name
+  const childrenByParent = new Map();
+  childRows.forEach(row => {
+    const key = row.parent_account.trim().toLowerCase();
+    if (!childrenByParent.has(key)) childrenByParent.set(key, []);
+    childrenByParent.get(key).push(row);
+  });
+
+  // For children whose parent doesn't have its own row, create a synthetic district row
+  childrenByParent.forEach((children, parentKeyLower) => {
+    if (!parentNames.has(parentKeyLower)) {
+      // Create a synthetic district from the first child but with parent's name and no enrollment
+      const first = children[0];
+      const synthetic = {};
+      Object.keys(first).forEach(key => { synthetic[key] = first[key]; });
+
+      // Use the parent account name as the account name
+      const parentName = first.parent_account.trim();
+      if (synthetic.account_name !== undefined) synthetic.account_name = parentName;
+      if (synthetic.name !== undefined) synthetic.name = parentName;
+
+      // Clear enrollment fields — we don't have a parent-level count
+      ['students_in_district', 'enrollment', 'student_count', 'total_students', 'total_enrollment'].forEach(k => {
+        if (synthetic[k] !== undefined) synthetic[k] = '';
+      });
+      delete synthetic.parent_account;
+
+      parentRows.push(synthetic);
+      console.log('[SFDC Merge] Created synthetic district row for:', parentName, '(from', children.length, 'school records)');
+    }
+  });
+
+  return parentRows;
 }
 
 // Core merge logic: merges csvData rows against an existing dataset.
@@ -3541,7 +3616,8 @@ function previewMerge(csvData) {
     console.log('[SFDC Merge] Type column detected — splitting:', customerRows.length, 'customer rows,', accountRows.length, 'account rows');
 
     mergeHasTypeSplit = true;
-    const accountResult = runMerge(accountRows, ACCOUNT_DATA);
+    const consolidatedAccountRows = consolidateParentAccounts(accountRows);
+    const accountResult = runMerge(consolidatedAccountRows, ACCOUNT_DATA);
     const customerResult = runMerge(customerRows, CUSTOMER_DATA);
 
     pendingAccountMerge = accountResult.mergedData;
@@ -3576,8 +3652,11 @@ function previewMerge(csvData) {
                              'csm', 'csm_name', 'customer_success_manager',
                              'segment', 'gdr', 'ndr', 'lapsed_renewal', 'arr_12mo_ago'];
     const accountSignals = ['superintendent', 'super', 'sis', 'sis_platform', 'sis_system',
-                              'ada_adm', 'math_products', 'attendance',
-                              'enrollment', 'enrollment_count', 'student_count', 'total_enrollment', 'students_in_d',
+                              'student_information_system_sis',
+                              'ada_adm', 'math_products', 'math_curriculum', 'core_math_curriculum',
+                              'math_supplemental', 'attendance', 'attendance_comms', 'attendance_comms_tools',
+                              'parent_account', 'website', 'strategic_plan',
+                              'enrollment', 'enrollment_count', 'student_count', 'total_enrollment', 'students_in_d', 'students_in_district',
                               'opp_stage', 'stage', 'opportunity_stage',
                               'opp_acv', 'acv', 'year_1_acv', 'amount',
                               'opp_forecast', 'forecast', 'forecast_category',
@@ -3604,7 +3683,8 @@ function previewMerge(csvData) {
     }
   }
 
-  const result = runMerge(csvData, sfdcDataType === 'accounts' ? ACCOUNT_DATA : CUSTOMER_DATA);
+  const dataToMerge = sfdcDataType === 'accounts' ? consolidateParentAccounts(csvData) : csvData;
+  const result = runMerge(dataToMerge, sfdcDataType === 'accounts' ? ACCOUNT_DATA : CUSTOMER_DATA);
   pendingMergeData = result.mergedData;
   pendingMergeStats = result.stats;
   showMergeModal(result.stats);
@@ -3648,6 +3728,15 @@ function mapFieldName(csvField) {
     'sis_platform': 'sis',
     'sis_system': 'sis',
     'student_information_system': 'sis',
+    'student_information_system_sis': 'sis',
+    // New account fields
+    'core_math_curriculum': 'math_curriculum',
+    'math_supplemental': 'math_supplemental',
+    'attendance_comms_tools': 'attendance_comms',
+    'strategic_plan': 'strategic_plan_url',
+    // Legacy field name aliases
+    'math_products': 'math_curriculum',
+    'attendance': 'attendance_comms',
     // Opportunity fields
     'opportunity_stage': 'opp_stage',
     'stage': 'opp_stage',
@@ -3696,7 +3785,7 @@ function mapFieldName(csvField) {
     'super': 'superintendent'
   };
 
-  const normalized = csvField.toLowerCase().replace(/[\/()]+/g, '_').replace(/\s+/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
+  const normalized = csvField.toLowerCase().replace(/[\/()&]+/g, '_').replace(/\s+/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
   return mappings[normalized] || normalized;
 }
 
