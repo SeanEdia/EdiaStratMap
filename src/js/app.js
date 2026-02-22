@@ -77,7 +77,22 @@ let _dataSource = 'bundled'; // 'bundled' or 'localStorage'
 // Mutable data arrays (can be replaced on refresh)
 let ACCOUNT_DATA = _persisted && _persisted.accounts ? [..._persisted.accounts] : [...accountData];
 let CUSTOMER_DATA = _persisted && _persisted.customers ? [..._persisted.customers] : [...customerData];
-if (_persisted) _dataSource = 'localStorage';
+if (_persisted) {
+  _dataSource = 'localStorage';
+  // Repair enrollment values corrupted by CSV comma formatting (e.g. "30,210" → 30).
+  // Bundled accounts.json is the enrollment source of truth.
+  const _bundledEnrollment = new Map();
+  accountData.forEach(d => { if (d.enrollment) _bundledEnrollment.set(d.name, d.enrollment); });
+  let _repaired = 0;
+  ACCOUNT_DATA.forEach(d => {
+    const bundled = _bundledEnrollment.get(d.name);
+    if (bundled && (!d.enrollment || d.enrollment < bundled)) {
+      d.enrollment = bundled;
+      _repaired++;
+    }
+  });
+  if (_repaired) console.log(`[Persist] Repaired enrollment for ${_repaired} account(s) from bundled data`);
+}
 
 // ============ PERFORMANCE INDICES ============
 // Pre-computed lookup structures rebuilt when data changes.
