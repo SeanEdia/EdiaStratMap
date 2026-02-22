@@ -112,9 +112,13 @@ const TEAM_REP_DATA = {
   },
 };
 
-// Holdout detection — automatic, no manual map needed.
-// A strategic account is a holdout when its AE is NOT on the Strategic team.
-// The territory AE is the Strategic team's primary rep.
+// ============ STRATEGIC ACCOUNT ASSIGNMENT RULES ============
+// All strategic accounts (districts >= 30,000 students) are assigned to Sean Johnson
+// EXCEPT holdouts: accounts whose AE is Aric Walden or Andy Graham retain their owner.
+// Any other AE (e.g. Ben Foley) is reassigned to Sean Johnson — they are NOT holdouts.
+const STRATEGIC_PRIMARY_AE = 'Sean Johnson';
+const STRATEGIC_HOLDOUT_AES = new Set(['Aric Walden', 'Andy Graham']);
+
 let _strategicRepsCache = null;
 function getStrategicReps() {
   if (!_strategicRepsCache) {
@@ -124,19 +128,21 @@ function getStrategicReps() {
 }
 
 // Helper: returns the territory (assigned) AE for an account.
-// If the account's AE is outside the Strategic team, the territory AE is the Strategic team rep.
+// Strategic accounts always have Sean Johnson as territory AE.
 function getTerritoryAE(d) {
   if (!d.ae) return d.ae;
   const reps = getStrategicReps();
-  if (reps.includes(d.ae)) return d.ae;       // already assigned to Strategic team
-  return reps[0] || d.ae;                      // holdout — territory AE is the Strategic rep
+  if (reps.includes(d.ae)) return d.ae;              // already on Strategic team
+  if (STRATEGIC_HOLDOUT_AES.has(d.ae)) return reps[0] || STRATEGIC_PRIMARY_AE; // holdout — territory AE is Strategic rep
+  return reps[0] || STRATEGIC_PRIMARY_AE;             // not a valid holdout — reassign to Strategic rep
 }
 
-// Helper: returns the holdout AE if account is a holdout, otherwise null.
+// Helper: returns the holdout AE if account is a recognized holdout, otherwise null.
+// Only Aric Walden and Andy Graham are valid holdout AEs.
 function getHoldoutAE(d) {
   if (!d.ae) return null;
-  const reps = getStrategicReps();
-  return reps.includes(d.ae) ? null : d.ae;    // holdout if AE is outside Strategic team
+  if (STRATEGIC_HOLDOUT_AES.has(d.ae)) return d.ae;  // recognized holdout
+  return null;                                         // not a holdout (including unknown AEs)
 }
 
 // ============ STATE ============
@@ -2978,7 +2984,7 @@ function readSpreadsheetFile(file) {
           const rows = rawRows.map(row => {
             const mapped = {};
             Object.keys(row).forEach(key => {
-              const normKey = key.trim().toLowerCase().replace(/\s+/g, '_');
+              const normKey = key.trim().toLowerCase().replace(/[\/()]+/g, '_').replace(/\s+/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
               const val = row[key];
               // Handle Date objects from Excel (cellDates: true)
               if (val instanceof Date && !isNaN(val.getTime())) {
@@ -3134,8 +3140,8 @@ function parseCSV(text) {
     if (values.length === headers.length) {
       const row = {};
       headers.forEach((h, idx) => {
-        // Normalize header names (lowercase, trim, replace spaces with underscores)
-        const key = h.trim().toLowerCase().replace(/\s+/g, '_');
+        // Normalize header names to match mapFieldName format
+        const key = h.trim().toLowerCase().replace(/[\/()]+/g, '_').replace(/\s+/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
         row[key] = values[idx].trim();
       });
       data.push(row);
@@ -3195,7 +3201,19 @@ function previewMerge(csvData) {
                              'csm', 'csm_name', 'customer_success_manager',
                              'segment', 'gdr', 'ndr', 'lapsed_renewal', 'arr_12mo_ago'];
     const strategicSignals = ['superintendent', 'super', 'sis', 'sis_platform', 'sis_system',
-                              'ada_adm', 'math_products', 'attendance'];
+                              'ada_adm', 'math_products', 'attendance',
+                              'enrollment', 'enrollment_count', 'student_count', 'total_enrollment', 'students_in_d',
+                              'opp_stage', 'stage', 'opportunity_stage',
+                              'opp_acv', 'acv', 'year_1_acv', 'amount',
+                              'opp_forecast', 'forecast', 'forecast_category',
+                              'opp_probability', 'probability',
+                              'opp_areas', 'areas', 'product_areas', 'areas_of_interest',
+                              'opp_next_step', 'next_step', 'next_steps',
+                              'opp_contact', 'primary_contact', 'contact_name',
+                              'opp_sdr', 'sdr_name',
+                              'opp_champion', 'champion',
+                              'opp_economic_buyer', 'economic_buyer',
+                              'opp_competition', 'competition', 'competitors'];
     const custHits = customerSignals.filter(s => cols.has(s)).length;
     const stratHits = strategicSignals.filter(s => cols.has(s)).length;
     if (custHits > stratHits && custHits >= 2) {
@@ -3288,10 +3306,18 @@ function previewMerge(csvData) {
   const processedNames = new Set();
   const mergedByName = new Map(); // Track already-merged records to handle duplicate CSV rows
 
-  // Helper to get name from CSV row - checks all name field variations
+  // Helper to get name from CSV row - checks all name field variations.
+  // account_name is checked BEFORE name because Salesforce CSVs often have both
+  // a "Name" column (record/opp name) and "Account Name" — we want the account name.
   function getNameFromRow(row) {
-    return row.name || row.district_name || row.account_name ||
-           row.district || row.organization || row.org_name || row.account || '';
+    return row.account_name || row.district_name || row.district ||
+           row.organization || row.org_name || row.account || row.name || '';
+  }
+
+  // Helper to get state from CSV row - checks all state field variations
+  function getStateFromRow(row) {
+    return row.state || row.billing_state_province || row.billing_state ||
+           row.shipping_state_province || row.shipping_state || '';
   }
 
   // Debug: Find all Dallas rows in CSV
@@ -3341,7 +3367,7 @@ function previewMerge(csvData) {
     }
     // Fallback: try state + name contains match
     if (!existing) {
-      const csvState = csvRow.state || '';
+      const csvState = getStateFromRow(csvRow);
       existing = findByStateAndName(name, csvState);
       // If we found a match, also add to processedNames to avoid duplicates
       if (existing) {
@@ -3357,15 +3383,22 @@ function previewMerge(csvData) {
     // If this account was already merged from a previous CSV row, update that record (multiple opps scenario)
     if (alreadyMerged) {
       console.log('[SFDC Merge] Multiple opps for:', name, '- updating existing merged record');
-      // Update with this row's opp data (later row wins, or we could aggregate)
+      // Increment opp_count to reflect additional opportunities
+      alreadyMerged.opp_count = (parseInt(alreadyMerged.opp_count) || 1) + 1;
+      // Only fill in opp fields that are currently empty (first opp's details win)
       Object.keys(csvRow).forEach(key => {
         const val = csvRow[key];
         if (val && val.trim()) {
           const mappedKey = mapFieldName(key);
-          // Don't overwrite name with opportunity_name
-          if (mappedKey !== 'name' || !alreadyMerged.name) {
-            alreadyMerged[mappedKey] = val.trim();
-          }
+          // Don't overwrite name
+          if (mappedKey === 'name') return;
+          // For opp-specific fields, only fill if empty (preserve first opp's details)
+          const oppFields = ['opp_stage', 'opp_forecast', 'opp_areas', 'opp_acv', 'opp_probability',
+                             'opp_contact', 'opp_contact_title', 'opp_next_step', 'opp_last_activity',
+                             'opp_sdr', 'opp_champion', 'opp_economic_buyer', 'opp_competition'];
+          if (oppFields.includes(mappedKey) && alreadyMerged[mappedKey]) return;
+          // For non-opp fields, update if the CSV has a value (e.g. account-level fields like ae, region)
+          alreadyMerged[mappedKey] = val.trim();
         }
       });
       parseNumericFields(alreadyMerged);
