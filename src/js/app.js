@@ -3558,14 +3558,19 @@ function runMerge(csvData, existingData) {
 
   // Create a map of existing data by name for quick lookup
   // Use both exact name and normalized name for matching
+  // Store ARRAYS of entries per key to handle same-name different-state accounts
+  // (e.g., "Jefferson County" in KY and AL, "Arlington" in TX and NY)
   const existingByName = new Map();
   const existingByNormalized = new Map();
   const existingByState = new Map(); // Group by state for fuzzy matching
   existingData.forEach((item, idx) => {
     const exactKey = item.name.toLowerCase().trim();
     const normalizedKey = normalizeDistrictName(item.name);
-    existingByName.set(exactKey, { item, idx });
-    existingByNormalized.set(normalizedKey, { item, idx });
+    // Store arrays to handle multiple accounts with the same name in different states
+    if (!existingByName.has(exactKey)) existingByName.set(exactKey, []);
+    existingByName.get(exactKey).push({ item, idx });
+    if (!existingByNormalized.has(normalizedKey)) existingByNormalized.set(normalizedKey, []);
+    existingByNormalized.get(normalizedKey).push({ item, idx });
     // Group by state
     const state = (item.state || '').toUpperCase().trim();
     if (state) {
@@ -3576,6 +3581,96 @@ function runMerge(csvData, existingData) {
   console.log('[SFDC Merge] Existing exact keys:', Array.from(existingByName.keys()).slice(0, 10), '...');
   console.log('[SFDC Merge] Existing normalized keys:', Array.from(existingByNormalized.keys()).slice(0, 10), '...');
   console.log('[SFDC Merge] States indexed:', Array.from(existingByState.keys()).join(', '));
+
+  // Cascading match: Name → State → Enrollment → Address/City
+  // If any check finds a mismatch against ALL candidates, the CSV row is a new account.
+  // Returns the best matching entry, or null if no match (→ new pin).
+  function pickBestMatch(entries, csvRow) {
+    if (!entries || entries.length === 0) return null;
+    let candidates = entries;
+
+    // --- Check 1: State ---
+    const csvSt = getStateFromRow(csvRow).toUpperCase().trim();
+    if (csvSt) {
+      const sameState = candidates.filter(e => (e.item.state || '').toUpperCase().trim() === csvSt);
+      if (sameState.length > 0) {
+        candidates = sameState;
+      } else {
+        // CSV state doesn't match ANY candidate — different account, drop a new pin
+        console.log('[SFDC Merge] State mismatch → new record:', candidates[0].item.name,
+          '- CSV state', csvSt, 'vs existing', candidates.map(e => e.item.state || '?').join(', '));
+        return null;
+      }
+    }
+    if (candidates.length === 1) return candidates[0];
+
+    // --- Check 2: Enrollment ---
+    const csvEnrollmentRaw = csvRow.enrollment || csvRow.enrollment_count ||
+      csvRow.student_count || csvRow.total_students || csvRow.students ||
+      csvRow.total_enrollment || csvRow.students_in_d || csvRow.students_in_district || '';
+    const csvEnrollment = parseInt(String(csvEnrollmentRaw).replace(/[$,]/g, '')) || 0;
+    if (csvEnrollment > 0) {
+      // Match if within 30% — handles year-to-year enrollment changes
+      const closeEnrollment = candidates.filter(e => {
+        const existing = parseInt(e.item.enrollment) || 0;
+        if (existing === 0) return true; // Can't rule out if existing has no enrollment
+        const diff = Math.abs(existing - csvEnrollment);
+        const larger = Math.max(existing, csvEnrollment);
+        return (diff / larger) <= 0.30;
+      });
+      if (closeEnrollment.length > 0) {
+        candidates = closeEnrollment;
+      } else {
+        // Enrollment differs significantly from ALL candidates — different account
+        console.log('[SFDC Merge] Enrollment mismatch → new record:', candidates[0].item.name,
+          '- CSV enrollment', csvEnrollment, 'vs existing',
+          candidates.map(e => (e.item.enrollment || '?')).join(', '));
+        return null;
+      }
+    }
+    if (candidates.length === 1) return candidates[0];
+
+    // --- Check 3: Address / City ---
+    const csvAddress = (csvRow.address || csvRow.billing_address_line_1 ||
+      csvRow.billing_address || csvRow.shipping_address_line_1 ||
+      csvRow.shipping_address || '').toLowerCase().trim();
+    const csvCity = (csvRow.city || csvRow.billing_city || csvRow.shipping_city || '').toLowerCase().trim();
+    if (csvAddress || csvCity) {
+      const sameLocation = candidates.filter(e => {
+        const existAddr = (e.item.address || '').toLowerCase().trim();
+        const existCity = (e.item.city || '').toLowerCase().trim();
+        // If existing has no address/city data, can't rule it out
+        if (!existAddr && !existCity) return true;
+        // Match on address if both have it, otherwise match on city
+        if (csvAddress && existAddr) return existAddr === csvAddress;
+        if (csvCity && existCity) return existCity === csvCity;
+        return true; // Not enough data to distinguish
+      });
+      if (sameLocation.length > 0) {
+        candidates = sameLocation;
+      } else {
+        // Address/city differs from ALL candidates — different account
+        console.log('[SFDC Merge] Address mismatch → new record:', candidates[0].item.name,
+          '- CSV address/city', csvAddress || csvCity, 'vs existing',
+          candidates.map(e => e.item.address || e.item.city || '?').join(', '));
+        return null;
+      }
+    }
+
+    // Return best remaining candidate (pick closest enrollment if we have CSV enrollment)
+    if (candidates.length > 1 && csvEnrollment > 0) {
+      candidates.sort((a, b) => {
+        const aDiff = Math.abs((parseInt(a.item.enrollment) || 0) - csvEnrollment);
+        const bDiff = Math.abs((parseInt(b.item.enrollment) || 0) - csvEnrollment);
+        return aDiff - bDiff;
+      });
+    }
+    if (candidates.length > 1) {
+      console.log('[SFDC Merge] Multiple candidates remain after all checks for:', candidates[0].item.name,
+        '- using first match in', (candidates[0].item.state || '?'));
+    }
+    return candidates[0];
+  }
 
   // Fuzzy match by state + core name contains
   function findByStateAndName(csvName, csvState) {
@@ -3598,8 +3693,8 @@ function runMerge(csvData, existingData) {
   // Log Dallas specifically if it exists - test with CORRECT keys
   const dallasExact = existingByName.get('dallas isd');
   const dallasNormalized = existingByNormalized.get('dallas'); // normalized key is "dallas", not "dallas isd"
-  console.log('[SFDC Merge] Dallas in exact map ("dallas isd"):', dallasExact ? 'FOUND' : 'NOT FOUND');
-  console.log('[SFDC Merge] Dallas in normalized map ("dallas"):', dallasNormalized ? 'FOUND' : 'NOT FOUND');
+  console.log('[SFDC Merge] Dallas in exact map ("dallas isd"):', dallasExact && dallasExact.length > 0 ? 'FOUND' : 'NOT FOUND');
+  console.log('[SFDC Merge] Dallas in normalized map ("dallas"):', dallasNormalized && dallasNormalized.length > 0 ? 'FOUND' : 'NOT FOUND');
 
   // Count notes that exist in localStorage
   let notesCount = 0;
@@ -3655,29 +3750,44 @@ function runMerge(csvData, existingData) {
       console.log('  - existingByNormalized.has(normalizedKey):', existingByNormalized.has(normalizedKey));
     }
 
+    // Get CSV row state for state-aware matching
+    const csvState = getStateFromRow(csvRow);
+    // Use composite key (name + state) for already-merged lookup to avoid
+    // folding same-name different-state accounts into each other
+    const csvStateKey = (csvState || '').toUpperCase().trim();
+    const compositeKey = nameKey + '|' + csvStateKey;
+    const compositeNormKey = normalizedKey + '|' + csvStateKey;
+
     // First check if we already merged this account from an earlier CSV row (handles multiple opps per account)
-    let alreadyMerged = mergedByName.get(nameKey) || mergedByName.get(normalizedKey);
+    // Use composite key first (name+state), fall back to name-only for backwards compat
+    let alreadyMerged = mergedByName.get(compositeKey) || mergedByName.get(compositeNormKey);
+    if (!alreadyMerged && !csvStateKey) {
+      // Only fall back to name-only lookup when CSV has no state info
+      alreadyMerged = mergedByName.get(nameKey) || mergedByName.get(normalizedKey);
+    }
 
     // Try exact match first, then normalized match, then state+name fuzzy match
-    let existing = existingByName.get(nameKey);
+    // pickBestMatch cascades: Name → State → Enrollment → Address
+    let existing = pickBestMatch(existingByName.get(nameKey), csvRow);
     if (!existing) {
-      existing = existingByNormalized.get(normalizedKey);
+      existing = pickBestMatch(existingByNormalized.get(normalizedKey), csvRow);
       if (existing) {
         console.log('[SFDC Merge] Normalized match:', name, '→', existing.item.name);
         // Check if we already merged this existing record
-        alreadyMerged = alreadyMerged || mergedByName.get(existing.item.name.toLowerCase().trim());
+        const existingComposite = existing.item.name.toLowerCase().trim() + '|' + (existing.item.state || '').toUpperCase().trim();
+        alreadyMerged = alreadyMerged || mergedByName.get(existingComposite) || mergedByName.get(existing.item.name.toLowerCase().trim());
       }
     }
     // Fallback: try state + name contains match
     if (!existing) {
-      const csvState = getStateFromRow(csvRow);
       existing = findByStateAndName(name, csvState);
       if (existing) {
-        alreadyMerged = alreadyMerged || mergedByName.get(existing.item.name.toLowerCase().trim());
+        const existingComposite = existing.item.name.toLowerCase().trim() + '|' + (existing.item.state || '').toUpperCase().trim();
+        alreadyMerged = alreadyMerged || mergedByName.get(existingComposite) || mergedByName.get(existing.item.name.toLowerCase().trim());
       }
     }
     if (!existing && !alreadyMerged && idx < 10) {
-      console.log('[SFDC Merge] No match for:', name, '(exact:', nameKey, ', normalized:', normalizedKey, ')');
+      console.log('[SFDC Merge] No match for:', name, '(exact:', nameKey, ', normalized:', normalizedKey, ', state:', csvStateKey || 'none', ')');
     }
 
     // If this account was already merged from a previous CSV row, update that record (multiple opps scenario)
@@ -3793,6 +3903,12 @@ function runMerge(csvData, existingData) {
 
       mergedData.push(merged);
       // Track this merged record to handle duplicate CSV rows (multiple opps per account)
+      // Use composite keys (name+state) so same-name different-state accounts stay separate
+      const mergedState = (merged.state || '').toUpperCase().trim();
+      mergedByName.set(nameKey + '|' + mergedState, merged);
+      mergedByName.set(normalizedKey + '|' + mergedState, merged);
+      mergedByName.set(existing.item.name.toLowerCase().trim() + '|' + mergedState, merged);
+      // Also set name-only keys for backwards compat (CSV rows without state info)
       mergedByName.set(nameKey, merged);
       mergedByName.set(normalizedKey, merged);
       mergedByName.set(existing.item.name.toLowerCase().trim(), merged);
@@ -3830,6 +3946,11 @@ function runMerge(csvData, existingData) {
       }
       mergedData.push(newRecord);
       // Track this new record to handle duplicate CSV rows
+      // Use composite keys (name+state) so same-name different-state accounts stay separate
+      const newState = (newRecord.state || '').toUpperCase().trim();
+      mergedByName.set(nameKey + '|' + newState, newRecord);
+      mergedByName.set(normalizedKey + '|' + newState, newRecord);
+      // Also set name-only keys for backwards compat
       mergedByName.set(nameKey, newRecord);
       mergedByName.set(normalizedKey, newRecord);
     }
@@ -4108,18 +4229,20 @@ function parseNumericFields(record) {
 
 function findPartialMatch(name, existingByName) {
   // Check if there's a similar name in existing data
+  // existingByName values are arrays of { item, idx } entries
   const nameLower = name.toLowerCase().trim();
   const nameWords = nameLower.split(/\s+/);
 
-  for (const [existingKey, data] of existingByName) {
+  for (const [existingKey, entries] of existingByName) {
+    const first = entries[0]; // Use first entry for name comparison
     // Check if first word matches (e.g., "Dallas" matches "Dallas ISD")
     const existingWords = existingKey.split(/\s+/);
     if (nameWords[0] === existingWords[0] && nameWords[0].length > 3) {
-      return data.item.name;
+      return first.item.name;
     }
     // Check for substring match
     if (existingKey.includes(nameLower) || nameLower.includes(existingKey)) {
-      return data.item.name;
+      return first.item.name;
     }
   }
   return null;
