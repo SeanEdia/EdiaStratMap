@@ -215,6 +215,20 @@ function crossLinkCustomers() {
   const acctNorms = new Set();
   ACCOUNT_DATA.forEach(d => acctNorms.add(normalizeDistrictName(d.name)));
 
+  // Build school-to-district map: normalized school name → district name.
+  // Used to set parent_district on customer records for school-level customers.
+  const schoolToDistrict = new Map();
+  ACCOUNT_DATA.forEach(d => {
+    if (d._schools && d._schools.length > 0) {
+      d._schools.forEach(schoolName => {
+        const norm = normalizeDistrictName(schoolName);
+        if (!schoolToDistrict.has(norm)) {
+          schoolToDistrict.set(norm, d.name);
+        }
+      });
+    }
+  });
+
   // Forward link: account → customer
   let linked = 0;
   ACCOUNT_DATA.forEach(d => {
@@ -231,12 +245,22 @@ function crossLinkCustomers() {
   });
 
   // Reverse link: customer → account
+  // Also set parent_district for school-level customers
+  let parentLinked = 0;
   CUSTOMER_DATA.forEach(c => {
     const norm = normalizeDistrictName(c.name);
     c.also_account = acctNorms.has(norm);
+
+    // If customer name matches a school within a district, set parent_district
+    const parentDistrict = schoolToDistrict.get(norm);
+    if (parentDistrict) {
+      c.parent_district = parentDistrict;
+      parentLinked++;
+    }
   });
 
   if (linked) console.log(`[CrossLink] ${linked} account(s) matched to customer records`);
+  if (parentLinked) console.log(`[CrossLink] ${parentLinked} customer(s) linked to parent district`);
 }
 
 // ============ PERFORMANCE INDICES ============
@@ -370,6 +394,20 @@ const INACTIVE_OWNERS = new Set([
   'Bella Duffey', 'Scott Walters',
 ]);
 
+// Ben Foley: still with company, NOT an account holder.
+// Accounts with >30k students → hard override to Sean Johnson (no holdout).
+// Accounts with ≤30k students or missing enrollment → treat as inactive (holdout logic).
+const BEN_FOLEY = 'Ben Foley';
+
+// CTO and SFDC Admin — not account holders.
+// Only reassign their accounts when the uploaded CSV contains opp data for the account.
+// If opp exists → treat as inactive (run holdout/territory logic).
+// If no opp → leave ownership as-is (do not reassign).
+const CONDITIONAL_REASSIGN = new Set([
+  'Iain Proctor',     // CTO
+  'Nicholas Watson',  // SFDC Admin
+]);
+
 let _accountRepsCache = null;
 function getAccountReps() {
   if (!_accountRepsCache) {
@@ -416,26 +454,53 @@ function getHoldoutAE(d) {
 }
 
 // Resolve the account owner from a CSV value against an existing owner.
-// Handles three scenarios:
-//   1. CSV owner is a current, active rep → assign (unless existing differs → conflict, keep existing)
-//   2. CSV owner is a former rep or non-sales employee → treat as unassigned, keep existing if valid
-//   3. CSV owner is blank or unrecognized → keep existing if valid, else unassigned
+// Optional ctx: { enrollment, hasUploadedOpp } for conditional reassignment rules.
+// Evaluation order:
+//   1. Blank CSV → keep existing if active
+//   2. Ben Foley → enrollment > 30k → Sean Johnson; else holdout (treat as inactive)
+//   3. CONDITIONAL_REASSIGN (Iain/Nicholas) → has opp → holdout; no opp → leave as-is
+//   4. INACTIVE_OWNERS → keep existing if active (holdout logic)
+//   5. Active rep → assign (unless existing differs → conflict, keep existing)
+//   6. Unrecognized → keep existing if active
 // Returns the resolved ae string (may be '' for truly unassigned).
-function resolveOwner(csvAE, existingAE) {
+function resolveOwner(csvAE, existingAE, ctx) {
   const csv = (csvAE || '').trim();
   const existing = (existingAE || '').trim();
 
-  // CSV AE is blank → keep existing if active, else unassigned
+  // 1. CSV AE is blank → keep existing if active, else unassigned
   if (!csv) {
     return (existing && ALL_ACTIVE_REPS.has(existing)) ? existing : '';
   }
 
-  // CSV AE is a known inactive/former owner → keep existing if active, else unassigned
+  // 2. Ben Foley: >30k students → hard override to Sean Johnson (no holdout).
+  //    ≤30k or missing enrollment → treat as inactive (holdout logic).
+  if (csv === BEN_FOLEY) {
+    const enrollment = ctx ? parseEnrollment(ctx.enrollment) : 0;
+    if (enrollment > STRATEGIC_ENROLLMENT_THRESHOLD) {
+      return ACCOUNT_PRIMARY_AE; // Sean Johnson — direct assignment
+    }
+    // ≤30k or missing → same as inactive owner
+    return (existing && ALL_ACTIVE_REPS.has(existing)) ? existing : '';
+  }
+
+  // 3. CONDITIONAL_REASSIGN (Iain Proctor / Nicholas Watson):
+  //    Only reassign when the uploaded CSV has opp data for this account.
+  //    Has opp → treat as inactive (holdout logic). No opp → leave as-is.
+  if (CONDITIONAL_REASSIGN.has(csv)) {
+    if (ctx && ctx.hasUploadedOpp) {
+      // Opp exists → reassign through holdout (keep existing active rep, else unassigned)
+      return (existing && ALL_ACTIVE_REPS.has(existing)) ? existing : '';
+    }
+    // No opp → leave the record as-is, don't overwrite a valid rep
+    return (existing && ALL_ACTIVE_REPS.has(existing)) ? existing : csv;
+  }
+
+  // 4. CSV AE is a known inactive/former owner → keep existing if active, else unassigned
   if (INACTIVE_OWNERS.has(csv)) {
     return (existing && ALL_ACTIVE_REPS.has(existing)) ? existing : '';
   }
 
-  // CSV AE is a current, active rep
+  // 5. CSV AE is a current, active rep
   if (ALL_ACTIVE_REPS.has(csv)) {
     // If existing is also a different active rep (and not the Strategic primary default)
     // → conflict: keep existing owner, conflict is logged separately in the merge
@@ -446,7 +511,7 @@ function resolveOwner(csvAE, existingAE) {
     return csv;
   }
 
-  // CSV AE is an unrecognized name (not active, not in inactive list)
+  // 6. CSV AE is an unrecognized name (not active, not in inactive list)
   // Treat as unassigned — keep existing if active
   return (existing && ALL_ACTIVE_REPS.has(existing)) ? existing : '';
 }
@@ -2203,6 +2268,9 @@ function buildStratPopup(d) {
     : 'strat';
   html += `<div class="popup-type ${typeClass}">${typeLabel}</div>`;
   html += `<h3 class="copyable" data-tooltip="Click to copy" onclick="copyText('${d.name.replace(/'/g, "\\\\'")}', this)">${d.name}</h3>`;
+  if (d.parent_district) {
+    html += `<div style="font-size:11px;color:var(--text-muted);margin:-4px 0 6px;">District: ${d.parent_district}</div>`;
+  }
 
   // Build Account Exec display: show territory AE (Assigned) and holdout AE on second line
   let aeDisplay = null;
@@ -2391,6 +2459,9 @@ function buildCustPopup(d) {
     html += `<div class="popup-type cust">Active Customer</div>`;
   }
   html += `<h3>${d.name}</h3>`;
+  if (d.parent_district) {
+    html += `<div style="font-size:11px;color:var(--text-muted);margin:-4px 0 6px;">District: ${d.parent_district}</div>`;
+  }
 
   const arr = parseFloat(d.arr) || 0;
   const arr12 = parseFloat(d.arr_12mo_ago) || 0;
@@ -3953,7 +4024,8 @@ function consolidateParentAccounts(csvData) {
     }
   });
 
-  // Attach school names (_schools) to each parent row from their child rows
+  // Attach school names (_schools) to each parent row from their child rows,
+  // and roll up any opp data from child rows into the parent district.
   parentRows.forEach(row => {
     const rowName = getNameFromRow(row);
     if (!rowName) return;
@@ -3962,6 +4034,24 @@ function consolidateParentAccounts(csvData) {
     if (children && children.length > 0) {
       row._schools = children.map(c => getNameFromRow(c)).filter(Boolean).sort();
       console.log('[SFDC Merge] Attached', row._schools.length, 'schools to:', rowName);
+
+      // Roll up opp data from child rows into the parent district.
+      // This prevents school-level opps from being silently dropped during consolidation.
+      children.forEach(child => {
+        const childOppFields = {};
+        Object.keys(child).forEach(k => {
+          if (typeof child[k] !== 'string') return;
+          const mapped = mapFieldName(k);
+          if (OPP_ENTRY_FIELDS.has(mapped) && child[k].trim()) {
+            childOppFields[mapped] = child[k].trim();
+          }
+        });
+        if (Object.keys(childOppFields).length > 0) {
+          const oppEntry = buildOppEntry(childOppFields);
+          upsertOpp(row, oppEntry);
+          console.log('[SFDC Merge] Rolled up opp from school', getNameFromRow(child), 'to district:', rowName);
+        }
+      });
     }
   });
 
@@ -4214,6 +4304,12 @@ function runMerge(csvData, existingData) {
     // If this account was already merged from a previous CSV row, update that record (multiple opps scenario)
     if (alreadyMerged) {
       console.log('[SFDC Merge] Multiple opps for:', name, '- updating existing merged record');
+      // Pre-scan for opp fields so resolveOwner knows if this row has opp data
+      const rowHasOppData = Object.keys(csvRow).some(key => {
+        if (typeof csvRow[key] !== 'string') return false;
+        return OPP_ENTRY_FIELDS.has(mapFieldName(key)) && csvRow[key].trim();
+      });
+      if (rowHasOppData) alreadyMerged._hasUploadedOpp = true;
       // Separate opp fields from account fields, then upsert each opp by product area
       const csvOppFields = {};
       Object.keys(csvRow).forEach(key => {
@@ -4230,7 +4326,10 @@ function runMerge(csvData, existingData) {
           } else if (mappedKey === 'ae') {
             // Don't blindly overwrite ae — it was already resolved on the first row.
             // Only update if the new CSV value resolves to a valid active rep.
-            const candidateAE = resolveOwner(val.trim(), alreadyMerged.ae || '');
+            const candidateAE = resolveOwner(val.trim(), alreadyMerged.ae || '', {
+              enrollment: alreadyMerged.enrollment,
+              hasUploadedOpp: alreadyMerged._hasUploadedOpp,
+            });
             if (candidateAE) alreadyMerged.ae = candidateAE;
           } else {
             // For non-opp fields, update if the CSV has a value (e.g. region)
@@ -4327,12 +4426,27 @@ function runMerge(csvData, existingData) {
       if (!isDOE(merged.name)) {
         const csvAE = (merged.ae || '').trim();
         const priorAE = (existing.item.ae || '').trim();
-        merged.ae = resolveOwner(csvAE, priorAE);
+        const hasUploadedOpp = Object.keys(csvOppFields).length > 0;
+        merged.ae = resolveOwner(csvAE, priorAE, {
+          enrollment: merged.enrollment,
+          hasUploadedOpp,
+        });
+        if (hasUploadedOpp) merged._hasUploadedOpp = true;
 
         // Log inactive-owner resolutions
         if (csvAE && INACTIVE_OWNERS.has(csvAE)) {
           console.log('[SFDC Merge] Inactive owner resolved:', merged.name,
             '- CSV owner', csvAE, '→', merged.ae || '(unassigned)');
+        }
+        // Log Ben Foley resolutions
+        if (csvAE === BEN_FOLEY) {
+          console.log('[SFDC Merge] Ben Foley resolved:', merged.name,
+            '- enrollment', parseEnrollment(merged.enrollment), '→', merged.ae || '(unassigned)');
+        }
+        // Log CONDITIONAL_REASSIGN resolutions
+        if (csvAE && CONDITIONAL_REASSIGN.has(csvAE)) {
+          console.log('[SFDC Merge] Conditional reassign:', merged.name,
+            '- owner', csvAE, ', hasOpp:', hasUploadedOpp, '→', merged.ae || '(unassigned)');
         }
 
         // Conflict: CSV brings a different active rep than the current active rep
@@ -4489,7 +4603,12 @@ function runMerge(csvData, existingData) {
       // unknown names → unassigned, active reps → assigned normally.
       if (!isDOE(newRecord.name)) {
         const csvAE = (newRecord.ae || '').trim();
-        newRecord.ae = resolveOwner(csvAE, '');
+        const hasUploadedOpp = Object.keys(newOppFields).length > 0;
+        newRecord.ae = resolveOwner(csvAE, '', {
+          enrollment: newRecord.enrollment,
+          hasUploadedOpp,
+        });
+        if (hasUploadedOpp) newRecord._hasUploadedOpp = true;
         if (csvAE && csvAE !== newRecord.ae) {
           console.log('[SFDC Merge] New record owner resolved:', newRecord.name,
             '- CSV owner', csvAE, '→', newRecord.ae || '(unassigned)');
