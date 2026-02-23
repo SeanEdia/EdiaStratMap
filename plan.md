@@ -1,136 +1,132 @@
-# Implementation Plan: Owner Reassignment Special Names + Parent Account Hierarchy
+# Diagnosis & Fix Plan: Account Owner Fallback Logic
 
-All changes are in `/home/user/EdiaStratMap/src/js/app.js`.
+## Root Cause Analysis
 
----
+### Pattern 1: Managers treated as valid account holders
 
-## PART 1: Special Name Handling in resolveOwner
+**The bug is NOT in the "unrecognized" path (step 6) — Samantha Santucci never reaches step 6.**
 
-### 1A. Add constants after INACTIVE_OWNERS (after line 371)
+Samantha Santucci is the **manager** of ENT East (`ent-east.json` line 3). When `ALL_ACTIVE_REPS` is built (`app.js:380-384`), managers are included:
 
 ```js
-// Ben Foley: still with company, NOT an account holder.
-// Accounts >30k students → hard override to Sean Johnson (no holdout).
-// Accounts ≤30k or missing enrollment → treat as inactive (run normal holdout logic).
-const BEN_FOLEY = 'Ben Foley';
-
-// CTO and SFDC Admin — not account holders.
-// Only reassign their accounts when the account has opp data in the uploaded CSV.
-// If opp exists → treat as inactive (run holdout/territory logic).
-// If no opp → leave ownership as-is (do not reassign).
-const CONDITIONAL_REASSIGN = new Set([
-  'Iain Proctor',     // CTO
-  'Nicholas Watson',  // SFDC Admin
-]);
+if (info.manager) ALL_ACTIVE_REPS.add(info.manager);
 ```
 
-Ben Foley, Iain Proctor, and Nicholas Watson are NOT added to `INACTIVE_OWNERS`.
+So when `resolveOwner("Samantha Santucci", "", { oppOwner: "Victoria Macoul" })` runs:
+- Step 5 (`app.js:512`): `ALL_ACTIVE_REPS.has("Samantha Santucci")` → **TRUE**
+- She's treated as a valid active rep assignee
+- The account gets `ae = "Samantha Santucci"`
+- The `oppOwner` fallback to Victoria Macoul **never fires**
 
-### 1B. Modify `resolveOwner` signature and logic (lines 424–452)
+The account then appears under Samantha Santucci in the ENT East manager view, but is invisible when browsing by Victoria Macoul or any other rep. The pin exists but is filtered to the wrong person.
 
-Add an optional third parameter `ctx` with shape `{ enrollment, hasUploadedOpp }`.
+**This affects all managers**: Brad Halsey (ENT West), Christina Ceballos (SMB), and any future managers added to team configs. None of them hold accounts, but `resolveOwner` treats them as valid assignees.
 
-New order of evaluation inside resolveOwner:
+### Pattern 2: Active reps with no data loaded yet
 
-1. **Blank CSV** → keep existing if active, else unassigned (unchanged)
-2. **Ben Foley check** → if `csv === BEN_FOLEY`:
-   - Parse enrollment from `ctx.enrollment` using `parseEnrollment()`
-   - If enrollment > 30,000 → return `'Sean Johnson'` (hard override, no holdout)
-   - If enrollment ≤ 30,000 OR missing → treat as inactive (return existing if active, else `''`)
-3. **CONDITIONAL_REASSIGN check** → if `CONDITIONAL_REASSIGN.has(csv)`:
-   - If `ctx.hasUploadedOpp` is true → treat as inactive (return existing if active, else `''`)
-   - If no uploaded opp → return `csv` (leave ownership as-is)
-4. **INACTIVE_OWNERS check** → unchanged
-5. **Active rep check** → unchanged
-6. **Unrecognized name** → unchanged
+Ally McCready and Daniel Way are both in `ALL_ACTIVE_REPS` (reps in ENT East and SMB respectively). When Victoria's opp CSV has an account owned by Ally:
 
-### 1C. Update all 3 call sites of resolveOwner to pass context
+- Step 5 (`app.js:512`): `ALL_ACTIVE_REPS.has("Ally McCready")` → TRUE
+- Account gets `ae = "Ally McCready"`
+- Since Ally's data hasn't been uploaded, the account lands under Ally's index
+- When browsing Victoria's view → account is invisible
+- When browsing Ally's view → the account shows, but none of Ally's own data is there yet
 
-**Existing record match** (~line 4330):
-- `csvOppFields` is already populated by this point
-- Pass `{ enrollment: merged.enrollment, hasUploadedOpp: Object.keys(csvOppFields).length > 0 }`
-- Set `merged._hasUploadedOpp = true` if opp data exists (for alreadyMerged lookups)
+This will happen for **every rep** whose data hasn't been uploaded yet. With incremental uploads, this is the common case.
 
-**New record** (~line 4492):
-- `newOppFields` is already populated
-- Pass `{ enrollment: newRecord.enrollment, hasUploadedOpp: Object.keys(newOppFields).length > 0 }`
-- Set `newRecord._hasUploadedOpp = true` if opp data exists
+### Pattern 3: The Opp Owner fallback itself
 
-**AlreadyMerged (duplicate CSV row)** (~line 4233):
-- Pre-scan the CSV row for opp fields before the forEach loop
-- If opp fields found, set `alreadyMerged._hasUploadedOpp = true`
-- Pass `{ enrollment: alreadyMerged.enrollment, hasUploadedOpp: alreadyMerged._hasUploadedOpp }`
-
----
-
-## PART 2: Parent Account / District Hierarchy
-
-### 2A. Enhance `consolidateParentAccounts` (~line 3900)
-
-Currently, child rows (schools) are removed and only their names go into the `_schools` array on the parent. Opp data from child rows is lost.
-
-**Change**: After attaching school names, also merge any opp data from child rows into the parent district row. This prevents opp uploads from creating duplicate district-level records when the opps are on school-level CSV rows.
-
-Logic:
-- For each child row that has opp fields, extract them
-- Upsert each child's opp into the parent row's opps array
-- This ensures school-level opps roll up to their parent district
-
-### 2B. Enhance `crossLinkCustomers` (~line 205)
-
-Add a school-to-district lookup so customer records for schools get a `parent_district` field.
-
-Logic:
-- After building the account name lookup, iterate `ACCOUNT_DATA`
-- For each account with `_schools`, map each school name (normalized) → district name
-- Then, for each customer record, check if its name matches a school name
-- If so, set `c.parent_district = districtName`
-- Also check during forward link: if account match found, check if customer name matches a school (not the district itself) and set `parent_district`
-
-### 2C. Show parent district in `buildStratPopup` (~line 2205)
-
-After the `<h3>` name line:
-- If `d.parent_district` exists and differs from `d.name`, add:
-  `<div class="popup-parent-district">District: ${d.parent_district}</div>`
-
-### 2D. Show parent district in `buildCustPopup` (~line 2393)
-
-After the `<h3>` name line:
-- If `d.parent_district` exists, add:
-  `<div class="popup-parent-district">District: ${d.parent_district}</div>`
-
-### 2E. Preserve parent_account through merge operations
-
-In `runMerge`, when merging CSV fields into existing records:
-- The `parent_account` field is already mapped by `mapFieldName` (passes through as-is)
-- Ensure it's preserved in the merged record (already happens since all CSV fields are copied)
-- For the consolidation step: `parent_account` is deliberately removed from synthetic records (correct behavior — synthetic records ARE districts)
-- For child rows processed through consolidation: their `parent_account` info is used for grouping, then the child is folded into the parent. This is correct and preserves the hierarchy.
-
-### 2F. Minimal CSS for parent district display
-
-Add a `.popup-parent-district` style rule in the popup HTML (inline style) for the district subtitle:
-- Smaller font, muted color, positioned below the school name
-
----
-
-## Order of Operations Summary
-
-In `resolveOwner(csvAE, existingAE, ctx)`:
-```
-1. Blank CSV → keep existing if active
-2. Ben Foley → check enrollment for hard override vs holdout
-3. CONDITIONAL_REASSIGN (Iain/Nicholas) → check hasUploadedOpp
-4. INACTIVE_OWNERS → keep existing if active
-5. Active rep → assign (with conflict detection)
-6. Unrecognized → keep existing if active
+The `fallback()` function (`app.js:475-478`) is correct:
+```js
+const fallback = () => {
+  if (oppOwner && ALL_ACTIVE_REPS.has(oppOwner)) return oppOwner;
+  return (existing && ALL_ACTIVE_REPS.has(existing)) ? existing : '';
+};
 ```
 
-## What does NOT change
+Step 6 (unrecognized path, `app.js:524`) correctly calls `fallback()`. The problem for Huber Heights is that Samantha Santucci **never reaches step 6** — she hits step 5 instead.
 
-- `getTerritoryAE` / `getHoldoutAE` logic — unchanged
-- `INACTIVE_OWNERS` set — Ben Foley, Iain Proctor, Nicholas Watson are NOT added
-- Existing consolidation behavior — schools still roll up into districts for account data
-- `_schools` array format — remains string array
-- Marker placement — pins already drop at record lat/lng (school customers already have their own coordinates)
-- Conflict detection logic — unchanged
+The Stafford County success case (John Tyrrell → Victoria Macoul) worked because John Tyrrell IS in `INACTIVE_OWNERS`, so he correctly hit step 4 → `fallback()` → Victoria.
+
+## Proposed Fixes
+
+### Fix 1: Distinguish managers from account-holding reps
+
+Build a `MANAGERS` set from team config managers. In `resolveOwner`, add a check before step 5: if the CSV AE is a manager, treat them like an unrecognized name and fall through to Opp Owner.
+
+**Location**: `app.js` after line 384 (after `ALL_ACTIVE_REPS` is built)
+
+```js
+const MANAGERS = new Set();
+Object.values(TEAM_REP_DATA).forEach(info => {
+  if (info.manager) MANAGERS.add(info.manager);
+});
+```
+
+New step in `resolveOwner` between steps 4 and 5:
+```js
+// 4b. CSV AE is a manager (not an account holder) → fallback
+if (MANAGERS.has(csv)) {
+  return fallback();
+}
+```
+
+Auto-adapts when managers change in team config. No hardcoded name list.
+
+### Fix 2: Active reps with no loaded data fall through to Opp Owner
+
+Build a `loadedReps` set at the start of `runMerge` by scanning which reps actually have accounts in the existing dataset. Pass it through `ctx` to `resolveOwner`.
+
+**In `runMerge`** (after building existingByName):
+```js
+const loadedReps = new Set();
+existingData.forEach(item => {
+  if (item.ae) loadedReps.add(item.ae);
+});
+```
+
+**In `resolveOwner`** step 5 — before accepting the CSV rep:
+```js
+if (ALL_ACTIVE_REPS.has(csv)) {
+  // Active rep with no data loaded yet → fall through to Opp Owner
+  if (ctx && ctx.loadedReps && !ctx.loadedReps.has(csv)) {
+    return fallback();
+  }
+  // existing conflict logic unchanged...
+}
+```
+
+When that rep's data is eventually uploaded, the holdout/conflict logic will naturally reconcile.
+
+### Fix 3: Track resolution reasons in merge stats
+
+Add a `resolutions` array to the merge stats object that records every owner resolution with the reason:
+- `"inactive_owner"` — Account Owner in INACTIVE_OWNERS
+- `"manager_fallback"` — Account Owner is a manager
+- `"no_data_loaded"` — Account Owner is active rep with no data in system
+- `"unrecognized"` — Account Owner not in any known list
+- `"ben_foley"` — Ben Foley special case
+- `"conditional_reassign"` — Iain/Nicholas special case
+- `"direct_assign"` — Account Owner is active rep with data, assigned normally
+- `"conflict_kept_existing"` — Active rep conflict, kept existing owner
+
+### Fix 4: Post-upload summary modal
+
+Replace the `alert(buildMergeMessage(...))` in `confirmMerge` with a styled summary modal showing:
+- Total accounts processed / new / updated
+- Per-account resolution details (AE assigned, method used)
+- Opp Owner fallback usage (with reason per account)
+- Geocoding failures (with address attempted)
+- Records missing coordinates (hidden from map)
+
+## Implementation Steps
+
+1. Add `MANAGERS` set after `ALL_ACTIVE_REPS` construction (~line 384)
+2. Add manager check in `resolveOwner` between steps 4 and 5
+3. Build `loadedReps` set at start of `runMerge`
+4. Pass `loadedReps` through `ctx` to all `resolveOwner` call sites
+5. Add no-data-loaded check in `resolveOwner` step 5
+6. Add `resolutions` tracking to merge stats in all three merge paths (existing match, new record, already-merged)
+7. Build summary modal HTML/CSS
+8. Replace `alert()` calls with summary modal in `confirmMerge`
+9. Add console logging for manager and no-data-loaded fallback paths
