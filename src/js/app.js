@@ -523,16 +523,18 @@ function initMap() {
   updateDataSourceIndicator();
   updateConflictsBadge();
 
-  // Auto-geocode any localStorage records that were repaired (now have state but lack lat/lng)
+  // Auto-recover coordinates for localStorage records missing lat/lng:
+  // 1. Cross-reference other datasets for matching names (instant, no API calls)
+  // 2. Geocode remaining records via Nominatim API (handles records with or without state)
   if (_dataSource === 'localStorage') {
     const allRecords = [...ACCOUNT_DATA, ...CUSTOMER_DATA];
-    const needsGeocode = allRecords.filter(r => (!r.lat || !r.lng) && r.state);
-    if (needsGeocode.length > 0) {
-      console.log(`[Persist] ${needsGeocode.length} record(s) have state but no coordinates — auto-geocoding`);
+    const needsCoords = allRecords.filter(r => !r.lat || !r.lng);
+    if (needsCoords.length > 0) {
+      console.log(`[Persist] ${needsCoords.length} record(s) missing coordinates — auto-recovering`);
       geocodeMissingRecords(allRecords).then(() => {
         saveDataToLocalStorage(ACCOUNT_DATA, CUSTOMER_DATA);
         buildIndices();
-        applyFilters();
+        if (!welcomeActive) applyFilters();
       });
     }
   }
@@ -4291,6 +4293,35 @@ function runMerge(csvData, existingData) {
       });
       newRecord.name = name;
 
+      // Cross-reference: if this new record is missing location data, try to
+      // find a match in the OTHER dataset (e.g. opp introduces a new account
+      // that already exists as a customer, or vice versa). This is the primary
+      // fix for the "data exists but no pin" issue.
+      const otherDataset = (existingData === ACCOUNT_DATA) ? CUSTOMER_DATA
+        : (existingData === CUSTOMER_DATA) ? ACCOUNT_DATA : null;
+      if (otherDataset && (!newRecord.lat || !newRecord.lng)) {
+        const newNorm = normalizeDistrictName(name);
+        for (const other of otherDataset) {
+          if (!other.lat || !other.lng) continue;
+          const otherNorm = normalizeDistrictName(other.name);
+          if (other.name.toLowerCase().trim() === name.toLowerCase().trim() || otherNorm === newNorm) {
+            // Verify state if both records have it
+            const nState = (newRecord.state || '').toUpperCase().trim();
+            const oState = (other.state || '').toUpperCase().trim();
+            if (nState && oState && nState !== oState) continue;
+            console.log('[SFDC Merge] Cross-dataset match for new record:', name, '→ inherited coords from', other.name);
+            newRecord.lat = other.lat;
+            newRecord.lng = other.lng;
+            // Also inherit missing location fields
+            if (!newRecord.state && other.state) newRecord.state = other.state;
+            if (!newRecord.city && other.city) newRecord.city = other.city;
+            if (!newRecord.address && other.address) newRecord.address = other.address;
+            if (!newRecord.region && other.region) newRecord.region = other.region;
+            break;
+          }
+        }
+      }
+
       // Build opps array for new record
       if (Object.keys(newOppFields).length > 0) {
         const oppEntry = buildOppEntry(newOppFields);
@@ -4763,6 +4794,9 @@ function closeMergeModal() {
   document.getElementById('mergeModal').classList.remove('show');
   pendingMergeData = null;
   pendingMergeStats = null;
+  pendingAccountMerge = null;
+  pendingCustomerMerge = null;
+  mergeHasTypeSplit = false;
 }
 
 // State abbreviation to full name mapping (for validating geocode results)
@@ -4793,6 +4827,47 @@ function isResultInState(result, expectedState) {
     const resultState = (result.address.state || '').toLowerCase();
     if (stateFull && resultState.includes(stateFull)) return true;
     if (resultState.includes(stateAbbr.toLowerCase())) return true;
+  }
+  return false;
+}
+
+// Cross-reference a record against all known datasets to inherit location data.
+// Called before geocoding to avoid unnecessary API calls.
+function inheritLocationData(record) {
+  if (record.lat && record.lng) return true; // Already has coordinates
+  if (!record.name) return false;
+
+  const nameLower = record.name.toLowerCase().trim();
+  const normalizedName = normalizeDistrictName(record.name);
+
+  // Search both ACCOUNT_DATA and CUSTOMER_DATA for a matching record with coordinates
+  const allSources = [ACCOUNT_DATA, CUSTOMER_DATA];
+  for (const dataset of allSources) {
+    for (const source of dataset) {
+      if (!source.lat || !source.lng) continue;
+      if (source === record) continue; // Don't match self
+
+      const sourceLower = source.name.toLowerCase().trim();
+      const sourceNormalized = normalizeDistrictName(source.name);
+
+      // Exact match or normalized match
+      if (sourceLower === nameLower || sourceNormalized === normalizedName) {
+        // If both have state, verify they match
+        const recState = (record.state || '').toUpperCase().trim();
+        const srcState = (source.state || '').toUpperCase().trim();
+        if (recState && srcState && recState !== srcState) continue;
+
+        console.log('[LocationInherit] Inherited coords for:', record.name, '→', source.lat, source.lng, 'from', source.name);
+        record.lat = source.lat;
+        record.lng = source.lng;
+        // Also inherit missing location fields
+        if (!record.state && source.state) record.state = source.state;
+        if (!record.city && source.city) record.city = source.city;
+        if (!record.address && source.address) record.address = source.address;
+        if (!record.region && source.region) record.region = source.region;
+        return true;
+      }
+    }
   }
   return false;
 }
@@ -4845,15 +4920,27 @@ async function geocodeDistrict(name, state, record) {
     }
   }
 
-  // Fall back to free-text queries with state validation
+  // Fall back to free-text queries
   const queries = [];
-  queries.push(
-    `${baseName}, ${state}, USA`,
-    `${baseName} County, ${state}, USA`,
-    `${name}, ${state}, USA`,
-    `${baseName} city, ${state}, USA`,
-    `${name} school district, ${state}, USA`
-  );
+  if (state) {
+    // State-aware queries (preferred — can validate results)
+    queries.push(
+      `${baseName}, ${state}, USA`,
+      `${baseName} County, ${state}, USA`,
+      `${name}, ${state}, USA`,
+      `${baseName} city, ${state}, USA`,
+      `${name} school district, ${state}, USA`
+    );
+  } else {
+    // No state available — use name-only queries (less accurate but better than nothing)
+    console.log('[Geocode] No state for:', name, '- trying name-only queries');
+    queries.push(
+      `${name} school district, USA`,
+      `${baseName} school district, USA`,
+      `${name}, USA`,
+      `${baseName}, USA`
+    );
+  }
 
   const uniqueQueries = [...new Set(queries)].filter(q => q && !q.includes('undefined'));
 
@@ -4867,13 +4954,33 @@ async function geocodeDistrict(name, state, record) {
       });
       const data = await response.json();
       if (data && data.length > 0) {
-        // Find the first result that's actually in the correct state
-        const match = data.find(r => isResultInState(r, state));
-        if (match) {
-          console.log('[Geocode] Found:', name, '→', match.lat, match.lon, '(query:', query, ')');
-          return { lat: parseFloat(match.lat), lng: parseFloat(match.lon) };
+        if (state) {
+          // Find the first result that's actually in the correct state
+          const match = data.find(r => isResultInState(r, state));
+          if (match) {
+            console.log('[Geocode] Found:', name, '→', match.lat, match.lon, '(query:', query, ')');
+            return { lat: parseFloat(match.lat), lng: parseFloat(match.lon) };
+          }
+          console.log('[Geocode] All results for', query, 'were in wrong state (expected:', state, ')');
+        } else {
+          // No state to validate against — accept best result and extract state from it
+          const best = data[0];
+          console.log('[Geocode] Found (no state validation):', name, '→', best.lat, best.lon, '(query:', query, ')');
+          const result = { lat: parseFloat(best.lat), lng: parseFloat(best.lon) };
+          // Try to extract state from the result to fill the record
+          if (best.address && best.address.state && record) {
+            const extractedState = best.address.state;
+            // Reverse-lookup state abbreviation
+            const stateAbbr = Object.entries(STATE_FULL_NAMES).find(
+              ([abbr, full]) => full.toLowerCase() === extractedState.toLowerCase()
+            );
+            if (stateAbbr) {
+              record.state = stateAbbr[0];
+              console.log('[Geocode] Extracted state from result:', record.state);
+            }
+          }
+          return result;
         }
-        console.log('[Geocode] All results for', query, 'were in wrong state (expected:', state, ')');
       }
       // Rate limit between query attempts
       await new Promise(resolve => setTimeout(resolve, 1100));
@@ -4882,28 +4989,41 @@ async function geocodeDistrict(name, state, record) {
     }
   }
 
-  // Last resort: try to at least place it somewhere in the state
-  console.warn('[Geocode] Trying state-level fallback for:', name, state);
-  try {
-    const stateUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent((stateFull || state) + ', USA')}&limit=1&countrycodes=us`;
-    const response = await fetch(stateUrl, {
-      headers: { 'User-Agent': 'EdiaStratMap/1.0' }
-    });
-    const data = await response.json();
-    if (data && data.length > 0) {
-      console.log('[Geocode] Using state center for:', name, '→', data[0].lat, data[0].lon);
-      return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+  // Last resort: try to at least place it somewhere in the state (only if we have a state)
+  if (state) {
+    console.warn('[Geocode] Trying state-level fallback for:', name, state);
+    try {
+      const stateUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent((stateFull || state) + ', USA')}&limit=1&countrycodes=us`;
+      const response = await fetch(stateUrl, {
+        headers: { 'User-Agent': 'EdiaStratMap/1.0' }
+      });
+      const data = await response.json();
+      if (data && data.length > 0) {
+        console.log('[Geocode] Using state center for:', name, '→', data[0].lat, data[0].lon);
+        return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+      }
+    } catch (err) {
+      console.error('[Geocode] State fallback error:', err);
     }
-  } catch (err) {
-    console.error('[Geocode] State fallback error:', err);
   }
 
-  console.warn('[Geocode] No results for:', name, state);
+  console.warn('[Geocode] No results for:', name, state || '(no state)');
   return null;
 }
 
 // Geocode all records missing lat/lng (with rate limiting)
 async function geocodeMissingRecords(records) {
+  // Phase 1: Try to inherit coordinates from existing datasets (no API calls)
+  let inherited = 0;
+  records.forEach(r => {
+    if (!r.lat || !r.lng) {
+      if (inheritLocationData(r)) inherited++;
+    }
+  });
+  if (inherited > 0) {
+    console.log('[Geocode] Inherited coordinates for', inherited, 'record(s) from existing data');
+  }
+
   const needsGeocoding = records.filter(r => !r.lat || !r.lng);
   if (needsGeocoding.length === 0) return;
 
@@ -4915,14 +5035,13 @@ async function geocodeMissingRecords(records) {
     const record = needsGeocoding[i];
     updateGeocodeProgress(i + 1, total, (i + 1) + ' of ' + total + ' — ' + (record.name || '').substring(0, 30));
 
-    if (!record.state) continue;
-
     // Rate limit between records (Nominatim allows 1 req/sec)
     if (i > 0) {
       await new Promise(resolve => setTimeout(resolve, 1200));
     }
 
-    const coords = await geocodeDistrict(record.name, record.state, record);
+    // geocodeDistrict now handles missing state with name-only fallback queries
+    const coords = await geocodeDistrict(record.name, record.state || '', record);
     if (coords) {
       record.lat = coords.lat;
       record.lng = coords.lng;
@@ -4945,12 +5064,25 @@ function downloadJsonFile(data, filename) {
   downloadLink.click();
 }
 
-// Helper: geocode records missing lat/lng, updating confirmBtn text. Returns { geocodedCount, errors }.
+// Helper: geocode records missing lat/lng, updating confirmBtn text. Returns { geocodedCount, errors, inheritedCount }.
 async function geocodePendingRecords(records, confirmBtn) {
   const errors = [];
   let geocodedCount = 0;
+  let inheritedCount = 0;
+
+  // Phase 1: Cross-reference existing datasets to inherit coordinates (no API calls needed)
+  confirmBtn.textContent = 'Cross-referencing location data...';
+  records.forEach(r => {
+    if (!r.lat || !r.lng) {
+      if (inheritLocationData(r)) inheritedCount++;
+    }
+  });
+  if (inheritedCount > 0) {
+    console.log('[Geocode] Inherited coordinates for', inheritedCount, 'record(s) from existing data');
+  }
+
   const needsGeocoding = records.filter(r => !r.lat || !r.lng);
-  if (needsGeocoding.length === 0) return { geocodedCount, errors };
+  if (needsGeocoding.length === 0) return { geocodedCount, errors, inheritedCount };
 
   showGeocodeProgress('Geocoding accounts...');
   const failedRecords = [];
@@ -4959,10 +5091,6 @@ async function geocodePendingRecords(records, confirmBtn) {
     const record = needsGeocoding[i];
     confirmBtn.textContent = `Geocoding ${i + 1}/${needsGeocoding.length}...`;
     updateGeocodeProgress(i + 1, needsGeocoding.length, (i + 1) + ' of ' + needsGeocoding.length + ' — ' + (record.name || '').substring(0, 30));
-    if (!record.state) {
-      errors.push(`No state for: ${record.name}`);
-      continue;
-    }
 
     // Rate limit between records (Nominatim allows 1 req/sec)
     if (i > 0) {
@@ -4970,7 +5098,8 @@ async function geocodePendingRecords(records, confirmBtn) {
     }
 
     try {
-      const coords = await geocodeDistrict(record.name, record.state, record);
+      // geocodeDistrict now handles missing state with name-only fallback queries
+      const coords = await geocodeDistrict(record.name, record.state || '', record);
       if (coords) {
         record.lat = coords.lat;
         record.lng = coords.lng;
@@ -5002,13 +5131,13 @@ async function geocodePendingRecords(records, confirmBtn) {
       }
 
       try {
-        const coords = await geocodeDistrict(record.name, record.state, record);
+        const coords = await geocodeDistrict(record.name, record.state || '', record);
         if (coords) {
           record.lat = coords.lat;
           record.lng = coords.lng;
           geocodedCount++;
         } else {
-          errors.push(`Could not geocode: ${record.name}`);
+          errors.push(`Could not geocode: ${record.name}${record.state ? ' (' + record.state + ')' : ' (no state)'}`);
         }
       } catch (e) {
         errors.push(`Geocode error for ${record.name}: ${e.message}`);
@@ -5017,7 +5146,88 @@ async function geocodePendingRecords(records, confirmBtn) {
   }
 
   hideGeocodeProgress();
-  return { geocodedCount, errors };
+  return { geocodedCount, errors, inheritedCount };
+}
+
+// Post-merge validation: count records still missing coordinates and log them
+function auditMissingCoordinates(datasetName, records) {
+  const missing = records.filter(r => !r.lat || !r.lng);
+  if (missing.length === 0) {
+    console.log(`[Audit] All ${datasetName} records have coordinates`);
+    return [];
+  }
+  console.warn(`[Audit] ${missing.length} ${datasetName} record(s) still missing coordinates:`);
+  missing.forEach(r => {
+    console.warn(`  - ${r.name || '(no name)'}${r.state ? ' (' + r.state + ')' : ' (no state)'}`);
+  });
+  return missing;
+}
+
+// Common post-merge UI refresh logic (DRY — used by both merge paths)
+function postMergeRefresh() {
+  // Ensure welcome overlay is dismissed so pins actually render
+  if (welcomeActive) {
+    welcomeActive = false;
+    hideWelcomeOverlay();
+  }
+
+  // Rebuild performance indices after data change
+  buildIndices();
+  _custGrid = null;
+
+  // Rebuild district data cache for modal/popup access
+  window.districtDataCache = {};
+  ACCOUNT_DATA.forEach(d => {
+    const key = d.name.replace(/[^a-zA-Z0-9]/g, '_');
+    window.districtDataCache[key] = d;
+  });
+
+  // Refresh all UI components
+  renderTeamRepSelectors();
+  renderFilters();
+  applyFilters();
+  updateDataSourceIndicator();
+  renderConflictsOverlay();
+  updateConflictsBadge();
+}
+
+// Build the merge completion message
+function buildMergeMessage({ dataLabel, recordCount, geocodedCount, inheritedCount, conflicts, errors, filenames, missingCoords }) {
+  let message = `Merge complete!\n\n${recordCount} ${dataLabel} updated on the map.`;
+  message += `\n\nData saved to this browser — it will persist across page refreshes.`;
+  if (filenames.length === 1) {
+    message += `\n\nThe file "${filenames[0]}" has been downloaded.`;
+    message += `\nReplace src/data/${filenames[0]} in the repo and redeploy so ALL users see the updated data.`;
+  } else {
+    message += `\n\n${filenames.length} files downloaded: ${filenames.join(' and ')}`;
+    message += `\nReplace both in src/data/ and redeploy so ALL users see the updated data.`;
+  }
+  if (inheritedCount > 0) {
+    message += `\n\n${inheritedCount} record(s) matched to existing location data.`;
+  }
+  if (geocodedCount > 0) {
+    message += `\n${geocodedCount} new record(s) geocoded via address lookup.`;
+  }
+  if (conflicts && conflicts.length > 0) {
+    message += `\n\n${conflicts.length} ownership conflict(s) detected — review in the Conflicts dropdown.`;
+  }
+  if (missingCoords && missingCoords.length > 0) {
+    message += `\n\n${missingCoords.length} record(s) could not be placed on the map (missing coordinates):`;
+    missingCoords.slice(0, 5).forEach(r => {
+      message += `\n  - ${r.name || '(no name)'}${r.state ? ' (' + r.state + ')' : ''}`;
+    });
+    if (missingCoords.length > 5) {
+      message += `\n  ...and ${missingCoords.length - 5} more`;
+    }
+    message += `\n\nThese records are in the data but need state/address info to appear on the map.`;
+  }
+  if (errors.length > 0) {
+    message += `\n\n${errors.length} warning(s):\n${errors.slice(0, 5).map(e => '  ' + e).join('\n')}`;
+    if (errors.length > 5) {
+      message += `\n  ...and ${errors.length - 5} more`;
+    }
+  }
+  return message;
 }
 
 async function confirmMerge() {
@@ -5027,6 +5237,7 @@ async function confirmMerge() {
   const originalBtnText = confirmBtn.textContent;
   let errors = [];
   let geocodedCount = 0;
+  let inheritedCount = 0;
 
   try {
     // Disable button and show loading state
@@ -5038,11 +5249,13 @@ async function confirmMerge() {
       // Geocode account records
       const acctGeo = await geocodePendingRecords(pendingAccountMerge, confirmBtn);
       geocodedCount += acctGeo.geocodedCount;
+      inheritedCount += acctGeo.inheritedCount || 0;
       errors.push(...acctGeo.errors);
 
       // Geocode customer records
       const custGeo = await geocodePendingRecords(pendingCustomerMerge, confirmBtn);
       geocodedCount += custGeo.geocodedCount;
+      inheritedCount += custGeo.inheritedCount || 0;
       errors.push(...custGeo.errors);
 
       confirmBtn.textContent = 'Saving data...';
@@ -5075,37 +5288,24 @@ async function confirmMerge() {
 
       // Close modal and refresh UI
       closeMergeModal();
-      buildIndices();
-      _custGrid = null;
-      window.districtDataCache = {};
-      ACCOUNT_DATA.forEach(d => {
-        const key = d.name.replace(/[^a-zA-Z0-9]/g, '_');
-        window.districtDataCache[key] = d;
-      });
-      renderFilters();
-      applyFilters();
-      updateDataSourceIndicator();
-      renderConflictsOverlay();
-      updateConflictsBadge();
+      postMergeRefresh();
+
+      // Post-merge audit
+      const missingAcct = auditMissingCoordinates('account', ACCOUNT_DATA);
+      const missingCust = auditMissingCoordinates('customer', CUSTOMER_DATA);
+      const allMissing = [...missingAcct, ...missingCust];
 
       // Show confirmation
-      let message = `✓ Merge complete!\n\n${ACCOUNT_DATA.length} accounts + ${CUSTOMER_DATA.length} customers updated on the map.`;
-      message += `\n\nData saved to this browser — it will persist across page refreshes.`;
-      message += `\n\nTwo files downloaded: accounts.json and customers.json`;
-      message += `\nReplace both in src/data/ and redeploy so ALL users see the updated data.`;
-      if (geocodedCount > 0) {
-        message += `\n\n${geocodedCount} new records geocoded.`;
-      }
-      if (mergeConflicts.length > 0) {
-        message += `\n\n⚠ ${mergeConflicts.length} ownership conflict(s) detected — review in the Conflicts dropdown.`;
-      }
-      if (errors.length > 0) {
-        message += `\n\n⚠ ${errors.length} warning(s):\n• ${errors.slice(0, 5).join('\n• ')}`;
-        if (errors.length > 5) {
-          message += `\n• ...and ${errors.length - 5} more`;
-        }
-      }
-      alert(message);
+      alert(buildMergeMessage({
+        dataLabel: `${ACCOUNT_DATA.length} accounts + ${CUSTOMER_DATA.length} customers`,
+        recordCount: ACCOUNT_DATA.length + CUSTOMER_DATA.length,
+        geocodedCount,
+        inheritedCount,
+        conflicts: mergeConflicts,
+        errors,
+        filenames: ['accounts.json', 'customers.json'],
+        missingCoords: allMissing,
+      }));
 
     } else {
       // Single-dataset merge (no type column)
@@ -5114,6 +5314,7 @@ async function confirmMerge() {
       // Geocode missing records
       const geo = await geocodePendingRecords(pendingMergeData, confirmBtn);
       geocodedCount = geo.geocodedCount;
+      inheritedCount = geo.inheritedCount || 0;
       errors = geo.errors;
 
       confirmBtn.textContent = 'Saving data...';
@@ -5147,52 +5348,33 @@ async function confirmMerge() {
       const mergeConflicts2 = pendingMergeStats && pendingMergeStats.conflicts ? pendingMergeStats.conflicts : [];
       storeNewConflicts(pendingMergeStats);
 
-      // Close modal
+      // Close modal and refresh UI
       closeMergeModal();
+      postMergeRefresh();
 
-      // Rebuild performance indices after data change
-      buildIndices();
-      _custGrid = null;
-
-      // Refresh map and UI in-place
-      window.districtDataCache = {};
-      ACCOUNT_DATA.forEach(d => {
-        const key = d.name.replace(/[^a-zA-Z0-9]/g, '_');
-        window.districtDataCache[key] = d;
-      });
-      renderFilters();
-      applyFilters();
-      updateDataSourceIndicator();
-      renderConflictsOverlay();
-      updateConflictsBadge();
+      // Post-merge audit
+      const targetData = isAccountType ? ACCOUNT_DATA : CUSTOMER_DATA;
+      const missingCoords = auditMissingCoordinates(isAccountType ? 'account' : 'customer', targetData);
 
       // Show confirmation
-      const recordCount = isAccountType ? ACCOUNT_DATA.length : CUSTOMER_DATA.length;
-      let message = `✓ Merge complete!\n\n${recordCount} ${isAccountType ? 'accounts' : 'customers'} updated on the map.`;
-      message += `\n\nData saved to this browser — it will persist across page refreshes.`;
-      message += `\n\nThe file "${filename}" has been downloaded.`;
-      message += `\nReplace src/data/${filename} in the repo and redeploy so ALL users see the updated data.`;
-      if (geocodedCount > 0) {
-        message += `\n\n${geocodedCount} new records geocoded.`;
-      }
-      if (mergeConflicts2.length > 0) {
-        message += `\n\n⚠ ${mergeConflicts2.length} ownership conflict(s) detected — review in the Conflicts dropdown.`;
-      }
-      if (errors.length > 0) {
-        message += `\n\n⚠ ${errors.length} warning(s):\n• ${errors.slice(0, 5).join('\n• ')}`;
-        if (errors.length > 5) {
-          message += `\n• ...and ${errors.length - 5} more`;
-        }
-      }
-
-      alert(message);
+      const recordCount = targetData.length;
+      alert(buildMergeMessage({
+        dataLabel: `${isAccountType ? 'accounts' : 'customers'}`,
+        recordCount,
+        geocodedCount,
+        inheritedCount,
+        conflicts: mergeConflicts2,
+        errors,
+        filenames: [filename],
+        missingCoords,
+      }));
     }
 
   } catch (e) {
     console.error('[Merge] Error:', e);
     confirmBtn.disabled = false;
     confirmBtn.textContent = originalBtnText;
-    alert(`❌ Merge failed!\n\nError: ${e.message}\n\nCheck console for details.`);
+    alert(`Merge failed!\n\nError: ${e.message}\n\nCheck console for details.`);
   }
 }
 
