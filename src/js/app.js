@@ -351,6 +351,25 @@ Object.entries(TEAM_REP_DATA).forEach(([team, info]) => {
   if (info.manager) ACCOUNT_HOLDOUT_AES.add(info.manager);
 });
 
+// All active sales reps across every team (including Strategic + managers).
+// Used by resolveOwner() to distinguish current reps from former/non-sales staff.
+const ALL_ACTIVE_REPS = new Set();
+Object.values(TEAM_REP_DATA).forEach(info => {
+  info.reps.forEach(rep => ALL_ACTIVE_REPS.add(rep));
+  if (info.manager) ALL_ACTIVE_REPS.add(info.manager);
+});
+
+// Former reps (no longer with the company) and employees who left sales.
+// Treat identically for territory assignment: their accounts are unassigned
+// and fall back to the existing owner or remain ownerless.
+const INACTIVE_OWNERS = new Set([
+  // Former reps
+  'John Tyrrell', 'Zac Otwell', 'Brittany Garrison', 'Bill Lloyd',
+  'Jacqueline Layreau', 'Marixza Acuna', 'Sydney Levenfeld', 'Jose Puyol',
+  // Still with company but no longer in sales
+  'Bella Duffey', 'Scott Walters',
+]);
+
 let _accountRepsCache = null;
 function getAccountReps() {
   if (!_accountRepsCache) {
@@ -394,6 +413,42 @@ function getHoldoutAE(d) {
     return d.ae; // holdout on a strategic account
   }
   return null;
+}
+
+// Resolve the account owner from a CSV value against an existing owner.
+// Handles three scenarios:
+//   1. CSV owner is a current, active rep → assign (unless existing differs → conflict, keep existing)
+//   2. CSV owner is a former rep or non-sales employee → treat as unassigned, keep existing if valid
+//   3. CSV owner is blank or unrecognized → keep existing if valid, else unassigned
+// Returns the resolved ae string (may be '' for truly unassigned).
+function resolveOwner(csvAE, existingAE) {
+  const csv = (csvAE || '').trim();
+  const existing = (existingAE || '').trim();
+
+  // CSV AE is blank → keep existing if active, else unassigned
+  if (!csv) {
+    return (existing && ALL_ACTIVE_REPS.has(existing)) ? existing : '';
+  }
+
+  // CSV AE is a known inactive/former owner → keep existing if active, else unassigned
+  if (INACTIVE_OWNERS.has(csv)) {
+    return (existing && ALL_ACTIVE_REPS.has(existing)) ? existing : '';
+  }
+
+  // CSV AE is a current, active rep
+  if (ALL_ACTIVE_REPS.has(csv)) {
+    // If existing is also a different active rep (and not the Strategic primary default)
+    // → conflict: keep existing owner, conflict is logged separately in the merge
+    if (existing && ALL_ACTIVE_REPS.has(existing) && existing !== csv && existing !== ACCOUNT_PRIMARY_AE) {
+      return existing;
+    }
+    // Otherwise assign the CSV rep (new account, same rep, or existing was the Strategic default)
+    return csv;
+  }
+
+  // CSV AE is an unrecognized name (not active, not in inactive list)
+  // Treat as unassigned — keep existing if active
+  return (existing && ALL_ACTIVE_REPS.has(existing)) ? existing : '';
 }
 
 // ============ STATE ============
@@ -1085,25 +1140,21 @@ function applyFilters() {
       // Team / rep filter (applied before other filters)
       // Holdout accounts match both the territory AE and the holdout AE
       // Uses Set-based lookup (_teamRepsSet) for O(1) instead of Array.includes O(n)
-      // Records with no AE (e.g. new accounts from opp CSV uploads) bypass the
-      // team/rep filter so they remain visible — otherwise they'd be invisible
-      // ghosts in the data layer with no pin, no stats, and no indicator.
-      const hasAnyAE = territoryAE || holdoutAE;
-      if (hasAnyAE) {
-        if (selectedRep) {
-          const isManager = selectedTeam && TEAM_REP_DATA[selectedTeam] &&
-            TEAM_REP_DATA[selectedTeam].manager === selectedRep;
-          if (isManager) {
-            // Manager = team-level view
-            const teamReps = _teamRepsSet[selectedTeam];
-            if (!teamReps || (!teamReps.has(territoryAE) && !(holdoutAE && teamReps.has(holdoutAE)))) return false;
-          } else {
-            if (territoryAE !== selectedRep && holdoutAE !== selectedRep) return false;
-          }
-        } else if (selectedTeam) {
+      // Unassigned accounts (no AE) are filtered OUT when a team/rep is selected
+      // — they only appear in the "All" view (no team/rep filter).
+      if (selectedRep) {
+        const isManager = selectedTeam && TEAM_REP_DATA[selectedTeam] &&
+          TEAM_REP_DATA[selectedTeam].manager === selectedRep;
+        if (isManager) {
+          // Manager = team-level view
           const teamReps = _teamRepsSet[selectedTeam];
           if (!teamReps || (!teamReps.has(territoryAE) && !(holdoutAE && teamReps.has(holdoutAE)))) return false;
+        } else {
+          if (territoryAE !== selectedRep && holdoutAE !== selectedRep) return false;
         }
+      } else if (selectedTeam) {
+        const teamReps = _teamRepsSet[selectedTeam];
+        if (!teamReps || (!teamReps.has(territoryAE) && !(holdoutAE && teamReps.has(holdoutAE)))) return false;
       }
       if (filters.strat_region && d.region !== filters.strat_region) return false;
       if (filters.strat_state && d.state !== filters.strat_state) return false;
@@ -4176,8 +4227,13 @@ function runMerge(csvData, existingData) {
           if (mappedKey === 'name') return;
           if (OPP_ENTRY_FIELDS.has(mappedKey)) {
             csvOppFields[mappedKey] = val.trim();
+          } else if (mappedKey === 'ae') {
+            // Don't blindly overwrite ae — it was already resolved on the first row.
+            // Only update if the new CSV value resolves to a valid active rep.
+            const candidateAE = resolveOwner(val.trim(), alreadyMerged.ae || '');
+            if (candidateAE) alreadyMerged.ae = candidateAE;
           } else {
-            // For non-opp fields, update if the CSV has a value (e.g. ae, region)
+            // For non-opp fields, update if the CSV has a value (e.g. region)
             alreadyMerged[mappedKey] = val.trim();
           }
         }
@@ -4265,19 +4321,31 @@ function runMerge(csvData, existingData) {
       // Strip ownership from DOE accounts
       if (isDOE(merged.name)) { delete merged.ae; delete merged.csm; }
 
-      // Conflict detection: if AE is changing from a real rep to a different rep
-      const oldAE = (existing.item.ae || '').trim();
-      const newAE = (merged.ae || '').trim();
-      if (oldAE && newAE && oldAE !== newAE && oldAE !== ACCOUNT_PRIMARY_AE) {
-        const isRealRep = ACCOUNT_HOLDOUT_AES.has(oldAE);
-        if (isRealRep) {
-          console.log('[SFDC Merge] CONFLICT:', merged.name, '- was', oldAE, ', CSV says', newAE);
+      // Owner resolution: handle inactive/former reps, blank owners, and
+      // active-vs-active conflicts.  resolveOwner decides the final ae value;
+      // conflict detection fires when two different active reps compete.
+      if (!isDOE(merged.name)) {
+        const csvAE = (merged.ae || '').trim();
+        const priorAE = (existing.item.ae || '').trim();
+        merged.ae = resolveOwner(csvAE, priorAE);
+
+        // Log inactive-owner resolutions
+        if (csvAE && INACTIVE_OWNERS.has(csvAE)) {
+          console.log('[SFDC Merge] Inactive owner resolved:', merged.name,
+            '- CSV owner', csvAE, '→', merged.ae || '(unassigned)');
+        }
+
+        // Conflict: CSV brings a different active rep than the current active rep
+        if (csvAE && priorAE && csvAE !== priorAE
+            && ALL_ACTIVE_REPS.has(csvAE) && ALL_ACTIVE_REPS.has(priorAE)
+            && priorAE !== ACCOUNT_PRIMARY_AE) {
+          console.log('[SFDC Merge] CONFLICT:', merged.name, '- was', priorAE, ', CSV says', csvAE);
           stats.conflicts.push({
             name: merged.name,
             enrollment: parseInt(merged.enrollment) || 0,
             state: merged.state || '',
-            oldAE: oldAE,
-            newAE: newAE,
+            oldAE: priorAE,
+            newAE: csvAE,
           });
         }
       }
@@ -4416,6 +4484,17 @@ function runMerge(csvData, existingData) {
 
       // Strip ownership from DOE accounts
       if (isDOE(newRecord.name)) { delete newRecord.ae; delete newRecord.csm; }
+
+      // Owner resolution for new records: inactive/former owners → unassigned,
+      // unknown names → unassigned, active reps → assigned normally.
+      if (!isDOE(newRecord.name)) {
+        const csvAE = (newRecord.ae || '').trim();
+        newRecord.ae = resolveOwner(csvAE, '');
+        if (csvAE && csvAE !== newRecord.ae) {
+          console.log('[SFDC Merge] New record owner resolved:', newRecord.name,
+            '- CSV owner', csvAE, '→', newRecord.ae || '(unassigned)');
+        }
+      }
 
       stats.newRecords++;
       if (!possibleMatch) {
@@ -5339,7 +5418,7 @@ function buildMergeMessage({ dataLabel, recordCount, geocodedCount, inheritedCou
     message += `\n\n${conflicts.length} ownership conflict(s) detected — review in the Conflicts dropdown.`;
   }
   if (hiddenByFilter && hiddenByFilter > 0) {
-    message += `\n\n⚠ ${hiddenByFilter} new record(s) are hidden by your current Team/Rep filter because they have no Account Owner assigned.`;
+    message += `\n\n⚠ ${hiddenByFilter} new record(s) are hidden by your current Team/Rep filter (assigned to a different rep or unassigned).`;
     message += `\nClear the Team/Rep filter to see all new pins.`;
   }
   if (missingCoords && missingCoords.length > 0) {
@@ -5362,8 +5441,7 @@ function buildMergeMessage({ dataLabel, recordCount, geocodedCount, inheritedCou
 }
 
 // Count how many new records (with lat/lng) are hidden by the active team/rep filter.
-// Records with no AE bypass the team/rep filter (they're always visible), so only
-// count records that HAVE an AE but don't match the current team/rep selection.
+// Includes unassigned records (no AE) which are now filtered out when a team/rep is selected.
 function countNewRecordsHiddenByFilter(newRecordNames) {
   if (!newRecordNames || newRecordNames.size === 0) return 0;
   if (!selectedTeam && !selectedRep) return 0; // No team/rep filter active
@@ -5373,8 +5451,6 @@ function countNewRecordsHiddenByFilter(newRecordNames) {
     if (!d.lat || !d.lng) return; // Already counted as missing coords
     const territoryAE = getTerritoryAE(d);
     const holdoutAE = getHoldoutAE(d);
-    // Records with no AE bypass the filter (always visible), so skip them
-    if (!territoryAE && !holdoutAE) return;
     if (selectedRep) {
       const isManager = selectedTeam && TEAM_REP_DATA[selectedTeam] &&
         TEAM_REP_DATA[selectedTeam].manager === selectedRep;
