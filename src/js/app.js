@@ -1085,19 +1085,25 @@ function applyFilters() {
       // Team / rep filter (applied before other filters)
       // Holdout accounts match both the territory AE and the holdout AE
       // Uses Set-based lookup (_teamRepsSet) for O(1) instead of Array.includes O(n)
-      if (selectedRep) {
-        const isManager = selectedTeam && TEAM_REP_DATA[selectedTeam] &&
-          TEAM_REP_DATA[selectedTeam].manager === selectedRep;
-        if (isManager) {
-          // Manager = team-level view
+      // Records with no AE (e.g. new accounts from opp CSV uploads) bypass the
+      // team/rep filter so they remain visible — otherwise they'd be invisible
+      // ghosts in the data layer with no pin, no stats, and no indicator.
+      const hasAnyAE = territoryAE || holdoutAE;
+      if (hasAnyAE) {
+        if (selectedRep) {
+          const isManager = selectedTeam && TEAM_REP_DATA[selectedTeam] &&
+            TEAM_REP_DATA[selectedTeam].manager === selectedRep;
+          if (isManager) {
+            // Manager = team-level view
+            const teamReps = _teamRepsSet[selectedTeam];
+            if (!teamReps || (!teamReps.has(territoryAE) && !(holdoutAE && teamReps.has(holdoutAE)))) return false;
+          } else {
+            if (territoryAE !== selectedRep && holdoutAE !== selectedRep) return false;
+          }
+        } else if (selectedTeam) {
           const teamReps = _teamRepsSet[selectedTeam];
           if (!teamReps || (!teamReps.has(territoryAE) && !(holdoutAE && teamReps.has(holdoutAE)))) return false;
-        } else {
-          if (territoryAE !== selectedRep && holdoutAE !== selectedRep) return false;
         }
-      } else if (selectedTeam) {
-        const teamReps = _teamRepsSet[selectedTeam];
-        if (!teamReps || (!teamReps.has(territoryAE) && !(holdoutAE && teamReps.has(holdoutAE)))) return false;
       }
       if (filters.strat_region && d.region !== filters.strat_region) return false;
       if (filters.strat_state && d.state !== filters.strat_state) return false;
@@ -4628,6 +4634,16 @@ function mapFieldName(csvField) {
     'shipping_address': 'address',
     'billing_city': 'city',
     'shipping_city': 'city',
+    // Zip / postal code (header "Billing Zip/Postal Code" normalizes to "billing_zip_postal_code")
+    'billing_zip_postal_code': 'zip',
+    'billing_zip': 'zip',
+    'billing_zipcode': 'zip',
+    'billing_postal_code': 'zip',
+    'shipping_zip_postal_code': 'zip',
+    'shipping_zip': 'zip',
+    'zip_code': 'zip',
+    'zipcode': 'zip',
+    'postal_code': 'zip',
     // Customer fields
     'last_modified_date': 'last_modified',
     // Leadership
@@ -4954,9 +4970,11 @@ function inheritLocationData(record) {
 // Geocode a district using OpenStreetMap Nominatim API
 async function geocodeDistrict(name, state, record) {
   // Check for address fields in the record (most accurate if available)
-  // CSV headers get normalized: "Billing Address Line 1" → "billing_address_line_1"
+  // CSV headers get normalized: "Billing Address Line 1" → "address" via mapFieldName
+  // "Billing Zip/Postal Code" → "zip" via mapFieldName (slash normalized to underscore)
   const address = record?.billing_address_line_1 || record?.address || record?.street_address || record?.billing_address || record?.mailing_address || record?.billing_street || '';
   const city = record?.billing_city || record?.city || record?.mailing_city || '';
+  const zip = record?.zip || record?.billing_zip_postal_code || record?.postal_code || record?.zipcode || '';
 
   // Build list of query variations to try
   // Strip school-related suffixes and identifiers so Nominatim gets a clean city/region name.
@@ -4967,15 +4985,16 @@ async function geocodeDistrict(name, state, record) {
     .trim() || name; // Fallback to original if stripping empties it
 
   // Try structured search first (more accurate for address-based lookups)
+  // Construct the fullest possible query: street + city + zip + state
   const structuredQueries = [];
   const stateFull = STATE_FULL_NAMES[(state || '').toUpperCase().trim()] || state;
 
   if (address && city && state) {
-    structuredQueries.push({ street: address, city: city, state: stateFull, country: 'US' });
-    console.log('[Geocode] Using address from CSV:', address, city, state);
+    structuredQueries.push({ street: address, city: city, state: stateFull, postalcode: zip, country: 'US' });
+    console.log('[Geocode] Using address from CSV:', address, city, zip || '(no zip)', state);
   }
   if (city && state) {
-    structuredQueries.push({ city: city, state: stateFull, country: 'US' });
+    structuredQueries.push({ city: city, state: stateFull, postalcode: zip, country: 'US' });
   }
 
   // Try structured queries first
@@ -4984,6 +5003,7 @@ async function geocodeDistrict(name, state, record) {
     if (sq.street) params.set('street', sq.street);
     if (sq.city) params.set('city', sq.city);
     if (sq.state) params.set('state', sq.state);
+    if (sq.postalcode) params.set('postalcode', sq.postalcode);
     if (sq.country) params.set('country', sq.country);
     const url = `https://nominatim.openstreetmap.org/search?${params.toString()}`;
 
@@ -5342,8 +5362,8 @@ function buildMergeMessage({ dataLabel, recordCount, geocodedCount, inheritedCou
 }
 
 // Count how many new records (with lat/lng) are hidden by the active team/rep filter.
-// This catches the case where a CSV upload creates new accounts with no AE, so they
-// don't appear under the user's current team/rep selection.
+// Records with no AE bypass the team/rep filter (they're always visible), so only
+// count records that HAVE an AE but don't match the current team/rep selection.
 function countNewRecordsHiddenByFilter(newRecordNames) {
   if (!newRecordNames || newRecordNames.size === 0) return 0;
   if (!selectedTeam && !selectedRep) return 0; // No team/rep filter active
@@ -5353,6 +5373,8 @@ function countNewRecordsHiddenByFilter(newRecordNames) {
     if (!d.lat || !d.lng) return; // Already counted as missing coords
     const territoryAE = getTerritoryAE(d);
     const holdoutAE = getHoldoutAE(d);
+    // Records with no AE bypass the filter (always visible), so skip them
+    if (!territoryAE && !holdoutAE) return;
     if (selectedRep) {
       const isManager = selectedTeam && TEAM_REP_DATA[selectedTeam] &&
         TEAM_REP_DATA[selectedTeam].manager === selectedRep;
