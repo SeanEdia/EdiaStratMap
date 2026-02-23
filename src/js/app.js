@@ -980,7 +980,6 @@ function renderFilters() {
     html += buildFilterGroup('Account Owner', 'cust_ae', getUnique(CUSTOMER_DATA, 'ae'), 'select');
   }
 
-  html += `<button class="reset-btn" onclick="resetFilters()">↺ Reset All Filters</button>`;
   area.innerHTML = html;
 }
 
