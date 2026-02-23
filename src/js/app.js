@@ -383,6 +383,14 @@ Object.values(TEAM_REP_DATA).forEach(info => {
   if (info.manager) ALL_ACTIVE_REPS.add(info.manager);
 });
 
+// Managers are in ALL_ACTIVE_REPS for team membership checks, but they do NOT
+// hold accounts. resolveOwner must fall through to Opp Owner when a manager
+// appears as Account Owner. Derived from team configs — auto-adapts.
+const MANAGERS = new Set();
+Object.values(TEAM_REP_DATA).forEach(info => {
+  if (info.manager) MANAGERS.add(info.manager);
+});
+
 // Former reps (no longer with the company) and employees who left sales.
 // Treat identically for territory assignment: their accounts are unassigned
 // and fall back to the existing owner or remain ownerless.
@@ -456,20 +464,23 @@ function getHoldoutAE(d) {
 }
 
 // Resolve the account owner from a CSV value against an existing owner.
-// Optional ctx: { enrollment, hasUploadedOpp, oppOwner } for conditional reassignment.
+// Optional ctx: { enrollment, hasUploadedOpp, oppOwner, loadedReps } for conditional reassignment.
 // Evaluation order (Opp Owner used as fallback when Account Owner is invalid):
 //   1. Blank CSV → Opp Owner if active → existing if active → unassigned
 //   2. Ben Foley → enrollment > 30k → Sean Johnson; else → Opp Owner / existing / unassigned
 //   3. CONDITIONAL_REASSIGN (Iain/Nicholas) → has opp → Opp Owner / existing / unassigned;
 //      no opp → keep existing if active, else leave as-is
 //   4. INACTIVE_OWNERS → Opp Owner if active → existing if active → unassigned
-//   5. Active rep → assign (unless existing differs → conflict, keep existing)
-//   6. Unrecognized → Opp Owner if active → existing if active → unassigned
-// Returns the resolved ae string (may be '' for truly unassigned).
+//   5. MANAGERS (not account holders) → Opp Owner if active → existing if active → unassigned
+//   6. Active rep WITH data loaded → assign (unless existing differs → conflict, keep existing)
+//      Active rep WITHOUT data loaded → Opp Owner fallback (until their data is uploaded)
+//   7. Unrecognized → Opp Owner if active → existing if active → unassigned
+// Returns { ae, reason } where ae is the resolved string and reason describes the resolution path.
 function resolveOwner(csvAE, existingAE, ctx) {
   const csv = (csvAE || '').trim();
   const existing = (existingAE || '').trim();
   const oppOwner = (ctx && ctx.oppOwner || '').trim();
+  const loadedReps = ctx && ctx.loadedReps;
 
   // Fallback chain: Opp Owner → existing active rep → unassigned
   const fallback = () => {
@@ -479,7 +490,7 @@ function resolveOwner(csvAE, existingAE, ctx) {
 
   // 1. CSV AE is blank → fallback (Opp Owner → existing → unassigned)
   if (!csv) {
-    return fallback();
+    return { ae: fallback(), reason: 'blank_owner' };
   }
 
   // 2. Ben Foley: >30k students → hard override to Sean Johnson (no holdout).
@@ -487,9 +498,9 @@ function resolveOwner(csvAE, existingAE, ctx) {
   if (csv === BEN_FOLEY) {
     const enrollment = ctx ? parseEnrollment(ctx.enrollment) : 0;
     if (enrollment > STRATEGIC_ENROLLMENT_THRESHOLD) {
-      return ACCOUNT_PRIMARY_AE; // Sean Johnson — direct assignment
+      return { ae: ACCOUNT_PRIMARY_AE, reason: 'ben_foley_strategic' }; // Sean Johnson — direct assignment
     }
-    return fallback();
+    return { ae: fallback(), reason: 'ben_foley_fallback' };
   }
 
   // 3. CONDITIONAL_REASSIGN (Iain Proctor / Nicholas Watson):
@@ -497,31 +508,42 @@ function resolveOwner(csvAE, existingAE, ctx) {
   //    Has opp → fallback (Opp Owner → existing → unassigned). No opp → leave as-is.
   if (CONDITIONAL_REASSIGN.has(csv)) {
     if (ctx && ctx.hasUploadedOpp) {
-      return fallback();
+      return { ae: fallback(), reason: 'conditional_reassign' };
     }
     // No opp → leave the record as-is, don't overwrite a valid rep
-    return (existing && ALL_ACTIVE_REPS.has(existing)) ? existing : csv;
+    return { ae: (existing && ALL_ACTIVE_REPS.has(existing)) ? existing : csv, reason: 'conditional_no_opp' };
   }
 
   // 4. CSV AE is a known inactive/former owner → fallback (Opp Owner → existing → unassigned)
   if (INACTIVE_OWNERS.has(csv)) {
-    return fallback();
+    return { ae: fallback(), reason: 'inactive_owner' };
   }
 
-  // 5. CSV AE is a current, active rep
+  // 5. CSV AE is a manager (not an account holder) → fallback (Opp Owner → existing → unassigned)
+  //    Managers are in ALL_ACTIVE_REPS for team membership, but they don't hold accounts.
+  if (MANAGERS.has(csv)) {
+    return { ae: fallback(), reason: 'manager_fallback' };
+  }
+
+  // 6. CSV AE is a current, active rep
   if (ALL_ACTIVE_REPS.has(csv)) {
+    // Active rep but no data loaded yet → fall through to Opp Owner.
+    // When this rep's data is uploaded later, holdout/conflict logic will reconcile.
+    if (loadedReps && !loadedReps.has(csv)) {
+      return { ae: fallback(), reason: 'no_data_loaded' };
+    }
     // If existing is also a different active rep (and not the Strategic primary default)
     // → conflict: keep existing owner, conflict is logged separately in the merge
     if (existing && ALL_ACTIVE_REPS.has(existing) && existing !== csv && existing !== ACCOUNT_PRIMARY_AE) {
-      return existing;
+      return { ae: existing, reason: 'conflict_kept_existing' };
     }
     // Otherwise assign the CSV rep (new account, same rep, or existing was the Strategic default)
-    return csv;
+    return { ae: csv, reason: 'direct_assign' };
   }
 
-  // 6. CSV AE is an unrecognized name (not active, not in inactive list)
+  // 7. CSV AE is an unrecognized name (not active, not in inactive list, not a manager)
   // → fallback (Opp Owner → existing → unassigned)
-  return fallback();
+  return { ae: fallback(), reason: 'unrecognized' };
 }
 
 // ============ STATE ============
@@ -4075,6 +4097,15 @@ function runMerge(csvData, existingData) {
     console.log('[SFDC Merge] Sample row:', csvData[0]);
   }
 
+  // Build set of reps who currently have data loaded in the system.
+  // This reflects ALL data in ACCOUNT_DATA at call time, including earlier uploads
+  // in the same session. Active reps NOT in this set will fall through to Opp Owner.
+  const loadedReps = new Set();
+  existingData.forEach(item => {
+    if (item.ae) loadedReps.add(item.ae);
+  });
+  console.log('[SFDC Merge] Loaded reps (have data in system):', [...loadedReps].sort().join(', '));
+
   // Create a map of existing data by name for quick lookup
   // Use both exact name and normalized name for matching
   // Store ARRAYS of entries per key to handle same-name different-state accounts
@@ -4232,7 +4263,8 @@ function runMerge(csvData, existingData) {
     updatedRecords: 0,
     notesPreserved: notesCount,
     changes: [],
-    conflicts: []
+    conflicts: [],
+    resolutions: []  // Track every owner resolution: { name, csvOwner, resolvedAE, reason, oppOwner }
   };
 
   const mergedData = [];
@@ -4337,12 +4369,13 @@ function runMerge(csvData, existingData) {
           } else if (mappedKey === 'ae') {
             // Don't blindly overwrite ae — it was already resolved on the first row.
             // Only update if the new CSV value resolves to a valid active rep.
-            const candidateAE = resolveOwner(val.trim(), alreadyMerged.ae || '', {
+            const result = resolveOwner(val.trim(), alreadyMerged.ae || '', {
               enrollment: alreadyMerged.enrollment,
               hasUploadedOpp: alreadyMerged._hasUploadedOpp,
               oppOwner: rowOppOwner,
+              loadedReps,
             });
-            if (candidateAE) alreadyMerged.ae = candidateAE;
+            if (result.ae) alreadyMerged.ae = result.ae;
           } else {
             // For non-opp fields, update if the CSV has a value (e.g. region)
             alreadyMerged[mappedKey] = val.trim();
@@ -4432,34 +4465,36 @@ function runMerge(csvData, existingData) {
       // Strip ownership from DOE accounts
       if (isDOE(merged.name)) { delete merged.ae; delete merged.csm; }
 
-      // Owner resolution: handle inactive/former reps, blank owners, and
-      // active-vs-active conflicts.  resolveOwner decides the final ae value;
-      // conflict detection fires when two different active reps compete.
+      // Owner resolution: handle inactive/former reps, managers, reps with no data,
+      // blank owners, and active-vs-active conflicts.
       if (!isDOE(merged.name)) {
         const csvAE = (merged.ae || '').trim();
         const priorAE = (existing.item.ae || '').trim();
         const hasUploadedOpp = Object.keys(csvOppFields).length > 0;
-        merged.ae = resolveOwner(csvAE, priorAE, {
+        const ownerResult = resolveOwner(csvAE, priorAE, {
           enrollment: merged.enrollment,
           hasUploadedOpp,
           oppOwner: (merged.opp_owner || '').trim(),
+          loadedReps,
         });
+        merged.ae = ownerResult.ae;
         if (hasUploadedOpp) merged._hasUploadedOpp = true;
 
-        // Log inactive-owner resolutions
-        if (csvAE && INACTIVE_OWNERS.has(csvAE)) {
-          console.log('[SFDC Merge] Inactive owner resolved:', merged.name,
-            '- CSV owner', csvAE, '→', merged.ae || '(unassigned)');
-        }
-        // Log Ben Foley resolutions
-        if (csvAE === BEN_FOLEY) {
-          console.log('[SFDC Merge] Ben Foley resolved:', merged.name,
-            '- enrollment', parseEnrollment(merged.enrollment), '→', merged.ae || '(unassigned)');
-        }
-        // Log CONDITIONAL_REASSIGN resolutions
-        if (csvAE && CONDITIONAL_REASSIGN.has(csvAE)) {
-          console.log('[SFDC Merge] Conditional reassign:', merged.name,
-            '- owner', csvAE, ', hasOpp:', hasUploadedOpp, '→', merged.ae || '(unassigned)');
+        // Track resolution for post-upload summary
+        if (csvAE) {
+          stats.resolutions.push({
+            name: merged.name,
+            csvOwner: csvAE,
+            resolvedAE: ownerResult.ae || '(unassigned)',
+            reason: ownerResult.reason,
+            oppOwner: (merged.opp_owner || '').trim(),
+            isNew: false,
+          });
+          if (ownerResult.reason !== 'direct_assign') {
+            console.log('[SFDC Merge] Owner resolved:', merged.name,
+              '- CSV owner', csvAE, '→', ownerResult.ae || '(unassigned)',
+              '(reason:', ownerResult.reason + ')');
+          }
         }
 
         // Conflict: CSV brings a different active rep than the current active rep
@@ -4612,20 +4647,35 @@ function runMerge(csvData, existingData) {
       // Strip ownership from DOE accounts
       if (isDOE(newRecord.name)) { delete newRecord.ae; delete newRecord.csm; }
 
-      // Owner resolution for new records: inactive/former owners → unassigned,
-      // unknown names → unassigned, active reps → assigned normally.
+      // Owner resolution for new records: inactive/former owners, managers,
+      // reps with no data → Opp Owner fallback. Active reps with data → assigned normally.
       if (!isDOE(newRecord.name)) {
         const csvAE = (newRecord.ae || '').trim();
         const hasUploadedOpp = Object.keys(newOppFields).length > 0;
-        newRecord.ae = resolveOwner(csvAE, '', {
+        const ownerResult = resolveOwner(csvAE, '', {
           enrollment: newRecord.enrollment,
           hasUploadedOpp,
           oppOwner: (newRecord.opp_owner || '').trim(),
+          loadedReps,
         });
+        newRecord.ae = ownerResult.ae;
         if (hasUploadedOpp) newRecord._hasUploadedOpp = true;
-        if (csvAE && csvAE !== newRecord.ae) {
-          console.log('[SFDC Merge] New record owner resolved:', newRecord.name,
-            '- CSV owner', csvAE, '→', newRecord.ae || '(unassigned)');
+
+        // Track resolution for post-upload summary
+        if (csvAE) {
+          stats.resolutions.push({
+            name: newRecord.name,
+            csvOwner: csvAE,
+            resolvedAE: ownerResult.ae || '(unassigned)',
+            reason: ownerResult.reason,
+            oppOwner: (newRecord.opp_owner || '').trim(),
+            isNew: true,
+          });
+          if (ownerResult.reason !== 'direct_assign') {
+            console.log('[SFDC Merge] New record owner resolved:', newRecord.name,
+              '- CSV owner', csvAE, '→', ownerResult.ae || '(unassigned)',
+              '(reason:', ownerResult.reason + ')');
+          }
         }
       }
 
@@ -4693,7 +4743,8 @@ function previewMerge(csvData) {
       updatedRecords: accountResult.stats.updatedRecords + customerResult.stats.updatedRecords,
       notesPreserved: accountResult.stats.notesPreserved + customerResult.stats.notesPreserved,
       changes: [...accountResult.stats.changes, ...customerResult.stats.changes],
-      conflicts: [...(accountResult.stats.conflicts || []), ...(customerResult.stats.conflicts || [])]
+      conflicts: [...(accountResult.stats.conflicts || []), ...(customerResult.stats.conflicts || [])],
+      resolutions: [...(accountResult.stats.resolutions || []), ...(customerResult.stats.resolutions || [])],
     };
 
     pendingMergeStats = combinedStats;
@@ -5574,6 +5625,136 @@ function buildMergeMessage({ dataLabel, recordCount, geocodedCount, inheritedCou
   return message;
 }
 
+// Readable reason labels for the upload summary
+const REASON_LABELS = {
+  direct_assign: 'Account Owner (direct)',
+  inactive_owner: 'Opp Owner fallback — inactive owner',
+  manager_fallback: 'Opp Owner fallback — manager (not account holder)',
+  no_data_loaded: 'Opp Owner fallback — rep has no data loaded yet',
+  unrecognized: 'Opp Owner fallback — unrecognized name',
+  ben_foley_strategic: 'Ben Foley rule — strategic override to Sean Johnson',
+  ben_foley_fallback: 'Ben Foley rule — below threshold, Opp Owner fallback',
+  conditional_reassign: 'Conditional reassign — has opp, Opp Owner fallback',
+  conditional_no_opp: 'Conditional reassign — no opp, kept existing',
+  conflict_kept_existing: 'Conflict — kept existing owner',
+  blank_owner: 'Blank Account Owner — Opp Owner fallback',
+};
+
+function showUploadSummary({ stats, geocodedCount, inheritedCount, errors, missingCoords, hiddenByFilter }) {
+  const body = document.getElementById('uploadSummaryBody');
+  let html = '';
+
+  // ── Overview stats ──
+  html += `<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px;">`;
+  html += `<div style="background:var(--panel-bg);border:1px solid var(--panel-border);border-radius:6px;padding:10px;text-align:center;">
+    <div style="font-size:20px;font-weight:700;color:var(--text-primary);">${stats.total}</div>
+    <div style="font-size:10px;color:var(--text-dim);text-transform:uppercase;">Processed</div></div>`;
+  html += `<div style="background:var(--panel-bg);border:1px solid var(--panel-border);border-radius:6px;padding:10px;text-align:center;">
+    <div style="font-size:20px;font-weight:700;color:#51cf66;">${stats.newRecords}</div>
+    <div style="font-size:10px;color:var(--text-dim);text-transform:uppercase;">New</div></div>`;
+  html += `<div style="background:var(--panel-bg);border:1px solid var(--panel-border);border-radius:6px;padding:10px;text-align:center;">
+    <div style="font-size:20px;font-weight:700;color:#339af0;">${stats.updatedRecords}</div>
+    <div style="font-size:10px;color:var(--text-dim);text-transform:uppercase;">Updated</div></div>`;
+  html += `</div>`;
+
+  // ── Geocoding summary ──
+  if (geocodedCount > 0 || inheritedCount > 0) {
+    html += `<div style="background:#E8853D15;border:1px solid #E8853D33;border-radius:6px;padding:8px 10px;margin-bottom:10px;font-size:11px;">`;
+    if (geocodedCount > 0) html += `<div>📍 <strong>${geocodedCount}</strong> record${geocodedCount > 1 ? 's' : ''} geocoded via address lookup</div>`;
+    if (inheritedCount > 0) html += `<div>📍 <strong>${inheritedCount}</strong> record${inheritedCount > 1 ? 's' : ''} matched to existing location data</div>`;
+    html += `</div>`;
+  }
+
+  // ── Hidden by filter ──
+  if (hiddenByFilter > 0) {
+    html += `<div style="background:#fab00522;border:1px solid #fab00544;border-radius:6px;padding:8px 10px;margin-bottom:10px;font-size:11px;">
+      <strong style="color:#fab005;">&#9888; ${hiddenByFilter} new record${hiddenByFilter > 1 ? 's' : ''} hidden by current Team/Rep filter</strong>
+      <div style="color:var(--text-dim);margin-top:3px;">Clear the filter to see all new pins.</div>
+    </div>`;
+  }
+
+  // ── Missing coordinates ──
+  if (missingCoords && missingCoords.length > 0) {
+    html += `<div style="background:#d6336c15;border:1px solid #d6336c33;border-radius:6px;padding:8px 10px;margin-bottom:10px;font-size:11px;">
+      <strong style="color:#d6336c;">${missingCoords.length} record${missingCoords.length > 1 ? 's' : ''} could not be placed on the map</strong>
+      <div style="color:var(--text-dim);margin-top:3px;">Missing state/address info for geocoding.</div>`;
+    missingCoords.slice(0, 8).forEach(r => {
+      html += `<div style="font-size:10px;color:var(--text-dim);margin-top:2px;">&bull; ${r.name || '(no name)'}${r.state ? ' (' + r.state + ')' : ''} — ${r.address || r.city || 'no address'}</div>`;
+    });
+    if (missingCoords.length > 8) html += `<div style="font-size:10px;color:var(--text-muted);margin-top:2px;font-style:italic;">...and ${missingCoords.length - 8} more</div>`;
+    html += `</div>`;
+  }
+
+  // ── Geocoding errors ──
+  if (errors && errors.length > 0) {
+    html += `<div style="background:#d6336c15;border:1px solid #d6336c33;border-radius:6px;padding:8px 10px;margin-bottom:10px;font-size:11px;">
+      <strong style="color:#d6336c;">${errors.length} geocoding error${errors.length > 1 ? 's' : ''}</strong>`;
+    errors.slice(0, 5).forEach(e => {
+      html += `<div style="font-size:10px;color:var(--text-dim);margin-top:2px;">&bull; ${e}</div>`;
+    });
+    if (errors.length > 5) html += `<div style="font-size:10px;color:var(--text-muted);margin-top:2px;font-style:italic;">...and ${errors.length - 5} more</div>`;
+    html += `</div>`;
+  }
+
+  // ── Owner resolutions ──
+  const resolutions = stats.resolutions || [];
+  if (resolutions.length > 0) {
+    // Group by reason
+    const byReason = {};
+    resolutions.forEach(r => {
+      if (!byReason[r.reason]) byReason[r.reason] = [];
+      byReason[r.reason].push(r);
+    });
+
+    // Show fallback resolutions first (most interesting), then direct assigns
+    const fallbackReasons = Object.keys(byReason).filter(r => r !== 'direct_assign').sort();
+    const directCount = (byReason['direct_assign'] || []).length;
+
+    html += `<div style="margin-top:12px;margin-bottom:6px;font-size:11px;font-weight:600;color:var(--text-primary);text-transform:uppercase;letter-spacing:0.5px;">Owner Resolutions</div>`;
+
+    if (directCount > 0) {
+      html += `<div style="font-size:11px;color:var(--text-dim);margin-bottom:6px;">${directCount} account${directCount > 1 ? 's' : ''} assigned directly to Account Owner (no fallback needed)</div>`;
+    }
+
+    fallbackReasons.forEach(reason => {
+      const items = byReason[reason];
+      const label = REASON_LABELS[reason] || reason;
+      html += `<div style="background:var(--panel-bg);border:1px solid var(--panel-border);border-radius:6px;padding:8px 10px;margin-bottom:6px;font-size:11px;">
+        <div style="font-weight:600;color:var(--accent-strat);margin-bottom:4px;">${label} (${items.length})</div>`;
+      items.slice(0, 10).forEach(r => {
+        html += `<div style="font-size:10px;color:var(--text-dim);margin-top:2px;">
+          ${r.isNew ? '<span style="color:#51cf66;font-weight:600;">NEW</span>' : '<span style="color:#339af0;font-weight:600;">UPD</span>'}
+          <strong>${r.name}</strong>: ${r.csvOwner} → ${r.resolvedAE}${r.oppOwner ? ' <span style="color:var(--text-muted);">(Opp Owner: ' + r.oppOwner + ')</span>' : ''}
+        </div>`;
+      });
+      if (items.length > 10) {
+        html += `<div style="font-size:10px;color:var(--text-muted);margin-top:2px;font-style:italic;">...and ${items.length - 10} more</div>`;
+      }
+      html += `</div>`;
+    });
+  }
+
+  // ── Conflicts ──
+  const conflicts = stats.conflicts || [];
+  if (conflicts.length > 0) {
+    html += `<div style="background:#d6336c15;border:1px solid #d6336c33;border-radius:6px;padding:8px 10px;margin-bottom:10px;font-size:11px;">
+      <strong style="color:#d6336c;">&#9888; ${conflicts.length} ownership conflict${conflicts.length > 1 ? 's' : ''}</strong>
+      <div style="color:var(--text-dim);margin-top:3px;">Resolve via the Conflicts dropdown.</div>`;
+    conflicts.slice(0, 5).forEach(c => {
+      html += `<div style="font-size:10px;color:var(--text-dim);margin-top:2px;">&bull; ${c.name}: ${c.oldAE} → ${c.newAE}</div>`;
+    });
+    if (conflicts.length > 5) html += `<div style="font-size:10px;color:var(--text-muted);margin-top:2px;font-style:italic;">...and ${conflicts.length - 5} more</div>`;
+    html += `</div>`;
+  }
+
+  body.innerHTML = html;
+  document.getElementById('uploadSummaryModal').classList.add('show');
+}
+
+function closeUploadSummary() {
+  document.getElementById('uploadSummaryModal').classList.remove('show');
+}
+
 // Count how many new records (with lat/lng) are hidden by the active team/rep filter.
 // Includes unassigned records (no AE) which are now filtered out when a team/rep is selected.
 function countNewRecordsHiddenByFilter(newRecordNames) {
@@ -5673,18 +5854,15 @@ async function confirmMerge() {
       );
       const hiddenByFilter = countNewRecordsHiddenByFilter(newNames);
 
-      // Show confirmation
-      alert(buildMergeMessage({
-        dataLabel: `${ACCOUNT_DATA.length} accounts + ${CUSTOMER_DATA.length} customers`,
-        recordCount: ACCOUNT_DATA.length + CUSTOMER_DATA.length,
+      // Show post-upload summary modal
+      showUploadSummary({
+        stats: pendingMergeStats,
         geocodedCount,
         inheritedCount,
-        conflicts: mergeConflicts,
         errors,
-        filenames: ['accounts.json', 'customers.json'],
         missingCoords: allMissing,
         hiddenByFilter,
-      }));
+      });
 
     } else {
       // Single-dataset merge (no type column)
@@ -5741,19 +5919,15 @@ async function confirmMerge() {
       );
       const hiddenByFilter2 = isAccountType ? countNewRecordsHiddenByFilter(newNames2) : 0;
 
-      // Show confirmation
-      const recordCount = targetData.length;
-      alert(buildMergeMessage({
-        dataLabel: `${isAccountType ? 'accounts' : 'customers'}`,
-        recordCount,
+      // Show post-upload summary modal
+      showUploadSummary({
+        stats: pendingMergeStats,
         geocodedCount,
         inheritedCount,
-        conflicts: mergeConflicts2,
         errors,
-        filenames: [filename],
         missingCoords,
         hiddenByFilter: hiddenByFilter2,
-      }));
+      });
     }
 
   } catch (e) {
@@ -6639,6 +6813,8 @@ Object.assign(window, {
   // Merge Modal
   closeMergeModal,
   confirmMerge,
+  // Upload Summary Modal
+  closeUploadSummary,
   // Account List
   toggleAccountListOverlay,
   highlightAccountMarker,
