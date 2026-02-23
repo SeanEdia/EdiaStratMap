@@ -211,6 +211,20 @@
   </div>
 </div>
 
+<!-- Post-Upload Summary Modal -->
+<div class="merge-modal" id="uploadSummaryModal">
+  <div class="merge-modal-content" style="max-width:620px;max-height:85vh;">
+    <div class="merge-modal-header">
+      <h3>Upload Summary</h3>
+      <button class="merge-modal-close" onclick="closeUploadSummary()">&times;</button>
+    </div>
+    <div class="merge-modal-body" id="uploadSummaryBody" style="overflow-y:auto;max-height:60vh;"></div>
+    <div class="merge-modal-footer">
+      <button class="merge-btn merge-btn-confirm" onclick="closeUploadSummary()">Done</button>
+    </div>
+  </div>
+</div>
+
 <!-- SFDC Refresh Modal -->
 <div class="sfdc-modal-backdrop" id="sfdcModal" onclick="if(event.target===this)closeSfdcModal()">
   <div class="sfdc-modal-content">
