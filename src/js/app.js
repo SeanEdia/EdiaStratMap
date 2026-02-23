@@ -1870,8 +1870,7 @@ function renderOppNextSteps(a) {
   let html = '';
   const opps = a.opps || [];
   if (opps.length === 0) {
-    // No opps — show a single warning
-    html += `<div class="ad-subtask ad-subtask-warn">&#9888;&#65039; No Next Step</div>`;
+    // No opps — skip subtask entirely
     return html;
   }
   opps.forEach(opp => {
