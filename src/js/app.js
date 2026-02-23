@@ -491,8 +491,8 @@ function resolveOwner(csvAE, existingAE, ctx) {
       // Opp exists → reassign through holdout (keep existing active rep, else unassigned)
       return (existing && ALL_ACTIVE_REPS.has(existing)) ? existing : '';
     }
-    // No opp → leave ownership as-is (do not reassign)
-    return csv;
+    // No opp → leave the record as-is, don't overwrite a valid rep
+    return (existing && ALL_ACTIVE_REPS.has(existing)) ? existing : csv;
   }
 
   // 4. CSV AE is a known inactive/former owner → keep existing if active, else unassigned
