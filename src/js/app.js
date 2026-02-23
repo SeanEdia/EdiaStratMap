@@ -3611,7 +3611,7 @@ function readSpreadsheetFile(file) {
           const rows = rawRows.map(row => {
             const mapped = {};
             Object.keys(row).forEach(key => {
-              const normKey = key.trim().toLowerCase().replace(/[\/()]+/g, '_').replace(/\s+/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
+              const normKey = key.trim().toLowerCase().replace(/[\/()&:]+/g, '_').replace(/\s+/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
               const val = row[key];
               // Handle Date objects from Excel (cellDates: true)
               if (val instanceof Date && !isNaN(val.getTime())) {
@@ -3772,7 +3772,7 @@ function parseCSV(text) {
       const row = {};
       headers.forEach((h, idx) => {
         // Normalize header names to match mapFieldName format
-        const key = h.trim().toLowerCase().replace(/[\/()&]+/g, '_').replace(/\s+/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
+        const key = h.trim().toLowerCase().replace(/[\/()&:]+/g, '_').replace(/\s+/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
         row[key] = values[idx].trim();
       });
       data.push(row);
@@ -4558,6 +4558,8 @@ function mapFieldName(csvField) {
     'customer_success_manager': 'csm',
     'sdr_name': 'opp_sdr',
     'sales_develop': 'opp_sdr',
+    'sales_development_representative_sdr': 'opp_sdr',
+    'sales_development_representative': 'opp_sdr',
     'primary_contact': 'opp_contact',
     'contact_name': 'opp_contact',
     'contact_title': 'opp_contact_title',
@@ -4588,6 +4590,7 @@ function mapFieldName(csvField) {
     'forecast_category': 'opp_forecast',
     'forecast': 'opp_forecast',
     'active_forecast': 'opp_forecast',
+    'active_forecast_category': 'opp_forecast',
     'probability': 'opp_probability',
     'probability_%': 'opp_probability',
     'probability_(%)': 'opp_probability',
@@ -4599,6 +4602,7 @@ function mapFieldName(csvField) {
     'next_steps': 'opp_next_step',
     'intro_meeting_next_step': 'opp_next_step',
     'last_activity_date': 'opp_last_activity',
+    'last_activity': 'opp_last_activity',
     'competition': 'opp_competition',
     'competitors': 'opp_competition',
     'economic_buyer': 'opp_economic_buyer',
@@ -4631,7 +4635,7 @@ function mapFieldName(csvField) {
     'super': 'superintendent'
   };
 
-  const normalized = csvField.toLowerCase().replace(/[\/()&]+/g, '_').replace(/\s+/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
+  const normalized = csvField.toLowerCase().replace(/[\/()&:]+/g, '_').replace(/\s+/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
   return mappings[normalized] || normalized;
 }
 
@@ -4710,7 +4714,12 @@ function normalizeDistrictName(name) {
 
   // Remove all school-related suffixes (order matters - longer patterns first)
   const suffixPatterns = [
+    /\s+sau\s*#?\d+$/i,              // NH: "Keene SAU #29" → "Keene"
     /\s+independent school district$/i,
+    /\s+consolidated unified school district$/i,
+    /\s+unified high school district$/i,
+    /\s+joint union high school district$/i,
+    /\s+joint unified school district$/i,
     /\s+unified school district$/i,
     /\s+consolidated school district$/i,
     /\s+central school district$/i,
@@ -4728,6 +4737,11 @@ function normalizeDistrictName(name) {
     /\s+parish school system$/i,
     /\s+parish school board$/i,
     /\s+school system$/i,
+    /\s+cusd$/i,
+    /\s+uhsd$/i,
+    /\s+juhsd$/i,
+    /\s+jusd$/i,
+    /\s+ufsd$/i,
     /\s+isd$/i,
     /\s+usd$/i,
     /\s+csd$/i,
@@ -4945,7 +4959,12 @@ async function geocodeDistrict(name, state, record) {
   const city = record?.billing_city || record?.city || record?.mailing_city || '';
 
   // Build list of query variations to try
-  const baseName = name.replace(/\s*(Independent School District|School District|Public Schools|County Schools|City Schools|Parish Schools|ISD|USD|CSD|Schools|District).*$/i, '').trim();
+  // Strip school-related suffixes and identifiers so Nominatim gets a clean city/region name.
+  // Includes NH "SAU #XX", CA "CUSD", "UHSD", "JUSD", "JUHSD" etc.
+  const baseName = name
+    .replace(/\s*SAU\s*#?\d+$/i, '')    // NH: "Keene SAU #29" → "Keene"
+    .replace(/\s*(Independent School District|Consolidated Unified School District|Unified High School District|Joint Union High School District|Joint Unified School District|Union Free School District|Central School District|Unified School District|School District|Public Schools|County Schools|City Schools|Parish Schools|CUSD|UHSD|JUHSD|JUSD|UFSD|ISD|USD|CSD|Schools|District).*$/i, '')
+    .trim() || name; // Fallback to original if stripping empties it
 
   // Try structured search first (more accurate for address-based lookups)
   const structuredQueries = [];
@@ -4989,6 +5008,7 @@ async function geocodeDistrict(name, state, record) {
   const queries = [];
   if (state) {
     // State-aware queries (preferred — can validate results)
+    // Put the most likely-to-succeed queries first
     queries.push(
       `${baseName}, ${state}, USA`,
       `${baseName} County, ${state}, USA`,
@@ -4996,6 +5016,11 @@ async function geocodeDistrict(name, state, record) {
       `${baseName} city, ${state}, USA`,
       `${name} school district, ${state}, USA`
     );
+    // If we have city data, add it as a fallback (handles SAU/CUSD-style names where
+    // baseName still includes identifiers Nominatim doesn't understand)
+    if (city && city.toLowerCase() !== baseName.toLowerCase()) {
+      queries.push(`${city}, ${state}, USA`);
+    }
   } else {
     // No state available — use name-only queries (less accurate but better than nothing)
     console.log('[Geocode] No state for:', name, '- trying name-only queries');
@@ -5274,7 +5299,7 @@ function postMergeRefresh() {
 }
 
 // Build the merge completion message
-function buildMergeMessage({ dataLabel, recordCount, geocodedCount, inheritedCount, conflicts, errors, filenames, missingCoords }) {
+function buildMergeMessage({ dataLabel, recordCount, geocodedCount, inheritedCount, conflicts, errors, filenames, missingCoords, hiddenByFilter }) {
   let message = `Merge complete!\n\n${recordCount} ${dataLabel} updated on the map.`;
   message += `\n\nData saved to this browser — it will persist across page refreshes.`;
   if (filenames.length === 1) {
@@ -5293,6 +5318,10 @@ function buildMergeMessage({ dataLabel, recordCount, geocodedCount, inheritedCou
   if (conflicts && conflicts.length > 0) {
     message += `\n\n${conflicts.length} ownership conflict(s) detected — review in the Conflicts dropdown.`;
   }
+  if (hiddenByFilter && hiddenByFilter > 0) {
+    message += `\n\n⚠ ${hiddenByFilter} new record(s) are hidden by your current Team/Rep filter because they have no Account Owner assigned.`;
+    message += `\nClear the Team/Rep filter to see all new pins.`;
+  }
   if (missingCoords && missingCoords.length > 0) {
     message += `\n\n${missingCoords.length} record(s) could not be placed on the map (missing coordinates):`;
     missingCoords.slice(0, 5).forEach(r => {
@@ -5310,6 +5339,35 @@ function buildMergeMessage({ dataLabel, recordCount, geocodedCount, inheritedCou
     }
   }
   return message;
+}
+
+// Count how many new records (with lat/lng) are hidden by the active team/rep filter.
+// This catches the case where a CSV upload creates new accounts with no AE, so they
+// don't appear under the user's current team/rep selection.
+function countNewRecordsHiddenByFilter(newRecordNames) {
+  if (!newRecordNames || newRecordNames.size === 0) return 0;
+  if (!selectedTeam && !selectedRep) return 0; // No team/rep filter active
+  let hidden = 0;
+  ACCOUNT_DATA.forEach(d => {
+    if (!newRecordNames.has(d.name)) return; // Only check new records
+    if (!d.lat || !d.lng) return; // Already counted as missing coords
+    const territoryAE = getTerritoryAE(d);
+    const holdoutAE = getHoldoutAE(d);
+    if (selectedRep) {
+      const isManager = selectedTeam && TEAM_REP_DATA[selectedTeam] &&
+        TEAM_REP_DATA[selectedTeam].manager === selectedRep;
+      if (isManager) {
+        const teamReps = _teamRepsSet[selectedTeam];
+        if (!teamReps || (!teamReps.has(territoryAE) && !(holdoutAE && teamReps.has(holdoutAE)))) hidden++;
+      } else {
+        if (territoryAE !== selectedRep && holdoutAE !== selectedRep) hidden++;
+      }
+    } else if (selectedTeam) {
+      const teamReps = _teamRepsSet[selectedTeam];
+      if (!teamReps || (!teamReps.has(territoryAE) && !(holdoutAE && teamReps.has(holdoutAE)))) hidden++;
+    }
+  });
+  return hidden;
 }
 
 async function confirmMerge() {
@@ -5377,6 +5435,12 @@ async function confirmMerge() {
       const missingCust = auditMissingCoordinates('customer', CUSTOMER_DATA);
       const allMissing = [...missingAcct, ...missingCust];
 
+      // Check if new records are hidden by the active team/rep filter
+      const newNames = new Set(
+        (pendingMergeStats?.changes || []).filter(c => c.action === 'new').map(c => c.name)
+      );
+      const hiddenByFilter = countNewRecordsHiddenByFilter(newNames);
+
       // Show confirmation
       alert(buildMergeMessage({
         dataLabel: `${ACCOUNT_DATA.length} accounts + ${CUSTOMER_DATA.length} customers`,
@@ -5387,6 +5451,7 @@ async function confirmMerge() {
         errors,
         filenames: ['accounts.json', 'customers.json'],
         missingCoords: allMissing,
+        hiddenByFilter,
       }));
 
     } else {
@@ -5438,6 +5503,12 @@ async function confirmMerge() {
       const targetData = isAccountType ? ACCOUNT_DATA : CUSTOMER_DATA;
       const missingCoords = auditMissingCoordinates(isAccountType ? 'account' : 'customer', targetData);
 
+      // Check if new records are hidden by the active team/rep filter
+      const newNames2 = new Set(
+        (pendingMergeStats?.changes || []).filter(c => c.action === 'new').map(c => c.name)
+      );
+      const hiddenByFilter2 = isAccountType ? countNewRecordsHiddenByFilter(newNames2) : 0;
+
       // Show confirmation
       const recordCount = targetData.length;
       alert(buildMergeMessage({
@@ -5449,6 +5520,7 @@ async function confirmMerge() {
         errors,
         filenames: [filename],
         missingCoords,
+        hiddenByFilter: hiddenByFilter2,
       }));
     }
 
