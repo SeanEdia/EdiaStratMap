@@ -456,50 +456,56 @@ function getHoldoutAE(d) {
 }
 
 // Resolve the account owner from a CSV value against an existing owner.
-// Optional ctx: { enrollment, hasUploadedOpp } for conditional reassignment rules.
-// Evaluation order:
-//   1. Blank CSV → keep existing if active
-//   2. Ben Foley → enrollment > 30k → Sean Johnson; else holdout (treat as inactive)
-//   3. CONDITIONAL_REASSIGN (Iain/Nicholas) → has opp → holdout; no opp → leave as-is
-//   4. INACTIVE_OWNERS → keep existing if active (holdout logic)
+// Optional ctx: { enrollment, hasUploadedOpp, oppOwner } for conditional reassignment.
+// Evaluation order (Opp Owner used as fallback when Account Owner is invalid):
+//   1. Blank CSV → Opp Owner if active → existing if active → unassigned
+//   2. Ben Foley → enrollment > 30k → Sean Johnson; else → Opp Owner / existing / unassigned
+//   3. CONDITIONAL_REASSIGN (Iain/Nicholas) → has opp → Opp Owner / existing / unassigned;
+//      no opp → keep existing if active, else leave as-is
+//   4. INACTIVE_OWNERS → Opp Owner if active → existing if active → unassigned
 //   5. Active rep → assign (unless existing differs → conflict, keep existing)
-//   6. Unrecognized → keep existing if active
+//   6. Unrecognized → Opp Owner if active → existing if active → unassigned
 // Returns the resolved ae string (may be '' for truly unassigned).
 function resolveOwner(csvAE, existingAE, ctx) {
   const csv = (csvAE || '').trim();
   const existing = (existingAE || '').trim();
+  const oppOwner = (ctx && ctx.oppOwner || '').trim();
 
-  // 1. CSV AE is blank → keep existing if active, else unassigned
-  if (!csv) {
+  // Fallback chain: Opp Owner → existing active rep → unassigned
+  const fallback = () => {
+    if (oppOwner && ALL_ACTIVE_REPS.has(oppOwner)) return oppOwner;
     return (existing && ALL_ACTIVE_REPS.has(existing)) ? existing : '';
+  };
+
+  // 1. CSV AE is blank → fallback (Opp Owner → existing → unassigned)
+  if (!csv) {
+    return fallback();
   }
 
   // 2. Ben Foley: >30k students → hard override to Sean Johnson (no holdout).
-  //    ≤30k or missing enrollment → treat as inactive (holdout logic).
+  //    ≤30k or missing enrollment → fallback (Opp Owner → existing → unassigned).
   if (csv === BEN_FOLEY) {
     const enrollment = ctx ? parseEnrollment(ctx.enrollment) : 0;
     if (enrollment > STRATEGIC_ENROLLMENT_THRESHOLD) {
       return ACCOUNT_PRIMARY_AE; // Sean Johnson — direct assignment
     }
-    // ≤30k or missing → same as inactive owner
-    return (existing && ALL_ACTIVE_REPS.has(existing)) ? existing : '';
+    return fallback();
   }
 
   // 3. CONDITIONAL_REASSIGN (Iain Proctor / Nicholas Watson):
   //    Only reassign when the uploaded CSV has opp data for this account.
-  //    Has opp → treat as inactive (holdout logic). No opp → leave as-is.
+  //    Has opp → fallback (Opp Owner → existing → unassigned). No opp → leave as-is.
   if (CONDITIONAL_REASSIGN.has(csv)) {
     if (ctx && ctx.hasUploadedOpp) {
-      // Opp exists → reassign through holdout (keep existing active rep, else unassigned)
-      return (existing && ALL_ACTIVE_REPS.has(existing)) ? existing : '';
+      return fallback();
     }
     // No opp → leave the record as-is, don't overwrite a valid rep
     return (existing && ALL_ACTIVE_REPS.has(existing)) ? existing : csv;
   }
 
-  // 4. CSV AE is a known inactive/former owner → keep existing if active, else unassigned
+  // 4. CSV AE is a known inactive/former owner → fallback (Opp Owner → existing → unassigned)
   if (INACTIVE_OWNERS.has(csv)) {
-    return (existing && ALL_ACTIVE_REPS.has(existing)) ? existing : '';
+    return fallback();
   }
 
   // 5. CSV AE is a current, active rep
@@ -514,8 +520,8 @@ function resolveOwner(csvAE, existingAE, ctx) {
   }
 
   // 6. CSV AE is an unrecognized name (not active, not in inactive list)
-  // Treat as unassigned — keep existing if active
-  return (existing && ALL_ACTIVE_REPS.has(existing)) ? existing : '';
+  // → fallback (Opp Owner → existing → unassigned)
+  return fallback();
 }
 
 // ============ STATE ============
@@ -4312,6 +4318,9 @@ function runMerge(csvData, existingData) {
         return OPP_ENTRY_FIELDS.has(mapFieldName(key)) && csvRow[key].trim();
       });
       if (rowHasOppData) alreadyMerged._hasUploadedOpp = true;
+      // Pre-extract Opp Owner from this row for resolveOwner fallback
+      const rowOppOwner = Object.keys(csvRow).reduce((found, k) =>
+        found || (mapFieldName(k) === 'opp_owner' ? (csvRow[k] || '').trim() : ''), '');
       // Separate opp fields from account fields, then upsert each opp by product area
       const csvOppFields = {};
       Object.keys(csvRow).forEach(key => {
@@ -4331,6 +4340,7 @@ function runMerge(csvData, existingData) {
             const candidateAE = resolveOwner(val.trim(), alreadyMerged.ae || '', {
               enrollment: alreadyMerged.enrollment,
               hasUploadedOpp: alreadyMerged._hasUploadedOpp,
+              oppOwner: rowOppOwner,
             });
             if (candidateAE) alreadyMerged.ae = candidateAE;
           } else {
@@ -4432,6 +4442,7 @@ function runMerge(csvData, existingData) {
         merged.ae = resolveOwner(csvAE, priorAE, {
           enrollment: merged.enrollment,
           hasUploadedOpp,
+          oppOwner: (merged.opp_owner || '').trim(),
         });
         if (hasUploadedOpp) merged._hasUploadedOpp = true;
 
@@ -4609,6 +4620,7 @@ function runMerge(csvData, existingData) {
         newRecord.ae = resolveOwner(csvAE, '', {
           enrollment: newRecord.enrollment,
           hasUploadedOpp,
+          oppOwner: (newRecord.opp_owner || '').trim(),
         });
         if (hasUploadedOpp) newRecord._hasUploadedOpp = true;
         if (csvAE && csvAE !== newRecord.ae) {
@@ -4760,6 +4772,7 @@ function mapFieldName(csvField) {
     'account_owner': 'ae',
     'owner': 'ae',
     'ae_name': 'ae',
+    'opportunity_owner': 'opp_owner',
     'csm_name': 'csm',
     'customer_success_manager': 'csm',
     'sdr_name': 'opp_sdr',
