@@ -449,16 +449,27 @@ function getTerritoryAE(d) {
   if (enrollment >= STRATEGIC_ENROLLMENT_THRESHOLD) {
     return ACCOUNT_PRIMARY_AE; // strategic account
   }
+  // If the account fell through to Opp Owner because the territory rep's data
+  // isn't loaded yet, territory_ae holds the original Account Owner from the CSV.
+  if (d.territory_ae) return d.territory_ae;
   if (!d.ae) return d.ae;
   return d.ae; // <30k — assigned to account owner
 }
 
-// Helper: returns the holdout AE for 30k+ accounts whose AE is not the Strategic default.
+// Helper: returns the holdout AE when there's a dual-assignment scenario.
+// Two cases: (1) 30k+ strategic account whose AE is not the default (Sean Johnson),
+// (2) Opp Owner fallback — territory rep's data isn't loaded yet, so the account is
+//     temporarily under the Opp Owner while the territory rep remains the assigned owner.
 function getHoldoutAE(d) {
   if (!d.ae || isDOE(d.name)) return null;
+  // Case 2: territory_ae set (Opp Owner fallback) — d.ae is the holdout (Opp Owner)
+  if (d.territory_ae && d.territory_ae !== d.ae) {
+    return d.ae;
+  }
+  // Case 1: strategic account holdout
   const enrollment = parseEnrollment(d.enrollment);
   if (enrollment >= STRATEGIC_ENROLLMENT_THRESHOLD && d.ae !== ACCOUNT_PRIMARY_AE) {
-    return d.ae; // holdout on a strategic account
+    return d.ae;
   }
   return null;
 }
@@ -4011,7 +4022,7 @@ function consolidateParentAccounts(csvData) {
     }
   });
 
-  if (childRows.length === 0) return csvData; // no parent account relationships
+  if (childRows.length === 0) return { rows: csvData, consolidatedCount: 0 }; // no parent account relationships
 
   console.log('[SFDC Merge] Parent account consolidation:', parentRows.length, 'districts,', childRows.length, 'schools');
 
@@ -4085,7 +4096,9 @@ function consolidateParentAccounts(csvData) {
     }
   });
 
-  return parentRows;
+  // Number of child rows absorbed into parents (original CSV rows minus output rows)
+  const consolidatedCount = csvData.length - parentRows.length;
+  return { rows: parentRows, consolidatedCount };
 }
 
 // Core merge logic: merges csvData rows against an existing dataset.
@@ -4261,6 +4274,7 @@ function runMerge(csvData, existingData) {
     total: csvData.length,
     newRecords: 0,
     updatedRecords: 0,
+    duplicateRows: 0,   // CSV rows for accounts already merged (multiple opps per account)
     notesPreserved: notesCount,
     changes: [],
     conflicts: [],
@@ -4343,6 +4357,7 @@ function runMerge(csvData, existingData) {
 
     // If this account was already merged from a previous CSV row, update that record (multiple opps scenario)
     if (alreadyMerged) {
+      stats.duplicateRows++;
       console.log('[SFDC Merge] Multiple opps for:', name, '- updating existing merged record');
       // Pre-scan for opp fields so resolveOwner knows if this row has opp data
       const rowHasOppData = Object.keys(csvRow).some(key => {
@@ -4479,6 +4494,15 @@ function runMerge(csvData, existingData) {
         });
         merged.ae = ownerResult.ae;
         if (hasUploadedOpp) merged._hasUploadedOpp = true;
+        // When an active rep's data isn't loaded yet, preserve them as the
+        // territory owner so the popup can show the dual-assignment display
+        // (Assigned = original Account Owner, Holdout = Opp Owner fallback).
+        if (ownerResult.reason === 'no_data_loaded' && csvAE) {
+          merged.territory_ae = csvAE;
+        } else {
+          // Clear stale territory_ae from a prior upload (rep's data now loaded)
+          delete merged.territory_ae;
+        }
 
         // Track resolution for post-upload summary
         if (csvAE) {
@@ -4660,6 +4684,11 @@ function runMerge(csvData, existingData) {
         });
         newRecord.ae = ownerResult.ae;
         if (hasUploadedOpp) newRecord._hasUploadedOpp = true;
+        // When an active rep's data isn't loaded yet, preserve them as the
+        // territory owner so the popup can show the dual-assignment display.
+        if (ownerResult.reason === 'no_data_loaded' && csvAE) {
+          newRecord.territory_ae = csvAE;
+        }
 
         // Track resolution for post-upload summary
         if (csvAE) {
@@ -4728,8 +4757,8 @@ function previewMerge(csvData) {
     console.log('[SFDC Merge] Type column detected — splitting:', customerRows.length, 'customer rows,', accountRows.length, 'account rows');
 
     mergeHasTypeSplit = true;
-    const consolidatedAccountRows = consolidateParentAccounts(accountRows);
-    const accountResult = runMerge(consolidatedAccountRows, ACCOUNT_DATA);
+    const consolidation = consolidateParentAccounts(accountRows);
+    const accountResult = runMerge(consolidation.rows, ACCOUNT_DATA);
     const customerResult = runMerge(customerRows, CUSTOMER_DATA);
 
     pendingAccountMerge = accountResult.mergedData;
@@ -4742,6 +4771,7 @@ function previewMerge(csvData) {
       newRecords: accountResult.stats.newRecords + customerResult.stats.newRecords,
       updatedRecords: accountResult.stats.updatedRecords + customerResult.stats.updatedRecords,
       notesPreserved: accountResult.stats.notesPreserved + customerResult.stats.notesPreserved,
+      consolidatedRecords: consolidation.consolidatedCount + (accountResult.stats.duplicateRows || 0) + (customerResult.stats.duplicateRows || 0),
       changes: [...accountResult.stats.changes, ...customerResult.stats.changes],
       conflicts: [...(accountResult.stats.conflicts || []), ...(customerResult.stats.conflicts || [])],
       resolutions: [...(accountResult.stats.resolutions || []), ...(customerResult.stats.resolutions || [])],
@@ -4797,8 +4827,17 @@ function previewMerge(csvData) {
     }
   }
 
-  const dataToMerge = sfdcDataType === 'accounts' ? consolidateParentAccounts(csvData) : csvData;
+  let consolidatedCount = 0;
+  let dataToMerge;
+  if (sfdcDataType === 'accounts') {
+    const consolidation = consolidateParentAccounts(csvData);
+    dataToMerge = consolidation.rows;
+    consolidatedCount = consolidation.consolidatedCount;
+  } else {
+    dataToMerge = csvData;
+  }
   const result = runMerge(dataToMerge, sfdcDataType === 'accounts' ? ACCOUNT_DATA : CUSTOMER_DATA);
+  result.stats.consolidatedRecords = consolidatedCount + (result.stats.duplicateRows || 0);
   pendingMergeData = result.mergedData;
   pendingMergeStats = result.stats;
   showMergeModal(result.stats);
@@ -5087,6 +5126,19 @@ function showMergeModal(stats) {
   document.getElementById('mergeNewRecords').textContent = stats.newRecords;
   document.getElementById('mergeUpdatedRecords').textContent = stats.updatedRecords;
   document.getElementById('mergeNotesPreserved').textContent = stats.notesPreserved;
+
+  // Show consolidated/deduplicated count when records were absorbed
+  const consolidatedEl = document.getElementById('mergeConsolidatedRecords');
+  const consolidatedRow = document.getElementById('mergeConsolidatedRow');
+  if (consolidatedEl && consolidatedRow) {
+    const consolidated = stats.consolidatedRecords || 0;
+    if (consolidated > 0) {
+      consolidatedEl.textContent = consolidated;
+      consolidatedRow.style.display = '';
+    } else {
+      consolidatedRow.style.display = 'none';
+    }
+  }
 
   // Count records needing geocoding
   const allPendingRecords = mergeHasTypeSplit
@@ -5657,6 +5709,12 @@ function showUploadSummary({ stats, geocodedCount, inheritedCount, errors, missi
     <div style="font-size:10px;color:var(--text-dim);text-transform:uppercase;">Updated</div></div>`;
   html += `</div>`;
 
+  // Show consolidated count when records were absorbed (schools → parents, multi-opp rows)
+  const consolidated = stats.consolidatedRecords || 0;
+  if (consolidated > 0) {
+    html += `<div style="font-size:11px;color:var(--text-dim);margin-bottom:10px;text-align:center;">${consolidated} row${consolidated > 1 ? 's' : ''} consolidated (schools rolled into parent districts / multiple opps per account)</div>`;
+  }
+
   // ── Geocoding summary ──
   if (geocodedCount > 0 || inheritedCount > 0) {
     html += `<div style="background:#E8853D15;border:1px solid #E8853D33;border-radius:6px;padding:8px 10px;margin-bottom:10px;font-size:11px;">`;
@@ -5839,6 +5897,9 @@ async function confirmMerge() {
       const mergeConflicts = pendingMergeStats && pendingMergeStats.conflicts ? pendingMergeStats.conflicts : [];
       storeNewConflicts(pendingMergeStats);
 
+      // Capture stats before closeMergeModal() nulls pendingMergeStats
+      const savedStats = pendingMergeStats;
+
       // Close modal and refresh UI
       closeMergeModal();
       postMergeRefresh();
@@ -5850,13 +5911,13 @@ async function confirmMerge() {
 
       // Check if new records are hidden by the active team/rep filter
       const newNames = new Set(
-        (pendingMergeStats?.changes || []).filter(c => c.action === 'new').map(c => c.name)
+        (savedStats?.changes || []).filter(c => c.action === 'new').map(c => c.name)
       );
       const hiddenByFilter = countNewRecordsHiddenByFilter(newNames);
 
       // Show post-upload summary modal
       showUploadSummary({
-        stats: pendingMergeStats,
+        stats: savedStats,
         geocodedCount,
         inheritedCount,
         errors,
@@ -5905,6 +5966,9 @@ async function confirmMerge() {
       const mergeConflicts2 = pendingMergeStats && pendingMergeStats.conflicts ? pendingMergeStats.conflicts : [];
       storeNewConflicts(pendingMergeStats);
 
+      // Capture stats before closeMergeModal() nulls pendingMergeStats
+      const savedStats2 = pendingMergeStats;
+
       // Close modal and refresh UI
       closeMergeModal();
       postMergeRefresh();
@@ -5915,13 +5979,13 @@ async function confirmMerge() {
 
       // Check if new records are hidden by the active team/rep filter
       const newNames2 = new Set(
-        (pendingMergeStats?.changes || []).filter(c => c.action === 'new').map(c => c.name)
+        (savedStats2?.changes || []).filter(c => c.action === 'new').map(c => c.name)
       );
       const hiddenByFilter2 = isAccountType ? countNewRecordsHiddenByFilter(newNames2) : 0;
 
       // Show post-upload summary modal
       showUploadSummary({
-        stats: pendingMergeStats,
+        stats: savedStats2,
         geocodedCount,
         inheritedCount,
         errors,
