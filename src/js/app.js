@@ -198,6 +198,47 @@ if (_persisted) {
   }
 }
 
+// ============ CROSS-LINK CUSTOMERS ↔ ACCOUNTS ============
+// Sets is_customer / customer_name on accounts that match a customer record,
+// and also_account on customer records that match an account.
+// Uses normalizeDistrictName() for fuzzy name matching (same logic as merge).
+function crossLinkCustomers() {
+  // Build a lookup of normalized customer names → customer records
+  const custByNorm = new Map();
+  CUSTOMER_DATA.forEach(c => {
+    const norm = normalizeDistrictName(c.name);
+    // If multiple customers share the same normalized name, keep the first
+    if (!custByNorm.has(norm)) custByNorm.set(norm, c);
+  });
+
+  // Build a lookup of normalized account names for the reverse link
+  const acctNorms = new Set();
+  ACCOUNT_DATA.forEach(d => acctNorms.add(normalizeDistrictName(d.name)));
+
+  // Forward link: account → customer
+  let linked = 0;
+  ACCOUNT_DATA.forEach(d => {
+    const norm = normalizeDistrictName(d.name);
+    const match = custByNorm.get(norm);
+    if (match) {
+      d.is_customer = true;
+      d.customer_name = match.name;
+      linked++;
+    } else {
+      d.is_customer = false;
+      d.customer_name = '';
+    }
+  });
+
+  // Reverse link: customer → account
+  CUSTOMER_DATA.forEach(c => {
+    const norm = normalizeDistrictName(c.name);
+    c.also_account = acctNorms.has(norm);
+  });
+
+  if (linked) console.log(`[CrossLink] ${linked} account(s) matched to customer records`);
+}
+
 // ============ PERFORMANCE INDICES ============
 // Pre-computed lookup structures rebuilt when data changes.
 // Converts O(n) scans into O(1) lookups for team/rep filtering.
@@ -372,7 +413,7 @@ let welcomeActive = true;  // Show welcome prompt until user selects a filter
 let savedViewState = {};
 
 // Account list state
-let markerLookup = {};          // name -> { marker, data, type }
+let markerLookup = {};          // "name|state" -> { marker, data, type }
 let filteredAccountData = [];     // current filtered account data
 let filteredCustData = [];      // current filtered customer data
 let accountListSort = 'enrollment_desc';
@@ -484,6 +525,9 @@ function initMap() {
   // otherwise from the bundled JSON files (accounts.json / customers.json).
   // After a merge, updated JSON is also downloaded for committing to the repo
   // so all users get the update on the next deploy.
+
+  // Cross-link customer ↔ account flags before building indices
+  crossLinkCustomers();
 
   // Build performance indices for team/rep/proximity lookups
   buildIndices();
@@ -1093,7 +1137,8 @@ function applyFilters() {
         map.flyTo([d.lat + 2.5, d.lng], 7, { duration: 0.6 });
       });
       statesSet.add(d.state);
-      markerLookup[d.name] = { marker, data: d, type: 'accounts' };
+      const mlKey = d.name + '|' + (d.state || '');
+      markerLookup[mlKey] = { marker, data: d, type: 'accounts' };
 
       // Track for search zoom functionality
       if (search) {
@@ -1144,8 +1189,9 @@ function applyFilters() {
         map.flyTo([d.lat + 2.5, d.lng], 7, { duration: 0.6 });
       });
       statesSet.add(d.state);
-      if (!markerLookup[d.name]) {
-        markerLookup[d.name] = { marker, data: d, type: 'customer' };
+      const mlKeyC = d.name + '|' + (d.state || '');
+      if (!markerLookup[mlKeyC]) {
+        markerLookup[mlKeyC] = { marker, data: d, type: 'customer' };
       }
 
       // Track for search zoom functionality
@@ -1198,6 +1244,18 @@ function applyFilters() {
     overlapCard.style.display = '';
   }
   document.getElementById('stat-states').textContent = statesSet.size;
+
+  // Hidden records indicator: count filtered records without coordinates
+  const missingAcct = filteredAccountData.filter(d => !d.lat || !d.lng).length;
+  const missingCust = filteredCustData.filter(d => !d.lat || !d.lng).length;
+  const totalMissing = missingAcct + missingCust;
+  const missingEl = document.getElementById('stat-missing-coords');
+  if (totalMissing > 0) {
+    document.getElementById('stat-missing-count').textContent = totalMissing;
+    missingEl.style.display = '';
+  } else {
+    missingEl.style.display = 'none';
+  }
 
   // Update count badge
   updateCountBadge(stratCount, custCount);
@@ -1414,7 +1472,8 @@ function selectAutocomplete(index) {
     document.getElementById('searchInput').value = item.label;
     searchExactMatch = true;
     applyFilters();
-    const entry = markerLookup[item.label];
+    const acState = item.data ? (item.data.state || '') : '';
+    const entry = markerLookup[item.label + '|' + acState];
     if (entry && entry.marker) {
       const latLng = entry.marker.getLatLng();
       map.setView([latLng.lat + 2.5, latLng.lng], 7, { animate: true });
@@ -2438,10 +2497,12 @@ function buildAccountListRow(d, type) {
   // Products column (opp_areas for accounts)
   const products = isStrat ? (d.opp_areas || '') : '';
 
+  const escapedName = d.name.replace(/'/g, "\\'");
+  const escapedState = (d.state || '').replace(/'/g, "\\'");
   return `<div class="account-list-item" data-name="${d.name.replace(/"/g, '&quot;')}" data-key="${districtKey}"
-    onmouseenter="highlightAccountMarker('${d.name.replace(/'/g, "\\'")}')"
-    onmouseleave="unhighlightAccountMarker('${d.name.replace(/'/g, "\\'")}')"
-    onclick="flyToAccount('${d.name.replace(/'/g, "\\'")}')"
+    onmouseenter="highlightAccountMarker('${escapedName}','${escapedState}')"
+    onmouseleave="unhighlightAccountMarker('${escapedName}','${escapedState}')"
+    onclick="flyToAccount('${escapedName}','${escapedState}')"
     ondblclick="openAccountFromList('${districtKey}')">
     <span class="al-stage-dot ${stage.cls}" title="${stage.label}"></span>
     <span class="al-name" title="${d.name}">${d.name}</span>
@@ -2453,22 +2514,22 @@ function buildAccountListRow(d, type) {
   </div>`;
 }
 
-function highlightAccountMarker(name) {
-  const entry = markerLookup[name];
+function highlightAccountMarker(name, state) {
+  const entry = markerLookup[name + '|' + (state || '')];
   if (!entry || !entry.marker) return;
   const el = entry.marker.getElement();
   if (el) el.classList.add('marker-highlight');
 }
 
-function unhighlightAccountMarker(name) {
-  const entry = markerLookup[name];
+function unhighlightAccountMarker(name, state) {
+  const entry = markerLookup[name + '|' + (state || '')];
   if (!entry || !entry.marker) return;
   const el = entry.marker.getElement();
   if (el) el.classList.remove('marker-highlight');
 }
 
-function flyToAccount(name) {
-  const entry = markerLookup[name];
+function flyToAccount(name, state) {
+  const entry = markerLookup[name + '|' + (state || '')];
   if (!entry || !entry.marker) return;
   const latLng = entry.marker.getLatLng();
   // Offset center north so the pin sits near the bottom and the popup is centered on screen
@@ -2483,9 +2544,12 @@ function flyToAccount(name) {
 function openAccountFromList(districtKey) {
   let d = window.districtDataCache && window.districtDataCache[districtKey];
   if (!d) {
-    // Fallback: search by key
-    const name = Object.keys(markerLookup).find(n => n.replace(/[^a-zA-Z0-9]/g, '_') === districtKey);
-    if (name && markerLookup[name]) d = markerLookup[name].data;
+    // Fallback: search markerLookup by comparing name portion of composite key
+    const match = Object.keys(markerLookup).find(k => {
+      const namePart = k.split('|')[0];
+      return namePart.replace(/[^a-zA-Z0-9]/g, '_') === districtKey;
+    });
+    if (match && markerLookup[match]) d = markerLookup[match].data;
   }
   if (d) {
     openAccountModalWithData(d);
@@ -2512,7 +2576,8 @@ function renderAccountList() {
     filteredCustData.forEach(d => {
       if (d.lat && d.lng) {
         // Avoid duplicates if already in accounts
-        if (!showStrat || !markerLookup[d.name] || markerLookup[d.name].type !== 'accounts') {
+        const mlKeyDup = d.name + '|' + (d.state || '');
+        if (!showStrat || !markerLookup[mlKeyDup] || markerLookup[mlKeyDup].type !== 'accounts') {
           items.push({ data: d, type: 'customer' });
         }
       }
@@ -5171,6 +5236,23 @@ function postMergeRefresh() {
     hideWelcomeOverlay();
   }
 
+  // Catch-up inheritance pass: now that both ACCOUNT_DATA and CUSTOMER_DATA
+  // are fully committed, cross-reference again so newly-added records in one
+  // dataset can inherit coordinates from newly-added records in the other.
+  let catchUpInherited = 0;
+  [...ACCOUNT_DATA, ...CUSTOMER_DATA].forEach(r => {
+    if (!r.lat || !r.lng) {
+      if (inheritLocationData(r)) catchUpInherited++;
+    }
+  });
+  if (catchUpInherited > 0) {
+    console.log(`[PostMerge] Catch-up inheritance resolved coords for ${catchUpInherited} record(s)`);
+    saveDataToLocalStorage(ACCOUNT_DATA, CUSTOMER_DATA);
+  }
+
+  // Cross-link customer ↔ account flags after merge
+  crossLinkCustomers();
+
   // Rebuild performance indices after data change
   buildIndices();
   _custGrid = null;
@@ -5381,7 +5463,8 @@ async function confirmMerge() {
 function focusOnAccount(districtKey) {
   const d = window.districtDataCache && window.districtDataCache[districtKey];
   if (!d) return;
-  const entry = markerLookup[d.name];
+  const mlKey = d.name + '|' + (d.state || '');
+  const entry = markerLookup[mlKey];
   if (entry && entry.marker) {
     const latLng = entry.marker.getLatLng();
     map.flyTo(latLng, 8, { duration: 0.6 });
@@ -6052,7 +6135,7 @@ function navigateToConflict(idx) {
   if (!c) return;
   const districtKey = c.name.replace(/[^a-zA-Z0-9]/g, '_');
   // Try markerLookup first (visible pins)
-  const entry = markerLookup[c.name];
+  const entry = markerLookup[c.name + '|' + (c.state || '')];
   if (entry && entry.marker) {
     const latLng = entry.marker.getLatLng();
     map.flyTo(latLng, 8, { duration: 0.6 });

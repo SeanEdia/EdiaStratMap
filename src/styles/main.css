@@ -290,6 +290,7 @@ body {
 /* Stats bar */
 .stats-bar {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   padding: 14px 22px;
   border-bottom: 1px solid var(--panel-border);
@@ -319,6 +320,14 @@ body {
 
 .stat-strat .num { color: var(--accent-strat); }
 .stat-cust .num { color: var(--accent-cust); }
+
+.stat-missing {
+  width: 100%;
+  font-size: 11px;
+  color: #e17055;
+  text-align: center;
+  padding: 2px 0 0;
+}
 
 /* Search */
 .search-box {
