@@ -435,11 +435,13 @@ function parseEnrollment(val) {
 // 30k+ enrollment → Strategic (Sean Johnson). <30k → account owner.
 function getTerritoryAE(d) {
   if (isDOE(d.name)) return null;
-  if (!d.ae) return d.ae;
+  // Check strategic enrollment BEFORE bailing on empty ae —
+  // unassigned 30k+ accounts still belong to Sean Johnson.
   const enrollment = parseEnrollment(d.enrollment);
   if (enrollment >= STRATEGIC_ENROLLMENT_THRESHOLD) {
     return ACCOUNT_PRIMARY_AE; // strategic account
   }
+  if (!d.ae) return d.ae;
   return d.ae; // <30k — assigned to account owner
 }
 
