@@ -1866,6 +1866,28 @@ function isThisWeek(date) {
   return d >= weekStart && d <= weekEnd;
 }
 
+function renderOppNextSteps(a) {
+  let html = '';
+  const opps = a.opps || [];
+  if (opps.length === 0) {
+    // No opps — show a single warning
+    html += `<div class="ad-subtask ad-subtask-warn">&#9888;&#65039; No Next Step</div>`;
+    return html;
+  }
+  opps.forEach(opp => {
+    const ns = (opp.next_step || '').trim();
+    if (ns) {
+      const truncNs = ns.length > 60 ? ns.slice(0, 60) + '...' : ns;
+      const areaLabel = opp.area ? opp.area + ': ' : '';
+      html += `<div class="ad-subtask" title="${ns.replace(/"/g, '&quot;')}">${areaLabel}${truncNs}</div>`;
+    } else {
+      const areaLabel = opp.area ? opp.area + ': ' : '';
+      html += `<div class="ad-subtask ad-subtask-warn">${areaLabel}&#9888;&#65039; No Next Step</div>`;
+    }
+  });
+  return html;
+}
+
 function updateActionDashboard() {
   const body = document.getElementById('actionDashboardBody');
   if (!body) return;
@@ -1873,9 +1895,9 @@ function updateActionDashboard() {
   let allAccounts = [];
   window.districtDataCache = window.districtDataCache || {};
 
-  // Gather accounts based on current view
+  // Gather accounts based on current view, filtered by sidebar selections
   if (currentView === 'accounts' || currentView === 'all') {
-    ACCOUNT_DATA.forEach(d => {
+    filteredAccountData.forEach(d => {
       const key = d.name.replace(/[^a-zA-Z0-9]/g, '_');
       window.districtDataCache[key] = d;
       allAccounts.push({
@@ -1883,13 +1905,14 @@ function updateActionDashboard() {
         key: key,
         lastActivity: d.opp_last_activity || '',
         nextStep: d.opp_next_step || '',
+        opps: d.opps && d.opps.length > 0 ? d.opps : (d.opp_stage ? [buildOppEntry(d)] : []),
         type: 'accounts',
         data: d
       });
     });
   }
   if (currentView === 'customers' || currentView === 'all') {
-    CUSTOMER_DATA.forEach(d => {
+    filteredCustData.forEach(d => {
       // Avoid duplicates in 'all' view
       if (currentView === 'all' && allAccounts.some(a => a.name === d.name)) return;
       const key = d.name.replace(/[^a-zA-Z0-9]/g, '_');
@@ -1899,6 +1922,7 @@ function updateActionDashboard() {
         key: key,
         lastActivity: d.last_activity || '',
         nextStep: '',
+        opps: [],
         type: 'customer',
         data: d
       });
@@ -1912,13 +1936,22 @@ function updateActionDashboard() {
     .sort((a, b) => b.daysSince - a.daysSince);
   const stalest = withActivity.slice(0, 8);
 
-  // 2) Next steps due this week
+  // 2) Next steps due this week — check flat nextStep and individual opp next_step fields
   const dueThisWeek = [];
   allAccounts.forEach(a => {
-    if (!a.nextStep) return;
-    const dates = extractDatesFromText(a.nextStep);
-    if (dates.some(d => isThisWeek(d))) {
-      dueThisWeek.push(a);
+    // Check flat nextStep field
+    if (a.nextStep) {
+      const dates = extractDatesFromText(a.nextStep);
+      if (dates.some(d => isThisWeek(d))) { dueThisWeek.push(a); return; }
+    }
+    // Check individual opp next_step fields
+    if (a.opps && a.opps.length > 0) {
+      for (const opp of a.opps) {
+        if (opp.next_step) {
+          const dates = extractDatesFromText(opp.next_step);
+          if (dates.some(d => isThisWeek(d))) { dueThisWeek.push(a); return; }
+        }
+      }
     }
   });
 
@@ -1935,9 +1968,12 @@ function updateActionDashboard() {
   } else {
     stalest.forEach(a => {
       const label = a.daysSince === 1 ? '1d ago' : a.daysSince + 'd ago';
-      html += `<div class="ad-item" onclick="openAccountModalByKey('${a.key}')">`;
+      html += `<div class="ad-item-wrap" onclick="openAccountModalByKey('${a.key}')">`;
+      html += `<div class="ad-item-row">`;
       html += `<span class="ad-name">${a.name}</span>`;
       html += `<span class="ad-meta ad-stale">${label}</span>`;
+      html += `</div>`;
+      html += renderOppNextSteps(a);
       html += `</div>`;
     });
   }
@@ -1951,9 +1987,12 @@ function updateActionDashboard() {
   } else {
     dueThisWeek.forEach(a => {
       const truncStep = a.nextStep.length > 40 ? a.nextStep.slice(0, 40) + '...' : a.nextStep;
-      html += `<div class="ad-item" onclick="openAccountModalByKey('${a.key}')" title="${a.nextStep.replace(/"/g, '&quot;')}">`;
+      html += `<div class="ad-item-wrap" onclick="openAccountModalByKey('${a.key}')" title="${a.nextStep.replace(/"/g, '&quot;')}">`;
+      html += `<div class="ad-item-row">`;
       html += `<span class="ad-name">${a.name}</span>`;
       html += `<span class="ad-next-step-text ad-due">${truncStep}</span>`;
+      html += `</div>`;
+      html += renderOppNextSteps(a);
       html += `</div>`;
     });
   }
@@ -1967,9 +2006,12 @@ function updateActionDashboard() {
   } else {
     const shown = untouched.slice(0, 8);
     shown.forEach(a => {
-      html += `<div class="ad-item" onclick="openAccountModalByKey('${a.key}')">`;
+      html += `<div class="ad-item-wrap" onclick="openAccountModalByKey('${a.key}')">`;
+      html += `<div class="ad-item-row">`;
       html += `<span class="ad-name">${a.name}</span>`;
       html += `<span class="ad-meta ad-untouched">no activity</span>`;
+      html += `</div>`;
+      html += renderOppNextSteps(a);
       html += `</div>`;
     });
     if (untouched.length > 8) {
@@ -3595,7 +3637,8 @@ function formatMeetingPrepPrompt(d) {
     customerData = CUSTOMER_DATA.find(c => c.name === d.customer_name);
   }
 
-  let prompt = `Please generate detailed meeting prep for the following district:\n\n`;
+  let prompt = `Meeting With: (Enter name and title)\n\n`;
+  prompt += `Please generate detailed meeting prep for the following district:\n\n`;
   prompt += `=== DISTRICT INFORMATION ===\n`;
   prompt += `Name: ${d.name}\n`;
   prompt += `State: ${d.state || 'Unknown'}\n`;

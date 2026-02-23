@@ -1322,29 +1322,43 @@ input[type="range"]::-webkit-slider-thumb {
   border-radius: 8px;
   font-weight: 500;
 }
-.ad-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+.ad-item-wrap {
   padding: 5px 8px;
-  font-size: 11px;
   border-radius: 5px;
   cursor: pointer;
   transition: background 0.15s;
+}
+.ad-item-wrap:hover { background: rgba(255,255,255,0.05); }
+.ad-item-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
   gap: 8px;
 }
-.ad-item:hover { background: rgba(255,255,255,0.05); }
-.ad-item .ad-name {
+.ad-item-row .ad-name {
   flex: 1;
   color: var(--text-dim);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.ad-item .ad-meta {
+.ad-item-row .ad-meta {
   white-space: nowrap;
   font-size: 10px;
   font-family: 'JetBrains Mono', monospace;
+}
+.ad-subtask {
+  font-size: 10px;
+  color: var(--text-muted);
+  padding: 2px 0 0 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ad-subtask-warn {
+  color: var(--danger);
+  opacity: 0.85;
 }
 .ad-stale { color: var(--danger); }
 .ad-due { color: var(--accent-both); }
