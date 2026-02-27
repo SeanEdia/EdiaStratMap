@@ -432,6 +432,19 @@ function isDOE(name) {
   return n.includes('department of education') || /\bdoe\b/.test(n);
 }
 
+// Helper: detect NYC Public Schools and sub-districts/schools within NYC.
+// NYC is unique: the mega-district (1M+ students) is subdivided into geographic
+// districts (e.g. "New York City Geographic District #16") which contain individual
+// schools. These accounts use holdout logic (opp owner) instead of a hard territory
+// override, so that uploaded opps remain assigned to the opp owner.
+function isNYCAccount(name) {
+  if (!name) return false;
+  const n = name.toLowerCase();
+  return n.includes('new york city public schools') || n.includes('nyc public schools')
+    || n.includes('new york city geographic district')
+    || n.startsWith('nyc ');
+}
+
 // Helper: robustly parse enrollment (handles comma-formatted strings like "30,210")
 function parseEnrollment(val) {
   if (typeof val === 'number') return val;
@@ -475,7 +488,7 @@ function getHoldoutAE(d) {
 }
 
 // Resolve the account owner from a CSV value against an existing owner.
-// Optional ctx: { enrollment, hasUploadedOpp, oppOwner, loadedReps } for conditional reassignment.
+// Optional ctx: { enrollment, hasUploadedOpp, oppOwner, loadedReps, accountName } for conditional reassignment.
 // Evaluation order (Opp Owner used as fallback when Account Owner is invalid):
 //   1. Blank CSV → Opp Owner if active → existing if active → unassigned
 //   2. Ben Foley → enrollment > 30k → Sean Johnson; else → Opp Owner / existing / unassigned
@@ -505,10 +518,17 @@ function resolveOwner(csvAE, existingAE, ctx) {
   }
 
   // 2. Ben Foley: >30k students → hard override to Sean Johnson (no holdout).
+  //    NYC Public Schools exception: use holdout logic (Opp Owner) instead of hard override,
+  //    so uploaded opps stay with the opp owner rather than being reassigned to territory.
   //    ≤30k or missing enrollment → fallback (Opp Owner → existing → unassigned).
   if (csv === BEN_FOLEY) {
     const enrollment = ctx ? parseEnrollment(ctx.enrollment) : 0;
+    const accountName = ctx && ctx.accountName || '';
     if (enrollment > STRATEGIC_ENROLLMENT_THRESHOLD) {
+      // NYC accounts: apply holdout logic — opp owner keeps the account, Sean Johnson is territory
+      if (isNYCAccount(accountName)) {
+        return { ae: fallback(), reason: 'ben_foley_nyc_holdout' };
+      }
       return { ae: ACCOUNT_PRIMARY_AE, reason: 'ben_foley_strategic' }; // Sean Johnson — direct assignment
     }
     return { ae: fallback(), reason: 'ben_foley_fallback' };
@@ -4288,6 +4308,17 @@ function runMerge(csvData, existingData) {
     for (const { item, idx, normalizedKey } of stateRecords) {
       // Check if either name contains the other (handles "Dallas" matching "Dallas ISD")
       if (csvNormalized.includes(normalizedKey) || normalizedKey.includes(csvNormalized)) {
+        // Guard against false positives where a short normalized parent name is embedded
+        // in a much longer sub-entity name (e.g. "new york city" inside
+        // "new york city geographic district #16"). Require the shorter name to be at
+        // least half the length of the longer to confirm they refer to the same entity.
+        const shorter = Math.min(csvNormalized.length, normalizedKey.length);
+        const longer = Math.max(csvNormalized.length, normalizedKey.length);
+        if (shorter < longer * 0.5) {
+          console.log('[SFDC Merge] State+Name SKIPPED (length mismatch):', csvName, '→', item.name,
+            '(normalized:', csvNormalized, 'vs', normalizedKey + ')');
+          continue;
+        }
         console.log('[SFDC Merge] State+Name match:', csvName, '→', item.name, '(state:', stateKey, ')');
         return { item, idx };
       }
@@ -4430,6 +4461,7 @@ function runMerge(csvData, existingData) {
               hasUploadedOpp: alreadyMerged._hasUploadedOpp,
               oppOwner: rowOppOwner,
               loadedReps,
+              accountName: alreadyMerged.name || '',
             });
             if (result.ae) alreadyMerged.ae = result.ae;
           } else {
@@ -4488,6 +4520,10 @@ function runMerge(csvData, existingData) {
         if (val && val.trim()) {
           // Map common CSV column names to our field names
           const mappedKey = mapFieldName(key);
+          // Never overwrite the existing account name — it's the source of truth.
+          // CSV names may be sub-districts or alternate labels that shouldn't replace
+          // the canonical name (e.g. "NYC Geographic District #16" overwriting "NYC Public Schools").
+          if (mappedKey === 'name') return;
           if (OPP_ENTRY_FIELDS.has(mappedKey)) {
             csvOppFields[mappedKey] = val.trim();
           } else {
@@ -4532,6 +4568,7 @@ function runMerge(csvData, existingData) {
           hasUploadedOpp,
           oppOwner: (merged.opp_owner || '').trim(),
           loadedReps,
+          accountName: merged.name || '',
         });
         merged.ae = ownerResult.ae;
         if (hasUploadedOpp) merged._hasUploadedOpp = true;
@@ -4722,6 +4759,7 @@ function runMerge(csvData, existingData) {
           hasUploadedOpp,
           oppOwner: (newRecord.opp_owner || '').trim(),
           loadedReps,
+          accountName: newRecord.name || '',
         });
         newRecord.ae = ownerResult.ae;
         if (hasUploadedOpp) newRecord._hasUploadedOpp = true;
@@ -5735,6 +5773,7 @@ const REASON_LABELS = {
   no_data_loaded: 'Opp Owner fallback — rep has no data loaded yet',
   unrecognized: 'Opp Owner fallback — unrecognized name',
   ben_foley_strategic: 'Ben Foley rule — strategic override to Sean Johnson',
+  ben_foley_nyc_holdout: 'Ben Foley rule — NYC holdout, Opp Owner assigned',
   ben_foley_fallback: 'Ben Foley rule — below threshold, Opp Owner fallback',
   conditional_reassign: 'Conditional reassign — has opp, Opp Owner fallback',
   conditional_no_opp: 'Conditional reassign — no opp, kept existing',
