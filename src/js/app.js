@@ -5159,6 +5159,15 @@ function findPartialMatch(name, existingByName) {
 }
 
 function showMergeModal(stats) {
+  // Reset confirm button state — it may still be disabled with stale text
+  // from a previous successful merge (the success path never re-enables it
+  // because closeMergeModal just hides the modal).
+  const confirmBtn = document.querySelector('#mergeModal .merge-btn-confirm');
+  if (confirmBtn) {
+    confirmBtn.disabled = false;
+    confirmBtn.textContent = 'Apply Changes';
+  }
+
   const mergeTitle = mergeHasTypeSplit
     ? 'Merge Preview: Accounts + Customers (split by Type)'
     : `Merge Preview: ${sfdcDataType === 'accounts' ? 'Accounts' : 'Customers'}`;
