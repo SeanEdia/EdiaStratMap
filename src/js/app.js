@@ -432,6 +432,16 @@ function isDOE(name) {
   return n.includes('department of education') || /\bdoe\b/.test(n);
 }
 
+// Helper: detect NYC Public Schools and individual schools/districts within NYC.
+// These accounts use holdout logic (opp owner) instead of a hard territory override,
+// so that uploaded opps remain assigned to the opp owner rather than being reassigned.
+function isNYCAccount(name) {
+  if (!name) return false;
+  const n = name.toLowerCase();
+  return n.includes('new york city public schools') || n.includes('nyc public schools')
+    || n.startsWith('nyc ');
+}
+
 // Helper: robustly parse enrollment (handles comma-formatted strings like "30,210")
 function parseEnrollment(val) {
   if (typeof val === 'number') return val;
@@ -475,7 +485,7 @@ function getHoldoutAE(d) {
 }
 
 // Resolve the account owner from a CSV value against an existing owner.
-// Optional ctx: { enrollment, hasUploadedOpp, oppOwner, loadedReps } for conditional reassignment.
+// Optional ctx: { enrollment, hasUploadedOpp, oppOwner, loadedReps, accountName } for conditional reassignment.
 // Evaluation order (Opp Owner used as fallback when Account Owner is invalid):
 //   1. Blank CSV → Opp Owner if active → existing if active → unassigned
 //   2. Ben Foley → enrollment > 30k → Sean Johnson; else → Opp Owner / existing / unassigned
@@ -505,10 +515,17 @@ function resolveOwner(csvAE, existingAE, ctx) {
   }
 
   // 2. Ben Foley: >30k students → hard override to Sean Johnson (no holdout).
+  //    NYC Public Schools exception: use holdout logic (Opp Owner) instead of hard override,
+  //    so uploaded opps stay with the opp owner rather than being reassigned to territory.
   //    ≤30k or missing enrollment → fallback (Opp Owner → existing → unassigned).
   if (csv === BEN_FOLEY) {
     const enrollment = ctx ? parseEnrollment(ctx.enrollment) : 0;
+    const accountName = ctx && ctx.accountName || '';
     if (enrollment > STRATEGIC_ENROLLMENT_THRESHOLD) {
+      // NYC accounts: apply holdout logic — opp owner keeps the account, Sean Johnson is territory
+      if (isNYCAccount(accountName)) {
+        return { ae: fallback(), reason: 'ben_foley_nyc_holdout' };
+      }
       return { ae: ACCOUNT_PRIMARY_AE, reason: 'ben_foley_strategic' }; // Sean Johnson — direct assignment
     }
     return { ae: fallback(), reason: 'ben_foley_fallback' };
@@ -4430,6 +4447,7 @@ function runMerge(csvData, existingData) {
               hasUploadedOpp: alreadyMerged._hasUploadedOpp,
               oppOwner: rowOppOwner,
               loadedReps,
+              accountName: alreadyMerged.name || '',
             });
             if (result.ae) alreadyMerged.ae = result.ae;
           } else {
@@ -4532,6 +4550,7 @@ function runMerge(csvData, existingData) {
           hasUploadedOpp,
           oppOwner: (merged.opp_owner || '').trim(),
           loadedReps,
+          accountName: merged.name || '',
         });
         merged.ae = ownerResult.ae;
         if (hasUploadedOpp) merged._hasUploadedOpp = true;
@@ -4722,6 +4741,7 @@ function runMerge(csvData, existingData) {
           hasUploadedOpp,
           oppOwner: (newRecord.opp_owner || '').trim(),
           loadedReps,
+          accountName: newRecord.name || '',
         });
         newRecord.ae = ownerResult.ae;
         if (hasUploadedOpp) newRecord._hasUploadedOpp = true;
@@ -5735,6 +5755,7 @@ const REASON_LABELS = {
   no_data_loaded: 'Opp Owner fallback — rep has no data loaded yet',
   unrecognized: 'Opp Owner fallback — unrecognized name',
   ben_foley_strategic: 'Ben Foley rule — strategic override to Sean Johnson',
+  ben_foley_nyc_holdout: 'Ben Foley rule — NYC holdout, Opp Owner assigned',
   ben_foley_fallback: 'Ben Foley rule — below threshold, Opp Owner fallback',
   conditional_reassign: 'Conditional reassign — has opp, Opp Owner fallback',
   conditional_no_opp: 'Conditional reassign — no opp, kept existing',
