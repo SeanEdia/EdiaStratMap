@@ -432,13 +432,16 @@ function isDOE(name) {
   return n.includes('department of education') || /\bdoe\b/.test(n);
 }
 
-// Helper: detect NYC Public Schools and individual schools/districts within NYC.
-// These accounts use holdout logic (opp owner) instead of a hard territory override,
-// so that uploaded opps remain assigned to the opp owner rather than being reassigned.
+// Helper: detect NYC Public Schools and sub-districts/schools within NYC.
+// NYC is unique: the mega-district (1M+ students) is subdivided into geographic
+// districts (e.g. "New York City Geographic District #16") which contain individual
+// schools. These accounts use holdout logic (opp owner) instead of a hard territory
+// override, so that uploaded opps remain assigned to the opp owner.
 function isNYCAccount(name) {
   if (!name) return false;
   const n = name.toLowerCase();
   return n.includes('new york city public schools') || n.includes('nyc public schools')
+    || n.includes('new york city geographic district')
     || n.startsWith('nyc ');
 }
 
@@ -4305,6 +4308,17 @@ function runMerge(csvData, existingData) {
     for (const { item, idx, normalizedKey } of stateRecords) {
       // Check if either name contains the other (handles "Dallas" matching "Dallas ISD")
       if (csvNormalized.includes(normalizedKey) || normalizedKey.includes(csvNormalized)) {
+        // Guard against false positives where a short normalized parent name is embedded
+        // in a much longer sub-entity name (e.g. "new york city" inside
+        // "new york city geographic district #16"). Require the shorter name to be at
+        // least half the length of the longer to confirm they refer to the same entity.
+        const shorter = Math.min(csvNormalized.length, normalizedKey.length);
+        const longer = Math.max(csvNormalized.length, normalizedKey.length);
+        if (shorter < longer * 0.5) {
+          console.log('[SFDC Merge] State+Name SKIPPED (length mismatch):', csvName, '→', item.name,
+            '(normalized:', csvNormalized, 'vs', normalizedKey + ')');
+          continue;
+        }
         console.log('[SFDC Merge] State+Name match:', csvName, '→', item.name, '(state:', stateKey, ')');
         return { item, idx };
       }
@@ -4506,6 +4520,10 @@ function runMerge(csvData, existingData) {
         if (val && val.trim()) {
           // Map common CSV column names to our field names
           const mappedKey = mapFieldName(key);
+          // Never overwrite the existing account name — it's the source of truth.
+          // CSV names may be sub-districts or alternate labels that shouldn't replace
+          // the canonical name (e.g. "NYC Geographic District #16" overwriting "NYC Public Schools").
+          if (mappedKey === 'name') return;
           if (OPP_ENTRY_FIELDS.has(mappedKey)) {
             csvOppFields[mappedKey] = val.trim();
           } else {
