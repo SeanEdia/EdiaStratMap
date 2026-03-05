@@ -1,0 +1,1788 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Edia Territory Map</title>
+<script src="/pages/tycho.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root,[data-theme="dark"]{
+  --bg:#0f1117;--sidebar-bg:#161822;--card-bg:#1e2030;--text:#e2e4e9;--text-dim:#8b8fa3;
+  --accent:#7c5cfc;--accent-glow:rgba(124,92,252,0.15);--border:rgba(255,255,255,0.06);
+  --green:#2dd4a8;--red:#f06;--yellow:#fbbf24;--blue:#60a5fa;
+  --ring:rgba(124,92,252,0.4);--hover-bg:rgba(255,255,255,0.04);--input-bg:#1a1c2e;
+  --shadow:0 4px 24px rgba(0,0,0,0.4);--popup-bg:#1e2030;--popup-text:#e2e4e9;
+  --popup-border:rgba(255,255,255,0.08);--modal-bg:#161822;--modal-card:#1e2030;
+  --opp-purple:#9f7aea;--opp-yellow:#fbbf24;--opp-blue:#60a5fa;--opp-orange:#fb923c;--opp-green:#34d399;
+}
+[data-theme="light"]{
+  --bg:#f8f9fb;--sidebar-bg:#fff;--card-bg:#f1f3f9;--text:#1a1c2e;--text-dim:#64748b;
+  --accent:#7c5cfc;--border:rgba(0,0,0,0.08);--hover-bg:rgba(0,0,0,0.03);--input-bg:#f1f3f9;
+  --shadow:0 4px 24px rgba(0,0,0,0.08);--popup-bg:#fff;--popup-text:#1a1c2e;
+  --popup-border:rgba(0,0,0,0.1);--modal-bg:#f8f9fb;--modal-card:#fff;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--text);overflow:hidden;height:100vh;display:flex;}
+::-webkit-scrollbar{width:6px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:rgba(124,92,252,0.3);border-radius:3px;}
+button{cursor:pointer;font-family:inherit;}
+input,select{font-family:inherit;}
+
+/* Sidebar */
+#sidebar{width:320px;min-width:320px;height:100vh;background:var(--sidebar-bg);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto;z-index:1000;position:relative;}
+.brand{padding:16px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);}
+.brand h1{font-size:16px;font-weight:700;color:var(--accent);letter-spacing:-0.02em;}
+.brand-actions{display:flex;gap:8px;align-items:center;}
+.brand-actions button{background:none;border:none;color:var(--text-dim);font-size:16px;padding:4px;border-radius:6px;transition:all .2s;}
+.brand-actions button:hover{color:var(--text);background:var(--hover-bg);}
+
+/* View Toggle */
+.view-toggle{display:flex;gap:6px;padding:12px 20px;border-bottom:1px solid var(--border);}
+.view-toggle button{flex:1;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--card-bg);color:var(--text-dim);font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;transition:all .2s;}
+.view-toggle button.active{background:var(--accent);color:#fff;border-color:var(--accent);box-shadow:0 0 16px var(--accent-glow);}
+
+/* Team/Rep Selectors */
+.team-rep-selectors{padding:12px 20px;display:flex;flex-direction:column;gap:8px;border-bottom:1px solid var(--border);}
+.team-rep-selectors label{font-size:11px;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.05em;}
+.team-rep-selectors select{width:100%;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--input-bg);color:var(--text);font-size:13px;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238b8fa3' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;}
+
+/* Stats Bar */
+.stats-bar{display:flex;gap:2px;padding:10px 20px;border-bottom:1px solid var(--border);flex-wrap:wrap;}
+.stat-item{flex:1;min-width:65px;text-align:center;padding:6px 4px;background:var(--card-bg);border-radius:6px;}
+.stat-item:first-child{border-radius:6px 0 0 6px;}
+.stat-item:last-child{border-radius:0 6px 6px 0;}
+.stat-value{font-size:16px;font-weight:700;color:var(--accent);}
+.stat-label{font-size:9px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.05em;margin-top:2px;}
+
+/* Search */
+.search-wrap{padding:12px 20px;border-bottom:1px solid var(--border);position:relative;}
+.search-wrap input{width:100%;padding:10px 14px 10px 36px;border-radius:10px;border:1px solid var(--border);background:var(--input-bg);color:var(--text);font-size:13px;transition:border-color .2s;}
+.search-wrap input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--ring);}
+.search-wrap .search-icon{position:absolute;left:34px;top:50%;transform:translateY(-50%);color:var(--text-dim);font-size:14px;pointer-events:none;}
+.autocomplete-list{position:absolute;top:100%;left:20px;right:20px;background:var(--card-bg);border:1px solid var(--border);border-radius:10px;max-height:240px;overflow-y:auto;z-index:2000;display:none;box-shadow:var(--shadow);}
+.autocomplete-list .ac-item{padding:10px 14px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--border);transition:background .15s;}
+.autocomplete-list .ac-item:hover,.autocomplete-list .ac-item.active{background:var(--accent-glow);color:var(--accent);}
+.autocomplete-list .ac-item:last-child{border-bottom:none;}
+
+/* Stage Filter Pills */
+.stage-pills{display:flex;gap:6px;padding:10px 20px;border-bottom:1px solid var(--border);flex-wrap:wrap;}
+.stage-pill{padding:5px 10px;border-radius:20px;border:1px solid var(--border);background:var(--card-bg);color:var(--text-dim);font-size:11px;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap;}
+.stage-pill.active{color:#fff;border-color:transparent;}
+.stage-pill[data-stage="none"].active{background:var(--opp-purple);border-color:var(--opp-purple);}
+.stage-pill[data-stage="discovery"].active{background:var(--opp-yellow);color:#000;border-color:var(--opp-yellow);}
+.stage-pill[data-stage="demo"].active{background:var(--opp-blue);border-color:var(--opp-blue);}
+.stage-pill[data-stage="scoping"].active{background:var(--opp-orange);border-color:var(--opp-orange);}
+.stage-pill[data-stage="validation"].active{background:var(--opp-green);border-color:var(--opp-green);}
+
+/* Filters */
+.filters-wrap{padding:12px 20px;display:flex;flex-direction:column;gap:8px;border-bottom:1px solid var(--border);max-height:300px;overflow-y:auto;}
+.filter-group{display:flex;flex-direction:column;gap:4px;}
+.filter-group label{font-size:10px;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.05em;}
+.filter-group select{width:100%;padding:7px 10px;border-radius:6px;border:1px solid var(--border);background:var(--input-bg);color:var(--text);font-size:12px;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%238b8fa3' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;}
+.filter-actions{display:flex;gap:6px;padding:8px 20px;border-bottom:1px solid var(--border);}
+.filter-actions button{flex:1;padding:7px;border-radius:6px;border:1px solid var(--border);background:var(--card-bg);color:var(--text-dim);font-size:11px;font-weight:600;transition:all .2s;}
+.filter-actions button:hover{background:var(--accent);color:#fff;border-color:var(--accent);}
+
+/* Pipeline Panel */
+.pipeline-panel{padding:12px 20px;border-bottom:1px solid var(--border);}
+.pipeline-header{font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;}
+.pipeline-total{font-size:14px;font-weight:700;color:var(--accent);}
+.pipeline-stage{display:flex;align-items:center;justify-content:space-between;padding:6px 10px;margin-bottom:4px;border-radius:6px;background:var(--card-bg);cursor:pointer;transition:background .15s;}
+.pipeline-stage:hover{background:var(--hover-bg);}
+.pipeline-stage-name{font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px;}
+.pipeline-stage-dot{width:8px;height:8px;border-radius:50%;display:inline-block;}
+.pipeline-stage-value{font-size:12px;font-weight:700;font-family:'JetBrains Mono',monospace;}
+.pipeline-stage-count{font-size:10px;color:var(--text-dim);margin-left:4px;}
+.pipeline-dropdown{display:none;padding:4px 0 4px 20px;}
+.pipeline-dropdown.open{display:block;}
+.pipeline-dropdown-item{font-size:11px;padding:4px 8px;color:var(--text-dim);cursor:pointer;border-radius:4px;transition:background .15s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pipeline-dropdown-item:hover{background:var(--hover-bg);color:var(--text);}
+
+/* Proximity Controls */
+.proximity-controls{padding:12px 20px;border-bottom:1px solid var(--border);}
+.proximity-controls label{font-size:11px;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.05em;display:flex;align-items:center;gap:8px;cursor:pointer;margin-bottom:6px;}
+.proximity-controls input[type="checkbox"]{accent-color:var(--accent);}
+.proximity-controls .radius-slider{display:flex;align-items:center;gap:8px;margin-top:4px;}
+.proximity-controls input[type="range"]{flex:1;accent-color:var(--accent);}
+.proximity-controls .radius-value{font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--accent);min-width:40px;}
+
+/* Map */
+#map-container{flex:1;position:relative;}
+#map{width:100%;height:100%;z-index:1;}
+[data-theme="dark"] .leaflet-tile-pane{filter:invert(1) hue-rotate(180deg) saturate(0.4) brightness(0.85);}
+[data-theme="light"] .leaflet-tile-pane{filter:none;}
+
+/* Loading Overlay */
+#loading-overlay{position:absolute;inset:0;background:rgba(15,17,23,0.85);z-index:1500;display:none;align-items:center;justify-content:center;flex-direction:column;gap:16px;}
+#loading-overlay .spinner{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;}
+#loading-overlay .loading-text{color:var(--text);font-size:14px;font-weight:500;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* Welcome Overlay */
+#welcomeOverlay{position:absolute;inset:0;background:rgba(15,17,23,0.92);z-index:2000;display:flex;align-items:center;justify-content:center;}
+.welcome-card{background:var(--card-bg);border:1px solid var(--border);border-radius:16px;padding:32px;max-width:420px;width:90%;text-align:center;box-shadow:var(--shadow);}
+.welcome-card h2{font-size:20px;font-weight:700;color:var(--accent);margin-bottom:8px;}
+.welcome-card p{font-size:13px;color:var(--text-dim);margin-bottom:20px;line-height:1.5;}
+.welcome-actions{display:flex;flex-direction:column;gap:8px;}
+.welcome-actions button{padding:12px;border-radius:10px;border:1px solid var(--border);background:var(--card-bg);color:var(--text);font-size:13px;font-weight:600;transition:all .2s;}
+.welcome-actions button:hover{background:var(--accent);color:#fff;border-color:var(--accent);}
+.welcome-actions button.primary{background:var(--accent);color:#fff;border-color:var(--accent);}
+
+/* Markers */
+.marker-strat{width:12px;height:12px;border-radius:50%;border:2px solid rgba(255,255,255,0.8);box-shadow:0 0 6px rgba(0,0,0,0.4);transition:transform .15s;}
+.marker-strat:hover{transform:scale(1.4);}
+.marker-strat.opp-none{background:var(--opp-purple);}
+.marker-strat.opp-discovery{background:var(--opp-yellow);}
+.marker-strat.opp-demo{background:var(--opp-blue);}
+.marker-strat.opp-scoping{background:var(--opp-orange);}
+.marker-strat.opp-validation{background:var(--opp-green);}
+.marker-strat.opp-doe{background:#9ca3af;}
+.marker-cust{width:10px;height:10px;border-radius:50%;background:#22c55e;border:2px solid rgba(255,255,255,0.8);box-shadow:0 0 6px rgba(0,0,0,0.4);transition:transform .15s;}
+.marker-cust:hover{transform:scale(1.4);}
+.marker-prox{fill:var(--accent);fill-opacity:0.08;stroke:var(--accent);stroke-opacity:0.3;stroke-width:1;}
+
+/* Leaflet Popup Overrides */
+.leaflet-popup-content-wrapper{background:var(--popup-bg)!important;color:var(--popup-text)!important;border:1px solid var(--popup-border)!important;border-radius:12px!important;box-shadow:var(--shadow)!important;padding:0!important;}
+.leaflet-popup-content{margin:0!important;font-family:'DM Sans',sans-serif!important;font-size:13px!important;line-height:1.5!important;min-width:280px;max-width:340px;}
+.leaflet-popup-tip{background:var(--popup-bg)!important;border:1px solid var(--popup-border)!important;}
+.leaflet-popup-close-button{color:var(--text-dim)!important;font-size:18px!important;top:8px!important;right:8px!important;}
+.popup-header{padding:14px 16px 10px;border-bottom:1px solid var(--border);}
+.popup-header h3{font-size:14px;font-weight:700;color:var(--accent);margin-bottom:2px;}
+.popup-header .popup-subtitle{font-size:11px;color:var(--text-dim);}
+.popup-body{padding:10px 16px 14px;}
+.popup-row{display:flex;justify-content:space-between;padding:3px 0;font-size:12px;}
+.popup-row .label{color:var(--text-dim);}
+.popup-row .value{font-weight:600;text-align:right;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.popup-actions{display:flex;gap:6px;padding:0 16px 12px;flex-wrap:wrap;}
+.popup-actions button{padding:5px 10px;border-radius:6px;border:1px solid var(--border);background:var(--card-bg);color:var(--text);font-size:11px;font-weight:600;transition:all .2s;}
+.popup-actions button:hover{background:var(--accent);color:#fff;border-color:var(--accent);}
+.popup-opp{margin-top:6px;padding:8px 10px;background:var(--card-bg);border-radius:8px;border:1px solid var(--border);}
+.popup-opp-header{font-size:12px;font-weight:600;margin-bottom:4px;display:flex;align-items:center;gap:6px;}
+.popup-opp-dot{width:6px;height:6px;border-radius:50%;display:inline-block;}
+
+/* Stage Colors */
+.stage-none{color:var(--opp-purple);}
+.stage-discovery{color:var(--opp-yellow);}
+.stage-demo{color:var(--opp-blue);}
+.stage-scoping{color:var(--opp-orange);}
+.stage-validation{color:var(--opp-green);}
+.bg-none{background:var(--opp-purple);}
+.bg-discovery{background:var(--opp-yellow);}
+.bg-demo{background:var(--opp-blue);}
+.bg-scoping{background:var(--opp-orange);}
+.bg-validation{background:var(--opp-green);}
+
+/* Legend */
+#legend{position:absolute;bottom:20px;right:20px;background:var(--card-bg);border:1px solid var(--border);border-radius:10px;padding:12px 16px;z-index:1000;box-shadow:var(--shadow);min-width:140px;}
+#legend h4{font-size:11px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;}
+.legend-item{display:flex;align-items:center;gap:8px;padding:3px 0;font-size:12px;color:var(--text);}
+.legend-dot{width:10px;height:10px;border-radius:50%;border:1.5px solid rgba(255,255,255,0.5);flex-shrink:0;}
+
+/* Action Dashboard */
+#ad-trigger{position:absolute;top:16px;right:16px;z-index:1000;background:var(--card-bg);border:1px solid var(--border);border-radius:10px;padding:8px 14px;cursor:pointer;font-size:12px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:6px;transition:all .2s;box-shadow:var(--shadow);}
+#ad-trigger:hover{background:var(--accent);color:#fff;border-color:var(--accent);}
+#ad-trigger .badge{background:var(--red);color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;font-weight:700;display:none;}
+#adOverlay{position:absolute;inset:0;background:rgba(15,17,23,0.85);z-index:1800;display:none;align-items:flex-start;justify-content:center;padding-top:60px;overflow-y:auto;}
+.ad-card{background:var(--card-bg);border:1px solid var(--border);border-radius:14px;width:90%;max-width:700px;max-height:80vh;overflow-y:auto;box-shadow:var(--shadow);}
+.ad-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.ad-header h3{font-size:16px;font-weight:700;color:var(--accent);}
+.ad-close{background:none;border:none;color:var(--text-dim);font-size:20px;cursor:pointer;}
+.ad-section{padding:14px 20px;border-bottom:1px solid var(--border);}
+.ad-section h4{font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+.ad-section .count-badge{background:var(--accent-glow);color:var(--accent);border-radius:10px;padding:1px 8px;font-size:11px;font-weight:700;}
+.ad-item{display:flex;align-items:center;justify-content:space-between;padding:6px 10px;margin-bottom:4px;background:var(--sidebar-bg);border-radius:6px;cursor:pointer;transition:background .15s;font-size:12px;}
+.ad-item:hover{background:var(--hover-bg);}
+.ad-item .days{font-family:'JetBrains Mono',monospace;color:var(--red);font-weight:600;font-size:11px;}
+
+/* Account List Overlay */
+#alOverlay{position:absolute;inset:0;background:rgba(15,17,23,0.85);z-index:1800;display:none;align-items:flex-start;justify-content:center;padding-top:40px;overflow-y:auto;}
+.al-card{background:var(--card-bg);border:1px solid var(--border);border-radius:14px;width:95%;max-width:900px;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:var(--shadow);}
+.al-header{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.al-header h3{font-size:16px;font-weight:700;color:var(--accent);}
+.al-close{background:none;border:none;color:var(--text-dim);font-size:20px;cursor:pointer;}
+.al-toolbar{padding:10px 20px;border-bottom:1px solid var(--border);display:flex;gap:8px;align-items:center;flex-shrink:0;}
+.al-toolbar input{flex:1;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--input-bg);color:var(--text);font-size:13px;}
+.al-toolbar select{padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:var(--input-bg);color:var(--text);font-size:12px;}
+.al-body{flex:1;overflow-y:auto;padding:0;}
+.al-table{width:100%;border-collapse:collapse;}
+.al-table th{position:sticky;top:0;background:var(--sidebar-bg);padding:8px 12px;text-align:left;font-size:11px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.05em;border-bottom:1px solid var(--border);cursor:pointer;}
+.al-table th:hover{color:var(--accent);}
+.al-table td{padding:8px 12px;font-size:12px;border-bottom:1px solid var(--border);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px;}
+.al-table tr:hover{background:var(--hover-bg);}
+.al-table tr{cursor:pointer;}
+
+/* Full-Screen Account Modal */
+#accountModal{position:fixed;inset:0;background:rgba(15,17,23,0.92);z-index:3000;display:none;align-items:center;justify-content:center;}
+.modal-container{background:var(--modal-bg);border:1px solid var(--border);border-radius:16px;width:95%;max-width:1000px;height:90vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 8px 48px rgba(0,0,0,0.5);}
+.modal-header{padding:16px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.modal-header h2{font-size:18px;font-weight:700;color:var(--accent);}
+.modal-header .subtitle{font-size:12px;color:var(--text-dim);margin-top:2px;}
+.modal-close{background:none;border:none;color:var(--text-dim);font-size:24px;cursor:pointer;padding:4px 8px;border-radius:6px;transition:all .2s;}
+.modal-close:hover{color:var(--text);background:var(--hover-bg);}
+.modal-tabs{display:flex;gap:0;border-bottom:1px solid var(--border);flex-shrink:0;padding:0 24px;}
+.modal-tab{padding:10px 16px;font-size:12px;font-weight:600;color:var(--text-dim);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;}
+.modal-tab:hover{color:var(--text);}
+.modal-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+.modal-body{flex:1;overflow-y:auto;padding:20px 24px;}
+.modal-section{margin-bottom:20px;}
+.modal-section h3{font-size:14px;font-weight:700;color:var(--text);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border);}
+.modal-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;}
+.modal-field{padding:8px 12px;background:var(--modal-card);border-radius:8px;border:1px solid var(--border);}
+.modal-field .field-label{font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:2px;}
+.modal-field .field-value{font-size:13px;font-weight:600;color:var(--text);word-break:break-word;}
+.modal-opp-card{padding:14px;background:var(--modal-card);border-radius:10px;border:1px solid var(--border);margin-bottom:10px;}
+.modal-opp-card h4{font-size:13px;font-weight:700;color:var(--accent);margin-bottom:8px;display:flex;align-items:center;gap:8px;}
+.modal-opp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:6px;}
+.modal-contact-card{padding:10px 12px;background:var(--modal-card);border-radius:8px;border:1px solid var(--border);margin-bottom:6px;}
+.modal-contact-card .contact-name{font-size:13px;font-weight:600;color:var(--text);}
+.modal-contact-card .contact-title{font-size:11px;color:var(--text-dim);}
+.modal-contact-card .contact-detail{font-size:11px;color:var(--accent);margin-top:2px;}
+.modal-school-item{padding:8px 12px;background:var(--modal-card);border-radius:6px;border:1px solid var(--border);margin-bottom:4px;font-size:12px;}
+.modal-actions{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;}
+.modal-actions button{padding:8px 14px;border-radius:8px;border:1px solid var(--border);background:var(--modal-card);color:var(--text);font-size:12px;font-weight:600;transition:all .2s;}
+.modal-actions button:hover{background:var(--accent);color:#fff;border-color:var(--accent);}
+
+/* Toast */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--card-bg);border:1px solid var(--border);border-radius:10px;padding:10px 20px;font-size:13px;font-weight:500;color:var(--text);z-index:5000;box-shadow:var(--shadow);animation:toastIn .3s ease;}
+@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(20px);}to{opacity:1;transform:translateX(-50%) translateY(0);}}
+
+/* Light mode specifics */
+[data-theme="light"] .marker-strat{border-color:rgba(0,0,0,0.3);}
+[data-theme="light"] .marker-cust{border-color:rgba(0,0,0,0.3);}
+[data-theme="light"] .legend-dot{border-color:rgba(0,0,0,0.3);}
+[data-theme="light"] #loading-overlay{background:rgba(248,249,251,0.85);}
+[data-theme="light"] #welcomeOverlay{background:rgba(248,249,251,0.92);}
+[data-theme="light"] #accountModal{background:rgba(248,249,251,0.92);}
+[data-theme="light"] #adOverlay{background:rgba(248,249,251,0.85);}
+[data-theme="light"] #alOverlay{background:rgba(248,249,251,0.85);}
+</style>
+</head>
+<body>
+<!-- Sidebar -->
+<div id="sidebar">
+  <div class="brand">
+    <h1>Edia Territory Map</h1>
+    <div class="brand-actions">
+      <button id="themeToggle" title="Toggle theme">&#9790;</button>
+      <button id="resetViewBtn" title="Reset view">&#8962;</button>
+    </div>
+  </div>
+
+  <div class="view-toggle">
+    <button id="viewAccounts" class="active" onclick="setView('accounts')">Accounts</button>
+    <button id="viewCustomers" onclick="setView('customers')">Customers</button>
+  </div>
+
+  <div class="team-rep-selectors">
+    <div>
+      <label>Team</label>
+      <select id="teamSelect"><option value="">All Teams</option></select>
+    </div>
+    <div>
+      <label>Rep</label>
+      <select id="repSelect"><option value="">All Reps</option></select>
+    </div>
+  </div>
+
+  <div class="stats-bar">
+    <div class="stat-item"><div class="stat-value" id="statAccounts">0</div><div class="stat-label">Accounts</div></div>
+    <div class="stat-item"><div class="stat-value" id="statCustomers">0</div><div class="stat-label">Customers</div></div>
+    <div class="stat-item"><div class="stat-value" id="statOverlap">0</div><div class="stat-label">Overlap</div></div>
+    <div class="stat-item"><div class="stat-value" id="statStates">0</div><div class="stat-label">States</div></div>
+  </div>
+
+  <div class="search-wrap">
+    <span class="search-icon">&#128269;</span>
+    <input type="text" id="searchInput" placeholder="Search districts..." autocomplete="off">
+    <div class="autocomplete-list" id="autocompleteList"></div>
+  </div>
+
+  <div class="stage-pills" id="stagePills">
+    <button class="stage-pill active" data-stage="none" onclick="toggleStagePill(this)">No Opp</button>
+    <button class="stage-pill active" data-stage="discovery" onclick="toggleStagePill(this)">Discovery</button>
+    <button class="stage-pill active" data-stage="demo" onclick="toggleStagePill(this)">Demo</button>
+    <button class="stage-pill active" data-stage="scoping" onclick="toggleStagePill(this)">Scoping</button>
+    <button class="stage-pill active" data-stage="validation" onclick="toggleStagePill(this)">Validation</button>
+  </div>
+
+  <div class="filters-wrap" id="filtersWrap">
+    <div class="filter-group"><label>Region</label><select id="filterRegion"><option value="">All</option></select></div>
+    <div class="filter-group"><label>State</label><select id="filterState"><option value="">All</option></select></div>
+    <div class="filter-group"><label>Opp Stage</label><select id="filterStage"><option value="">All</option></select></div>
+    <div class="filter-group"><label>SIS</label><select id="filterSIS"><option value="">All</option></select></div>
+    <div class="filter-group"><label>Enrollment</label><select id="filterEnrollment"><option value="">All</option></select></div>
+    <div class="filter-group" id="filterCSMGroup" style="display:none"><label>CSM</label><select id="filterCSM"><option value="">All</option></select></div>
+  </div>
+
+  <div class="filter-actions">
+    <button onclick="resetFilters()">Reset Filters</button>
+    <button onclick="openAccountList()">View List</button>
+  </div>
+
+  <div class="proximity-controls" id="proximityControls">
+    <label><input type="checkbox" id="proxToggle" onchange="toggleProximity()"> Show Proximity</label>
+    <div class="radius-slider">
+      <input type="range" id="proxRadius" min="10" max="200" value="50" oninput="updateProximityRadius()">
+      <span class="radius-value" id="proxRadiusVal">50 mi</span>
+    </div>
+  </div>
+
+  <div class="pipeline-panel" id="pipelinePanel">
+    <div class="pipeline-header">
+      <span>Pipeline</span>
+      <span class="pipeline-total" id="pipelineTotal">$0</span>
+    </div>
+    <div id="pipelineStages"></div>
+  </div>
+</div>
+
+<!-- Map Container -->
+<div id="map-container">
+  <div id="map"></div>
+  <div id="loading-overlay"><div class="spinner"></div><div class="loading-text">Loading data from Salesforce...</div></div>
+
+  <!-- Welcome Overlay -->
+  <div id="welcomeOverlay">
+    <div class="welcome-card">
+      <h2>Edia Territory Map</h2>
+      <p>Select a starting context to load the map. Choose a team, rep, or view all opportunities.</p>
+      <div class="welcome-actions" id="welcomeActions"></div>
+    </div>
+  </div>
+
+  <!-- Action Dashboard Trigger -->
+  <button id="ad-trigger" onclick="openActionDashboard()">
+    &#9888; Actions <span class="badge" id="adBadge">0</span>
+  </button>
+
+  <!-- Action Dashboard Overlay -->
+  <div id="adOverlay">
+    <div class="ad-card">
+      <div class="ad-header"><h3>Action Dashboard</h3><button class="ad-close" onclick="closeActionDashboard()">&times;</button></div>
+      <div id="adContent"></div>
+    </div>
+  </div>
+
+  <!-- Account List Overlay -->
+  <div id="alOverlay">
+    <div class="al-card">
+      <div class="al-header"><h3>Account List</h3><button class="al-close" onclick="closeAccountList()">&times;</button></div>
+      <div class="al-toolbar">
+        <input type="text" id="alSearch" placeholder="Filter accounts..." oninput="filterAccountList()">
+        <select id="alSort" onchange="sortAccountList()">
+          <option value="name">Name</option>
+          <option value="state">State</option>
+          <option value="enrollment">Enrollment</option>
+          <option value="lastActivity">Last Activity</option>
+        </select>
+      </div>
+      <div class="al-body"><table class="al-table"><thead id="alHead"></thead><tbody id="alBody"></tbody></table></div>
+    </div>
+  </div>
+
+  <!-- Legend -->
+  <div id="legend">
+    <h4>Legend</h4>
+    <div id="legendContent"></div>
+  </div>
+</div>
+
+<!-- Full-Screen Account Modal -->
+<div id="accountModal">
+  <div class="modal-container">
+    <div class="modal-header">
+      <div><h2 id="modalTitle"></h2><div class="subtitle" id="modalSubtitle"></div></div>
+      <button class="modal-close" onclick="closeAccountModal()">&times;</button>
+    </div>
+    <div class="modal-tabs" id="modalTabs"></div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   Edia Territory Map — Tycho Pages Edition
+   All data loaded live from Salesforce via tycho.salesforce.query()
+   ============================================================ */
+
+// ── Team Roster Data ──
+const TEAM_REP_DATA = {
+  'Strategic': { manager: null, reps: ['Sean Johnson'] },
+  'ENT West': { manager: 'Brad Halsey', reps: ['Aric Walden','Lance Baretz','Sydney Smith','Ben Skillman','Jimmy Koerner'] },
+  'ENT East': { manager: 'Samantha Santucci', reps: ['Andy Graham','David Thomas','Susan Speiser',"Hannah O'Brien",'Ally McCready','Victoria Macoul'] },
+  'SMB': { manager: 'Christina Ceballos', reps: ['Jonathan Pacheco','Callie Brennan','Paulina Famiano','Caroline Uhlarik','Daniel Way'] },
+};
+const ALL_REPS = Object.values(TEAM_REP_DATA).flatMap(t => t.reps);
+const ALL_MANAGERS = Object.values(TEAM_REP_DATA).map(t => t.manager).filter(Boolean);
+const TEAM_NAMES = Object.keys(TEAM_REP_DATA);
+
+function repToTeam(repName) {
+  for (const [team, data] of Object.entries(TEAM_REP_DATA)) {
+    if (data.reps.includes(repName)) return team;
+  }
+  return null;
+}
+
+// ── State Centroids (fallback geocoding) ──
+const STATE_CENTROIDS = {
+  'AL':[32.806671,-86.791130],'AK':[61.370716,-152.404419],'AZ':[33.729759,-111.431221],
+  'AR':[34.969704,-92.373123],'CA':[36.116203,-119.681564],'CO':[39.059811,-105.311104],
+  'CT':[41.597782,-72.755371],'DE':[39.318523,-75.507141],'FL':[27.766279,-81.686783],
+  'GA':[33.040619,-83.643074],'HI':[21.094318,-157.498337],'ID':[44.240459,-114.478828],
+  'IL':[40.349457,-88.986137],'IN':[39.849426,-86.258278],'IA':[42.011539,-93.210526],
+  'KS':[38.526600,-96.726486],'KY':[37.668140,-84.670067],'LA':[31.169546,-91.867805],
+  'ME':[44.693947,-69.381927],'MD':[39.063946,-76.802101],'MA':[42.230171,-71.530106],
+  'MI':[43.326618,-84.536095],'MN':[45.694454,-93.900192],'MS':[32.741646,-89.678696],
+  'MO':[38.456085,-92.288368],'MT':[46.921925,-110.454353],'NE':[41.125370,-98.268082],
+  'NV':[38.313515,-117.055374],'NH':[43.452492,-71.563896],'NJ':[40.298904,-74.521011],
+  'NM':[34.840515,-106.248482],'NY':[42.165726,-74.948051],'NC':[35.630066,-79.806419],
+  'ND':[47.528912,-99.784012],'OH':[40.388783,-82.764915],'OK':[35.565342,-96.928917],
+  'OR':[44.572021,-122.070938],'PA':[40.590752,-77.209755],'RI':[41.680893,-71.511780],
+  'SC':[33.856892,-80.945007],'SD':[44.299782,-99.438828],'TN':[35.747845,-86.692345],
+  'TX':[31.054487,-97.563461],'UT':[40.150032,-111.862434],'VT':[44.045876,-72.710686],
+  'VA':[37.769337,-78.169968],'WA':[47.400902,-121.490494],'WV':[38.491226,-80.954453],
+  'WI':[44.268543,-89.616508],'WY':[42.755966,-107.302490],'DC':[38.897438,-77.026817],
+};
+
+// ── Opp Stage Helpers ──
+const STAGE_MAP = {
+  '1 - discovery': 'discovery', '2 - demo': 'demo', '3 - scoping': 'scoping',
+  '4 - validation': 'validation', '5 - negotiation': 'validation',
+  '6 - verbal commit': 'validation',
+};
+function normalizeStage(stageName) {
+  if (!stageName) return 'none';
+  const key = stageName.toLowerCase().trim();
+  return STAGE_MAP[key] || 'none';
+}
+function bestStage(opps) {
+  if (!opps || !opps.length) return 'none';
+  const order = ['validation','scoping','demo','discovery','none'];
+  let best = 'none';
+  for (const o of opps) {
+    const s = normalizeStage(o.StageName || o.stage);
+    const idx = order.indexOf(s);
+    if (idx < order.indexOf(best)) best = s;
+  }
+  return best;
+}
+function normalizeOppArea(raw) {
+  if (!raw) return 'General';
+  const l = raw.toLowerCase();
+  if (l.includes('math')) return 'Math';
+  if (l.includes('attend') || l.includes('ada')) return 'Attendance';
+  if (l.includes('bundle') || l.includes('full')) return 'Bundle';
+  return raw;
+}
+
+// ── App State ──
+let accounts = [];
+let customers = [];
+let accountOpps = {};    // accountId → [opp, ...]
+let accountContacts = {}; // accountId → [contact, ...]
+let currentView = 'accounts';
+let selectedTeam = '';
+let selectedRep = '';
+let activeStages = new Set(['none','discovery','demo','scoping','validation']);
+let isLoading = false;
+let welcomeDismissed = false;
+let customersLoaded = false;
+
+// Map state
+let map, markersLayer, proximityLayer;
+let proximityEnabled = false;
+let proximityRadius = 50;
+
+// Cache
+let _visibleAccounts = [];
+let _visibleCustomers = [];
+
+// ── Enrollment Segments ──
+const ENROLLMENT_RANGES = [
+  { label: '50k+', min: 50000, max: Infinity },
+  { label: '30k–50k', min: 30000, max: 49999 },
+  { label: '15k–30k', min: 15000, max: 29999 },
+  { label: '5k–15k', min: 5000, max: 14999 },
+  { label: '1k–5k', min: 1000, max: 4999 },
+  { label: 'Under 1k', min: 0, max: 999 },
+];
+
+// ── SFDC Data Loading ──
+async function sfdcQuery(soql) {
+  try {
+    const result = await tycho.salesforce.query(soql);
+    return result.records || [];
+  } catch (err) {
+    console.error('SFDC query failed:', soql, err);
+    return [];
+  }
+}
+
+function geocodeAccount(acc) {
+  let lat = acc.BillingLatitude;
+  let lng = acc.BillingLongitude;
+  if (lat && lng && lat !== 0 && lng !== 0) return { lat, lng };
+  const st = acc.BillingState;
+  if (st && STATE_CENTROIDS[st]) {
+    const [cLat, cLng] = STATE_CENTROIDS[st];
+    // Add small random offset so pins don't stack
+    return { lat: cLat + (Math.random() - 0.5) * 0.8, lng: cLng + (Math.random() - 0.5) * 1.2 };
+  }
+  return null;
+}
+
+function transformAccount(rec) {
+  const geo = geocodeAccount(rec);
+  if (!geo) return null;
+  return {
+    id: rec.Id, name: rec.Name, type: rec.Type,
+    parentId: rec.ParentId, parentAccount: rec.Parent ? rec.Parent.Name : '',
+    region: rec.Region__c || '', state: rec.BillingState || '',
+    city: rec.BillingCity || '', street: rec.BillingStreet || '',
+    zip: rec.BillingPostalCode || '',
+    lat: geo.lat, lng: geo.lng,
+    enrollment: rec.Students_in_District__c || 0,
+    sis: rec.Student_Information_System__c || '',
+    sisOther: rec.Student_Information_System_Other__c || '',
+    curriculum: rec.Curriculum__c || '',
+    attendanceTools: rec.Attendance_Comms_Tools__c || '',
+    website: rec.Website || '',
+    lastActivity: rec.LastActivityDate || '',
+    ae: rec.Owner ? rec.Owner.Name : '',
+    ownerId: rec.OwnerId || '',
+    opps: [],
+    _raw: rec,
+  };
+}
+
+function transformCustomer(rec) {
+  const base = transformAccount(rec);
+  if (!base) return null;
+  base.csm = rec.Customer_Success_Manager__r ? rec.Customer_Success_Manager__r.Name : '';
+  base.arr = rec.Active_ARR_Total__c || 0;
+  base.arrPrior = rec.Active_ARR_Total_12_Months_Ago__c || 0;
+  base.lapsedRenewal = rec.Lapsed_Renewal_Amount__c || 0;
+  base.gdr = rec.GDR__c || 0;
+  base.ndr = rec.NDR__c || 0;
+  return base;
+}
+
+function transformOpp(rec) {
+  return {
+    id: rec.Id, name: rec.Name,
+    stage: rec.StageName || '', stageNorm: normalizeStage(rec.StageName),
+    amount: rec.Amount || 0, forecast: rec.ForecastCategory || '',
+    probability: rec.Probability || 0,
+    nextStep: rec.NextStep || '', closeDate: rec.CloseDate || '',
+    createdDate: rec.CreatedDate || '', lastModified: rec.LastModifiedDate || '',
+    lastActivity: rec.LastActivityDate || '',
+    accountId: rec.AccountId, accountName: rec.Account ? rec.Account.Name : '',
+    accountState: rec.Account ? rec.Account.BillingState : '',
+    ownerName: rec.Owner ? rec.Owner.Name : '',
+    area: normalizeOppArea(rec.Areas_of_Interest__c),
+    acv: rec.Year_1_ACV__c || 0,
+    introMeeting: rec.Intro_Meeting_Date__c || '',
+    primaryContact: rec.Primary_Contact__c || '',
+    economicBuyer: rec.Economic_buyer__c || '',
+    decisionCriteria: rec.Decision_criteria__c || '',
+    decisionProcess: rec.Decision_process__c || '',
+    paperProcess: rec.Paper_process__c || '',
+    implicationOfPain: rec.Implication_of_pain__c || '',
+    champion: rec.Champion__c || '',
+    competition: rec.Competition__c || '',
+  };
+}
+
+async function loadAccountsForRep(repName) {
+  const escaped = repName.replace(/'/g, "\\'");
+  const soql = `SELECT Id, Name, Type, ParentId, Parent.Name, Region__c, BillingState, BillingCity, BillingStreet, BillingPostalCode, BillingLatitude, BillingLongitude, Students_in_District__c, Student_Information_System__c, Student_Information_System_Other__c, Curriculum__c, Attendance_Comms_Tools__c, Website, LastActivityDate, OwnerId, Owner.Name FROM Account WHERE Type = 'Prospect' AND Owner.Name = '${escaped}'`;
+  const records = await sfdcQuery(soql);
+  return records.map(transformAccount).filter(Boolean);
+}
+
+async function loadOppsForRep(repName) {
+  const escaped = repName.replace(/'/g, "\\'");
+  const soql = `SELECT Id, Name, StageName, Amount, ForecastCategory, Probability, NextStep, CloseDate, CreatedDate, LastModifiedDate, LastActivityDate, AccountId, Account.Name, Account.BillingState, OwnerId, Owner.Name, Areas_of_Interest__c, Intro_Meeting_Date__c, Year_1_ACV__c, Primary_Contact__c, Economic_buyer__c, Decision_criteria__c, Decision_process__c, Paper_process__c, Implication_of_pain__c, Champion__c, Competition__c FROM Opportunity WHERE StageName NOT IN ('7 - Closed Won','8 - Closed Lost') AND Account.Owner.Name = '${escaped}'`;
+  const records = await sfdcQuery(soql);
+  return records.map(transformOpp);
+}
+
+async function loadCustomers() {
+  if (customersLoaded && customers.length > 0) return;
+  const soql = `SELECT Id, Name, Type, ParentId, Parent.Name, Region__c, BillingState, BillingCity, BillingStreet, BillingPostalCode, BillingLatitude, BillingLongitude, Students_in_District__c, Student_Information_System__c, Website, LastActivityDate, OwnerId, Owner.Name, Customer_Success_Manager__c, Customer_Success_Manager__r.Name, Active_ARR_Total__c, Active_ARR_Total_12_Months_Ago__c, Lapsed_Renewal_Amount__c, GDR__c, NDR__c FROM Account WHERE Type = 'Customer'`;
+  const records = await sfdcQuery(soql);
+  customers = records.map(transformCustomer).filter(Boolean);
+  customersLoaded = true;
+}
+
+async function loadContactsForAccounts(accountIds) {
+  if (!accountIds.length) return [];
+  // Batch in groups of 50
+  const batches = [];
+  for (let i = 0; i < accountIds.length; i += 50) {
+    batches.push(accountIds.slice(i, i + 50));
+  }
+  const allContacts = [];
+  for (const batch of batches) {
+    const ids = batch.map(id => `'${id}'`).join(',');
+    const soql = `SELECT Id, Name, AccountId, Title, Email, Phone FROM Contact WHERE AccountId IN (${ids})`;
+    const records = await sfdcQuery(soql);
+    allContacts.push(...records);
+  }
+  return allContacts;
+}
+
+async function loadDataForTeam(teamName) {
+  const team = TEAM_REP_DATA[teamName];
+  if (!team) return;
+  showLoading();
+  const reps = team.reps;
+  const [accArrays, oppArrays] = await Promise.all([
+    Promise.all(reps.map(r => loadAccountsForRep(r))),
+    Promise.all(reps.map(r => loadOppsForRep(r))),
+  ]);
+  accounts = accArrays.flat();
+  const allOpps = oppArrays.flat();
+  attachOppsToAccounts(allOpps);
+  hideLoading();
+}
+
+async function loadDataForRep(repName) {
+  showLoading();
+  const [accs, opps] = await Promise.all([
+    loadAccountsForRep(repName),
+    loadOppsForRep(repName),
+  ]);
+  accounts = accs;
+  attachOppsToAccounts(opps);
+  hideLoading();
+}
+
+async function loadDataShowOpps() {
+  showLoading();
+  // Load all teams' data
+  const allReps = ALL_REPS;
+  const [accArrays, oppArrays] = await Promise.all([
+    Promise.all(allReps.map(r => loadAccountsForRep(r))),
+    Promise.all(allReps.map(r => loadOppsForRep(r))),
+  ]);
+  accounts = accArrays.flat();
+  const allOpps = oppArrays.flat();
+  attachOppsToAccounts(allOpps);
+  // Only show accounts that have opps
+  accounts = accounts.filter(a => a.opps && a.opps.length > 0);
+  hideLoading();
+}
+
+function attachOppsToAccounts(opps) {
+  accountOpps = {};
+  for (const opp of opps) {
+    if (!accountOpps[opp.accountId]) accountOpps[opp.accountId] = [];
+    accountOpps[opp.accountId].push(opp);
+  }
+  for (const acc of accounts) {
+    acc.opps = accountOpps[acc.id] || [];
+  }
+}
+
+// ── Deduplication ──
+function dedupeById(arr) {
+  const seen = new Set();
+  return arr.filter(item => {
+    if (seen.has(item.id)) return false;
+    seen.add(item.id);
+    return true;
+  });
+}
+
+// ── UI Helpers ──
+function showLoading() {
+  isLoading = true;
+  document.getElementById('loading-overlay').style.display = 'flex';
+}
+function hideLoading() {
+  isLoading = false;
+  document.getElementById('loading-overlay').style.display = 'none';
+}
+function showToast(msg, duration = 2500) {
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), duration);
+}
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function fmtCurrency(n) {
+  if (!n) return '$0';
+  if (n >= 1e6) return '$' + (n / 1e6).toFixed(1) + 'M';
+  if (n >= 1e3) return '$' + (n / 1e3).toFixed(0) + 'K';
+  return '$' + n.toFixed(0);
+}
+function fmtNum(n) {
+  if (!n) return '0';
+  return Number(n).toLocaleString();
+}
+function daysSince(dateStr) {
+  if (!dateStr) return Infinity;
+  const d = new Date(dateStr);
+  if (isNaN(d)) return Infinity;
+  return Math.floor((Date.now() - d.getTime()) / 86400000);
+}
+
+// ── Map Initialization ──
+function initMap() {
+  map = L.map('map', {
+    center: [39.5, -98.35],
+    zoom: 4,
+    zoomControl: true,
+    attributionControl: false,
+  });
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 18,
+  }).addTo(map);
+  markersLayer = L.layerGroup().addTo(map);
+  proximityLayer = L.layerGroup().addTo(map);
+}
+
+function renderMarkers() {
+  markersLayer.clearLayers();
+  if (currentView === 'accounts') {
+    _visibleAccounts = applyFilters(accounts);
+    for (const acc of _visibleAccounts) {
+      const stage = bestStage(acc.opps);
+      const isDOE = acc.name && acc.name.toLowerCase().includes('department of education');
+      const cssClass = isDOE ? 'opp-doe' : `opp-${stage}`;
+      const icon = L.divIcon({
+        className: `marker-strat ${cssClass}`,
+        iconSize: [12, 12],
+        iconAnchor: [6, 6],
+      });
+      const marker = L.marker([acc.lat, acc.lng], { icon });
+      marker.bindPopup(() => buildStratPopup(acc), { maxWidth: 340, minWidth: 280 });
+      marker.on('click', () => marker.openPopup());
+      markersLayer.addLayer(marker);
+    }
+  } else {
+    _visibleCustomers = applyFilters(customers);
+    for (const cust of _visibleCustomers) {
+      const icon = L.divIcon({
+        className: 'marker-cust',
+        iconSize: [10, 10],
+        iconAnchor: [5, 5],
+      });
+      const marker = L.marker([cust.lat, cust.lng], { icon });
+      marker.bindPopup(() => buildCustPopup(cust), { maxWidth: 340, minWidth: 280 });
+      marker.on('click', () => marker.openPopup());
+      markersLayer.addLayer(marker);
+    }
+  }
+  updateStats();
+  updatePipeline();
+  updateLegend();
+  if (proximityEnabled) renderProximity();
+}
+
+// ── View Toggle ──
+async function setView(view) {
+  currentView = view;
+  document.getElementById('viewAccounts').classList.toggle('active', view === 'accounts');
+  document.getElementById('viewCustomers').classList.toggle('active', view === 'customers');
+  // Show/hide view-specific UI
+  document.getElementById('stagePills').style.display = view === 'accounts' ? 'flex' : 'none';
+  document.getElementById('pipelinePanel').style.display = view === 'accounts' ? 'block' : 'none';
+  document.getElementById('filterCSMGroup').style.display = view === 'customers' ? 'block' : 'none';
+
+  if (view === 'customers' && !customersLoaded) {
+    showLoading();
+    await loadCustomers();
+    hideLoading();
+  }
+  buildFilterOptions();
+  renderMarkers();
+}
+
+// ── Team / Rep Selectors ──
+function renderTeamRepSelectors() {
+  const teamSel = document.getElementById('teamSelect');
+  const repSel = document.getElementById('repSelect');
+  teamSel.innerHTML = '<option value="">All Teams</option>';
+  for (const name of TEAM_NAMES) {
+    teamSel.innerHTML += `<option value="${name}">${name}</option>`;
+  }
+  repSel.innerHTML = '<option value="">All Reps</option>';
+  teamSel.onchange = onTeamChange;
+  repSel.onchange = onRepChange;
+}
+
+async function onTeamChange() {
+  const team = document.getElementById('teamSelect').value;
+  selectedTeam = team;
+  selectedRep = '';
+  const repSel = document.getElementById('repSelect');
+  repSel.innerHTML = '<option value="">All Reps</option>';
+  if (team && TEAM_REP_DATA[team]) {
+    for (const rep of TEAM_REP_DATA[team].reps) {
+      repSel.innerHTML += `<option value="${escapeHtml(rep)}">${escapeHtml(rep)}</option>`;
+    }
+    // Auto-select if single rep
+    if (TEAM_REP_DATA[team].reps.length === 1) {
+      repSel.value = TEAM_REP_DATA[team].reps[0];
+      selectedRep = TEAM_REP_DATA[team].reps[0];
+      await loadDataForRep(selectedRep);
+    } else {
+      await loadDataForTeam(team);
+    }
+  }
+  buildFilterOptions();
+  renderMarkers();
+}
+
+async function onRepChange() {
+  const rep = document.getElementById('repSelect').value;
+  selectedRep = rep;
+  if (rep) {
+    await loadDataForRep(rep);
+  } else if (selectedTeam) {
+    await loadDataForTeam(selectedTeam);
+  }
+  buildFilterOptions();
+  renderMarkers();
+}
+
+// ── Stage Filter Pills ──
+function toggleStagePill(btn) {
+  const stage = btn.dataset.stage;
+  if (activeStages.has(stage)) {
+    activeStages.delete(stage);
+    btn.classList.remove('active');
+  } else {
+    activeStages.add(stage);
+    btn.classList.add('active');
+  }
+  renderMarkers();
+}
+
+// ── Sidebar Filters ──
+function buildFilterOptions() {
+  const data = currentView === 'accounts' ? accounts : customers;
+  buildSelectOptions('filterRegion', [...new Set(data.map(a => a.region).filter(Boolean))].sort());
+  buildSelectOptions('filterState', [...new Set(data.map(a => a.state).filter(Boolean))].sort());
+  if (currentView === 'accounts') {
+    const stages = [...new Set(data.flatMap(a => (a.opps || []).map(o => o.stage)).filter(Boolean))].sort();
+    buildSelectOptions('filterStage', stages);
+  }
+  buildSelectOptions('filterSIS', [...new Set(data.map(a => a.sis).filter(Boolean))].sort());
+  buildSelectOptions('filterEnrollment', ENROLLMENT_RANGES.map(r => r.label));
+  if (currentView === 'customers') {
+    buildSelectOptions('filterCSM', [...new Set(customers.map(c => c.csm).filter(Boolean))].sort());
+  }
+}
+
+function buildSelectOptions(id, options) {
+  const sel = document.getElementById(id);
+  if (!sel) return;
+  const current = sel.value;
+  sel.innerHTML = '<option value="">All</option>';
+  for (const opt of options) {
+    sel.innerHTML += `<option value="${escapeHtml(opt)}">${escapeHtml(opt)}</option>`;
+  }
+  if (current && options.includes(current)) sel.value = current;
+}
+
+function getFilterValues() {
+  return {
+    region: document.getElementById('filterRegion').value,
+    state: document.getElementById('filterState').value,
+    stage: document.getElementById('filterStage').value,
+    sis: document.getElementById('filterSIS').value,
+    enrollment: document.getElementById('filterEnrollment').value,
+    csm: document.getElementById('filterCSM') ? document.getElementById('filterCSM').value : '',
+  };
+}
+
+function applyFilters(data) {
+  const f = getFilterValues();
+  let filtered = data;
+
+  if (f.region) filtered = filtered.filter(a => a.region === f.region);
+  if (f.state) filtered = filtered.filter(a => a.state === f.state);
+  if (f.sis) filtered = filtered.filter(a => a.sis === f.sis);
+  if (f.csm && currentView === 'customers') filtered = filtered.filter(a => a.csm === f.csm);
+
+  if (f.enrollment) {
+    const range = ENROLLMENT_RANGES.find(r => r.label === f.enrollment);
+    if (range) filtered = filtered.filter(a => a.enrollment >= range.min && a.enrollment <= range.max);
+  }
+
+  if (currentView === 'accounts') {
+    // Stage pills
+    filtered = filtered.filter(a => {
+      const stage = bestStage(a.opps);
+      return activeStages.has(stage);
+    });
+    // Stage dropdown
+    if (f.stage) {
+      filtered = filtered.filter(a => a.opps && a.opps.some(o => o.stage === f.stage));
+    }
+  }
+
+  return filtered;
+}
+
+function resetFilters() {
+  document.getElementById('filterRegion').value = '';
+  document.getElementById('filterState').value = '';
+  document.getElementById('filterStage').value = '';
+  document.getElementById('filterSIS').value = '';
+  document.getElementById('filterEnrollment').value = '';
+  if (document.getElementById('filterCSM')) document.getElementById('filterCSM').value = '';
+  // Reset stage pills
+  activeStages = new Set(['none','discovery','demo','scoping','validation']);
+  document.querySelectorAll('.stage-pill').forEach(p => p.classList.add('active'));
+  renderMarkers();
+}
+
+// ── Filter change listeners ──
+function setupFilterListeners() {
+  ['filterRegion','filterState','filterStage','filterSIS','filterEnrollment','filterCSM'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('change', () => renderMarkers());
+  });
+}
+
+// ── Search & Autocomplete ──
+function setupSearch() {
+  const input = document.getElementById('searchInput');
+  const list = document.getElementById('autocompleteList');
+  let acIndex = -1;
+
+  input.addEventListener('input', () => {
+    const q = input.value.trim().toLowerCase();
+    list.innerHTML = '';
+    acIndex = -1;
+    if (q.length < 2) { list.style.display = 'none'; return; }
+    const data = currentView === 'accounts' ? accounts : customers;
+    const matches = data.filter(a => a.name.toLowerCase().includes(q)).slice(0, 15);
+    if (!matches.length) { list.style.display = 'none'; return; }
+    for (const m of matches) {
+      const div = document.createElement('div');
+      div.className = 'ac-item';
+      div.textContent = `${m.name} (${m.state || '?'})`;
+      div.addEventListener('click', () => zoomToAccount(m));
+      list.appendChild(div);
+    }
+    list.style.display = 'block';
+  });
+
+  input.addEventListener('keydown', (e) => {
+    const items = list.querySelectorAll('.ac-item');
+    if (e.key === 'ArrowDown') { e.preventDefault(); acIndex = Math.min(acIndex + 1, items.length - 1); updateAcHighlight(items); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); acIndex = Math.max(acIndex - 1, 0); updateAcHighlight(items); }
+    else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (acIndex >= 0 && items[acIndex]) items[acIndex].click();
+      else if (items.length) items[0].click();
+    }
+    else if (e.key === 'Escape') { list.style.display = 'none'; }
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.search-wrap')) list.style.display = 'none';
+  });
+}
+
+function updateAcHighlight(items) {
+  items.forEach((item, i) => item.classList.toggle('active', i === arguments[0]));
+  // Actually use the acIndex from closure — this is handled via the input event
+}
+
+function zoomToAccount(acc) {
+  document.getElementById('autocompleteList').style.display = 'none';
+  document.getElementById('searchInput').value = acc.name;
+  if (map && acc.lat && acc.lng) {
+    map.setView([acc.lat, acc.lng], 10);
+    // Find and open the marker popup
+    markersLayer.eachLayer(layer => {
+      if (layer.getLatLng && Math.abs(layer.getLatLng().lat - acc.lat) < 0.001 && Math.abs(layer.getLatLng().lng - acc.lng) < 0.001) {
+        layer.openPopup();
+      }
+    });
+  }
+}
+
+// ── Popups ──
+function buildStratPopup(acc) {
+  const stage = bestStage(acc.opps);
+  let html = `<div class="popup-header">
+    <h3>${escapeHtml(acc.name)}</h3>
+    <div class="popup-subtitle">${escapeHtml(acc.city || '')}${acc.city && acc.state ? ', ' : ''}${escapeHtml(acc.state || '')} &middot; ${escapeHtml(acc.ae || 'Unassigned')}</div>
+  </div><div class="popup-body">`;
+  html += popupRow('Enrollment', fmtNum(acc.enrollment));
+  html += popupRow('Region', acc.region);
+  html += popupRow('SIS', acc.sis || acc.sisOther || '—');
+  if (acc.parentAccount) html += popupRow('Parent', acc.parentAccount);
+  html += popupRow('Last Activity', acc.lastActivity ? `${daysSince(acc.lastActivity)}d ago` : 'Never');
+
+  if (acc.opps && acc.opps.length) {
+    for (const opp of acc.opps) {
+      const sn = normalizeStage(opp.stage || opp.StageName);
+      html += `<div class="popup-opp">
+        <div class="popup-opp-header"><span class="popup-opp-dot bg-${sn}"></span>${escapeHtml(opp.name)}</div>`;
+      html += popupRow('Stage', opp.stage);
+      html += popupRow('Amount', fmtCurrency(opp.amount));
+      html += popupRow('Area', opp.area);
+      if (opp.nextStep) html += popupRow('Next Step', opp.nextStep);
+      if (opp.closeDate) html += popupRow('Close Date', opp.closeDate);
+      html += '</div>';
+    }
+  }
+  html += '</div>';
+  html += `<div class="popup-actions">
+    <button onclick="openAccountModal(accounts.find(a=>a.id==='${acc.id}'))">Expand</button>
+    <button onclick="generateMeetingPrep(accounts.find(a=>a.id==='${acc.id}'))">Meeting Prep</button>
+  </div>`;
+  return html;
+}
+
+function buildCustPopup(cust) {
+  let html = `<div class="popup-header">
+    <h3>${escapeHtml(cust.name)}</h3>
+    <div class="popup-subtitle">${escapeHtml(cust.city || '')}${cust.city && cust.state ? ', ' : ''}${escapeHtml(cust.state || '')} &middot; ${escapeHtml(cust.ae || '')}</div>
+  </div><div class="popup-body">`;
+  html += popupRow('Enrollment', fmtNum(cust.enrollment));
+  html += popupRow('ARR', fmtCurrency(cust.arr));
+  html += popupRow('CSM', cust.csm || '—');
+  html += popupRow('SIS', cust.sis || '—');
+  html += popupRow('Last Activity', cust.lastActivity ? `${daysSince(cust.lastActivity)}d ago` : 'Never');
+  if (cust.gdr) html += popupRow('GDR', (cust.gdr * 100).toFixed(0) + '%');
+  if (cust.ndr) html += popupRow('NDR', (cust.ndr * 100).toFixed(0) + '%');
+  html += '</div>';
+  html += `<div class="popup-actions">
+    <button onclick="openAccountModal(customers.find(c=>c.id==='${cust.id}'))">Expand</button>
+  </div>`;
+  return html;
+}
+
+function popupRow(label, value) {
+  if (!value || value === '—') return `<div class="popup-row"><span class="label">${label}</span><span class="value">—</span></div>`;
+  return `<div class="popup-row"><span class="label">${label}</span><span class="value">${escapeHtml(String(value))}</span></div>`;
+}
+
+// ── Full-Screen Account Modal ──
+let modalAccount = null;
+let modalContacts = [];
+let modalTab = 'info';
+
+async function openAccountModal(acc) {
+  if (!acc) return;
+  modalAccount = acc;
+  modalTab = 'info';
+  document.getElementById('accountModal').style.display = 'flex';
+  document.getElementById('modalTitle').textContent = acc.name;
+  document.getElementById('modalSubtitle').textContent = `${acc.city || ''}${acc.city && acc.state ? ', ' : ''}${acc.state || ''} — ${acc.ae || 'Unassigned'}`;
+
+  // Load contacts
+  modalContacts = [];
+  const contacts = await loadContactsForAccounts([acc.id]);
+  modalContacts = contacts;
+  if (acc.parentId) {
+    const parentContacts = await loadContactsForAccounts([acc.parentId]);
+    modalContacts = [...contacts, ...parentContacts];
+  }
+
+  renderModalTabs();
+  renderModalBody();
+}
+
+function closeAccountModal() {
+  document.getElementById('accountModal').style.display = 'none';
+  modalAccount = null;
+}
+
+function renderModalTabs() {
+  const isCustomer = currentView === 'customers';
+  const tabs = isCustomer
+    ? ['info','schools']
+    : ['info','math','attendance','schools','intel'];
+  const labels = { info: 'Info', math: 'Math', attendance: 'Attendance', schools: 'Schools', intel: 'District Intel' };
+  const container = document.getElementById('modalTabs');
+  container.innerHTML = '';
+  for (const tab of tabs) {
+    const div = document.createElement('div');
+    div.className = `modal-tab${tab === modalTab ? ' active' : ''}`;
+    div.textContent = labels[tab];
+    div.onclick = () => { modalTab = tab; renderModalTabs(); renderModalBody(); };
+    container.appendChild(div);
+  }
+}
+
+function renderModalBody() {
+  const body = document.getElementById('modalBody');
+  const acc = modalAccount;
+  if (!acc) return;
+
+  switch (modalTab) {
+    case 'info': body.innerHTML = renderModalInfo(acc); break;
+    case 'math': body.innerHTML = renderModalMath(acc); break;
+    case 'attendance': body.innerHTML = renderModalAttendance(acc); break;
+    case 'schools': body.innerHTML = renderModalSchools(acc); break;
+    case 'intel': body.innerHTML = renderModalIntel(acc); break;
+    default: body.innerHTML = '';
+  }
+}
+
+function renderModalInfo(acc) {
+  let html = '<div class="modal-actions">';
+  html += `<button onclick="generateMeetingPrep(modalAccount)">Generate Meeting Prep</button>`;
+  if (acc.website) html += `<button onclick="window.open('${escapeHtml(acc.website)}','_blank')">Website</button>`;
+  html += '</div>';
+
+  // Overview
+  html += '<div class="modal-section"><h3>Overview</h3><div class="modal-grid">';
+  html += modalField('District', acc.name);
+  html += modalField('State', acc.state);
+  html += modalField('City', acc.city);
+  html += modalField('Enrollment', fmtNum(acc.enrollment));
+  html += modalField('Region', acc.region);
+  html += modalField('AE', acc.ae);
+  html += modalField('SIS', acc.sis || acc.sisOther);
+  html += modalField('Parent Account', acc.parentAccount);
+  html += modalField('Last Activity', acc.lastActivity ? `${daysSince(acc.lastActivity)} days ago` : 'Never');
+  if (currentView === 'customers') {
+    html += modalField('CSM', acc.csm);
+    html += modalField('ARR', fmtCurrency(acc.arr));
+    html += modalField('GDR', acc.gdr ? (acc.gdr * 100).toFixed(0) + '%' : '—');
+    html += modalField('NDR', acc.ndr ? (acc.ndr * 100).toFixed(0) + '%' : '—');
+  }
+  html += '</div></div>';
+
+  // Contacts
+  if (modalContacts.length) {
+    html += '<div class="modal-section"><h3>Contacts</h3>';
+    for (const c of modalContacts) {
+      html += `<div class="modal-contact-card">
+        <div class="contact-name">${escapeHtml(c.Name)}</div>
+        <div class="contact-title">${escapeHtml(c.Title || '')}</div>
+        ${c.Email ? `<div class="contact-detail">${escapeHtml(c.Email)}</div>` : ''}
+        ${c.Phone ? `<div class="contact-detail">${escapeHtml(c.Phone)}</div>` : ''}
+      </div>`;
+    }
+    html += '</div>';
+  }
+
+  // Opportunities
+  if (acc.opps && acc.opps.length) {
+    html += '<div class="modal-section"><h3>Opportunities</h3>';
+    for (const opp of acc.opps) {
+      html += renderModalOpp(opp);
+    }
+    html += '</div>';
+  }
+
+  return html;
+}
+
+function renderModalOpp(opp) {
+  const sn = normalizeStage(opp.stage || opp.StageName);
+  let html = `<div class="modal-opp-card"><h4><span class="popup-opp-dot bg-${sn}"></span>${escapeHtml(opp.name)}</h4><div class="modal-opp-grid">`;
+  html += modalField('Stage', opp.stage);
+  html += modalField('Amount', fmtCurrency(opp.amount));
+  html += modalField('ACV', fmtCurrency(opp.acv));
+  html += modalField('Area', opp.area);
+  html += modalField('Close Date', opp.closeDate);
+  html += modalField('Probability', opp.probability ? opp.probability + '%' : '');
+  html += modalField('Forecast', opp.forecast);
+  html += modalField('Next Step', opp.nextStep);
+  html += modalField('Owner', opp.ownerName);
+  html += '</div></div>';
+  return html;
+}
+
+function renderModalMath(acc) {
+  let html = '<div class="modal-section"><h3>Math Overview</h3><div class="modal-grid">';
+  html += modalField('Curriculum', acc.curriculum || '—');
+  html += modalField('Enrollment', fmtNum(acc.enrollment));
+  html += '</div></div>';
+
+  // Math-specific opps
+  const mathOpps = (acc.opps || []).filter(o => o.area === 'Math');
+  if (mathOpps.length) {
+    html += '<div class="modal-section"><h3>Math Opportunities</h3>';
+    for (const opp of mathOpps) html += renderModalOpp(opp);
+    html += '</div>';
+  }
+
+  // Math contacts
+  const mathContacts = modalContacts.filter(c => {
+    const title = (c.Title || '').toLowerCase();
+    return title.includes('math') || title.includes('curriculum') || title.includes('instruction');
+  });
+  if (mathContacts.length) {
+    html += '<div class="modal-section"><h3>Math Contacts</h3>';
+    for (const c of mathContacts) {
+      html += `<div class="modal-contact-card">
+        <div class="contact-name">${escapeHtml(c.Name)}</div>
+        <div class="contact-title">${escapeHtml(c.Title || '')}</div>
+        ${c.Email ? `<div class="contact-detail">${escapeHtml(c.Email)}</div>` : ''}
+      </div>`;
+    }
+    html += '</div>';
+  }
+
+  // MEDDPICC fields from opps
+  const mainOpp = mathOpps[0] || (acc.opps && acc.opps[0]);
+  if (mainOpp) {
+    html += '<div class="modal-section"><h3>MEDDPICC</h3><div class="modal-grid">';
+    html += modalField('Economic Buyer', mainOpp.economicBuyer);
+    html += modalField('Decision Criteria', mainOpp.decisionCriteria);
+    html += modalField('Decision Process', mainOpp.decisionProcess);
+    html += modalField('Paper Process', mainOpp.paperProcess);
+    html += modalField('Implication of Pain', mainOpp.implicationOfPain);
+    html += modalField('Champion', mainOpp.champion);
+    html += modalField('Competition', mainOpp.competition);
+    html += '</div></div>';
+  }
+
+  return html;
+}
+
+function renderModalAttendance(acc) {
+  let html = '<div class="modal-section"><h3>Attendance Overview</h3><div class="modal-grid">';
+  html += modalField('SIS', acc.sis || acc.sisOther || '—');
+  html += modalField('Attendance Tools', acc.attendanceTools || '—');
+  html += '</div></div>';
+
+  const attOpps = (acc.opps || []).filter(o => o.area === 'Attendance');
+  if (attOpps.length) {
+    html += '<div class="modal-section"><h3>Attendance Opportunities</h3>';
+    for (const opp of attOpps) html += renderModalOpp(opp);
+    html += '</div>';
+  }
+
+  const attContacts = modalContacts.filter(c => {
+    const title = (c.Title || '').toLowerCase();
+    return title.includes('attend') || title.includes('student services') || title.includes('truancy');
+  });
+  if (attContacts.length) {
+    html += '<div class="modal-section"><h3>Attendance Contacts</h3>';
+    for (const c of attContacts) {
+      html += `<div class="modal-contact-card">
+        <div class="contact-name">${escapeHtml(c.Name)}</div>
+        <div class="contact-title">${escapeHtml(c.Title || '')}</div>
+        ${c.Email ? `<div class="contact-detail">${escapeHtml(c.Email)}</div>` : ''}
+      </div>`;
+    }
+    html += '</div>';
+  }
+
+  return html;
+}
+
+function renderModalSchools(acc) {
+  // Schools data would need a separate SFDC query for child accounts
+  let html = '<div class="modal-section"><h3>Schools</h3>';
+  html += '<p style="color:var(--text-dim);font-size:13px;">Loading schools data...</p>';
+  html += '</div>';
+  // Async load schools
+  loadSchoolsForAccount(acc.id).then(schools => {
+    const body = document.getElementById('modalBody');
+    if (modalTab !== 'schools' || !modalAccount || modalAccount.id !== acc.id) return;
+    let h = '<div class="modal-section"><h3>Schools (' + schools.length + ')</h3>';
+    if (!schools.length) {
+      h += '<p style="color:var(--text-dim);font-size:13px;">No child school records found.</p>';
+    } else {
+      for (const s of schools) {
+        h += `<div class="modal-school-item">${escapeHtml(s.Name)}${s.BillingCity ? ' — ' + escapeHtml(s.BillingCity) : ''}</div>`;
+      }
+    }
+    h += '</div>';
+    body.innerHTML = h;
+  });
+  return html;
+}
+
+async function loadSchoolsForAccount(accountId) {
+  const soql = `SELECT Id, Name, BillingCity, BillingState FROM Account WHERE ParentId = '${accountId}' ORDER BY Name`;
+  return await sfdcQuery(soql);
+}
+
+function renderModalIntel(acc) {
+  let html = '<div class="modal-section"><h3>District Intelligence</h3><div class="modal-grid">';
+  html += modalField('District', acc.name);
+  html += modalField('State', acc.state);
+  html += modalField('Enrollment', fmtNum(acc.enrollment));
+  html += modalField('Region', acc.region);
+  html += modalField('Website', acc.website);
+  html += '</div></div>';
+
+  // Leadership contacts
+  const leadership = modalContacts.filter(c => {
+    const title = (c.Title || '').toLowerCase();
+    return title.includes('superintendent') || title.includes('chief') || title.includes('director') || title.includes('cto') || title.includes('cio');
+  });
+  if (leadership.length) {
+    html += '<div class="modal-section"><h3>Leadership</h3>';
+    for (const c of leadership) {
+      html += `<div class="modal-contact-card">
+        <div class="contact-name">${escapeHtml(c.Name)}</div>
+        <div class="contact-title">${escapeHtml(c.Title || '')}</div>
+        ${c.Email ? `<div class="contact-detail">${escapeHtml(c.Email)}</div>` : ''}
+        ${c.Phone ? `<div class="contact-detail">${escapeHtml(c.Phone)}</div>` : ''}
+      </div>`;
+    }
+    html += '</div>';
+  }
+
+  // All opps summary
+  if (acc.opps && acc.opps.length) {
+    html += '<div class="modal-section"><h3>All Opportunities</h3>';
+    for (const opp of acc.opps) html += renderModalOpp(opp);
+    html += '</div>';
+  }
+
+  return html;
+}
+
+function modalField(label, value) {
+  return `<div class="modal-field"><div class="field-label">${escapeHtml(label)}</div><div class="field-value">${escapeHtml(value || '—')}</div></div>`;
+}
+
+// ── Pipeline Panel ──
+function updatePipeline() {
+  const container = document.getElementById('pipelineStages');
+  container.innerHTML = '';
+  if (currentView !== 'accounts') {
+    document.getElementById('pipelineTotal').textContent = '—';
+    return;
+  }
+  const stageGroups = {};
+  let total = 0;
+  for (const acc of _visibleAccounts) {
+    for (const opp of (acc.opps || [])) {
+      const s = opp.stage || 'No Stage';
+      if (!stageGroups[s]) stageGroups[s] = { amount: 0, count: 0, opps: [] };
+      stageGroups[s].amount += (opp.amount || 0);
+      stageGroups[s].count++;
+      stageGroups[s].opps.push(opp);
+      total += (opp.amount || 0);
+    }
+  }
+  document.getElementById('pipelineTotal').textContent = fmtCurrency(total);
+
+  const stageColors = {
+    '1 - Discovery': 'var(--opp-yellow)', '2 - Demo': 'var(--opp-blue)',
+    '3 - Scoping': 'var(--opp-orange)', '4 - Validation': 'var(--opp-green)',
+    '5 - Negotiation': 'var(--opp-green)', '6 - Verbal Commit': 'var(--opp-green)',
+  };
+
+  for (const [stage, data] of Object.entries(stageGroups).sort((a, b) => a[0].localeCompare(b[0]))) {
+    const color = stageColors[stage] || 'var(--opp-purple)';
+    const stageDiv = document.createElement('div');
+    stageDiv.innerHTML = `<div class="pipeline-stage" onclick="togglePipelineDropdown('pd-${stage.replace(/\s/g,'')}')">
+      <span class="pipeline-stage-name"><span class="pipeline-stage-dot" style="background:${color}"></span>${escapeHtml(stage)}</span>
+      <span><span class="pipeline-stage-value">${fmtCurrency(data.amount)}</span><span class="pipeline-stage-count">(${data.count})</span></span>
+    </div>
+    <div class="pipeline-dropdown" id="pd-${stage.replace(/\s/g,'')}">
+      ${data.opps.map(o => `<div class="pipeline-dropdown-item" onclick="zoomToOpp('${o.accountId}')">${escapeHtml(o.accountName || o.name)} — ${fmtCurrency(o.amount)}</div>`).join('')}
+    </div>`;
+    container.appendChild(stageDiv);
+  }
+}
+
+function togglePipelineDropdown(id) {
+  const el = document.getElementById(id);
+  if (el) el.classList.toggle('open');
+}
+
+function zoomToOpp(accountId) {
+  const acc = accounts.find(a => a.id === accountId);
+  if (acc) zoomToAccount(acc);
+}
+
+// ── Action Dashboard ──
+function openActionDashboard() {
+  document.getElementById('adOverlay').style.display = 'flex';
+  renderActionDashboard();
+}
+function closeActionDashboard() {
+  document.getElementById('adOverlay').style.display = 'none';
+}
+
+function renderActionDashboard() {
+  const container = document.getElementById('adContent');
+  const data = currentView === 'accounts' ? _visibleAccounts : _visibleCustomers;
+  let html = '';
+
+  // Stalest accounts
+  const withActivity = data.filter(a => a.lastActivity).sort((a, b) => daysSince(b.lastActivity) - daysSince(a.lastActivity));
+  const stale = withActivity.filter(a => daysSince(a.lastActivity) > 30).slice(0, 15);
+  html += `<div class="ad-section"><h4>Stalest Accounts <span class="count-badge">${stale.length}</span></h4>`;
+  if (!stale.length) html += '<p style="color:var(--text-dim);font-size:12px;">No stale accounts found.</p>';
+  for (const a of stale) {
+    html += `<div class="ad-item" onclick="zoomToAccount(${currentView === 'accounts' ? 'accounts' : 'customers'}.find(x=>x.id==='${a.id}'))">
+      <span>${escapeHtml(a.name)}</span><span class="days">${daysSince(a.lastActivity)}d</span></div>`;
+  }
+  html += '</div>';
+
+  // Due this week (opps with close date within 7 days)
+  if (currentView === 'accounts') {
+    const now = Date.now();
+    const weekMs = 7 * 86400000;
+    const dueOpps = [];
+    for (const acc of _visibleAccounts) {
+      for (const opp of (acc.opps || [])) {
+        if (opp.closeDate) {
+          const cd = new Date(opp.closeDate).getTime();
+          if (cd > now && cd - now < weekMs) dueOpps.push({ ...opp, _acc: acc });
+        }
+      }
+    }
+    html += `<div class="ad-section"><h4>Due This Week <span class="count-badge">${dueOpps.length}</span></h4>`;
+    if (!dueOpps.length) html += '<p style="color:var(--text-dim);font-size:12px;">No opps closing this week.</p>';
+    for (const o of dueOpps) {
+      html += `<div class="ad-item" onclick="zoomToOpp('${o.accountId}')">
+        <span>${escapeHtml(o._acc.name)} — ${escapeHtml(o.name)}</span><span class="days">${o.closeDate}</span></div>`;
+    }
+    html += '</div>';
+
+    // Next steps
+    const withNextStep = [];
+    for (const acc of _visibleAccounts) {
+      for (const opp of (acc.opps || [])) {
+        if (opp.nextStep) withNextStep.push({ ...opp, _acc: acc });
+      }
+    }
+    html += `<div class="ad-section"><h4>Next Steps <span class="count-badge">${withNextStep.length}</span></h4>`;
+    for (const o of withNextStep.slice(0, 20)) {
+      html += `<div class="ad-item" onclick="zoomToOpp('${o.accountId}')">
+        <span>${escapeHtml(o._acc.name)}: ${escapeHtml(o.nextStep.substring(0, 60))}</span></div>`;
+    }
+    html += '</div>';
+  }
+
+  // Untouched accounts
+  const untouched = data.filter(a => !a.lastActivity);
+  html += `<div class="ad-section"><h4>Untouched Accounts <span class="count-badge">${untouched.length}</span></h4>`;
+  for (const a of untouched.slice(0, 15)) {
+    html += `<div class="ad-item" onclick="zoomToAccount(${currentView === 'accounts' ? 'accounts' : 'customers'}.find(x=>x.id==='${a.id}'))">
+      <span>${escapeHtml(a.name)}</span><span class="days">Never</span></div>`;
+  }
+  html += '</div>';
+
+  container.innerHTML = html;
+
+  // Update badge
+  const alertCount = stale.length + untouched.length;
+  const badge = document.getElementById('adBadge');
+  badge.textContent = alertCount;
+  badge.style.display = alertCount > 0 ? 'inline' : 'none';
+}
+
+// ── Account List Overlay ──
+let alSortField = 'name';
+let alSortDir = 1;
+
+function openAccountList() {
+  document.getElementById('alOverlay').style.display = 'flex';
+  renderAccountList();
+}
+function closeAccountList() {
+  document.getElementById('alOverlay').style.display = 'none';
+}
+
+function renderAccountList() {
+  const data = currentView === 'accounts' ? _visibleAccounts : _visibleCustomers;
+  const isCustomer = currentView === 'customers';
+
+  const head = document.getElementById('alHead');
+  head.innerHTML = `<tr>
+    <th onclick="sortAccountListBy('name')">Name</th>
+    <th onclick="sortAccountListBy('state')">State</th>
+    <th onclick="sortAccountListBy('enrollment')">Enrollment</th>
+    <th>${isCustomer ? 'CSM' : 'AE'}</th>
+    <th>${isCustomer ? 'ARR' : 'Stage'}</th>
+    <th onclick="sortAccountListBy('lastActivity')">Last Activity</th>
+  </tr>`;
+
+  renderAccountListBody(data);
+}
+
+function renderAccountListBody(data) {
+  const body = document.getElementById('alBody');
+  const search = (document.getElementById('alSearch').value || '').toLowerCase();
+  let filtered = data;
+  if (search) filtered = filtered.filter(a => a.name.toLowerCase().includes(search));
+
+  // Sort
+  filtered = [...filtered].sort((a, b) => {
+    let va, vb;
+    switch (alSortField) {
+      case 'name': va = a.name.toLowerCase(); vb = b.name.toLowerCase(); break;
+      case 'state': va = a.state; vb = b.state; break;
+      case 'enrollment': va = a.enrollment || 0; vb = b.enrollment || 0; break;
+      case 'lastActivity': va = daysSince(a.lastActivity); vb = daysSince(b.lastActivity); break;
+      default: va = a.name; vb = b.name;
+    }
+    if (va < vb) return -1 * alSortDir;
+    if (va > vb) return 1 * alSortDir;
+    return 0;
+  });
+
+  const isCustomer = currentView === 'customers';
+  body.innerHTML = filtered.map(a => {
+    const stage = isCustomer ? fmtCurrency(a.arr) : (a.opps && a.opps.length ? a.opps[0].stage : 'No Opp');
+    return `<tr onclick="closeAccountList();zoomToAccount(${currentView === 'accounts' ? 'accounts' : 'customers'}.find(x=>x.id==='${a.id}'))">
+      <td>${escapeHtml(a.name)}</td>
+      <td>${escapeHtml(a.state)}</td>
+      <td>${fmtNum(a.enrollment)}</td>
+      <td>${escapeHtml(isCustomer ? (a.csm || '') : (a.ae || ''))}</td>
+      <td>${escapeHtml(stage)}</td>
+      <td>${a.lastActivity ? daysSince(a.lastActivity) + 'd ago' : 'Never'}</td>
+    </tr>`;
+  }).join('');
+}
+
+function filterAccountList() {
+  const data = currentView === 'accounts' ? _visibleAccounts : _visibleCustomers;
+  renderAccountListBody(data);
+}
+
+function sortAccountListBy(field) {
+  if (alSortField === field) alSortDir *= -1;
+  else { alSortField = field; alSortDir = 1; }
+  filterAccountList();
+}
+
+function sortAccountList() {
+  alSortField = document.getElementById('alSort').value;
+  alSortDir = 1;
+  filterAccountList();
+}
+
+// ── Proximity Mode ──
+function toggleProximity() {
+  proximityEnabled = document.getElementById('proxToggle').checked;
+  if (!proximityEnabled) proximityLayer.clearLayers();
+  else renderProximity();
+}
+
+function updateProximityRadius() {
+  proximityRadius = parseInt(document.getElementById('proxRadius').value);
+  document.getElementById('proxRadiusVal').textContent = proximityRadius + ' mi';
+  if (proximityEnabled) renderProximity();
+}
+
+function renderProximity() {
+  proximityLayer.clearLayers();
+  if (!proximityEnabled) return;
+  const source = currentView === 'accounts' ? _visibleAccounts : _visibleCustomers;
+  for (const acc of source) {
+    const radiusMeters = proximityRadius * 1609.34;
+    const circle = L.circle([acc.lat, acc.lng], {
+      radius: radiusMeters,
+      className: 'marker-prox',
+      fillOpacity: 0.06,
+      weight: 1,
+      color: 'var(--accent)',
+      opacity: 0.2,
+    });
+    proximityLayer.addLayer(circle);
+  }
+}
+
+// ── Meeting Prep ──
+function generateMeetingPrep(acc) {
+  if (!acc) return;
+  let text = `MEETING PREP — ${acc.name}\n${'='.repeat(40)}\n\n`;
+  text += `District: ${acc.name}\n`;
+  text += `Location: ${acc.city || '?'}, ${acc.state || '?'}\n`;
+  text += `Enrollment: ${fmtNum(acc.enrollment)}\n`;
+  text += `AE: ${acc.ae || 'Unassigned'}\n`;
+  text += `Region: ${acc.region || '?'}\n`;
+  text += `SIS: ${acc.sis || acc.sisOther || '?'}\n`;
+  text += `Curriculum: ${acc.curriculum || '?'}\n`;
+  text += `Last Activity: ${acc.lastActivity || 'Never'}\n`;
+  if (acc.website) text += `Website: ${acc.website}\n`;
+  if (acc.parentAccount) text += `Parent Account: ${acc.parentAccount}\n`;
+
+  if (acc.opps && acc.opps.length) {
+    text += `\nOPPORTUNITIES\n${'-'.repeat(30)}\n`;
+    for (const opp of acc.opps) {
+      text += `\n  ${opp.name}\n`;
+      text += `  Stage: ${opp.stage} | Amount: ${fmtCurrency(opp.amount)} | ACV: ${fmtCurrency(opp.acv)}\n`;
+      text += `  Area: ${opp.area} | Close: ${opp.closeDate || '?'}\n`;
+      if (opp.nextStep) text += `  Next Step: ${opp.nextStep}\n`;
+      if (opp.champion) text += `  Champion: ${opp.champion}\n`;
+      if (opp.competition) text += `  Competition: ${opp.competition}\n`;
+    }
+  }
+
+  if (modalContacts && modalContacts.length) {
+    text += `\nCONTACTS\n${'-'.repeat(30)}\n`;
+    for (const c of modalContacts) {
+      text += `  ${c.Name} — ${c.Title || '?'} — ${c.Email || ''}\n`;
+    }
+  }
+
+  text += `\n\nPlease prepare a structured meeting prep document based on the above account data. Include:\n1. Account summary\n2. Key contacts and their roles\n3. Opportunity analysis\n4. Suggested talking points\n5. Questions to ask\n6. Next steps recommendations`;
+
+  navigator.clipboard.writeText(text).then(() => {
+    showToast('Meeting prep copied to clipboard!');
+    // Open Claude
+    window.open('https://claude.ai/new', '_blank');
+  }).catch(() => {
+    showToast('Failed to copy — check clipboard permissions');
+  });
+}
+
+// ── Stats ──
+function updateStats() {
+  const accCount = currentView === 'accounts' ? _visibleAccounts.length : accounts.length;
+  const custCount = currentView === 'customers' ? _visibleCustomers.length : customers.length;
+  document.getElementById('statAccounts').textContent = accCount;
+  document.getElementById('statCustomers').textContent = custCount;
+
+  // Overlap: accounts that share a name with a customer
+  const custNames = new Set(customers.map(c => c.name.toLowerCase()));
+  const overlap = accounts.filter(a => custNames.has(a.name.toLowerCase())).length;
+  document.getElementById('statOverlap').textContent = overlap;
+
+  const visible = currentView === 'accounts' ? _visibleAccounts : _visibleCustomers;
+  const states = new Set(visible.map(a => a.state).filter(Boolean));
+  document.getElementById('statStates').textContent = states.size;
+}
+
+// ── Legend ──
+function updateLegend() {
+  const content = document.getElementById('legendContent');
+  if (currentView === 'accounts') {
+    content.innerHTML = `
+      <div class="legend-item"><div class="legend-dot" style="background:var(--opp-purple)"></div>No Opportunity</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--opp-yellow)"></div>Discovery</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--opp-blue)"></div>Demo</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--opp-orange)"></div>Scoping</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--opp-green)"></div>Validation</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#9ca3af"></div>DOE</div>`;
+  } else {
+    content.innerHTML = `
+      <div class="legend-item"><div class="legend-dot" style="background:#22c55e"></div>Active Customer</div>`;
+  }
+}
+
+// ── Theme Toggle ──
+function setupTheme() {
+  const btn = document.getElementById('themeToggle');
+  btn.addEventListener('click', () => {
+    const html = document.documentElement;
+    const current = html.getAttribute('data-theme');
+    const next = current === 'dark' ? 'light' : 'dark';
+    html.setAttribute('data-theme', next);
+    btn.textContent = next === 'dark' ? '\u263E' : '\u2600';
+  });
+}
+
+// ── Reset View ──
+function setupResetView() {
+  document.getElementById('resetViewBtn').addEventListener('click', () => {
+    selectedTeam = '';
+    selectedRep = '';
+    document.getElementById('teamSelect').value = '';
+    document.getElementById('repSelect').innerHTML = '<option value="">All Reps</option>';
+    resetFilters();
+    if (map) map.setView([39.5, -98.35], 4);
+    accounts = [];
+    customers = [];
+    customersLoaded = false;
+    renderMarkers();
+    document.getElementById('welcomeOverlay').style.display = 'flex';
+    welcomeDismissed = false;
+  });
+}
+
+// ── Welcome Overlay ──
+function renderWelcomeOverlay() {
+  const container = document.getElementById('welcomeActions');
+  container.innerHTML = '';
+
+  for (const team of TEAM_NAMES) {
+    const btn = document.createElement('button');
+    btn.textContent = team;
+    btn.onclick = async () => {
+      dismissWelcome();
+      selectedTeam = team;
+      document.getElementById('teamSelect').value = team;
+      const repSel = document.getElementById('repSelect');
+      repSel.innerHTML = '<option value="">All Reps</option>';
+      for (const rep of TEAM_REP_DATA[team].reps) {
+        repSel.innerHTML += `<option value="${escapeHtml(rep)}">${escapeHtml(rep)}</option>`;
+      }
+      if (TEAM_REP_DATA[team].reps.length === 1) {
+        selectedRep = TEAM_REP_DATA[team].reps[0];
+        repSel.value = selectedRep;
+        await loadDataForRep(selectedRep);
+      } else {
+        await loadDataForTeam(team);
+      }
+      buildFilterOptions();
+      renderMarkers();
+    };
+    container.appendChild(btn);
+  }
+
+  // Show Opps button
+  const oppBtn = document.createElement('button');
+  oppBtn.textContent = 'Show All Opps';
+  oppBtn.className = 'primary';
+  oppBtn.onclick = async () => {
+    dismissWelcome();
+    await loadDataShowOpps();
+    buildFilterOptions();
+    renderMarkers();
+  };
+  container.appendChild(oppBtn);
+}
+
+function dismissWelcome() {
+  document.getElementById('welcomeOverlay').style.display = 'none';
+  welcomeDismissed = true;
+}
+
+// ── Keyboard Shortcuts ──
+function setupKeyboard() {
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      if (document.getElementById('accountModal').style.display === 'flex') closeAccountModal();
+      else if (document.getElementById('adOverlay').style.display === 'flex') closeActionDashboard();
+      else if (document.getElementById('alOverlay').style.display === 'flex') closeAccountList();
+    }
+  });
+}
+
+// ── Initialization ──
+async function init() {
+  await tycho.ready;
+  initMap();
+  renderTeamRepSelectors();
+  renderWelcomeOverlay();
+  setupSearch();
+  setupFilterListeners();
+  setupTheme();
+  setupResetView();
+  setupKeyboard();
+  updateLegend();
+  updateStats();
+  // Also pre-load customers in background
+  loadCustomers().catch(console.error);
+}
+
+init();
+</script>
+</body>
+</html>
