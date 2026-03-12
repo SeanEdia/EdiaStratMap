@@ -1151,7 +1151,7 @@ input[type="range"]::-webkit-slider-thumb {
 .conflicts-trigger .ad-alert { background: #d6336c; }
 
 /* Conflicts overlay positioning — appears below the Conflicts button */
-.conflicts-overlay { right: auto; left: auto; }
+.conflicts-overlay { right: 16px; }
 
 /* Conflict list items */
 .conflict-item {
