@@ -1,5 +1,708 @@
 [
   {
+    "name": "Beaumont Unified School District",
+    "address": "PO Box 187",
+    "state": "CA",
+    "csm": "Casey Prohaska",
+    "ae": "Brad Halsey",
+    "segment": "Mid-Market",
+    "region": "West",
+    "students": 12121,
+    "arr": 134150,
+    "arr_12mo_ago": "108500.00",
+    "gdr": 100,
+    "ndr": 123.64,
+    "lapsed_renewal": "0.00",
+    "last_activity": "5/5/2026",
+    "lat": 33.9306,
+    "lng": -116.9756,
+    "also_account": true,
+    "city": "Beaumont",
+    "zip": "92223",
+    "type": "Customer",
+    "enrollment": 12121,
+    "sis": "Aeries",
+    "website": "beaumontusd.us",
+    "math_curriculum": "Eureka Math≤",
+    "math_supplemental": "i-Ready",
+    "attendance_comms": "ParentSquare",
+    "strategic_plan_url": "https://4.files.edl.io/9ed0/09/08/25/224001-9f113fad-1316-4354-ba79-4174b51cbee7.pdf",
+    "opps": [],
+    "_hasUploadedOpp": true,
+    "territory_ae": "Lance Baretz"
+  },
+  {
+    "name": "Ontario-Montclair School District",
+    "address": "950 West D St.",
+    "state": "CA",
+    "csm": "Casey Prohaska",
+    "ae": "Brad Halsey",
+    "segment": "Mid-Market",
+    "region": "West",
+    "students": 17944,
+    "arr": 49304,
+    "arr_12mo_ago": "0.00",
+    "gdr": 0,
+    "ndr": 0,
+    "lapsed_renewal": "0.00",
+    "last_activity": "1/25/2027",
+    "lat": 34.0633,
+    "lng": -117.6509,
+    "also_account": false,
+    "city": "Ontario",
+    "zip": "91762",
+    "type": "Customer",
+    "enrollment": 17944,
+    "sis": "Aeries",
+    "website": "https://www.omsd.net",
+    "math_curriculum": "Eureka Math",
+    "math_supplemental": "i-Ready",
+    "attendance_comms": "ParentSquare",
+    "strategic_plan_url": "https://www.omsd.net/Page/286",
+    "opps": [],
+    "_hasUploadedOpp": true,
+    "territory_ae": "Lance Baretz"
+  },
+  {
+    "name": "Palm Springs Unified School District",
+    "address": "150 District Center Dr.",
+    "state": "CA",
+    "csm": "Casey Prohaska",
+    "ae": "Brad Halsey",
+    "segment": "Enterprise",
+    "region": "West",
+    "students": 20416,
+    "arr": 163333,
+    "arr_12mo_ago": "163333.00",
+    "gdr": 100,
+    "ndr": 100,
+    "lapsed_renewal": "0.00",
+    "last_activity": "1/30/2026",
+    "lat": 33.8303,
+    "lng": -116.5453,
+    "also_account": false,
+    "city": "Palm Springs",
+    "zip": "92264",
+    "type": "Customer",
+    "enrollment": 20416,
+    "sis": "Edupoint Synergy",
+    "website": "psusd.us",
+    "math_curriculum": "K-5: Bridges; 6-12: Illustrative Math",
+    "math_supplemental": "STAR (Renaissance)",
+    "attendance_comms": "ParentSquare; ParentVUE",
+    "strategic_plan_url": "https://www.psusd.us/cms/lib/CA02204874/Centricity/Domain/192/LCAP%202025-2026%20PSUSD%20WM.pdf",
+    "opps": [],
+    "_hasUploadedOpp": true,
+    "territory_ae": "Lance Baretz"
+  },
+  {
+    "name": "San Jacinto Unified School District",
+    "address": "2045 South San Jacinto Ave.",
+    "state": "CA",
+    "csm": "Casey Prohaska",
+    "ae": "Brad Halsey",
+    "segment": "Mid-Market",
+    "region": "West",
+    "students": 10401,
+    "arr": 168291,
+    "arr_12mo_ago": "168291.00",
+    "gdr": 100,
+    "ndr": 100,
+    "lapsed_renewal": "0.00",
+    "last_activity": "5/28/2026",
+    "lat": 33.784,
+    "lng": -116.9587,
+    "also_account": false,
+    "city": "San Jacinto",
+    "zip": "92583",
+    "type": "Customer",
+    "enrollment": 10401,
+    "sis": "Aeries",
+    "website": "sanjacinto.k12.ca.us",
+    "math_supplemental": "i-Ready; Exact Path",
+    "attendance_comms": "ParentSquare; SchoolMessenger",
+    "strategic_plan_url": "https://4.files.edl.io/08af/08/29/25/205730-0074a373-35db-4e86-9238-26002c952dc9.pdf",
+    "opps": [],
+    "_hasUploadedOpp": true,
+    "territory_ae": "Lance Baretz"
+  },
+  {
+    "name": "Escondido Union High School District",
+    "address": "302 North Midway Dr.",
+    "state": "CA",
+    "csm": "Casey Prohaska",
+    "ae": "Brad Halsey",
+    "segment": "Mid-Market",
+    "region": "West",
+    "students": 6544,
+    "arr": 76655,
+    "arr_12mo_ago": "0.00",
+    "gdr": 0,
+    "ndr": 0,
+    "lapsed_renewal": "0.00",
+    "last_activity": "1/4/2027",
+    "lat": 33.1192,
+    "lng": -117.0864,
+    "also_account": false,
+    "city": "Escondido",
+    "zip": "92027",
+    "type": "Customer",
+    "enrollment": 6544,
+    "sis": "Other",
+    "website": "euhsd.org",
+    "math_curriculum": "Math 1-4",
+    "math_supplemental": "Edgenuity",
+    "attendance_comms": "Remind",
+    "strategic_plan_url": "https://4.files.edl.io/907c/08/06/25/181632-230bc4d2-d9bd-4925-967a-2eab1b06f345.pdf",
+    "student_information_system_sis_-_other": "Synergy; ParentVUE",
+    "opps": [],
+    "_hasUploadedOpp": true,
+    "territory_ae": "Lance Baretz"
+  },
+  {
+    "ae": "Sydney Smith",
+    "name": "Central Consolidated School District",
+    "region": "South-Central",
+    "state": "NM",
+    "city": "Shiprock",
+    "address": "OLD HIGH SCHOOL RD",
+    "zip": "87420",
+    "type": "Customer",
+    "enrollment": 5013,
+    "sis": "PowerSchool",
+    "website": "centralschools.org",
+    "attendance_comms": "PowerSchool",
+    "strategic_plan_url": "https://www.ccsdnm.org/SchoolReportCards.aspx",
+    "opps": [],
+    "_hasUploadedOpp": true,
+    "lat": 36.7858144,
+    "lng": -108.6844954,
+    "also_account": true
+  },
+  {
+    "name": "Roswell Independent Schools",
+    "address": "300 N. KENTUCKY",
+    "state": "NM",
+    "csm": "Casey Prohaska",
+    "ae": "Sydney Smith",
+    "segment": "Mid-Market",
+    "region": "South-Central",
+    "students": 9386,
+    "arr": 9260,
+    "arr_12mo_ago": "0.00",
+    "gdr": 0,
+    "ndr": 0,
+    "lapsed_renewal": "0.00",
+    "last_activity": "2/2/2026",
+    "lat": 33.3943,
+    "lng": -104.523,
+    "also_account": true,
+    "city": "Roswell",
+    "zip": "88201",
+    "type": "Customer",
+    "enrollment": 9386,
+    "sis": "PowerSchool",
+    "website": "risd.k12.nm.us",
+    "math_curriculum": "Envision",
+    "math_supplemental": "Istation; MobyMax",
+    "attendance_comms": "SchoolMessenger",
+    "strategic_plan_url": "https://cdn5-ss10.sharpschool.com/UserFiles/Servers/Server_18731897/File/Strategic%20Plan.pdf",
+    "opps": [],
+    "_hasUploadedOpp": true
+  },
+  {
+    "name": "Santa Fe Public Schools",
+    "address": "610 ALTA VISTA ST.",
+    "state": "NM",
+    "csm": "Casey Prohaska",
+    "ae": "Sydney Smith",
+    "segment": "Mid-Market",
+    "region": "South-Central",
+    "students": 11490,
+    "arr": 22475,
+    "arr_12mo_ago": "0.00",
+    "gdr": 0,
+    "ndr": 0,
+    "lapsed_renewal": "0.00",
+    "last_activity": "2/4/2026",
+    "lat": 35.687,
+    "lng": -105.9378,
+    "also_account": true,
+    "city": "Santa Fe",
+    "zip": "87505",
+    "type": "Customer",
+    "enrollment": 11490,
+    "sis": "PowerSchool",
+    "website": "sfps.info",
+    "math_curriculum": "Savvas",
+    "math_supplemental": "ST Math",
+    "attendance_comms": "Other",
+    "strategic_plan_url": "https://fliphtml5.com/zicnd/xwzt/SFPS_Strategic_Plan_v.3/",
+    "opps": [],
+    "_hasUploadedOpp": true
+  },
+  {
+    "name": "Farmington Municipal Schools",
+    "address": "3401 E 30TH ST",
+    "state": "NM",
+    "csm": "Casey Prohaska",
+    "ae": "Sydney Smith",
+    "segment": "Mid-Market",
+    "region": "South-Central",
+    "students": 11120,
+    "arr": 323460,
+    "arr_12mo_ago": "171000.00",
+    "gdr": 100,
+    "ndr": 189.16,
+    "lapsed_renewal": "0.00",
+    "last_activity": "1/1/2027",
+    "lat": 36.7281,
+    "lng": -108.2187,
+    "also_account": true,
+    "city": "Farmington",
+    "zip": "87402",
+    "type": "Customer",
+    "enrollment": 11120,
+    "sis": "PowerSchool",
+    "website": "fms.k12.nm.us",
+    "math_curriculum": "District pacing guides",
+    "math_supplemental": "IXL",
+    "attendance_comms": "Other",
+    "strategic_plan_url": "https://www.farmingtonschools.us/o/fms/page/district-strategic-plan",
+    "opps": [],
+    "_hasUploadedOpp": true
+  },
+  {
+    "name": "Frederick Douglass Academy VII High School",
+    "address": "226 Bristol Street",
+    "state": "NY",
+    "csm": "James Kennedy",
+    "ae": "Ally McCready",
+    "segment": "Mid-Market",
+    "region": "Northeast",
+    "students": 8334,
+    "arr": 1507.5,
+    "arr_12mo_ago": "0.00",
+    "gdr": 0,
+    "ndr": 0,
+    "lapsed_renewal": "0.00",
+    "last_activity": "10/31/2025",
+    "lat": 40.6754,
+    "lng": -73.9071,
+    "also_account": false,
+    "parent_account": "New York City Geographic District #23",
+    "city": "Brooklyn",
+    "zip": "11212",
+    "type": "Customer",
+    "enrollment": 8334,
+    "sis": "Other",
+    "website": "https://www.fda7.org",
+    "attendance_comms": "Other",
+    "opps": [],
+    "_hasUploadedOpp": true
+  },
+  {
+    "name": "Vineland Public Schools",
+    "address": "61 W Landis Ave",
+    "state": "NJ",
+    "csm": "Deanna Berget",
+    "ae": "Ally McCready",
+    "segment": "Mid-Market",
+    "region": "Northeast",
+    "students": 10317,
+    "arr": 52280.7,
+    "arr_12mo_ago": "0.00",
+    "gdr": 0,
+    "ndr": 0,
+    "lapsed_renewal": "0.00",
+    "last_activity": "8/6/2026",
+    "lat": 39.4863,
+    "lng": -75.026,
+    "also_account": true,
+    "city": "Vineland",
+    "zip": "8360",
+    "type": "Customer",
+    "enrollment": 10317,
+    "sis": "Other",
+    "website": "vineland.org",
+    "math_supplemental": "IXL",
+    "attendance_comms": "Other",
+    "strategic_plan_url": "https://www.vineland.org/page/office-of-the-superintendent",
+    "opps": [],
+    "_hasUploadedOpp": true
+  },
+  {
+    "name": "EBC High School for Public Service - Bushwick",
+    "address": "1155 DeKalb Avenue",
+    "state": "NY",
+    "csm": "James Kennedy",
+    "ae": "Ally McCready",
+    "segment": "Mid-Market",
+    "region": "Northeast",
+    "students": 9633,
+    "arr": 12960,
+    "arr_12mo_ago": "11460.00",
+    "gdr": 100,
+    "ndr": 113.09,
+    "lapsed_renewal": "0.00",
+    "last_activity": "7/1/2026",
+    "lat": 40.6987,
+    "lng": -73.9277,
+    "also_account": false,
+    "parent_account": "New York City Geographic District #32",
+    "city": "Brooklyn",
+    "zip": "11221",
+    "type": "Customer",
+    "enrollment": 9633,
+    "sis": "Other",
+    "website": "https://sites.google.com/view/ebc-high-school/home",
+    "attendance_comms": "Other",
+    "opps": [],
+    "_hasUploadedOpp": true
+  },
+  {
+    "name": "Teachers Preparatory High School",
+    "address": "226 Bristol Street",
+    "state": "NY",
+    "csm": "James Kennedy",
+    "ae": "Ally McCready",
+    "segment": "Mid-Market",
+    "region": "Northeast",
+    "students": 8334,
+    "arr": 5150,
+    "arr_12mo_ago": "5300.00",
+    "gdr": 97.17,
+    "ndr": 97.17,
+    "lapsed_renewal": "0.00",
+    "last_activity": "1/21/2026",
+    "lat": 40.6716,
+    "lng": -73.9246,
+    "also_account": false,
+    "parent_account": "New York City Geographic District #23",
+    "city": "Brooklyn",
+    "zip": "11212",
+    "type": "Customer",
+    "enrollment": 8334,
+    "sis": "Other",
+    "website": "https://www.teachersprep.org",
+    "attendance_comms": "Other",
+    "opps": [],
+    "_hasUploadedOpp": true
+  },
+  {
+    "name": "Boys and Girls High School",
+    "address": "1700 Fulton Street",
+    "state": "NY",
+    "csm": "James Kennedy",
+    "ae": "Ally McCready",
+    "segment": "Mid-Market",
+    "region": "Northeast",
+    "students": 5827,
+    "arr": 9360,
+    "arr_12mo_ago": "9150.00",
+    "gdr": 100,
+    "ndr": 102.3,
+    "lapsed_renewal": "0.00",
+    "last_activity": "6/26/2026",
+    "lat": 40.6828,
+    "lng": -73.9348,
+    "also_account": false,
+    "parent_account": "New York City Geographic District #16",
+    "city": "Brooklyn",
+    "zip": "11213",
+    "type": "Customer",
+    "enrollment": 5827,
+    "sis": "Other",
+    "website": "https://www.madisonhs.org",
+    "attendance_comms": "ParentSquare; Other",
+    "opps": [],
+    "_hasUploadedOpp": true
+  },
+  {
+    "name": "Bushwick Leaders High School for Academic Excellence",
+    "address": "797 Bushwick Ave.",
+    "state": "NY",
+    "csm": "James Kennedy",
+    "ae": "Ally McCready",
+    "segment": "Mid-Market",
+    "region": "Northeast",
+    "students": 9633,
+    "arr": 9750,
+    "arr_12mo_ago": "6000.00",
+    "gdr": 100,
+    "ndr": 162.5,
+    "lapsed_renewal": "0.00",
+    "last_activity": "7/1/2026",
+    "lat": 40.6987,
+    "lng": -73.9277,
+    "also_account": false,
+    "parent_account": "New York City Geographic District #32",
+    "city": "Brooklyn",
+    "zip": "11221",
+    "type": "Customer",
+    "enrollment": 9633,
+    "sis": "Other",
+    "website": "https://bushwickleadershs.com",
+    "attendance_comms": "Other",
+    "opps": [],
+    "_hasUploadedOpp": true
+  },
+  {
+    "name": "Academy for Excellence in Leadership",
+    "address": "400 Irving Avenue",
+    "state": "NY",
+    "csm": "James Kennedy",
+    "ae": "Ally McCready",
+    "segment": "Mid-Market",
+    "region": "Northeast",
+    "students": 9633,
+    "arr": 7883.8,
+    "arr_12mo_ago": "0.00",
+    "gdr": 0,
+    "ndr": 0,
+    "lapsed_renewal": "0.00",
+    "last_activity": "12/23/2025",
+    "lat": 40.6715,
+    "lng": -73.908,
+    "also_account": false,
+    "parent_account": "New York City Geographic District #32",
+    "city": "Brooklyn",
+    "zip": "11237",
+    "type": "Customer",
+    "enrollment": 9633,
+    "sis": "Other",
+    "website": "https://aelnyc.org",
+    "attendance_comms": "Other",
+    "opps": [],
+    "_hasUploadedOpp": true
+  },
+  {
+    "name": "Academy of Urban Planning and Engineering",
+    "address": "",
+    "state": "NY",
+    "csm": "James Kennedy",
+    "ae": "Ally McCready",
+    "segment": "Mid-Market",
+    "region": "Northeast",
+    "students": 9633,
+    "arr": 7249.8,
+    "arr_12mo_ago": "0.00",
+    "gdr": 0,
+    "ndr": 0,
+    "lapsed_renewal": "0.00",
+    "last_activity": "1/5/2027",
+    "lat": 40.658,
+    "lng": -73.887,
+    "also_account": false,
+    "parent_account": "New York City Geographic District #32",
+    "type": "Customer",
+    "enrollment": 9633,
+    "sis": "Other",
+    "attendance_comms": "Other",
+    "opps": [],
+    "_hasUploadedOpp": true
+  },
+  {
+    "name": "Nelson Mandela School for Social Justice",
+    "address": "1700 Fulton Street",
+    "state": "NY",
+    "csm": "James Kennedy",
+    "ae": "Ally McCready",
+    "segment": "Mid-Market",
+    "region": "Northeast",
+    "students": 5827,
+    "arr": 4520,
+    "arr_12mo_ago": "0.00",
+    "gdr": 0,
+    "ndr": 0,
+    "lapsed_renewal": "0.00",
+    "last_activity": "1/14/2027",
+    "lat": 40.695,
+    "lng": -73.954,
+    "also_account": false,
+    "parent_account": "New York City Geographic District #16",
+    "city": "Brooklyn",
+    "zip": "11213",
+    "type": "Customer",
+    "enrollment": 5827,
+    "sis": "Other",
+    "website": "https://www.mandelaschoolnyc.org",
+    "attendance_comms": "ParentSquare; Other",
+    "opps": [],
+    "_hasUploadedOpp": true
+  },
+  {
+    "name": "Brooklyn High School for Law and Technology",
+    "address": "1396 Broadway",
+    "state": "NY",
+    "csm": "James Kennedy",
+    "ae": "Ally McCready",
+    "segment": "Mid-Market",
+    "region": "Northeast",
+    "students": 5827,
+    "arr": 10570,
+    "arr_12mo_ago": "5930.00",
+    "gdr": 100,
+    "ndr": 178.25,
+    "lapsed_renewal": "0.00",
+    "last_activity": "6/25/2026",
+    "lat": 40.691,
+    "lng": -73.9534,
+    "also_account": false,
+    "parent_account": "New York City Geographic District #16",
+    "city": "Brooklyn",
+    "zip": "11221",
+    "type": "Customer",
+    "enrollment": 5827,
+    "sis": "Other",
+    "website": "https://www.bklawtech.com",
+    "attendance_comms": "ParentSquare; Other",
+    "opps": [],
+    "_hasUploadedOpp": true
+  },
+  {
+    "name": "Brooklyn Collegiate: A College Board School",
+    "address": "2021 Bergen St.",
+    "state": "NY",
+    "csm": "James Kennedy",
+    "ae": "Ally McCready",
+    "segment": "Mid-Market",
+    "region": "Northeast",
+    "students": 8334,
+    "arr": 12150,
+    "arr_12mo_ago": "0.00",
+    "gdr": 0,
+    "ndr": 0,
+    "lapsed_renewal": "0.00",
+    "last_activity": "1/27/2026",
+    "lat": 40.6842,
+    "lng": -73.9339,
+    "also_account": false,
+    "parent_account": "New York City Geographic District #23",
+    "city": "Brooklyn",
+    "zip": "11233",
+    "type": "Customer",
+    "enrollment": 8334,
+    "sis": "Other",
+    "website": "http://www.brooklyncollegiate.net",
+    "attendance_comms": "Other",
+    "opps": [],
+    "_hasUploadedOpp": true
+  },
+  {
+    "name": "The Brooklyn Academy of Global Finance",
+    "address": "125 Stuyvesant Avenue",
+    "state": "NY",
+    "csm": "James Kennedy",
+    "ae": "Ally McCready",
+    "segment": "Mid-Market",
+    "region": "Northeast",
+    "students": 5827,
+    "arr": 6756,
+    "arr_12mo_ago": "0.00",
+    "gdr": 0,
+    "ndr": 0,
+    "lapsed_renewal": "0.00",
+    "last_activity": "1/7/2026",
+    "lat": 40.6866,
+    "lng": -73.9755,
+    "also_account": false,
+    "parent_account": "New York City Geographic District #16",
+    "city": "Brooklyn",
+    "zip": "11221",
+    "type": "Customer",
+    "enrollment": 5827,
+    "sis": "Other",
+    "website": "http://www.bkagf.org",
+    "attendance_comms": "ParentSquare; Other",
+    "opps": [],
+    "_hasUploadedOpp": true
+  },
+  {
+    "name": "Lower East Side Preparatory High School",
+    "address": "145 Stanton Street",
+    "state": "NY",
+    "csm": "James Kennedy",
+    "ae": "Ally McCready",
+    "segment": "Mid-Market",
+    "region": "Northeast",
+    "students": 9896,
+    "arr": 4907.6,
+    "arr_12mo_ago": "0.00",
+    "gdr": 0,
+    "ndr": 0,
+    "lapsed_renewal": "0.00",
+    "last_activity": "1/14/2027",
+    "lat": 40.7149,
+    "lng": -73.982,
+    "also_account": false,
+    "parent_account": "New York City Geographic District #1",
+    "city": "New York",
+    "zip": "10002",
+    "type": "Customer",
+    "enrollment": 9896,
+    "sis": "Other",
+    "attendance_comms": "ParentSquare",
+    "opps": [],
+    "_hasUploadedOpp": true
+  },
+  {
+    "name": "Edward Johnstone School",
+    "address": "165 South Brewster Road",
+    "state": "NJ",
+    "csm": "Deanna Berget",
+    "ae": "Ally McCready",
+    "segment": "Mid-Market",
+    "region": "",
+    "students": 10317,
+    "arr": 3567,
+    "arr_12mo_ago": "0.00",
+    "gdr": 0,
+    "ndr": 0,
+    "lapsed_renewal": "0.00",
+    "last_activity": "1/28/2026",
+    "lat": 40.5015,
+    "lng": -74.8541,
+    "also_account": false,
+    "parent_account": "Vineland Public Schools",
+    "city": "Vineland",
+    "zip": "08361",
+    "type": "Customer",
+    "enrollment": 10317,
+    "sis": "Genesis",
+    "attendance_comms": "Other",
+    "opps": [],
+    "_hasUploadedOpp": true
+  },
+  {
+    "name": "Juan Morel Campos Secondary School",
+    "address": "215 Heyward Street",
+    "state": "NY",
+    "csm": "James Kennedy",
+    "ae": "Ally McCready",
+    "segment": "",
+    "region": "",
+    "students": "",
+    "arr": 4975,
+    "arr_12mo_ago": "0.00",
+    "gdr": 0,
+    "ndr": 0,
+    "lapsed_renewal": "0.00",
+    "last_activity": "1/26/2027",
+    "lat": 40.7057,
+    "lng": -73.9398,
+    "also_account": false,
+    "parent_account": "New York City Geographic District #14",
+    "city": "Brooklyn",
+    "zip": "11206",
+    "type": "Customer",
+    "enrollment": 15196,
+    "website": "https://www.schools.nyc.gov/schools/K071",
+    "attendance_comms": "ParentSquare; Other",
+    "opps": [],
+    "_hasUploadedOpp": true
+  },
+  {
     "name": "Stamford Public Schools",
     "address": "Box 9310",
     "state": "CT",
@@ -24,7 +727,8 @@
     "math_curriculum": "Gold Star",
     "math_supplemental": "i-Ready; IXL",
     "attendance_comms": "PowerSchool; Remind",
-    "strategic_plan_url": "https://www.stamfordpublicschools.org/about-us/strategic-plan"
+    "strategic_plan_url": "https://www.stamfordpublicschools.org/about-us/strategic-plan",
+    "also_account": true
   },
   {
     "name": "Shenendehowa Central School District",
@@ -50,7 +754,8 @@
     "website": "shenet.org",
     "math_curriculum": "Program of Studies",
     "attendance_comms": "Infinite Campus",
-    "strategic_plan_url": "https://drive.google.com/file/d/1lThxXJkVKcUx3DdIIQJ7YBF6POo_f8cF/view?usp=sharing"
+    "strategic_plan_url": "https://drive.google.com/file/d/1lThxXJkVKcUx3DdIIQJ7YBF6POo_f8cF/view?usp=sharing",
+    "also_account": true
   },
   {
     "name": "Russellville City Schools",
@@ -68,7 +773,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "1/28/2026",
     "lat": 34.5076,
-    "lng": -87.7286
+    "lng": -87.7286,
+    "also_account": false
   },
   {
     "name": "Liberty Union High School District",
@@ -86,7 +792,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "11/26/2026",
     "lat": 37.9849,
-    "lng": -121.768
+    "lng": -121.768,
+    "also_account": false
   },
   {
     "name": "Acalanes Union High School District",
@@ -104,7 +811,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "2/5/2026",
     "lat": 37.9483,
-    "lng": -122.0607
+    "lng": -122.0607,
+    "also_account": false
   },
   {
     "name": "Alpha Schools / 2HR Learning, Inc",
@@ -122,7 +830,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "1/19/2027",
     "lat": 30.2292,
-    "lng": -97.761
+    "lng": -97.761,
+    "also_account": false
   },
   {
     "name": "John Jay School for Law",
@@ -140,7 +849,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "1/7/2026",
     "lat": 40.7372,
-    "lng": -73.9915
+    "lng": -73.9915,
+    "also_account": false
   },
   {
     "name": "Sunset Park High School",
@@ -158,7 +868,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "6/25/2026",
     "lat": 40.658,
-    "lng": -74.0037
+    "lng": -74.0037,
+    "also_account": false
   },
   {
     "name": "Granville County Public Schools",
@@ -176,7 +887,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "7/2/2026",
     "lat": 36.3107,
-    "lng": -78.591
+    "lng": -78.591,
+    "also_account": false
   },
   {
     "name": "Aviation Career & Technical Education High School",
@@ -194,7 +906,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "1/20/2027",
     "lat": 40.7518,
-    "lng": -73.9235
+    "lng": -73.9235,
+    "also_account": false
   },
   {
     "name": "Colorado Springs School District 11",
@@ -212,7 +925,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "12/21/2026",
     "lat": 38.8339,
-    "lng": -104.8214
+    "lng": -104.8214,
+    "also_account": false
   },
   {
     "name": "Thomas A. Edison Career and Technical High School",
@@ -230,7 +944,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "7/1/2026",
     "lat": 40.6792,
-    "lng": -73.8339
+    "lng": -73.8339,
+    "also_account": false
   },
   {
     "name": "Fontana Unified School District",
@@ -250,7 +965,8 @@
     "lat": 34.0897,
     "lng": -117.4494,
     "also_strategic": true,
-    "strategic_name": "Fontana Unified"
+    "strategic_name": "Fontana Unified",
+    "also_account": false
   },
   {
     "name": "Spring Creek Community School",
@@ -268,25 +984,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "1/13/2027",
     "lat": 40.6537,
-    "lng": -73.8813
-  },
-  {
-    "name": "Farmington Municipal Schools",
-    "address": "3401 E 30TH ST",
-    "state": "NM",
-    "csm": "Casey Prohaska",
-    "ae": "Sydney Smith",
-    "segment": "Mid-Market",
-    "region": "South-Central",
-    "students": "11120",
-    "arr": "323460.00",
-    "arr_12mo_ago": "171000.00",
-    "gdr": "100.00",
-    "ndr": "189.16",
-    "lapsed_renewal": "0.00",
-    "last_activity": "1/1/2027",
-    "lat": 36.7281,
-    "lng": -108.2187
+    "lng": -73.8813,
+    "also_account": false
   },
   {
     "name": "Hawkins County Schools",
@@ -304,25 +1003,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "7/2/2026",
     "lat": 36.4776,
-    "lng": -82.9671
-  },
-  {
-    "name": "Brooklyn High School for Law and Technology",
-    "address": "1396 Broadway",
-    "state": "NY",
-    "csm": "James Kennedy",
-    "ae": "Ally McCready",
-    "segment": "Mid-Market",
-    "region": "Northeast",
-    "students": "5827",
-    "arr": "10570.00",
-    "arr_12mo_ago": "5930.00",
-    "gdr": "100.00",
-    "ndr": "178.25",
-    "lapsed_renewal": "0.00",
-    "last_activity": "6/25/2026",
-    "lat": 40.691,
-    "lng": -73.9534
+    "lng": -82.9671,
+    "also_account": false
   },
   {
     "name": "Clara Barton High School",
@@ -340,7 +1022,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "1/6/2027",
     "lat": 40.6827,
-    "lng": -73.9606
+    "lng": -73.9606,
+    "also_account": false
   },
   {
     "name": "Charleston County School District",
@@ -360,7 +1043,8 @@
     "lat": 32.7765,
     "lng": -79.9311,
     "also_strategic": true,
-    "strategic_name": "Charleston County School District"
+    "strategic_name": "Charleston County School District",
+    "also_account": true
   },
   {
     "name": "Cass City Public Schools",
@@ -378,7 +1062,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "8/15/2025",
     "lat": 43.6011,
-    "lng": -83.1747
+    "lng": -83.1747,
+    "also_account": false
   },
   {
     "name": "Unity Center for Urban Technologies",
@@ -396,7 +1081,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "6/25/2026",
     "lat": 40.7451,
-    "lng": -73.9812
+    "lng": -73.9812,
+    "also_account": false
   },
   {
     "name": "Triton Regional School District",
@@ -414,25 +1100,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "1/28/2026",
     "lat": 42.8351,
-    "lng": -70.9371
-  },
-  {
-    "name": "Bushwick Leaders High School for Academic Excellence",
-    "address": "797 Bushwick Ave.",
-    "state": "NY",
-    "csm": "James Kennedy",
-    "ae": "Ally McCready",
-    "segment": "Mid-Market",
-    "region": "Northeast",
-    "students": "9633",
-    "arr": "9750.00",
-    "arr_12mo_ago": "6000.00",
-    "gdr": "100.00",
-    "ndr": "162.50",
-    "lapsed_renewal": "0.00",
-    "last_activity": "7/1/2026",
-    "lat": 40.6987,
-    "lng": -73.9277
+    "lng": -70.9371,
+    "also_account": false
   },
   {
     "name": "Belcourt 7",
@@ -450,7 +1119,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "8/6/2026",
     "lat": 48.8292,
-    "lng": -99.7435
+    "lng": -99.7435,
+    "also_account": false
   },
   {
     "name": "Manassas Park City Public Schools",
@@ -468,7 +1138,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "9/14/2026",
     "lat": 38.7712,
-    "lng": -77.443
+    "lng": -77.443,
+    "also_account": false
   },
   {
     "name": "Midwood High School",
@@ -486,7 +1157,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "8/11/2026",
     "lat": 40.6215,
-    "lng": -73.9478
+    "lng": -73.9478,
+    "also_account": false
   },
   {
     "name": "Cumberland County Public Schools",
@@ -504,7 +1176,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "8/7/2026",
     "lat": 37.4976,
-    "lng": -78.2491
+    "lng": -78.2491,
+    "also_account": true
   },
   {
     "name": "Williamsburg Preparatory School",
@@ -522,7 +1195,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "1/20/2027",
     "lat": 40.7166,
-    "lng": -73.9614
+    "lng": -73.9614,
+    "also_account": false
   },
   {
     "name": "Transit Tech CTE High School",
@@ -540,7 +1214,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "1/14/2027",
     "lat": 40.658,
-    "lng": -73.957
+    "lng": -73.957,
+    "also_account": false
   },
   {
     "name": "Brooklyn Lab School",
@@ -558,7 +1233,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "9/15/2026",
     "lat": 40.6866,
-    "lng": -73.9755
+    "lng": -73.9755,
+    "also_account": false
   },
   {
     "name": "Cobble Hill School of American Studies",
@@ -576,7 +1252,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "11/4/2026",
     "lat": 40.6877,
-    "lng": -73.9946
+    "lng": -73.9946,
+    "also_account": false
   },
   {
     "name": "A-Tech High School",
@@ -594,7 +1271,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "6/23/2026",
     "lat": 40.6866,
-    "lng": -73.9284
+    "lng": -73.9284,
+    "also_account": false
   },
   {
     "name": "Limestone County Schools",
@@ -612,25 +1290,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "1/15/2026",
     "lat": 34.8023,
-    "lng": -86.9441
-  },
-  {
-    "name": "Beaumont Unified School District",
-    "address": "350 W Brookside Ave, Beaumont, CA 92223",
-    "state": "CA",
-    "csm": "Casey Prohaska",
-    "ae": "Brad Halsey",
-    "segment": "Mid-Market",
-    "region": "West",
-    "students": "12121",
-    "arr": "134150.00",
-    "arr_12mo_ago": "108500.00",
-    "gdr": "100.00",
-    "ndr": "123.64",
-    "lapsed_renewal": "0.00",
-    "last_activity": "5/5/2026",
-    "lat": 33.9306,
-    "lng": -116.9756
+    "lng": -86.9441,
+    "also_account": false
   },
   {
     "name": "Franklin Delano Roosevelt High School",
@@ -648,7 +1309,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "1/28/2026",
     "lat": 40.581,
-    "lng": -73.968
+    "lng": -73.968,
+    "also_account": false
   },
   {
     "name": "Multicultural High School",
@@ -666,7 +1328,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "6/5/2026",
     "lat": 40.6866,
-    "lng": -73.9755
+    "lng": -73.9755,
+    "also_account": false
   },
   {
     "name": "Forest Hills High School",
@@ -684,7 +1347,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "8/18/2026",
     "lat": 40.726,
-    "lng": -73.8448
+    "lng": -73.8448,
+    "also_account": false
   },
   {
     "name": "East Williamsburg Scholars Academy",
@@ -702,7 +1366,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "9/12/2025",
     "lat": 40.7102,
-    "lng": -73.9356
+    "lng": -73.9356,
+    "also_account": false
   },
   {
     "name": "Templeton Academy",
@@ -720,7 +1385,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "10/8/2025",
     "lat": 38.9072,
-    "lng": -76.9952
+    "lng": -76.9952,
+    "also_account": false
   },
   {
     "name": "Hanover County Public Schools",
@@ -738,7 +1404,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "8/19/2026",
     "lat": 37.754,
-    "lng": -77.4718
+    "lng": -77.4718,
+    "also_account": false
   },
   {
     "name": "Camden's Promise Charter School",
@@ -756,7 +1423,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "9/11/2026",
     "lat": 39.9259,
-    "lng": -75.1107
+    "lng": -75.1107,
+    "also_account": false
   },
   {
     "name": "Cypress Hills Collegiate Preparatory School",
@@ -774,25 +1442,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "7/1/2026",
     "lat": 40.6795,
-    "lng": -73.8807
-  },
-  {
-    "name": "EBC High School for Public Service - Bushwick",
-    "address": "1155 DeKalb Avenue",
-    "state": "NY",
-    "csm": "James Kennedy",
-    "ae": "Ally McCready",
-    "segment": "Mid-Market",
-    "region": "Northeast",
-    "students": "9633",
-    "arr": "12960.00",
-    "arr_12mo_ago": "11460.00",
-    "gdr": "100.00",
-    "ndr": "113.09",
-    "lapsed_renewal": "0.00",
-    "last_activity": "7/1/2026",
-    "lat": 40.6987,
-    "lng": -73.9277
+    "lng": -73.8807,
+    "also_account": false
   },
   {
     "name": "Pickens County School District",
@@ -810,7 +1461,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "4/2/2026",
     "lat": 34.4634,
-    "lng": -84.4655
+    "lng": -84.4655,
+    "also_account": false
   },
   {
     "name": "James Madison High School",
@@ -828,7 +1480,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "12/29/2026",
     "lat": 40.609,
-    "lng": -73.9476
+    "lng": -73.9476,
+    "also_account": false
   },
   {
     "name": "School for Classics High School",
@@ -846,7 +1499,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "8/11/2026",
     "lat": 40.6866,
-    "lng": -73.9755
+    "lng": -73.9755,
+    "also_account": false
   },
   {
     "name": "FDNY - Captain Vernon A. Richards High School",
@@ -864,7 +1518,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "7/3/2026",
     "lat": 40.6765,
-    "lng": -73.8944
+    "lng": -73.8944,
+    "also_account": false
   },
   {
     "name": "Dawson County School District",
@@ -882,7 +1537,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "1/7/2026",
     "lat": 34.4283,
-    "lng": -84.1213
+    "lng": -84.1213,
+    "also_account": false
   },
   {
     "name": "Wilson County Schools",
@@ -900,7 +1556,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "6/8/2026",
     "lat": 35.7252,
-    "lng": -77.9132
+    "lng": -77.9132,
+    "also_account": true
   },
   {
     "name": "Brooklyn Studio Secondary School",
@@ -918,7 +1575,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "1/20/2026",
     "lat": 40.6892,
-    "lng": -73.9714
+    "lng": -73.9714,
+    "also_account": false
   },
   {
     "name": "Kern High School District",
@@ -938,7 +1596,8 @@
     "lat": 35.3733,
     "lng": -119.0187,
     "also_strategic": true,
-    "strategic_name": "Kern High"
+    "strategic_name": "Kern High",
+    "also_account": true
   },
   {
     "name": "The East New York Arts and Civics High School",
@@ -956,7 +1615,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "1/29/2026",
     "lat": 40.658,
-    "lng": -73.887
+    "lng": -73.887,
+    "also_account": false
   },
   {
     "name": "Newtown High School",
@@ -974,7 +1634,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "2/5/2026",
     "lat": 40.736,
-    "lng": -73.8692
+    "lng": -73.8692,
+    "also_account": false
   },
   {
     "name": "Monroe Central School Corporation",
@@ -992,25 +1653,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "2/2/2026",
     "lat": 40.1947,
-    "lng": -85.2672
-  },
-  {
-    "name": "Boys and Girls High School",
-    "address": "1700 Fulton Street",
-    "state": "NY",
-    "csm": "James Kennedy",
-    "ae": "Ally McCready",
-    "segment": "Mid-Market",
-    "region": "Northeast",
-    "students": "5827",
-    "arr": "9360.00",
-    "arr_12mo_ago": "9150.00",
-    "gdr": "100.00",
-    "ndr": "102.30",
-    "lapsed_renewal": "0.00",
-    "last_activity": "6/26/2026",
-    "lat": 40.6828,
-    "lng": -73.9348
+    "lng": -85.2672,
+    "also_account": false
   },
   {
     "name": "Hillside Public Schools",
@@ -1028,7 +1672,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "7/28/2026",
     "lat": 40.6959,
-    "lng": -74.2297
+    "lng": -74.2297,
+    "also_account": false
   },
   {
     "name": "Preparatory Academy for Writers",
@@ -1046,7 +1691,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "7/8/2026",
     "lat": 40.8134,
-    "lng": -73.9119
+    "lng": -73.9119,
+    "also_account": false
   },
   {
     "name": "Allendale Public Schools",
@@ -1064,7 +1710,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "1/30/2026",
     "lat": 42.9826,
-    "lng": -86.1795
+    "lng": -86.1795,
+    "also_account": false
   },
   {
     "name": "Northeast School Corporation",
@@ -1082,25 +1729,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "",
     "lat": 40.2547,
-    "lng": -84.94
-  },
-  {
-    "name": "Palm Springs Unified School District",
-    "address": "150 District Center Dr.",
-    "state": "CA",
-    "csm": "Casey Prohaska",
-    "ae": "Brad Halsey",
-    "segment": "Enterprise",
-    "region": "West",
-    "students": "20416",
-    "arr": "163333.00",
-    "arr_12mo_ago": "163333.00",
-    "gdr": "100.00",
-    "ndr": "100.00",
-    "lapsed_renewal": "0.00",
-    "last_activity": "1/30/2026",
-    "lat": 33.8303,
-    "lng": -116.5453
+    "lng": -84.94,
+    "also_account": false
   },
   {
     "name": "Porter Township School Corporation",
@@ -1118,7 +1748,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "6/14/2024",
     "lat": 41.312,
-    "lng": -87.0735
+    "lng": -87.0735,
+    "also_account": false
   },
   {
     "name": "Raton Public Schools",
@@ -1136,7 +1767,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "1/22/2027",
     "lat": 36.8975,
-    "lng": -104.4393
+    "lng": -104.4393,
+    "also_account": false
   },
   {
     "name": "Rolla Public Schools (Rolla 31)",
@@ -1154,25 +1786,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "12/15/2026",
     "lat": 37.9514,
-    "lng": -91.7712
-  },
-  {
-    "name": "San Jacinto Unified School District",
-    "address": "2045 South San Jacinto Ave.",
-    "state": "CA",
-    "csm": "Casey Prohaska",
-    "ae": "Brad Halsey",
-    "segment": "Mid-Market",
-    "region": "West",
-    "students": "10401",
-    "arr": "168291.00",
-    "arr_12mo_ago": "168291.00",
-    "gdr": "100.00",
-    "ndr": "100.00",
-    "lapsed_renewal": "0.00",
-    "last_activity": "5/28/2026",
-    "lat": 33.784,
-    "lng": -116.9587
+    "lng": -91.7712,
+    "also_account": false
   },
   {
     "name": "Shelby County Schools",
@@ -1190,7 +1805,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "1/30/2026",
     "lat": 33.1792,
-    "lng": -86.6074
+    "lng": -86.6074,
+    "also_account": false
   },
   {
     "name": "Federal Way Public Schools",
@@ -1208,7 +1824,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "1/18/2027",
     "lat": 47.3223,
-    "lng": -122.3126
+    "lng": -122.3126,
+    "also_account": false
   },
   {
     "name": "Frederick County Public Schools",
@@ -1228,7 +1845,8 @@
     "lat": 39.1687,
     "lng": -78.1633,
     "also_strategic": true,
-    "strategic_name": "Frederick County Public Schools"
+    "strategic_name": "Frederick County Public Schools",
+    "also_account": true
   },
   {
     "name": "Southern Valley Schools",
@@ -1246,7 +1864,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "12/3/2026",
     "lat": 40.4233,
-    "lng": -100.4141
+    "lng": -100.4141,
+    "also_account": false
   },
   {
     "name": "Stafford County Public Schools",
@@ -1264,7 +1883,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "1/25/2027",
     "lat": 38.422,
-    "lng": -77.4083
+    "lng": -77.4083,
+    "also_account": true
   },
   {
     "name": "Hays Consolidated Independent School District",
@@ -1282,7 +1902,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "12/4/2025",
     "lat": 29.9988,
-    "lng": -97.8775
+    "lng": -97.8775,
+    "also_account": false
   },
   {
     "name": "Valle Lindo School District (Valle Lindo Elementary School District)",
@@ -1300,7 +1921,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "1/15/2027",
     "lat": 34.07,
-    "lng": -118.04
+    "lng": -118.04,
+    "also_account": false
   },
   {
     "name": "Leon County Schools",
@@ -1318,7 +1940,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "7/9/2026",
     "lat": 30.4383,
-    "lng": -84.2807
+    "lng": -84.2807,
+    "also_account": true
   },
   {
     "name": "Instituto de Ciencias",
@@ -1336,7 +1959,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "12/12/2025",
     "lat": 20.6597,
-    "lng": -103.3496
+    "lng": -103.3496,
+    "also_account": false
   },
   {
     "name": "Natrona County School District 1",
@@ -1354,7 +1978,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "9/21/2026",
     "lat": 42.8501,
-    "lng": -106.3252
+    "lng": -106.3252,
+    "also_account": false
   },
   {
     "name": "Fulton County Schools",
@@ -1374,25 +1999,8 @@
     "lat": 33.7621,
     "lng": -84.3836,
     "also_strategic": true,
-    "strategic_name": "Fulton County Schools"
-  },
-  {
-    "name": "Teachers Preparatory High School",
-    "address": "226 Bristol Street",
-    "state": "NY",
-    "csm": "James Kennedy",
-    "ae": "Ally McCready",
-    "segment": "Mid-Market",
-    "region": "Northeast",
-    "students": "8334",
-    "arr": "5150.00",
-    "arr_12mo_ago": "5300.00",
-    "gdr": "97.17",
-    "ndr": "97.17",
-    "lapsed_renewal": "0.00",
-    "last_activity": "1/21/2026",
-    "lat": 40.6716,
-    "lng": -73.9246
+    "strategic_name": "Fulton County Schools",
+    "also_account": true
   },
   {
     "name": "De La Salle Collegiate",
@@ -1410,7 +2018,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "11/10/2025",
     "lat": 42.5312,
-    "lng": -82.9418
+    "lng": -82.9418,
+    "also_account": false
   },
   {
     "name": "Harding County School District 31-1",
@@ -1428,7 +2037,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "10/2/2025",
     "lat": 45.5841,
-    "lng": -103.546
+    "lng": -103.546,
+    "also_account": false
   },
   {
     "name": "Celina Independent School District",
@@ -1446,7 +2056,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "1/27/2026",
     "lat": 33.2948,
-    "lng": -96.7847
+    "lng": -96.7847,
+    "also_account": false
   },
   {
     "name": "Twin Valley School District",
@@ -1464,7 +2075,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "1/30/2026",
     "lat": 40.1889,
-    "lng": -75.8986
+    "lng": -75.8986,
+    "also_account": false
   },
   {
     "name": "Lincoln County School District #1",
@@ -1482,7 +2094,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "11/18/2025",
     "lat": 41.7924,
-    "lng": -110.5378
+    "lng": -110.5378,
+    "also_account": false
   },
   {
     "name": "St. Norbert School",
@@ -1500,7 +2113,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "11/10/2025",
     "lat": 41.7147,
-    "lng": -87.7916
+    "lng": -87.7916,
+    "also_account": false
   },
   {
     "name": "Progress High School for Professional Careers",
@@ -1518,7 +2132,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "7/6/2026",
     "lat": 40.6863,
-    "lng": -73.9746
+    "lng": -73.9746,
+    "also_account": false
   },
   {
     "name": "Pelham City Schools",
@@ -1536,7 +2151,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "11/5/2025",
     "lat": 33.2857,
-    "lng": -86.8091
+    "lng": -86.8091,
+    "also_account": false
   },
   {
     "name": "Bertie County Schools",
@@ -1554,7 +2170,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "1/27/2026",
     "lat": 36.0625,
-    "lng": -76.953
+    "lng": -76.953,
+    "also_account": false
   },
   {
     "name": "Juab School District",
@@ -1572,7 +2189,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "4/29/2026",
     "lat": 39.7127,
-    "lng": -111.7744
+    "lng": -111.7744,
+    "also_account": false
   },
   {
     "name": "Monterey Peninsula Unified School District",
@@ -1590,7 +2208,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "10/31/2025",
     "lat": 36.5952,
-    "lng": -121.8914
+    "lng": -121.8914,
+    "also_account": false
   },
   {
     "name": "Anderson School District 4",
@@ -1608,7 +2227,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "3/4/2026",
     "lat": 34.6246,
-    "lng": -82.4756
+    "lng": -82.4756,
+    "also_account": false
   },
   {
     "name": "Orange County Public Schools",
@@ -1628,7 +2248,8 @@
     "lat": 38.2459,
     "lng": -78.1108,
     "also_strategic": true,
-    "strategic_name": "Orange County Public Schools"
+    "strategic_name": "Orange County Public Schools",
+    "also_account": true
   },
   {
     "name": "Life Academy High School for Film and Music",
@@ -1646,7 +2267,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "1/21/2026",
     "lat": 40.6978,
-    "lng": -73.9335
+    "lng": -73.9335,
+    "also_account": false
   },
   {
     "name": "International School of Trieste",
@@ -1664,7 +2286,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "2/2/2026",
     "lat": 45.6495,
-    "lng": 13.7768
+    "lng": 13.7768,
+    "also_account": false
   },
   {
     "name": "The School District of Palm Beach County",
@@ -1684,7 +2307,8 @@
     "lat": 26.7153,
     "lng": -80.0534,
     "also_strategic": true,
-    "strategic_name": "The School District of Palm Beach County"
+    "strategic_name": "The School District of Palm Beach County",
+    "also_account": true
   },
   {
     "name": "Nettleton School District",
@@ -1702,7 +2326,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "1/28/2026",
     "lat": 35.8195,
-    "lng": -90.5557
+    "lng": -90.5557,
+    "also_account": false
   },
   {
     "name": "Alameda Unified School District",
@@ -1720,7 +2345,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "12/24/2026",
     "lat": 37.7652,
-    "lng": -122.2416
+    "lng": -122.2416,
+    "also_account": false
   },
   {
     "name": "Aleutians East Borough School District",
@@ -1738,7 +2364,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "12/11/2025",
     "lat": 61.1869,
-    "lng": -149.8885
+    "lng": -149.8885,
+    "also_account": false
   },
   {
     "name": "Allegany County Public Schools",
@@ -1756,7 +2383,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "1/16/2026",
     "lat": 39.6526,
-    "lng": -78.7625
+    "lng": -78.7625,
+    "also_account": false
   },
   {
     "name": "Alliance Collins Family College-Ready High District",
@@ -1774,7 +2402,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "1/30/2026",
     "lat": 33.9566,
-    "lng": -118.2567
+    "lng": -118.2567,
+    "also_account": false
   },
   {
     "name": "Lyon County School District",
@@ -1792,7 +2421,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "1/30/2026",
     "lat": 39.2353,
-    "lng": -119.2018
+    "lng": -119.2018,
+    "also_account": false
   },
   {
     "name": "Maple Valley Public School District #4",
@@ -1810,7 +2440,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "2/4/2026",
     "lat": 46.9232,
-    "lng": -97.6815
+    "lng": -97.6815,
+    "also_account": false
   },
   {
     "name": "Arlington School District 3",
@@ -1828,7 +2459,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "1/30/2026",
     "lat": 45.7237,
-    "lng": -120.1971
+    "lng": -120.1971,
+    "also_account": false
   },
   {
     "name": "Aztec Municipal Schools",
@@ -1846,7 +2478,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "12/8/2025",
     "lat": 36.8225,
-    "lng": -107.9929
+    "lng": -107.9929,
+    "also_account": false
   },
   {
     "name": "Big Horn County School District #1",
@@ -1864,7 +2497,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "1/22/2026",
     "lat": 44.38,
-    "lng": -108.0411
+    "lng": -108.0411,
+    "also_account": false
   },
   {
     "name": "Bloomfield School District (Bloomfield Schools)",
@@ -1882,7 +2516,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "12/24/2026",
     "lat": 36.7112,
-    "lng": -107.9848
+    "lng": -107.9848,
+    "also_account": false
   },
   {
     "name": "Boone County Schools",
@@ -1900,7 +2535,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "1/31/2026",
     "lat": 38.0491,
-    "lng": -81.7137
+    "lng": -81.7137,
+    "also_account": false
   },
   {
     "name": "Boston Public Schools",
@@ -1920,7 +2556,8 @@
     "lat": 42.3601,
     "lng": -71.0589,
     "also_strategic": true,
-    "strategic_name": "Boston"
+    "strategic_name": "Boston",
+    "also_account": true
   },
   {
     "name": "Niobrara County School District #1",
@@ -1938,7 +2575,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "10/21/2025",
     "lat": 42.7623,
-    "lng": -104.4521
+    "lng": -104.4521,
+    "also_account": false
   },
   {
     "name": "North Brookfield",
@@ -1956,7 +2594,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "1/28/2026",
     "lat": 42.2662,
-    "lng": -72.0827
+    "lng": -72.0827,
+    "also_account": false
   },
   {
     "name": "Calvert County Public Schools",
@@ -1974,7 +2613,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "6/4/2026",
     "lat": 38.5346,
-    "lng": -76.506
+    "lng": -76.506,
+    "also_account": false
   },
   {
     "name": "Cambridge Public Schools",
@@ -1992,7 +2632,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "7/16/2026",
     "lat": 42.3736,
-    "lng": -71.1097
+    "lng": -71.1097,
+    "also_account": false
   },
   {
     "name": "Okaloosa County School District",
@@ -2012,7 +2653,8 @@
     "lat": 30.5105,
     "lng": -86.4885,
     "also_strategic": true,
-    "strategic_name": "Okaloosa"
+    "strategic_name": "Okaloosa",
+    "also_account": true
   },
   {
     "name": "Old Forge School District",
@@ -2030,25 +2672,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "12/8/2025",
     "lat": 41.3709,
-    "lng": -75.7349
-  },
-  {
-    "name": "Ontario-Montclair School District",
-    "address": "950 West D St.",
-    "state": "CA",
-    "csm": "Casey Prohaska",
-    "ae": "Brad Halsey",
-    "segment": "Mid-Market",
-    "region": "West",
-    "students": "17944",
-    "arr": "49304.00",
-    "arr_12mo_ago": "0.00",
-    "gdr": "0.00",
-    "ndr": "0.00",
-    "lapsed_renewal": "0.00",
-    "last_activity": "1/25/2027",
-    "lat": 34.0633,
-    "lng": -117.6509
+    "lng": -75.7349,
+    "also_account": false
   },
   {
     "name": "Charlottesville City Schools",
@@ -2066,7 +2691,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "7/21/2026",
     "lat": 38.0293,
-    "lng": -78.4767
+    "lng": -78.4767,
+    "also_account": false
   },
   {
     "name": "Charter Institute at Erskine",
@@ -2084,7 +2710,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "1/27/2026",
     "lat": 34.0007,
-    "lng": -81.0348
+    "lng": -81.0348,
+    "also_account": false
   },
   {
     "name": "Cherokee County Schools",
@@ -2102,7 +2729,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "2/3/2026",
     "lat": 34.1754,
-    "lng": -85.6141
+    "lng": -85.6141,
+    "also_account": false
   },
   {
     "name": "Cincinnati Public Schools",
@@ -2122,7 +2750,8 @@
     "lat": 39.1295,
     "lng": -84.5133,
     "also_strategic": true,
-    "strategic_name": "Cincinnati Public Schools"
+    "strategic_name": "Cincinnati Public Schools",
+    "also_account": true
   },
   {
     "name": "School District of Pickens County",
@@ -2140,7 +2769,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "2/5/2026",
     "lat": 34.8835,
-    "lng": -82.7176
+    "lng": -82.7176,
+    "also_account": false
   },
   {
     "name": "Pinellas County Schools",
@@ -2160,7 +2790,8 @@
     "lat": 27.7706,
     "lng": -82.6793,
     "also_strategic": true,
-    "strategic_name": "Pinellas County Schools"
+    "strategic_name": "Pinellas County Schools",
+    "also_account": true
   },
   {
     "name": "Pojoaque Valley School District",
@@ -2178,7 +2809,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "12/25/2026",
     "lat": 35.8931,
-    "lng": -106.0235
+    "lng": -106.0235,
+    "also_account": false
   },
   {
     "name": "Princeton City Schools",
@@ -2196,7 +2828,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "12/18/2025",
     "lat": 39.2672,
-    "lng": -84.453
+    "lng": -84.453,
+    "also_account": false
   },
   {
     "name": "Pueblo School District 60",
@@ -2214,7 +2847,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "12/10/2026",
     "lat": 38.2545,
-    "lng": -104.6091
+    "lng": -104.6091,
+    "also_account": false
   },
   {
     "name": "Dayton Public Schools",
@@ -2232,7 +2866,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "12/15/2026",
     "lat": 39.7589,
-    "lng": -84.1916
+    "lng": -84.1916,
+    "also_account": true
   },
   {
     "name": "Dinuba Unified School District",
@@ -2250,7 +2885,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "12/16/2026",
     "lat": 36.543,
-    "lng": -119.3871
+    "lng": -119.3871,
+    "also_account": false
   },
   {
     "name": "Dunkirk City School District",
@@ -2268,7 +2904,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "7/1/2026",
     "lat": 42.4834,
-    "lng": -79.334
+    "lng": -79.334,
+    "also_account": true
   },
   {
     "name": "Rockdale County Public Schools",
@@ -2286,7 +2923,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "1/28/2026",
     "lat": 33.6551,
-    "lng": -84.0166
+    "lng": -84.0166,
+    "also_account": false
   },
   {
     "name": "Rogers Public Schools",
@@ -2304,7 +2942,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "1/28/2026",
     "lat": 36.3321,
-    "lng": -94.1185
+    "lng": -94.1185,
+    "also_account": false
   },
   {
     "name": "E.L. Haynes Public Charter School",
@@ -2322,25 +2961,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "1/15/2026",
     "lat": 38.9421,
-    "lng": -77.0218
-  },
-  {
-    "name": "Roswell Independent Schools",
-    "address": "300 N. KENTUCKY",
-    "state": "NM",
-    "csm": "Casey Prohaska",
-    "ae": "Sydney Smith",
-    "segment": "Mid-Market",
-    "region": "South-Central",
-    "students": "9386",
-    "arr": "9260.00",
-    "arr_12mo_ago": "0.00",
-    "gdr": "0.00",
-    "ndr": "0.00",
-    "lapsed_renewal": "0.00",
-    "last_activity": "2/2/2026",
-    "lat": 33.3943,
-    "lng": -104.523
+    "lng": -77.0218,
+    "also_account": false
   },
   {
     "name": "Rowland Unified School District",
@@ -2358,7 +2980,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "1/30/2026",
     "lat": 33.9904,
-    "lng": -117.8931
+    "lng": -117.8931,
+    "also_account": false
   },
   {
     "name": "Russell County Public Schools",
@@ -2376,7 +2999,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "2/13/2026",
     "lat": 36.9458,
-    "lng": -82.0953
+    "lng": -82.0953,
+    "also_account": false
   },
   {
     "name": "San Francisco Unified School District",
@@ -2396,7 +3020,8 @@
     "lat": 37.7749,
     "lng": -122.4194,
     "also_strategic": true,
-    "strategic_name": "San Francisco Unified"
+    "strategic_name": "San Francisco Unified",
+    "also_account": false
   },
   {
     "name": "El Dorado Union High School District",
@@ -2414,25 +3039,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "1/15/2027",
     "lat": 38.7296,
-    "lng": -120.7984
-  },
-  {
-    "name": "Santa Fe Public Schools",
-    "address": "610 ALTA VISTA ST.",
-    "state": "NM",
-    "csm": "Casey Prohaska",
-    "ae": "Sydney Smith",
-    "segment": "Mid-Market",
-    "region": "South-Central",
-    "students": "11490",
-    "arr": "22475.00",
-    "arr_12mo_ago": "0.00",
-    "gdr": "0.00",
-    "ndr": "0.00",
-    "lapsed_renewal": "0.00",
-    "last_activity": "2/4/2026",
-    "lat": 35.687,
-    "lng": -105.9378
+    "lng": -120.7984,
+    "also_account": false
   },
   {
     "name": "School District No. 1 in the City and County of Denver and State of CO",
@@ -2452,25 +3060,8 @@
     "lat": 39.7392,
     "lng": -104.9903,
     "also_strategic": true,
-    "strategic_name": "School District No. 1 In The County Of Denver And State Of C"
-  },
-  {
-    "name": "Escondido Union High School District",
-    "address": "302 North Midway Dr.",
-    "state": "CA",
-    "csm": "Casey Prohaska",
-    "ae": "Brad Halsey",
-    "segment": "Mid-Market",
-    "region": "West",
-    "students": "6544",
-    "arr": "76655.00",
-    "arr_12mo_ago": "0.00",
-    "gdr": "0.00",
-    "ndr": "0.00",
-    "lapsed_renewal": "0.00",
-    "last_activity": "1/4/2027",
-    "lat": 33.1192,
-    "lng": -117.0864
+    "strategic_name": "School District No. 1 In The County Of Denver And State Of C",
+    "also_account": false
   },
   {
     "name": "Española Public Schools",
@@ -2488,7 +3079,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "1/26/2027",
     "lat": 36.0042,
-    "lng": -106.0648
+    "lng": -106.0648,
+    "also_account": false
   },
   {
     "name": "Sheridan County School District #3",
@@ -2506,7 +3098,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "5/7/2025",
     "lat": 44.6246,
-    "lng": -106.8636
+    "lng": -106.8636,
+    "also_account": false
   },
   {
     "name": "Fall River Public Schools",
@@ -2524,7 +3117,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "1/29/2026",
     "lat": 41.7015,
-    "lng": -71.155
+    "lng": -71.155,
+    "also_account": false
   },
   {
     "name": "Florence City Schools",
@@ -2542,7 +3136,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "3/6/2026",
     "lat": 34.7998,
-    "lng": -87.6772
+    "lng": -87.6772,
+    "also_account": false
   },
   {
     "name": "Fremont County School District #14",
@@ -2560,7 +3155,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "8/29/2025",
     "lat": 43.0096,
-    "lng": -108.379
+    "lng": -108.379,
+    "also_account": false
   },
   {
     "name": "Fremont County School District #38",
@@ -2578,7 +3174,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "8/12/2026",
     "lat": 42.8614,
-    "lng": -108.7307
+    "lng": -108.7307,
+    "also_account": false
   },
   {
     "name": "Springfield Public Schools",
@@ -2596,7 +3193,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "2/4/2026",
     "lat": 42.1015,
-    "lng": -72.5898
+    "lng": -72.5898,
+    "also_account": true
   },
   {
     "name": "St. Cloud Public School District",
@@ -2614,7 +3212,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "1/22/2026",
     "lat": 45.5616,
-    "lng": -94.1636
+    "lng": -94.1636,
+    "also_account": false
   },
   {
     "name": "Glascock County School District",
@@ -2632,7 +3231,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "11/12/2025",
     "lat": 33.2266,
-    "lng": -82.611
+    "lng": -82.611,
+    "also_account": false
   },
   {
     "name": "Sublette County School District #9",
@@ -2650,7 +3250,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "10/20/2025",
     "lat": 42.8691,
-    "lng": -109.8618
+    "lng": -109.8618,
+    "also_account": false
   },
   {
     "name": "Grants Cibola County Schools",
@@ -2668,7 +3269,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "2/4/2026",
     "lat": 35.1464,
-    "lng": -107.8519
+    "lng": -107.8519,
+    "also_account": false
   },
   {
     "name": "Gravette School District",
@@ -2686,7 +3288,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "1/27/2026",
     "lat": 36.422,
-    "lng": -94.4528
+    "lng": -94.4528,
+    "also_account": false
   },
   {
     "name": "Greene County Schools",
@@ -2704,7 +3307,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "2/18/2026",
     "lat": 36.1627,
-    "lng": -82.8032
+    "lng": -82.8032,
+    "also_account": false
   },
   {
     "name": "Thomas County Schools",
@@ -2722,7 +3326,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "1/28/2026",
     "lat": 30.8368,
-    "lng": -83.9779
+    "lng": -83.9779,
+    "also_account": false
   },
   {
     "name": "Valdosta City Schools",
@@ -2740,25 +3345,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "2/5/2026",
     "lat": 30.8327,
-    "lng": -83.2785
-  },
-  {
-    "name": "Vineland Public Schools",
-    "address": "61 W Landis Ave",
-    "state": "NJ",
-    "csm": "Deanna Berget",
-    "ae": "Ally McCready",
-    "segment": "Mid-Market",
-    "region": "Northeast",
-    "students": "10317",
-    "arr": "52280.70",
-    "arr_12mo_ago": "0.00",
-    "gdr": "0.00",
-    "ndr": "0.00",
-    "lapsed_renewal": "0.00",
-    "last_activity": "8/6/2026",
-    "lat": 39.4863,
-    "lng": -75.026
+    "lng": -83.2785,
+    "also_account": false
   },
   {
     "name": "Waco Independent School District",
@@ -2776,7 +3364,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "12/1/2026",
     "lat": 31.5493,
-    "lng": -97.1467
+    "lng": -97.1467,
+    "also_account": false
   },
   {
     "name": "Washington Local Schools",
@@ -2794,7 +3383,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "12/9/2026",
     "lat": 41.6926,
-    "lng": -83.6267
+    "lng": -83.6267,
+    "also_account": false
   },
   {
     "name": "Kalamazoo Public Schools",
@@ -2812,7 +3402,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "1/26/2026",
     "lat": 42.2917,
-    "lng": -85.5872
+    "lng": -85.5872,
+    "also_account": false
   },
   {
     "name": "SAU #65 Kearsarge",
@@ -2830,7 +3421,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "2/6/2026",
     "lat": 43.4273,
-    "lng": -71.9183
+    "lng": -71.9183,
+    "also_account": false
   },
   {
     "name": "Wichita Public Schools",
@@ -2850,7 +3442,8 @@
     "lat": 37.6872,
     "lng": -97.3301,
     "also_strategic": true,
-    "strategic_name": "Wichita"
+    "strategic_name": "Wichita",
+    "also_account": true
   },
   {
     "name": "Winton Woods City School District",
@@ -2868,7 +3461,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "4/7/2025",
     "lat": 39.223,
-    "lng": -84.4345
+    "lng": -84.4345,
+    "also_account": false
   },
   {
     "name": "Wood County Schools",
@@ -2886,7 +3480,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "7/8/2026",
     "lat": 39.2654,
-    "lng": -81.5615
+    "lng": -81.5615,
+    "also_account": false
   },
   {
     "name": "Zuni Public School District",
@@ -2904,7 +3499,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "1/13/2026",
     "lat": 35.0695,
-    "lng": -108.8512
+    "lng": -108.8512,
+    "also_account": false
   },
   {
     "name": "Lamad Academy Charter School",
@@ -2922,7 +3518,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "7/15/2026",
     "lat": 40.6735,
-    "lng": -73.9381
+    "lng": -73.9381,
+    "also_account": false
   },
   {
     "name": "The School District of Lee County",
@@ -2942,7 +3539,8 @@
     "lat": 26.6195,
     "lng": -81.8303,
     "also_strategic": true,
-    "strategic_name": "The School District of Lee County"
+    "strategic_name": "The School District of Lee County",
+    "also_account": true
   },
   {
     "name": "Academy of Finance and Enterprise",
@@ -2960,7 +3558,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "7/16/2026",
     "lat": 40.7505,
-    "lng": -73.9393
+    "lng": -73.9393,
+    "also_account": false
   },
   {
     "name": "William Cullen Bryant High School",
@@ -2978,7 +3577,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "1/4/2027",
     "lat": 40.756,
-    "lng": -73.9239
+    "lng": -73.9239,
+    "also_account": false
   },
   {
     "name": "John Dewey High School",
@@ -2996,7 +3596,8 @@
     "lapsed_renewal": "5450.00",
     "last_activity": "7/1/2026",
     "lat": 40.5892,
-    "lng": -73.978
+    "lng": -73.978,
+    "also_account": false
   },
   {
     "name": "High School of Applied Communication",
@@ -3014,7 +3615,8 @@
     "lapsed_renewal": "14000.00",
     "last_activity": "7/10/2026",
     "lat": 40.6866,
-    "lng": -73.9284
+    "lng": -73.9284,
+    "also_account": false
   },
   {
     "name": "Gregorio Luperon High School for Science and Mathematics",
@@ -3032,7 +3634,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "3/2/2026",
     "lat": 40.851,
-    "lng": -73.935
+    "lng": -73.935,
+    "also_account": false
   },
   {
     "name": "Union Square Academy for Health Sciences",
@@ -3050,7 +3653,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "9/18/2025",
     "lat": 40.7349,
-    "lng": -73.9888
+    "lng": -73.9888,
+    "also_account": false
   },
   {
     "name": "High School for Climate Justice",
@@ -3068,7 +3672,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "1/29/2026",
     "lat": 40.6866,
-    "lng": -73.9755
+    "lng": -73.9755,
+    "also_account": false
   },
   {
     "name": "Townsend Harris High School",
@@ -3086,7 +3691,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "7/8/2026",
     "lat": 40.7369,
-    "lng": -73.8211
+    "lng": -73.8211,
+    "also_account": false
   },
   {
     "name": "Brooklyn Community Arts and Media High School",
@@ -3104,7 +3710,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "3/5/2026",
     "lat": 40.6953,
-    "lng": -73.9285
+    "lng": -73.9285,
+    "also_account": false
   },
   {
     "name": "Science Skills Center High School for Science, Technology and the Creative Arts",
@@ -3122,7 +3729,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "1/14/2026",
     "lat": 40.658,
-    "lng": -73.957
+    "lng": -73.957,
+    "also_account": false
   },
   {
     "name": "High School for Enterprise, Business and Technology",
@@ -3140,7 +3748,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "11/18/2025",
     "lat": 40.6952,
-    "lng": -73.9237
+    "lng": -73.9237,
+    "also_account": false
   },
   {
     "name": "Brooklyn Preparatory High School",
@@ -3158,7 +3767,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "1/29/2026",
     "lat": 40.69,
-    "lng": -73.9534
+    "lng": -73.9534,
+    "also_account": false
   },
   {
     "name": "Williamsburg High School of Arts and Technology",
@@ -3176,25 +3786,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "9/12/2025",
     "lat": 40.7102,
-    "lng": -73.953
-  },
-  {
-    "name": "Academy for Excellence in Leadership",
-    "address": "400 Irving Avenue",
-    "state": "NY",
-    "csm": "James Kennedy",
-    "ae": "Ally McCready",
-    "segment": "Mid-Market",
-    "region": "Northeast",
-    "students": "9633",
-    "arr": "7883.80",
-    "arr_12mo_ago": "0.00",
-    "gdr": "0.00",
-    "ndr": "0.00",
-    "lapsed_renewal": "0.00",
-    "last_activity": "12/23/2025",
-    "lat": 40.6715,
-    "lng": -73.908
+    "lng": -73.953,
+    "also_account": false
   },
   {
     "name": "Brooklyn Institute for Liberal Arts",
@@ -3212,7 +3805,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "12/16/2025",
     "lat": 40.6863,
-    "lng": -73.9746
+    "lng": -73.9746,
+    "also_account": false
   },
   {
     "name": "Academy for College Preparation and Career Exploration",
@@ -3230,7 +3824,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "7/20/2026",
     "lat": 40.8265,
-    "lng": -73.8998
+    "lng": -73.8998,
+    "also_account": false
   },
   {
     "name": "Cultural Academy for the Arts and Sciences",
@@ -3248,7 +3843,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "12/28/2026",
     "lat": 40.8358,
-    "lng": -73.8502
+    "lng": -73.8502,
+    "also_account": false
   },
   {
     "name": "Robert F. Kennedy Community High School",
@@ -3266,7 +3862,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "12/24/2026",
     "lat": 40.7505,
-    "lng": -73.9393
+    "lng": -73.9393,
+    "also_account": false
   },
   {
     "name": "Grover Cleveland High School",
@@ -3284,7 +3881,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "6/20/2025",
     "lat": 40.724,
-    "lng": -73.863
+    "lng": -73.863,
+    "also_account": false
   },
   {
     "name": "Long Island City High School",
@@ -3302,7 +3900,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "1/12/2027",
     "lat": 40.7505,
-    "lng": -73.9393
+    "lng": -73.9393,
+    "also_account": false
   },
   {
     "name": "Herbert H. Lehman High School",
@@ -3320,7 +3919,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "7/17/2026",
     "lat": 40.8559,
-    "lng": -73.8643
+    "lng": -73.8643,
+    "also_account": false
   },
   {
     "name": "Maspeth High School",
@@ -3338,7 +3938,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "12/21/2026",
     "lat": 40.7252,
-    "lng": -73.8919
+    "lng": -73.8919,
+    "also_account": false
   },
   {
     "name": "State Charter School Institute",
@@ -3356,7 +3957,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "1/21/2026",
     "lat": 39.7472,
-    "lng": -104.9896
+    "lng": -104.9896,
+    "also_account": false
   },
   {
     "name": "Queens School of Inquiry",
@@ -3374,7 +3976,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "9/16/2025",
     "lat": 40.7505,
-    "lng": -73.9393
+    "lng": -73.9393,
+    "also_account": false
   },
   {
     "name": "Northwell School of Health Sciences",
@@ -3392,7 +3995,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "11/18/2025",
     "lat": 40.7677,
-    "lng": -73.8131
+    "lng": -73.8131,
+    "also_account": false
   },
   {
     "name": "East New York Family Academy",
@@ -3410,7 +4014,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "12/17/2026",
     "lat": 40.658,
-    "lng": -73.887
+    "lng": -73.887,
+    "also_account": false
   },
   {
     "name": "The Urban Assembly School for Collaborative Healthcare",
@@ -3428,7 +4033,8 @@
     "lapsed_renewal": "5900.00",
     "last_activity": "1/14/2026",
     "lat": 40.8358,
-    "lng": -73.8502
+    "lng": -73.8502,
+    "also_account": false
   },
   {
     "name": "City Polytechnic High School",
@@ -3446,7 +4052,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "2/1/2026",
     "lat": 40.6866,
-    "lng": -73.9284
+    "lng": -73.9284,
+    "also_account": false
   },
   {
     "name": "Business Technology Early College High School",
@@ -3464,7 +4071,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "12/22/2025",
     "lat": 40.7505,
-    "lng": -73.9393
+    "lng": -73.9393,
+    "also_account": false
   },
   {
     "name": "Archdiocese of Cincinnati",
@@ -3482,7 +4090,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "1/9/2026",
     "lat": 39.1017,
-    "lng": -84.512
+    "lng": -84.512,
+    "also_account": false
   },
   {
     "name": "Urban Assembly Maker Academy",
@@ -3500,7 +4109,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "7/8/2026",
     "lat": 40.813,
-    "lng": -73.9279
+    "lng": -73.9279,
+    "also_account": false
   },
   {
     "name": "Odyssey Online Learning",
@@ -3518,43 +4128,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "12/16/2025",
     "lat": 33.8361,
-    "lng": -81.1637
-  },
-  {
-    "name": "Academy of Urban Planning and Engineering",
-    "address": "",
-    "state": "NY",
-    "csm": "James Kennedy",
-    "ae": "Ally McCready",
-    "segment": "Mid-Market",
-    "region": "Northeast",
-    "students": "9633",
-    "arr": "7249.80",
-    "arr_12mo_ago": "0.00",
-    "gdr": "0.00",
-    "ndr": "0.00",
-    "lapsed_renewal": "0.00",
-    "last_activity": "1/5/2027",
-    "lat": 40.658,
-    "lng": -73.887
-  },
-  {
-    "name": "Nelson Mandela School for Social Justice",
-    "address": "1700 Fulton Street",
-    "state": "NY",
-    "csm": "James Kennedy",
-    "ae": "Ally McCready",
-    "segment": "Mid-Market",
-    "region": "Northeast",
-    "students": "5827",
-    "arr": "4520.00",
-    "arr_12mo_ago": "0.00",
-    "gdr": "0.00",
-    "ndr": "0.00",
-    "lapsed_renewal": "0.00",
-    "last_activity": "1/14/2027",
-    "lat": 40.695,
-    "lng": -73.954
+    "lng": -81.1637,
+    "also_account": false
   },
   {
     "name": "Performing Arts and Technology High School",
@@ -3572,7 +4147,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "2/18/2026",
     "lat": 40.6955,
-    "lng": -73.9293
+    "lng": -73.9293,
+    "also_account": false
   },
   {
     "name": "Cyberarts Studio Academy",
@@ -3590,25 +4166,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "12/19/2025",
     "lat": 40.687,
-    "lng": -73.975
-  },
-  {
-    "name": "Brooklyn Collegiate: A College Board School",
-    "address": "2021 Bergen St.",
-    "state": "NY",
-    "csm": "James Kennedy",
-    "ae": "Ally McCready",
-    "segment": "Mid-Market",
-    "region": "Northeast",
-    "students": "8334",
-    "arr": "12150.00",
-    "arr_12mo_ago": "0.00",
-    "gdr": "0.00",
-    "ndr": "0.00",
-    "lapsed_renewal": "0.00",
-    "last_activity": "1/27/2026",
-    "lat": 40.6842,
-    "lng": -73.9339
+    "lng": -73.975,
+    "also_account": false
   },
   {
     "name": "W. H. Maxwell Career and Technical Education High School",
@@ -3626,7 +4185,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "7/14/2026",
     "lat": 40.6866,
-    "lng": -73.9284
+    "lng": -73.9284,
+    "also_account": false
   },
   {
     "name": "Antonia Pantoja Preparatory Academy",
@@ -3644,7 +4204,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "9/11/2026",
     "lat": 40.82,
-    "lng": -73.9086
+    "lng": -73.9086,
+    "also_account": false
   },
   {
     "name": "Gotham Collaborative High School",
@@ -3662,7 +4223,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "1/15/2026",
     "lat": 40.7451,
-    "lng": -73.9812
+    "lng": -73.9812,
+    "also_account": false
   },
   {
     "name": "Bronxwood Preparatory Academy",
@@ -3680,7 +4242,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "1/27/2026",
     "lat": 40.875,
-    "lng": -73.8631
+    "lng": -73.8631,
+    "also_account": false
   },
   {
     "name": "Longwood Preparatory Academy",
@@ -3698,7 +4261,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "1/27/2026",
     "lat": 40.8265,
-    "lng": -73.8998
+    "lng": -73.8998,
+    "also_account": false
   },
   {
     "name": "Western Harnett High School",
@@ -3716,25 +4280,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "1/22/2026",
     "lat": 35.362,
-    "lng": -78.944
-  },
-  {
-    "name": "The Brooklyn Academy of Global Finance",
-    "address": "125 Stuyvesant Avenue",
-    "state": "NY",
-    "csm": "James Kennedy",
-    "ae": "Ally McCready",
-    "segment": "Mid-Market",
-    "region": "Northeast",
-    "students": "5827",
-    "arr": "6756.00",
-    "arr_12mo_ago": "0.00",
-    "gdr": "0.00",
-    "ndr": "0.00",
-    "lapsed_renewal": "0.00",
-    "last_activity": "1/7/2026",
-    "lat": 40.6866,
-    "lng": -73.9755
+    "lng": -78.944,
+    "also_account": false
   },
   {
     "name": "Harold O. Levy School 52",
@@ -3752,7 +4299,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "12/19/2025",
     "lat": 40.6453,
-    "lng": -73.8867
+    "lng": -73.8867,
+    "also_account": false
   },
   {
     "name": "Creators Academy",
@@ -3770,7 +4318,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "7/9/2026",
     "lat": 40.668,
-    "lng": -73.8895
+    "lng": -73.8895,
+    "also_account": false
   },
   {
     "name": "High School for Teaching and the Professions",
@@ -3788,7 +4337,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "2/6/2026",
     "lat": 40.6866,
-    "lng": -73.9755
+    "lng": -73.9755,
+    "also_account": false
   },
   {
     "name": "Fordham Leadership Academy",
@@ -3806,7 +4356,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "5/22/2025",
     "lat": 40.861,
-    "lng": -73.8908
+    "lng": -73.8908,
+    "also_account": false
   },
   {
     "name": "The Magnet School for Multimedia, Technology, and Urban Planning",
@@ -3824,25 +4375,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "1/28/2027",
     "lat": 40.7057,
-    "lng": -73.9398
-  },
-  {
-    "name": "Frederick Douglass Academy VII High School",
-    "address": "226 Bristol Street",
-    "state": "NY",
-    "csm": "James Kennedy",
-    "ae": "Ally McCready",
-    "segment": "Mid-Market",
-    "region": "Northeast",
-    "students": "8334",
-    "arr": "1507.50",
-    "arr_12mo_ago": "0.00",
-    "gdr": "0.00",
-    "ndr": "0.00",
-    "lapsed_renewal": "0.00",
-    "last_activity": "10/31/2025",
-    "lat": 40.6754,
-    "lng": -73.9071
+    "lng": -73.9398,
+    "also_account": false
   },
   {
     "name": "Mater Lakes Academy",
@@ -3860,7 +4394,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "9/11/2025",
     "lat": 25.896,
-    "lng": -80.3439
+    "lng": -80.3439,
+    "also_account": false
   },
   {
     "name": "Frederick Douglass Academy III Secondary School",
@@ -3878,7 +4413,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "1/19/2027",
     "lat": 40.8243,
-    "lng": -73.948
+    "lng": -73.948,
+    "also_account": false
   },
   {
     "name": "Atlantic Community High School",
@@ -3896,7 +4432,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "1/29/2026",
     "lat": 26.4615,
-    "lng": -80.0728
+    "lng": -80.0728,
+    "also_account": false
   },
   {
     "name": "Boca Raton Community High School",
@@ -3914,7 +4451,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "12/18/2025",
     "lat": 26.3683,
-    "lng": -80.127
+    "lng": -80.127,
+    "also_account": false
   },
   {
     "name": "Santaluces High School",
@@ -3932,7 +4470,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "1/14/2026",
     "lat": 26.488,
-    "lng": -80.1125
+    "lng": -80.1125,
+    "also_account": false
   },
   {
     "name": "Wellington Community High School",
@@ -3950,7 +4489,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "1/28/2026",
     "lat": 26.6586,
-    "lng": -80.2302
+    "lng": -80.2302,
+    "also_account": false
   },
   {
     "name": "Olympic Heights Community High School",
@@ -3968,7 +4508,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "1/7/2026",
     "lat": 26.3541,
-    "lng": -80.1834
+    "lng": -80.1834,
+    "also_account": false
   },
   {
     "name": "Boynton Beach Community High School",
@@ -3986,7 +4527,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "1/13/2026",
     "lat": 26.5318,
-    "lng": -80.0736
+    "lng": -80.0736,
+    "also_account": false
   },
   {
     "name": "RISE",
@@ -4004,7 +4546,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "2/13/2026",
     "lat": 28.0394,
-    "lng": -80.6239
+    "lng": -80.6239,
+    "also_account": false
   },
   {
     "name": "Park Vista Community High School",
@@ -4022,7 +4565,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "1/28/2026",
     "lat": 26.432,
-    "lng": -80.1563
+    "lng": -80.1563,
+    "also_account": false
   },
   {
     "name": "West Boca Raton High School",
@@ -4040,7 +4584,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "9/17/2025",
     "lat": 26.36,
-    "lng": -80.1975
+    "lng": -80.1975,
+    "also_account": false
   },
   {
     "name": "Daniel McLaughlin Therrell High School",
@@ -4058,7 +4603,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "10/1/2025",
     "lat": 33.6978,
-    "lng": -84.4332
+    "lng": -84.4332,
+    "also_account": false
   },
   {
     "name": "Academy Public Charter School",
@@ -4076,7 +4622,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "1/28/2026",
     "lat": 43.5845,
-    "lng": -116.3631
+    "lng": -116.3631,
+    "also_account": false
   },
   {
     "name": "South Valley Academy",
@@ -4094,7 +4641,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "10/6/2025",
     "lat": 35.0108,
-    "lng": -106.6758
+    "lng": -106.6758,
+    "also_account": false
   },
   {
     "name": "Archer Academy of Accelerated Learning",
@@ -4112,7 +4660,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "12/18/2025",
     "lat": 35.0844,
-    "lng": -106.6504
+    "lng": -106.6504,
+    "also_account": false
   },
   {
     "name": "Westwood Middle School",
@@ -4130,25 +4679,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "1/27/2026",
     "lat": 38.416,
-    "lng": -77.414
-  },
-  {
-    "name": "Lower East Side Preparatory High School",
-    "address": "145 Stanton Street",
-    "state": "NY",
-    "csm": "James Kennedy",
-    "ae": "Ally McCready",
-    "segment": "Mid-Market",
-    "region": "Northeast",
-    "students": "9896",
-    "arr": "4907.60",
-    "arr_12mo_ago": "0.00",
-    "gdr": "0.00",
-    "ndr": "0.00",
-    "lapsed_renewal": "0.00",
-    "last_activity": "1/14/2027",
-    "lat": 40.7149,
-    "lng": -73.982
+    "lng": -77.414,
+    "also_account": false
   },
   {
     "name": "Jacqueline Kennedy Onassis High School",
@@ -4166,7 +4698,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "1/12/2027",
     "lat": 40.7642,
-    "lng": -73.9669
+    "lng": -73.9669,
+    "also_account": false
   },
   {
     "name": "Harvey Milk High School",
@@ -4184,7 +4717,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "1/30/2026",
     "lat": 40.7406,
-    "lng": -74.0025
+    "lng": -74.0025,
+    "also_account": false
   },
   {
     "name": "Jamaica Gateway to the Sciences",
@@ -4202,7 +4736,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "1/20/2026",
     "lat": 40.7048,
-    "lng": -73.7944
+    "lng": -73.7944,
+    "also_account": false
   },
   {
     "name": "NYC Museum School",
@@ -4220,7 +4755,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "2/2/2026",
     "lat": 40.7451,
-    "lng": -73.9812
+    "lng": -73.9812,
+    "also_account": false
   },
   {
     "name": "VIRTUAL INNOVATOR'S ACADEMY",
@@ -4238,7 +4774,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "2/9/2026",
     "lat": 33.749,
-    "lng": -84.388
+    "lng": -84.388,
+    "also_account": false
   },
   {
     "name": "New Directions Secondary School",
@@ -4256,7 +4793,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "11/25/2025",
     "lat": 40.8243,
-    "lng": -73.948
+    "lng": -73.948,
+    "also_account": false
   },
   {
     "name": "Gates Foundation",
@@ -4274,7 +4812,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "",
     "lat": 47.627,
-    "lng": -122.3466
+    "lng": -122.3466,
+    "also_account": false
   },
   {
     "name": "University Prep Schools",
@@ -4292,25 +4831,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "2/19/2026",
     "lat": 42.3808,
-    "lng": -83.0886
-  },
-  {
-    "name": "Edward Johnstone School",
-    "address": "165 South Brewster Road",
-    "state": "NJ",
-    "csm": "Deanna Berget",
-    "ae": "Ally McCready",
-    "segment": "Mid-Market",
-    "region": "",
-    "students": "10317",
-    "arr": "3567.00",
-    "arr_12mo_ago": "0.00",
-    "gdr": "0.00",
-    "ndr": "0.00",
-    "lapsed_renewal": "0.00",
-    "last_activity": "1/28/2026",
-    "lat": 40.5015,
-    "lng": -74.8541
+    "lng": -83.0886,
+    "also_account": false
   },
   {
     "name": "Pacific Law Academy",
@@ -4328,7 +4850,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "12/16/2026",
     "lat": 38.5816,
-    "lng": -121.4944
+    "lng": -121.4944,
+    "also_account": false
   },
   {
     "name": "Westmark School",
@@ -4346,7 +4869,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "",
     "lat": 34.1577,
-    "lng": -118.6327
+    "lng": -118.6327,
+    "also_account": false
   },
   {
     "name": "Alliance Marine Innovation and Technology 6-12 Complex",
@@ -4364,7 +4888,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "12/22/2025",
     "lat": 33.764,
-    "lng": -118.189
+    "lng": -118.189,
+    "also_account": false
   },
   {
     "name": "Mt. Everett Regional School",
@@ -4382,7 +4907,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "1/29/2026",
     "lat": 42.1121,
-    "lng": -73.4296
+    "lng": -73.4296,
+    "also_account": false
   },
   {
     "name": "Holy Cross Catholic High School",
@@ -4400,25 +4926,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "1/20/2026",
     "lat": 29.4473,
-    "lng": -98.4581
-  },
-  {
-    "name": "Juan Morel Campos Secondary School",
-    "address": "215 Heyward Street",
-    "state": "NY",
-    "csm": "James Kennedy",
-    "ae": "Ally McCready",
-    "segment": "",
-    "region": "",
-    "students": "",
-    "arr": "4975.00",
-    "arr_12mo_ago": "0.00",
-    "gdr": "0.00",
-    "ndr": "0.00",
-    "lapsed_renewal": "0.00",
-    "last_activity": "1/26/2027",
-    "lat": 40.7057,
-    "lng": -73.9398
+    "lng": -98.4581,
+    "also_account": false
   },
   {
     "name": "Intrinsic Schools",
@@ -4436,7 +4945,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "1/12/2026",
     "lat": 41.9218,
-    "lng": -87.7066
+    "lng": -87.7066,
+    "also_account": false
   },
   {
     "name": "Pinkerton Middle School",
@@ -4454,7 +4964,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "1/29/2026",
     "lat": 34.0586,
-    "lng": -117.7529
+    "lng": -117.7529,
+    "also_account": false
   },
   {
     "name": "KIPP Colorado",
@@ -4472,7 +4983,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "1/31/2026",
     "lat": 39.7585,
-    "lng": -104.987
+    "lng": -104.987,
+    "also_account": false
   },
   {
     "name": "Foothill High School",
@@ -4490,7 +5002,8 @@
     "lapsed_renewal": "0.00",
     "last_activity": "12/18/2025",
     "lat": 34.1261,
-    "lng": -117.6948
+    "lng": -117.6948,
+    "also_account": false
   },
   {
     "name": "R.I.S.E. Academy",
@@ -4508,6 +5021,7 @@
     "lapsed_renewal": "0.00",
     "last_activity": "1/28/2026",
     "lat": 36.8468,
-    "lng": -76.2852
+    "lng": -76.2852,
+    "also_account": false
   }
 ]
