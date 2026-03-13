@@ -3042,8 +3042,8 @@ function openAccountModalWithData(d) {
           <div>${escapeHtml(conflict.oldAE)} vs ${escapeHtml(conflict.newAE)}</div>
         </div>
         <div class="modal-conflict-btns">
-          <button onclick="resolveConflict(${cidx}, '${escapeAttr(conflict.oldAE)}');closeAccountModal()">Keep ${escapeHtml(conflict.oldAE.split(' ')[0])}</button>
-          <button onclick="resolveConflict(${cidx}, '${escapeAttr(conflict.newAE)}');closeAccountModal()">Assign ${escapeHtml(conflict.newAE.split(' ')[0])}</button>
+          <button onclick="resolveConflict(${cidx}, '${escapeAttr(conflict.oldAE)}');refreshModalConflictBanner('${escapeAttr(d.name)}')">Keep ${escapeHtml(conflict.oldAE.split(' ')[0])}</button>
+          <button onclick="resolveConflict(${cidx}, '${escapeAttr(conflict.newAE)}');refreshModalConflictBanner('${escapeAttr(d.name)}')">Assign ${escapeHtml(conflict.newAE.split(' ')[0])}</button>
         </div>
       </div>`;
     conflictBanner.style.display = '';
@@ -6760,6 +6760,16 @@ function escapeAttr(str) {
   return str.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
 }
 
+/** Refresh the conflict banner in the account modal after resolving a conflict. */
+function refreshModalConflictBanner(accountName) {
+  const banner = document.getElementById('modalConflictBanner');
+  if (!banner) return;
+  const conflict = getConflictForAccount(accountName);
+  if (!conflict) {
+    banner.style.display = 'none';
+  }
+}
+
 /** Navigate map to a conflicted account. */
 function navigateToConflict(idx) {
   const c = CONFLICTS[idx];
@@ -6789,8 +6799,12 @@ function resolveConflict(idx, chosenAE) {
   resolveConflictConfirmed(idx, chosenAE);
 }
 
+/** Flag to prevent click-outside handler from closing overlay during resolve re-render. */
+let _conflictResolving = false;
+
 /** Apply conflict resolution after authentication. */
 function resolveConflictConfirmed(idx, chosenAE) {
+  _conflictResolving = true;
   const c = CONFLICTS[idx];
   if (!c) return;
 
@@ -6824,6 +6838,11 @@ function resolveConflictConfirmed(idx, chosenAE) {
 // Close conflicts overlay when clicking outside
 document.addEventListener('click', function(e) {
   if (!conflictsOverlayOpen) return;
+  // Skip close if a conflict was just resolved (the clicked button was removed from DOM by re-render)
+  if (_conflictResolving) {
+    _conflictResolving = false;
+    return;
+  }
   const overlay = document.getElementById('conflictsOverlay');
   const trigger = document.getElementById('conflictsTrigger');
   if (overlay && trigger && !overlay.contains(e.target) && !trigger.contains(e.target)) {
