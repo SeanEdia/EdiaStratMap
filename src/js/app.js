@@ -468,15 +468,32 @@ function parseEnrollment(val) {
   return parseInt(String(val).replace(/,/g, '')) || 0;
 }
 
-// Helper: returns true if an opp is still open (not closed).
-// An opp is closed when its forecast or stage starts with "Closed".
+// Helper: returns true if an opp's forecast starts with "Closed" (case-insensitive).
+// This is the reliable closed indicator — NOT the stage field.
+function isOppClosed(opp) {
+  if (!opp) return false;
+  const forecast = (opp.forecast || '').trim().toLowerCase();
+  return forecast.startsWith('closed');
+}
+
+// Helper: inverse of isOppClosed for readability.
 function isOppOpen(opp) {
   if (!opp) return false;
-  const forecast = (opp.forecast || '').trim();
-  const stage = (opp.stage || '').trim();
-  if (forecast.startsWith('Closed')) return false;
-  if (stage.startsWith('Closed')) return false;
-  return true;
+  return !isOppClosed(opp);
+}
+
+// Helper: returns true if account d has at least one OPEN opp attributable to repName.
+// opp_owner is stored at the account level (d.opp_owner), not per-opp.
+// If opp_owner matches repName, checks whether any opp on the account is still open.
+// If opp_owner is not set, falls back to checking if ANY opp is open (can't distinguish per-rep).
+function hasOpenOppByRep(d, repName) {
+  const opps = d.opps || [];
+  if (opps.length === 0) return false;
+  const oppOwner = (d.opp_owner || '').trim();
+  // If opp_owner is set and doesn't match the rep, they have no opps here
+  if (oppOwner && oppOwner !== repName) return false;
+  // Check if at least one opp is still open
+  return opps.some(isOppOpen);
 }
 
 // Helper: returns the territory (assigned) AE for an account.
@@ -502,25 +519,24 @@ function getTerritoryAE(d) {
 //     temporarily under the Opp Owner while the territory rep remains the assigned owner.
 function getHoldoutAE(d) {
   if (!d.ae || isDOE(d.name)) return null;
-  const opps = d.opps || [];
   // Case 2: territory_ae set (Opp Owner fallback) — d.ae is the holdout (Opp Owner)
   if (d.territory_ae && d.territory_ae !== d.ae) {
-    // Only show holdout while there's at least one OPEN opp on this account
-    if (!opps.some(isOppOpen)) return null;
+    // Only show holdout while the holdout rep has at least one OPEN opp
+    if (!hasOpenOppByRep(d, d.ae)) return null;
     return d.ae;
   }
   // Case 1: strategic account holdout
   const enrollment = parseEnrollment(d.enrollment);
   if (enrollment >= STRATEGIC_ENROLLMENT_THRESHOLD && d.ae !== ACCOUNT_PRIMARY_AE) {
-    // Only show holdout while there's at least one OPEN opp on this account
-    if (!opps.some(isOppOpen)) return null;
+    // Only show holdout while the holdout rep has at least one OPEN opp
+    if (!hasOpenOppByRep(d, d.ae)) return null;
     return d.ae;
   }
   return null;
 }
 
 // Resolve the account owner from a CSV value against an existing owner.
-// Optional ctx: { enrollment, hasUploadedOpp, hasOpenOpp, oppOwner, loadedReps, accountName } for conditional reassignment.
+// Optional ctx: { enrollment, hasUploadedOpp, oppOwner, loadedReps, accountName } for conditional reassignment.
 // Evaluation order (Opp Owner used as fallback when Account Owner is invalid):
 //   1. Blank CSV → Opp Owner if active → existing if active → unassigned
 //   2. Ben Foley → enrollment > 30k → Sean Johnson; else → Opp Owner / existing / unassigned
@@ -567,10 +583,10 @@ function resolveOwner(csvAE, existingAE, ctx) {
   }
 
   // 3. CONDITIONAL_REASSIGN (Iain Proctor / Nicholas Watson):
-  //    Only reassign when the uploaded CSV has an OPEN opp for this account.
-  //    Has open opp → fallback (Opp Owner → existing → unassigned). No open opp → leave as-is.
+  //    Only reassign when the uploaded CSV has opp data for this account.
+  //    Has opp → fallback (Opp Owner → existing → unassigned). No opp → leave as-is.
   if (CONDITIONAL_REASSIGN.has(csv)) {
-    if (ctx && ctx.hasUploadedOpp && ctx.hasOpenOpp !== false) {
+    if (ctx && ctx.hasUploadedOpp) {
       return { ae: fallback(), reason: 'conditional_reassign' };
     }
     // No opp → leave the record as-is, don't overwrite a valid rep
@@ -4468,12 +4484,6 @@ function runMerge(csvData, existingData) {
         return OPP_ENTRY_FIELDS.has(mapFieldName(key)) && csvRow[key].trim();
       });
       if (rowHasOppData) alreadyMerged._hasUploadedOpp = true;
-      // Check if this row's opp is open (not closed)
-      const rowOppForecast = Object.keys(csvRow).reduce((found, k) =>
-        found || (mapFieldName(k) === 'opp_forecast' ? (csvRow[k] || '').trim() : ''), '');
-      const rowOppStage = Object.keys(csvRow).reduce((found, k) =>
-        found || (mapFieldName(k) === 'opp_stage' ? (csvRow[k] || '').trim() : ''), '');
-      const rowOppIsOpen = rowHasOppData && isOppOpen({ forecast: rowOppForecast, stage: rowOppStage });
       // Pre-extract Opp Owner from this row for resolveOwner fallback
       const rowOppOwner = Object.keys(csvRow).reduce((found, k) =>
         found || (mapFieldName(k) === 'opp_owner' ? (csvRow[k] || '').trim() : ''), '');
@@ -4496,7 +4506,6 @@ function runMerge(csvData, existingData) {
             const result = resolveOwner(val.trim(), alreadyMerged.ae || '', {
               enrollment: alreadyMerged.enrollment,
               hasUploadedOpp: alreadyMerged._hasUploadedOpp,
-              hasOpenOpp: rowOppIsOpen,
               oppOwner: rowOppOwner,
               loadedReps,
               accountName: alreadyMerged.name || '',
@@ -4604,12 +4613,9 @@ function runMerge(csvData, existingData) {
         const csvAE = (merged.ae || '').trim();
         const priorAE = (existing.item.ae || '').trim();
         const hasUploadedOpp = Object.keys(csvOppFields).length > 0;
-        const oppEntry = hasUploadedOpp ? buildOppEntry(csvOppFields) : null;
-        const hasOpenOpp = hasUploadedOpp && oppEntry && isOppOpen(oppEntry);
         const ownerResult = resolveOwner(csvAE, priorAE, {
           enrollment: merged.enrollment,
           hasUploadedOpp,
-          hasOpenOpp,
           oppOwner: (merged.opp_owner || '').trim(),
           loadedReps,
           accountName: merged.name || '',
@@ -4803,12 +4809,9 @@ function runMerge(csvData, existingData) {
       if (!isDOE(newRecord.name)) {
         const csvAE = (newRecord.ae || '').trim();
         const hasUploadedOpp = Object.keys(newOppFields).length > 0;
-        const newOppEntry = hasUploadedOpp ? buildOppEntry(newOppFields) : null;
-        const hasOpenOpp = hasUploadedOpp && newOppEntry && isOppOpen(newOppEntry);
         const ownerResult = resolveOwner(csvAE, '', {
           enrollment: newRecord.enrollment,
           hasUploadedOpp,
-          hasOpenOpp,
           oppOwner: (newRecord.opp_owner || '').trim(),
           loadedReps,
           accountName: newRecord.name || '',
@@ -5127,13 +5130,10 @@ function deriveOppSummary(record) {
   record.opp_areas = opps.map(o => o.area).filter(Boolean).join(', ');
   // Sum ACV across all opps
   record.opp_acv = opps.reduce((sum, o) => sum + (Number(o.acv) || 0), 0);
-  // Most advanced stage (highest stage number) drives marker color & filter.
-  // Prefer OPEN opps — only fall back to closed opps if ALL opps are closed.
-  const openOpps = opps.filter(isOppOpen);
-  const candidateOpps = openOpps.length > 0 ? openOpps : opps;
+  // Most advanced stage (highest stage number) drives marker color & filter
   let maxStageNum = 0;
-  let primaryOpp = candidateOpps[0];
-  candidateOpps.forEach(o => {
+  let primaryOpp = opps[0];
+  opps.forEach(o => {
     const num = parseInt(o.stage) || 0;
     if (num > maxStageNum) {
       maxStageNum = num;
