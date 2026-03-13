@@ -274,6 +274,12 @@ let _overlapCount = 0;        // cached count of accounts that are also customer
 let _uniqueCache = {};        // key -> sorted unique values (invalidated on scope change)
 let _autocompleteCache = null; // pre-built state/region counts
 
+// Look up which team a rep belongs to. Returns team name or null.
+function getTeamForRep(rep) {
+  if (!rep) return null;
+  return _repToTeam[rep] || null;
+}
+
 function buildIndices() {
   // Map reps to teams (Set-based for O(1) lookup)
   _repToTeam = {};
@@ -308,6 +314,16 @@ function buildIndices() {
         _teamToAccounts[team].push(i);
       }
     });
+
+    // Compute _source_team for every account — used to scope "Unassigned Accounts"
+    // to the correct team. Checks all AE-related fields; prefers _source_team set
+    // during CSV merge (most accurate), then territory/holdout AE, then opp_owner.
+    if (!d._source_team) {
+      d._source_team = getTeamForRep(tAE)
+        || getTeamForRep(hAE)
+        || getTeamForRep(d.opp_owner)
+        || null;
+    }
   });
 
   // De-duplicate team indices (an account may be added for both territory and holdout AE)
@@ -952,8 +968,11 @@ function onStageChange(stage) {
 // When the selected rep is the team manager, show all team accounts (team-level view).
 function getScopedStratData() {
   if (selectedRep === '__unassigned__') {
-    // Unassigned accounts — no territory AE and no holdout AE
-    return ACCOUNT_DATA.filter(d => !getTerritoryAE(d) && !getHoldoutAE(d));
+    // Unassigned accounts scoped to the selected team
+    return ACCOUNT_DATA.filter(d =>
+      !getTerritoryAE(d) && !getHoldoutAE(d) &&
+      (!selectedTeam || d._source_team === selectedTeam)
+    );
   }
   if (selectedRep) {
     const indices = _repToAccounts[selectedRep];
@@ -1267,8 +1286,9 @@ function applyFilters() {
       // Holdout accounts match both the territory AE and the holdout AE
       // Uses Set-based lookup (_teamRepsSet) for O(1) instead of Array.includes O(n)
       if (selectedRep === '__unassigned__') {
-        // "Unassigned Accounts" — show accounts with no territory AE and no holdout
+        // "Unassigned Accounts" scoped to the selected team via _source_team
         if (territoryAE || holdoutAE) return false;
+        if (selectedTeam && d._source_team !== selectedTeam) return false;
       } else if (selectedRep) {
         if (territoryAE !== selectedRep && holdoutAE !== selectedRep) return false;
       } else if (selectedTeam) {
@@ -4459,6 +4479,9 @@ function runMerge(csvData, existingData) {
               accountName: alreadyMerged.name || '',
             });
             if (result.ae) alreadyMerged.ae = result.ae;
+            // Tag source team from the CSV AE
+            const aeTeam = getTeamForRep(val.trim());
+            if (aeTeam) alreadyMerged._source_team = aeTeam;
           } else {
             // For non-opp fields, update if the CSV has a value (e.g. region)
             alreadyMerged[mappedKey] = val.trim();
@@ -4567,6 +4590,11 @@ function runMerge(csvData, existingData) {
         });
         merged.ae = ownerResult.ae;
         if (hasUploadedOpp) merged._hasUploadedOpp = true;
+        // Tag source team from the CSV AE — used by "Unassigned Accounts" filter
+        // to scope unowned accounts to the correct team.
+        if (csvAE) {
+          merged._source_team = getTeamForRep(csvAE) || getTeamForRep(priorAE) || merged._source_team || null;
+        }
         // When an active rep's data isn't loaded yet, preserve them as the
         // territory owner so the popup can show the dual-assignment display
         // (Assigned = original Account Owner, Holdout = Opp Owner fallback).
@@ -4758,6 +4786,10 @@ function runMerge(csvData, existingData) {
         });
         newRecord.ae = ownerResult.ae;
         if (hasUploadedOpp) newRecord._hasUploadedOpp = true;
+        // Tag source team from the CSV AE — used by "Unassigned Accounts" filter
+        if (csvAE) {
+          newRecord._source_team = getTeamForRep(csvAE) || null;
+        }
         // When an active rep's data isn't loaded yet, preserve them as the
         // territory owner so the popup can show the dual-assignment display.
         if (ownerResult.reason === 'no_data_loaded' && csvAE) {
