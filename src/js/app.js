@@ -383,9 +383,9 @@ Object.values(TEAM_REP_DATA).forEach(info => {
   if (info.manager) ALL_ACTIVE_REPS.add(info.manager);
 });
 
-// Managers are in ALL_ACTIVE_REPS for team membership checks, but they do NOT
-// hold accounts. resolveOwner must fall through to Opp Owner when a manager
-// appears as Account Owner. Derived from team configs — auto-adapts.
+// Managers — derived from team configs for display purposes (e.g. "(Manager)"
+// suffix in the rep dropdown). Managers ARE account holders and can own accounts
+// just like reps. They are already in ALL_ACTIVE_REPS.
 const MANAGERS = new Set();
 Object.values(TEAM_REP_DATA).forEach(info => {
   if (info.manager) MANAGERS.add(info.manager);
@@ -495,7 +495,7 @@ function getHoldoutAE(d) {
 //   3. CONDITIONAL_REASSIGN (Iain/Nicholas) → has opp → Opp Owner / existing / unassigned;
 //      no opp → keep existing if active, else leave as-is
 //   4. INACTIVE_OWNERS → Opp Owner if active → existing if active → unassigned
-//   5. MANAGERS (not account holders) → Opp Owner if active → existing if active → unassigned
+//   5. (Removed — managers now hold accounts like reps; they flow to step 6)
 //   6. Active rep WITH data loaded → assign (unless existing differs → conflict, keep existing)
 //      Active rep WITHOUT data loaded → Opp Owner fallback (until their data is uploaded)
 //   7. Unrecognized → Opp Owner if active → existing if active → unassigned
@@ -550,13 +550,10 @@ function resolveOwner(csvAE, existingAE, ctx) {
     return { ae: fallback(), reason: 'inactive_owner' };
   }
 
-  // 5. CSV AE is a manager (not an account holder) → fallback (Opp Owner → existing → unassigned)
-  //    Managers are in ALL_ACTIVE_REPS for team membership, but they don't hold accounts.
-  if (MANAGERS.has(csv)) {
-    return { ae: fallback(), reason: 'manager_fallback' };
-  }
+  // 5. (Removed — managers now hold accounts; they are in ALL_ACTIVE_REPS
+  //    and fall through to step 6 like any active rep.)
 
-  // 6. CSV AE is a current, active rep
+  // 6. CSV AE is a current, active rep (includes managers)
   if (ALL_ACTIVE_REPS.has(csv)) {
     // Active rep but no data loaded yet → fall through to Opp Owner.
     // When this rep's data is uploaded later, holdout/conflict logic will reconcile.
@@ -655,7 +652,7 @@ function quickFilterTeam(team) {
     if (btn.dataset.view === 'accounts') btn.classList.add('active-strat');
   });
   selectedTeam = team;
-  selectedRep = getDefaultRepForTeam(team);
+  selectedRep = ''; // Default to "All [Team]" view
   invalidateCaches();
   renderTeamRepSelectors();
   renderFilters();
@@ -875,12 +872,17 @@ function renderTeamRepSelectors() {
     repRow.style.display = '';
     const reps = getAllRepsForTeam(selectedTeam);
     const info = TEAM_REP_DATA[selectedTeam];
-    repSel.innerHTML = '';
+    // "All [Team]" option at top — shows every account across the team
+    const allSel = !selectedRep ? ' selected' : '';
+    repSel.innerHTML = `<option value=""${allSel}>All ${selectedTeam}</option>`;
     reps.forEach(rep => {
       const sel = selectedRep === rep ? ' selected' : '';
       const suffix = info.manager === rep ? ' (Manager)' : '';
       repSel.innerHTML += `<option value="${rep}"${sel}>${rep}${suffix}</option>`;
     });
+    // "Unassigned Accounts" option — shows accounts with no owner assigned
+    const unSel = selectedRep === '__unassigned__' ? ' selected' : '';
+    repSel.innerHTML += `<option value="__unassigned__"${unSel}>Unassigned Accounts</option>`;
     repSel.classList.toggle('select-active', !!selectedRep);
   } else {
     repRow.style.display = 'none';
@@ -901,7 +903,7 @@ function getDefaultRepForTeam(team) {
 
 function onTeamChange(team) {
   selectedTeam = team;
-  selectedRep = team ? getDefaultRepForTeam(team) : '';
+  selectedRep = ''; // Default to "All [Team]" view
   // Clear filters that may no longer be valid for the new team scope
   delete filters.strat_region;
   delete filters.strat_state;
@@ -949,14 +951,13 @@ function onStageChange(stage) {
 // Uses pre-built indices for O(1) lookups instead of scanning all accounts.
 // When the selected rep is the team manager, show all team accounts (team-level view).
 function getScopedStratData() {
+  if (selectedRep === '__unassigned__') {
+    // Unassigned accounts — no territory AE and no holdout AE
+    return ACCOUNT_DATA.filter(d => !getTerritoryAE(d) && !getHoldoutAE(d));
+  }
   if (selectedRep) {
-    const isManager = selectedTeam && TEAM_REP_DATA[selectedTeam] &&
-      TEAM_REP_DATA[selectedTeam].manager === selectedRep;
-    if (!isManager) {
-      const indices = _repToAccounts[selectedRep];
-      return indices ? indices.map(i => ACCOUNT_DATA[i]) : [];
-    }
-    // Manager selected — fall through to team-level scoping
+    const indices = _repToAccounts[selectedRep];
+    return indices ? indices.map(i => ACCOUNT_DATA[i]) : [];
   }
   if (selectedTeam) {
     const indices = _teamToAccounts[selectedTeam];
@@ -1265,19 +1266,13 @@ function applyFilters() {
       // Team / rep filter (applied before other filters)
       // Holdout accounts match both the territory AE and the holdout AE
       // Uses Set-based lookup (_teamRepsSet) for O(1) instead of Array.includes O(n)
-      // Unassigned accounts (no AE) are filtered OUT when a team/rep is selected
-      // — they only appear in the "All" view (no team/rep filter).
-      if (selectedRep) {
-        const isManager = selectedTeam && TEAM_REP_DATA[selectedTeam] &&
-          TEAM_REP_DATA[selectedTeam].manager === selectedRep;
-        if (isManager) {
-          // Manager = team-level view
-          const teamReps = _teamRepsSet[selectedTeam];
-          if (!teamReps || (!teamReps.has(territoryAE) && !(holdoutAE && teamReps.has(holdoutAE)))) return false;
-        } else {
-          if (territoryAE !== selectedRep && holdoutAE !== selectedRep) return false;
-        }
+      if (selectedRep === '__unassigned__') {
+        // "Unassigned Accounts" — show accounts with no territory AE and no holdout
+        if (territoryAE || holdoutAE) return false;
+      } else if (selectedRep) {
+        if (territoryAE !== selectedRep && holdoutAE !== selectedRep) return false;
       } else if (selectedTeam) {
+        // Team-level view — show all accounts owned by any team member
         const teamReps = _teamRepsSet[selectedTeam];
         if (!teamReps || (!teamReps.has(territoryAE) && !(holdoutAE && teamReps.has(holdoutAE)))) return false;
       }
