@@ -564,6 +564,15 @@ body {
   gap: 5px;
 }
 
+.filter-chips-scroll {
+  max-height: 120px;
+  overflow-y: auto;
+}
+
+.filter-chips-scroll::-webkit-scrollbar { width: 4px; }
+.filter-chips-scroll::-webkit-scrollbar-track { background: transparent; }
+.filter-chips-scroll::-webkit-scrollbar-thumb { background: var(--panel-border); border-radius: 2px; }
+
 .filter-chip {
   padding: 5px 10px;
   background: var(--bg);
