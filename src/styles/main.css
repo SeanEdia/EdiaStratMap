@@ -799,6 +799,10 @@ input[type="range"]::-webkit-slider-thumb {
   box-shadow: 0 0 6px rgba(0, 184, 148, 0.6);
 }
 
+.marker-cust.expand-opp {
+  box-shadow: 0 0 0 3px #f9ca24, 0 0 8px rgba(249,202,36,0.5);
+}
+
 .marker-strat.is-customer {
   background: #00b894;
   border-color: #00a381;
@@ -951,6 +955,7 @@ input[type="range"]::-webkit-slider-thumb {
 
 .legend-dot.strat { background: #6c5ce7; box-shadow: 0 0 6px rgba(108,92,231,0.25); }
 .legend-dot.cust { background: var(--accent-cust); box-shadow: 0 0 6px var(--accent-cust-glow); }
+.legend-dot.cust.expand-opp { box-shadow: 0 0 0 3px #f9ca24, 0 0 6px rgba(249,202,36,0.5); }
 
 /* Visible count badge */
 .count-badge .cb-num { font-weight: 600; }
@@ -2760,6 +2765,13 @@ input[type="range"]::-webkit-slider-thumb {
   overflow: hidden;
   text-overflow: ellipsis;
   min-width: 0;
+}
+.al-expand-opp-badge {
+  display: inline-block;
+  margin-left: 4px;
+  color: #f9ca24;
+  font-size: 10px;
+  vertical-align: middle;
 }
 /* Fixed-width data columns */
 .al-col {
