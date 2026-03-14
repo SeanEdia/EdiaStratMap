@@ -1034,6 +1034,9 @@ function onRepChange(rep) {
 
   delete filters.strat_sis;
   invalidateCaches(); // Scoped unique values changed
+  // Update SMB opp banner visibility when switching between manager and individual rep
+  const smbBanner = document.getElementById('smbOppBanner');
+  if (smbBanner) smbBanner.style.display = isSmbTeamLevelView() ? '' : 'none';
   renderFilters();
   applyFilters();
 }
