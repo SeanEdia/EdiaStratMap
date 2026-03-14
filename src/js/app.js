@@ -297,28 +297,39 @@ function buildIndices() {
   ACCOUNT_DATA.forEach((d, i) => {
     const tAE = getTerritoryAE(d);
     const hAE = getHoldoutAE(d);
-    // Index by territory AE
-    if (tAE) {
-      if (!_repToAccounts[tAE]) _repToAccounts[tAE] = [];
-      _repToAccounts[tAE].push(i);
+    const managerHeld = isManagerHeld(d);
+
+    // Manager-held accounts are NOT indexed under the manager's name —
+    // they are "unassigned" placeholders and belong to the team, not the manager.
+    if (!managerHeld) {
+      // Index by territory AE
+      if (tAE) {
+        if (!_repToAccounts[tAE]) _repToAccounts[tAE] = [];
+        _repToAccounts[tAE].push(i);
+      }
+      // Index by holdout AE (if different)
+      if (hAE && hAE !== tAE) {
+        if (!_repToAccounts[hAE]) _repToAccounts[hAE] = [];
+        _repToAccounts[hAE].push(i);
+      }
     }
-    // Index by holdout AE (if different)
-    if (hAE && hAE !== tAE) {
-      if (!_repToAccounts[hAE]) _repToAccounts[hAE] = [];
-      _repToAccounts[hAE].push(i);
-    }
-    // Index by team
+    // Index by team — include manager-held accounts so they appear in team-level views
     Object.entries(_teamRepsSet).forEach(([team, reps]) => {
-      if ((tAE && reps.has(tAE)) || (hAE && reps.has(hAE))) {
+      if (managerHeld && reps.has(d.ae)) {
+        if (!_teamToAccounts[team]) _teamToAccounts[team] = [];
+        _teamToAccounts[team].push(i);
+      } else if ((tAE && reps.has(tAE)) || (hAE && reps.has(hAE))) {
         if (!_teamToAccounts[team]) _teamToAccounts[team] = [];
         _teamToAccounts[team].push(i);
       }
     });
 
     // Compute _source_team for every account — used to scope "Unassigned Accounts"
-    // to the correct team. Checks all AE-related fields; prefers _source_team set
-    // during CSV merge (most accurate), then territory/holdout AE, then opp_owner.
-    if (!d._source_team) {
+    // to the correct team. Manager-held accounts use the manager's team directly.
+    // Otherwise checks CSV merge tag, then territory/holdout AE, then opp_owner.
+    if (managerHeld) {
+      d._source_team = getTeamForRep(d.ae);
+    } else if (!d._source_team) {
       d._source_team = getTeamForRep(tAE)
         || getTeamForRep(hAE)
         || getTeamForRep(d.opp_owner)
@@ -406,6 +417,13 @@ const MANAGERS = new Set();
 Object.values(TEAM_REP_DATA).forEach(info => {
   if (info.manager) MANAGERS.add(info.manager);
 });
+
+// Returns true if the account is held by a manager (placeholder until assigned to a rep).
+// Manager-held accounts are treated as "unassigned" for filtering/display purposes.
+function isManagerHeld(d) {
+  if (!d || !d.ae) return false;
+  return MANAGERS.has(d.ae);
+}
 
 // Former reps (no longer with the company) and employees who left sales.
 // Treat identically for territory assignment: their accounts are unassigned
@@ -918,15 +936,17 @@ function renderTeamRepSelectors() {
   const repSel = document.getElementById('repSelect');
   if (selectedTeam) {
     repRow.style.display = '';
-    const reps = getAllRepsForTeam(selectedTeam);
     const info = TEAM_REP_DATA[selectedTeam];
-    // "All [Team]" option at top — shows every account across the team
-    const allSel = !selectedRep ? ' selected' : '';
-    repSel.innerHTML = `<option value=""${allSel}>All ${selectedTeam}</option>`;
-    reps.forEach(rep => {
+    repSel.innerHTML = '';
+    // Manager first — selecting the manager shows the full team view
+    if (info.manager) {
+      const mgrSel = (!selectedRep || selectedRep === info.manager) ? ' selected' : '';
+      repSel.innerHTML += `<option value="${info.manager}"${mgrSel}>${info.manager} (Manager)</option>`;
+    }
+    // Individual reps
+    info.reps.forEach(rep => {
       const sel = selectedRep === rep ? ' selected' : '';
-      const suffix = info.manager === rep ? ' (Manager)' : '';
-      repSel.innerHTML += `<option value="${rep}"${sel}>${rep}${suffix}</option>`;
+      repSel.innerHTML += `<option value="${rep}"${sel}>${rep}</option>`;
     });
     // "Unassigned Accounts" option — shows accounts with no owner assigned
     const unSel = selectedRep === '__unassigned__' ? ' selected' : '';
@@ -951,7 +971,7 @@ function getDefaultRepForTeam(team) {
 
 function onTeamChange(team) {
   selectedTeam = team;
-  selectedRep = ''; // Default to "All [Team]" view
+  selectedRep = getDefaultRepForTeam(team); // Default to manager (team-level view)
   // Clear filters that may no longer be valid for the new team scope
   delete filters.strat_region;
   delete filters.strat_state;
@@ -1000,11 +1020,16 @@ function onStageChange(stage) {
 // When the selected rep is the team manager, show all team accounts (team-level view).
 function getScopedStratData() {
   if (selectedRep === '__unassigned__') {
-    // Unassigned accounts scoped to the selected team
+    // Unassigned accounts (including manager-held) scoped to the selected team
     return ACCOUNT_DATA.filter(d =>
-      !getTerritoryAE(d) && !getHoldoutAE(d) &&
+      (isManagerHeld(d) || (!getTerritoryAE(d) && !getHoldoutAE(d))) &&
       (!selectedTeam || d._source_team === selectedTeam)
     );
+  }
+  if (selectedRep && MANAGERS.has(selectedRep)) {
+    // Manager selected → team-level view (all accounts for this team)
+    const indices = selectedTeam && _teamToAccounts[selectedTeam];
+    return indices ? indices.map(i => ACCOUNT_DATA[i]) : [];
   }
   if (selectedRep) {
     const indices = _repToAccounts[selectedRep];
@@ -1318,15 +1343,33 @@ function applyFilters() {
       // Holdout accounts match both the territory AE and the holdout AE
       // Uses Set-based lookup (_teamRepsSet) for O(1) instead of Array.includes O(n)
       if (selectedRep === '__unassigned__') {
-        // "Unassigned Accounts" scoped to the selected team via _source_team
-        if (territoryAE || holdoutAE) return false;
+        // "Unassigned Accounts" — includes truly unassigned AND manager-held accounts,
+        // scoped to the selected team via _source_team.
+        const managerHeld = isManagerHeld(d);
+        if (!managerHeld && (territoryAE || holdoutAE)) return false;
         if (selectedTeam && d._source_team !== selectedTeam) return false;
+      } else if (selectedRep && MANAGERS.has(selectedRep)) {
+        // Manager selected → team-level view (all accounts for this team, including manager-held)
+        const teamReps = selectedTeam && _teamRepsSet[selectedTeam];
+        if (!teamReps) return false;
+        if (isManagerHeld(d)) {
+          if (!teamReps.has(d.ae)) return false;
+        } else if (!teamReps.has(territoryAE) && !(holdoutAE && teamReps.has(holdoutAE))) {
+          return false;
+        }
       } else if (selectedRep) {
+        // Individual rep — manager-held accounts don't appear here
+        if (isManagerHeld(d)) return false;
         if (territoryAE !== selectedRep && holdoutAE !== selectedRep) return false;
       } else if (selectedTeam) {
-        // Team-level view — show all accounts owned by any team member
+        // Team-level view (fallback for teams without a manager)
         const teamReps = _teamRepsSet[selectedTeam];
-        if (!teamReps || (!teamReps.has(territoryAE) && !(holdoutAE && teamReps.has(holdoutAE)))) return false;
+        if (!teamReps) return false;
+        if (isManagerHeld(d)) {
+          if (!teamReps.has(d.ae)) return false;
+        } else if (!teamReps.has(territoryAE) && !(holdoutAE && teamReps.has(holdoutAE))) {
+          return false;
+        }
       }
       if (filters.strat_region && d.region !== filters.strat_region) return false;
       if (filters.strat_state && d.state !== filters.strat_state) return false;
@@ -2421,8 +2464,12 @@ function buildStratPopup(d) {
   }
 
   // Build Account Exec display: show territory AE (Assigned) and holdout AE on second line
+  // Manager-held accounts show "Unassigned" with the manager name as context
+  const managerHeld = isManagerHeld(d);
   let aeDisplay = null;
-  if (territoryAE) {
+  if (managerHeld) {
+    aeDisplay = `<span class="manager-held-badge">Unassigned</span> <span class="ae-role">(held by ${d.ae})</span>`;
+  } else if (territoryAE) {
     aeDisplay = holdoutAE
       ? `${territoryAE} <span class="ae-role">(Assigned)</span><br>${holdoutAE} <span class="ae-role">(Holdout)</span>`
       : territoryAE;
@@ -3152,7 +3199,7 @@ function populateInfoTab(d) {
     ${schoolCount > 0 ? modalRow('Schools', schoolCount.toLocaleString()) : ''}
     ${modalRow('State', d.state)}
     ${modalRow('Region', d.region)}
-    ${modalRow('Account Executive', (() => { const tAE = getTerritoryAE(d); const hAE = getHoldoutAE(d); return tAE ? (hAE ? tAE + ' <span class="ae-role">(Assigned)</span><br>' + hAE + ' <span class="ae-role">(Holdout)</span>' : tAE) : '—'; })())}
+    ${modalRow('Account Executive', (() => { if (isManagerHeld(d)) return '<span class="manager-held-badge">Unassigned</span> <span class="ae-role">(held by ' + d.ae + ')</span>'; const tAE = getTerritoryAE(d); const hAE = getHoldoutAE(d); return tAE ? (hAE ? tAE + ' <span class="ae-role">(Assigned)</span><br>' + hAE + ' <span class="ae-role">(Holdout)</span>' : tAE) : '—'; })())}
     ${modalRow('SIS Platform', d.sis || '—')}
     ${modalRow('Website', d.website ? `<a href="${d.website.startsWith('http') ? d.website : 'https://' + d.website}" target="_blank" style="color:var(--accent-cust);">${d.website}</a>` : '—')}
     ${modalRow('ADA/ADM', d.ada_adm || '—')}
