@@ -259,6 +259,35 @@ function crossLinkCustomers() {
     }
   });
 
+  // Count how many customers share the same parent_account (sibling count)
+  // and determine if the parent district is itself a customer
+  const acctByName = new Map();
+  ACCOUNT_DATA.forEach(d => acctByName.set(d.name, d));
+
+  const siblingCounts = new Map(); // parent_district → count of customers with that parent
+  CUSTOMER_DATA.forEach(c => {
+    if (c.parent_district) {
+      siblingCounts.set(c.parent_district, (siblingCounts.get(c.parent_district) || 0) + 1);
+    }
+  });
+
+  CUSTOMER_DATA.forEach(c => {
+    if (c.parent_district) {
+      c.sibling_customer_count = siblingCounts.get(c.parent_district) || 0;
+      const parentAcct = acctByName.get(c.parent_district);
+      c.district_is_customer = parentAcct ? !!parentAcct.is_customer : false;
+      // Flag expansion opportunity: only school from this district in our customer base,
+      // district is NOT a customer, and district exists in ACCOUNT_DATA
+      c.expand_opp = c.sibling_customer_count === 1
+        && !c.district_is_customer
+        && !!parentAcct;
+    } else {
+      c.sibling_customer_count = 0;
+      c.district_is_customer = false;
+      c.expand_opp = false;
+    }
+  });
+
   if (linked) console.log(`[CrossLink] ${linked} account(s) matched to customer records`);
   if (parentLinked) console.log(`[CrossLink] ${parentLinked} customer(s) linked to parent district`);
 }
@@ -1449,8 +1478,9 @@ function applyFilters() {
     filtered.forEach(d => {
       if (!d.lat || !d.lng) return;
       const isAlsoAcct = d.also_account ? ' also-account' : '';
+      const expandOpp = d.expand_opp ? ' expand-opp' : '';
       const icon = L.divIcon({
-        className: `marker-cust${isAlsoAcct}`,
+        className: `marker-cust${isAlsoAcct}${expandOpp}`,
         iconSize: d.also_account ? [14, 14] : [10, 10],
         iconAnchor: d.also_account ? [7, 7] : [5, 5],
       });
@@ -2655,7 +2685,16 @@ function buildCustPopup(d) {
   }
   html += `<h3>${d.name}</h3>`;
   if (d.parent_district) {
-    html += `<div style="font-size:11px;color:var(--text-muted);margin:-4px 0 6px;">District: ${d.parent_district}</div>`;
+    const parentKey = d.parent_district.replace(/[^a-zA-Z0-9]/g, '_');
+    const parentInAccounts = ACCOUNT_DATA.find(a => a.name === d.parent_district);
+    const districtLink = parentInAccounts
+      ? `<a href="#" onclick="event.preventDefault();openAccountModalByKey('${parentKey}')" style="color:var(--text-muted);text-decoration:underline;">${d.parent_district}</a>`
+      : d.parent_district;
+    html += `<div style="font-size:11px;color:var(--text-muted);margin:-4px 0 6px;">District: ${districtLink}</div>`;
+    if (d.expand_opp && parentInAccounts) {
+      const totalSchools = (parentInAccounts._schools && parentInAccounts._schools.length) || '?';
+      html += `<div style="font-size:11px;color:#f9ca24;margin:-2px 0 6px;font-weight:600;">🏫 District expansion opportunity — 1 of ${totalSchools} schools</div>`;
+    }
   }
 
   const arr = parseFloat(d.arr) || 0;
@@ -2828,7 +2867,7 @@ function buildAccountListRow(d, type) {
     onclick="flyToAccount('${escapedName}','${escapedState}')"
     ondblclick="openAccountFromList('${districtKey}')">
     <span class="al-stage-dot ${stage.cls}" title="${stage.label}"></span>
-    <span class="al-name" title="${d.name}">${d.name}</span>
+    <span class="al-name" title="${d.name}">${d.name}${d.expand_opp ? '<span class="al-expand-opp-badge" title="District expansion opportunity">★</span>' : ''}</span>
     <span class="al-col al-col-state">${d.state || ''}</span>
     <span class="al-col al-col-enroll">${enrollment > 0 ? formatCompactNumber(enrollment) : ''}</span>
     <span class="al-col al-col-acv">${moneyText}</span>
@@ -3052,6 +3091,7 @@ function updateLegend() {
   items += `<div class="legend-item"><div class="legend-dot" style="background:#55efc4;"></div>Validation</div>`;
   items += `<div class="legend-item"><div class="legend-dot" style="background:#fd79a8;"></div>Procurement</div>`;
   items += `<div class="legend-item"><div class="legend-dot cust"></div>Customer</div>`;
+  items += `<div class="legend-item"><div class="legend-dot cust expand-opp"></div>District expansion opp</div>`;
   legend.innerHTML = items;
   legend.style.display = 'flex';
 }
