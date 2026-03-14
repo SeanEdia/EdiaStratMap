@@ -3197,7 +3197,7 @@ function openAccountModalWithData(d) {
         <span class="modal-conflict-icon">&#9888;</span>
         <div class="modal-conflict-text">
           <strong>Ownership conflict</strong>
-          <div>${escapeHtml(conflict.oldAE)} vs ${escapeHtml(conflict.newAE)}</div>
+          <div>${escapeHtml(conflict.oldAE)} vs ${escapeHtml(conflict.newAE)} <span style="opacity:0.6;font-size:0.9em;">(${conflict.source === 'customers' ? 'Customer' : 'Account'} data)</span></div>
         </div>
         <div class="modal-conflict-btns">
           <button onclick="resolveConflict(${cidx}, '${escapeAttr(conflict.oldAE)}');refreshModalConflictBanner('${escapeAttr(d.name)}')">Keep ${escapeHtml(conflict.oldAE.split(' ')[0])}</button>
@@ -4322,7 +4322,7 @@ function consolidateParentAccounts(csvData) {
 
 // Core merge logic: merges csvData rows against an existing dataset.
 // Returns { mergedData, stats }.
-function runMerge(csvData, existingData) {
+function runMerge(csvData, existingData, source) {
   // Log CSV columns for debugging
   if (csvData.length > 0) {
     console.log('[SFDC Merge] CSV columns:', Object.keys(csvData[0]));
@@ -4776,6 +4776,7 @@ function runMerge(csvData, existingData) {
             state: merged.state || '',
             oldAE: priorAE,
             newAE: csvAE,
+            source: source || 'accounts',
           });
         }
       }
@@ -5007,8 +5008,8 @@ function previewMerge(csvData) {
 
     mergeHasTypeSplit = true;
     const consolidation = consolidateParentAccounts(accountRows);
-    const accountResult = runMerge(consolidation.rows, ACCOUNT_DATA);
-    const customerResult = runMerge(customerRows, CUSTOMER_DATA);
+    const accountResult = runMerge(consolidation.rows, ACCOUNT_DATA, 'accounts');
+    const customerResult = runMerge(customerRows, CUSTOMER_DATA, 'customers');
 
     pendingAccountMerge = accountResult.mergedData;
     pendingCustomerMerge = customerResult.mergedData;
@@ -5085,7 +5086,7 @@ function previewMerge(csvData) {
   } else {
     dataToMerge = csvData;
   }
-  const result = runMerge(dataToMerge, sfdcDataType === 'accounts' ? ACCOUNT_DATA : CUSTOMER_DATA);
+  const result = runMerge(dataToMerge, sfdcDataType === 'accounts' ? ACCOUNT_DATA : CUSTOMER_DATA, sfdcDataType);
   result.stats.consolidatedRecords = consolidatedCount + (result.stats.duplicateRows || 0);
   pendingMergeData = result.mergedData;
   pendingMergeStats = result.stats;
@@ -5416,7 +5417,7 @@ function showMergeModal(stats) {
       html += `<div style="background:#d6336c22;border:1px solid #d6336c44;border-radius:6px;padding:8px 10px;margin-bottom:10px;font-size:11px;">
         <strong style="color:#d6336c;">&#9888; ${conflictCount} ownership conflict${conflictCount > 1 ? 's' : ''} detected</strong>
         <div style="color:var(--text-dim);margin-top:4px;">Accounts assigned to multiple reps. Resolve via the Conflicts dropdown after merge.</div>
-        ${stats.conflicts.slice(0, 5).map(c => `<div style="margin-top:4px;font-size:10px;color:var(--text-dim);">&bull; ${c.name}: ${c.oldAE} &rarr; ${c.newAE}</div>`).join('')}
+        ${stats.conflicts.slice(0, 5).map(c => `<div style="margin-top:4px;font-size:10px;color:var(--text-dim);">&bull; ${c.name}: ${c.oldAE} &rarr; ${c.newAE} <span style="opacity:0.6;">(${c.source === 'customers' ? 'Customer' : 'Account'})</span></div>`).join('')}
         ${conflictCount > 5 ? `<div style="margin-top:4px;font-size:10px;color:var(--text-muted);font-style:italic;">...and ${conflictCount - 5} more</div>` : ''}
       </div>`;
     }
@@ -6058,7 +6059,7 @@ function showUploadSummary({ stats, geocodedCount, inheritedCount, errors, missi
       <strong style="color:#d6336c;">&#9888; ${conflicts.length} ownership conflict${conflicts.length > 1 ? 's' : ''}</strong>
       <div style="color:var(--text-dim);margin-top:3px;">Resolve via the Conflicts dropdown.</div>`;
     conflicts.slice(0, 5).forEach(c => {
-      html += `<div style="font-size:10px;color:var(--text-dim);margin-top:2px;">&bull; ${c.name}: ${c.oldAE} → ${c.newAE}</div>`;
+      html += `<div style="font-size:10px;color:var(--text-dim);margin-top:2px;">&bull; ${c.name}: ${c.oldAE} → ${c.newAE} <span style="opacity:0.6;">(${c.source === 'customers' ? 'Customer' : 'Account'})</span></div>`;
     });
     if (conflicts.length > 5) html += `<div style="font-size:10px;color:var(--text-muted);margin-top:2px;font-style:italic;">...and ${conflicts.length - 5} more</div>`;
     html += `</div>`;
@@ -6904,7 +6905,7 @@ function renderConflictsOverlay() {
     html += `<div class="conflict-item">
       <div class="conflict-item-header" onclick="navigateToConflict(${idx})">
         <div class="conflict-name">${c.name} ${stratBadge}</div>
-        <div class="conflict-detail">${c.state || '—'} &bull; ${enrollment} students</div>
+        <div class="conflict-detail">${c.state || '—'} &bull; ${enrollment} students &bull; ${c.source === 'customers' ? 'Customer' : 'Account'} data</div>
       </div>
       <div class="conflict-ae-row">
         <span class="conflict-ae conflict-ae-old" title="Previously assigned">${escapeHtml(c.oldAE)}</span>
