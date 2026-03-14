@@ -468,6 +468,34 @@ function parseEnrollment(val) {
   return parseInt(String(val).replace(/,/g, '')) || 0;
 }
 
+// Helper: returns true if an opp's forecast starts with "Closed" (case-insensitive).
+// This is the reliable closed indicator — NOT the stage field.
+function isOppClosed(opp) {
+  if (!opp) return false;
+  const forecast = (opp.forecast || '').trim().toLowerCase();
+  return forecast.startsWith('closed');
+}
+
+// Helper: inverse of isOppClosed for readability.
+function isOppOpen(opp) {
+  if (!opp) return false;
+  return !isOppClosed(opp);
+}
+
+// Helper: returns true if account d has at least one OPEN opp attributable to repName.
+// opp_owner is stored at the account level (d.opp_owner), not per-opp.
+// If opp_owner matches repName, checks whether any opp on the account is still open.
+// If opp_owner is not set, falls back to checking if ANY opp is open (can't distinguish per-rep).
+function hasOpenOppByRep(d, repName) {
+  const opps = d.opps || [];
+  if (opps.length === 0) return false;
+  const oppOwner = (d.opp_owner || '').trim();
+  // If opp_owner is set and doesn't match the rep, they have no opps here
+  if (oppOwner && oppOwner !== repName) return false;
+  // Check if at least one opp is still open
+  return opps.some(isOppOpen);
+}
+
 // Helper: returns the territory (assigned) AE for an account.
 // 30k+ enrollment → Strategic (Sean Johnson). <30k → account owner.
 function getTerritoryAE(d) {
@@ -493,11 +521,15 @@ function getHoldoutAE(d) {
   if (!d.ae || isDOE(d.name)) return null;
   // Case 2: territory_ae set (Opp Owner fallback) — d.ae is the holdout (Opp Owner)
   if (d.territory_ae && d.territory_ae !== d.ae) {
+    // Only show holdout while the holdout rep has at least one OPEN opp
+    if (!hasOpenOppByRep(d, d.ae)) return null;
     return d.ae;
   }
   // Case 1: strategic account holdout
   const enrollment = parseEnrollment(d.enrollment);
   if (enrollment >= STRATEGIC_ENROLLMENT_THRESHOLD && d.ae !== ACCOUNT_PRIMARY_AE) {
+    // Only show holdout while the holdout rep has at least one OPEN opp
+    if (!hasOpenOppByRep(d, d.ae)) return null;
     return d.ae;
   }
   return null;
@@ -1740,7 +1772,7 @@ function updatePipeline() {
   scopedData.forEach(d => {
     const opps = d.opps && d.opps.length > 0 ? d.opps : (d.opp_stage ? [buildOppEntry(d)] : []);
     opps.forEach(opp => {
-      if (opp.stage) allOpps.push({ account: d, opp });
+      if (opp.stage && isOppOpen(opp)) allOpps.push({ account: d, opp });
     });
   });
 
