@@ -1291,6 +1291,75 @@ input[type="range"]::-webkit-slider-thumb {
   background: rgba(162,155,254,0.08);
 }
 
+/* Conflict type label and description */
+.conflict-type-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #d6336c;
+  margin-top: 8px;
+}
+.conflict-type-desc {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 2px;
+  margin-bottom: 6px;
+}
+
+/* Per-rep detail cards */
+.conflict-rep-card {
+  border: 1px solid var(--panel-border);
+  border-radius: 5px;
+  padding: 7px 9px;
+  margin-top: 6px;
+}
+.conflict-rep-old {
+  border-left: 3px solid #74b9ff;
+}
+.conflict-rep-new {
+  border-left: 3px solid #a29bfe;
+}
+.conflict-rep-card-title {
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  color: var(--text-muted);
+  margin-bottom: 3px;
+}
+.conflict-rep-card-name {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+/* Opp list within rep cards */
+.conflict-opp-list {
+  font-size: 10px;
+  color: var(--text-dim);
+  margin-top: 4px;
+}
+.conflict-opp-item {
+  padding-left: 4px;
+  line-height: 1.5;
+}
+
+/* Account type badge */
+.conflict-account-type {
+  font-weight: 500;
+}
+
+/* Opp owner callout */
+.conflict-opp-owner-note {
+  font-size: 10px;
+  color: var(--text-muted);
+  font-style: italic;
+  margin-top: 6px;
+  padding: 4px 8px;
+  background: var(--surface);
+  border-radius: 3px;
+  border: 1px dashed var(--panel-border);
+}
+
 /* Conflict banner in account modal */
 .modal-conflict-banner {
   margin: 0;

@@ -3305,12 +3305,13 @@ function openAccountModalWithData(d) {
   const conflict = getConflictForAccount(d.name);
   if (conflict) {
     const cidx = CONFLICTS.indexOf(conflict);
+    const conflictTypeInfo = getConflictTypeLabel(conflict);
     conflictBanner.innerHTML = `
       <div class="modal-conflict-inner">
         <span class="modal-conflict-icon">&#9888;</span>
         <div class="modal-conflict-text">
-          <strong>Ownership conflict</strong>
-          <div>${escapeHtml(conflict.oldAE)} vs ${escapeHtml(conflict.newAE)} <span style="opacity:0.6;font-size:0.9em;">(${conflict.source === 'customers' ? 'Customer' : 'Account'} data)</span></div>
+          <strong>Ownership conflict &mdash; ${escapeHtml(conflictTypeInfo.label)}</strong>
+          <div>${escapeHtml(conflict.oldAE)}${conflict.oldTeam ? ' (' + escapeHtml(conflict.oldTeam) + ')' : ''} vs ${escapeHtml(conflict.newAE)}${conflict.newTeam ? ' (' + escapeHtml(conflict.newTeam) + ')' : ''}</div>
         </div>
         <div class="modal-conflict-btns">
           <button onclick="resolveConflict(${cidx}, '${escapeAttr(conflict.oldAE)}');refreshModalConflictBanner('${escapeAttr(d.name)}')">Keep ${escapeHtml(conflict.oldAE.split(' ')[0])}</button>
@@ -4895,6 +4896,30 @@ function runMerge(csvData, existingData, source) {
             oldAE: priorAE,
             newAE: csvAE,
             source: source || 'accounts',
+            // Context about the conflict
+            isCustomer: !!merged.is_customer,
+            isInactiveCustomer: merged.type === 'Inactive Customer',
+            arr: merged.arr || null,
+            // What the OLD rep (priorAE / existing owner) has
+            oldSource: 'existing',
+            oldTeam: getTeamForRep(priorAE) || null,
+            // What the NEW rep (csvAE / from upload) brings
+            newSource: 'csv',
+            newTeam: getTeamForRep(csvAE) || null,
+            // Opp context from CSV row
+            hasOpp: Object.keys(csvOppFields).length > 0,
+            oppStage: csvOppFields.opp_stage || merged.opp_stage || '',
+            oppAcv: csvOppFields.opp_acv || '',
+            oppAreas: csvOppFields.opp_areas || merged.opp_areas || '',
+            oppOwner: (merged.opp_owner || '').trim(),
+            // Existing record opps
+            existingOpps: (existing.item.opps || []).map(o => ({
+              area: o.area || '',
+              stage: o.stage || '',
+              acv: o.acv || '',
+            })),
+            // Resolution reason
+            ownerResolution: ownerResult.reason,
           });
         }
       }
@@ -5213,6 +5238,8 @@ function runOppMerge(csvData) {
     const isFirstTouch = !touchedAccounts.has(acctKey);
     if (isFirstTouch) {
       touchedAccounts.add(acctKey);
+      // Capture existing opps before clearing (used for conflict context)
+      const priorOpps = (acct.opps || []).map(o => ({ area: o.area || '', stage: o.stage || '', acv: o.acv || '' }));
       acct.opps = [];
 
       // Apply wrapper fields on first row
@@ -5310,6 +5337,26 @@ function runOppMerge(csvData) {
             oldAE: priorAE,
             newAE: csvAE,
             source: 'opps',
+            // Context about the conflict
+            isCustomer: !!acct.is_customer,
+            isInactiveCustomer: acct.type === 'Inactive Customer',
+            arr: acct.arr || null,
+            // What the OLD rep (priorAE / existing owner) has
+            oldSource: 'existing',
+            oldTeam: getTeamForRep(priorAE) || null,
+            // What the NEW rep (csvAE / from upload) brings
+            newSource: 'csv',
+            newTeam: getTeamForRep(csvAE) || null,
+            // Opp context from CSV row
+            hasOpp: Object.keys(oppFields).length > 0,
+            oppStage: oppFields.opp_stage || acct.opp_stage || '',
+            oppAcv: oppFields.opp_acv || '',
+            oppAreas: oppFields.opp_areas || acct.opp_areas || '',
+            oppOwner: (oppOwner || '').trim(),
+            // Existing record opps (captured before clearing)
+            existingOpps: priorOpps,
+            // Resolution reason
+            ownerResolution: ownerResult.reason,
           });
         }
       } else {
@@ -7361,6 +7408,51 @@ function updateConflictsBadge() {
   }
 }
 
+/** Derive a human-readable conflict type label from conflict context. */
+function getConflictTypeLabel(c) {
+  const hasNewOpp = !!c.hasOpp;
+  const hasExistingOpps = (c.existingOpps || []).length > 0;
+  let label, description;
+  if (hasNewOpp && hasExistingOpps) {
+    label = 'Competing Opportunities';
+    description = 'Both reps have active opps on this account.';
+  } else if (hasNewOpp && !hasExistingOpps) {
+    label = 'New Opp vs Existing Owner';
+    description = 'Upload brings a new opp under a different rep.';
+  } else if (!hasNewOpp && hasExistingOpps) {
+    label = 'Account Owner Change';
+    description = 'CSV reassigns the account away from a rep with active opps.';
+  } else {
+    label = 'Account Ownership';
+    description = 'SFDC account owner mismatch — no opp data either side.';
+  }
+  // Append opp owner note if it differs from both AEs
+  const oppOwner = (c.oppOwner || '').trim();
+  if (oppOwner && oppOwner !== c.oldAE && oppOwner !== c.newAE) {
+    label += ' (Opp Owner: ' + oppOwner + ')';
+  }
+  return { label, description };
+}
+
+/** Get account type badge text for a conflict. */
+function getConflictAccountType(c) {
+  if (c.isInactiveCustomer) return 'Inactive Customer';
+  if (c.isCustomer) {
+    if (c.arr) return 'Customer \u2022 $' + formatCompactNumber(c.arr) + ' ARR';
+    return 'Account + Customer';
+  }
+  return 'Account';
+}
+
+/** Format a number compactly (e.g. 125000 → 125k). */
+function formatCompactNumber(n) {
+  const num = parseFloat(n);
+  if (isNaN(num)) return String(n);
+  if (num >= 1000000) return (num / 1000000).toFixed(num % 1000000 === 0 ? 0 : 1) + 'M';
+  if (num >= 1000) return (num / 1000).toFixed(num % 1000 === 0 ? 0 : 1) + 'k';
+  return String(num);
+}
+
 /** Render the conflicts list in the overlay panel. */
 function renderConflictsOverlay() {
   const body = document.getElementById('conflictsBody');
@@ -7378,16 +7470,63 @@ function renderConflictsOverlay() {
     const enrollment = c.enrollment ? parseInt(c.enrollment).toLocaleString() : '—';
     const isStrategic = (parseInt(c.enrollment) || 0) >= STRATEGIC_ENROLLMENT_THRESHOLD;
     const stratBadge = isStrategic ? '<span class="conflict-strategic-badge">Strategic</span>' : '';
+    const accountType = getConflictAccountType(c);
+    const conflictType = getConflictTypeLabel(c);
+
+    // Old rep detail card
+    const oldTeamStr = c.oldTeam ? ' (' + escapeHtml(c.oldTeam) + ')' : '';
+    const existingOpps = c.existingOpps || [];
+    let oldOppHtml = '';
+    if (existingOpps.length > 0) {
+      const showOpps = existingOpps.slice(0, 2);
+      oldOppHtml = '<div class="conflict-opp-list">Has ' + existingOpps.length + ' existing opp' + (existingOpps.length !== 1 ? 's' : '') + ':';
+      showOpps.forEach(o => {
+        const acvStr = o.acv ? ' &mdash; $' + formatCompactNumber(o.acv) : '';
+        oldOppHtml += '<div class="conflict-opp-item">\u2022 ' + escapeHtml(o.area || 'Unknown') + ' &mdash; ' + escapeHtml(o.stage || 'No stage') + acvStr + '</div>';
+      });
+      if (existingOpps.length > 2) oldOppHtml += '<div class="conflict-opp-item" style="opacity:0.6;">and ' + (existingOpps.length - 2) + ' more</div>';
+      oldOppHtml += '</div>';
+    } else {
+      oldOppHtml = '<div class="conflict-opp-list" style="opacity:0.5;">No opportunity data</div>';
+    }
+
+    // New rep detail card
+    const newTeamStr = c.newTeam ? ' (' + escapeHtml(c.newTeam) + ')' : '';
+    let newOppHtml = '';
+    if (c.hasOpp) {
+      newOppHtml = '<div class="conflict-opp-list">CSV row includes opp:';
+      const areaStr = c.oppAreas || 'Unknown';
+      const stageStr = c.oppStage || 'No stage';
+      const acvStr = c.oppAcv ? '<div class="conflict-opp-item">\u2022 ACV: $' + formatCompactNumber(c.oppAcv) + '</div>' : '';
+      newOppHtml += '<div class="conflict-opp-item">\u2022 ' + escapeHtml(areaStr) + ' &mdash; ' + escapeHtml(stageStr) + '</div>' + acvStr;
+      newOppHtml += '</div>';
+    } else {
+      newOppHtml = '<div class="conflict-opp-list" style="opacity:0.5;">No opportunity data</div>';
+    }
+
+    // Opp owner callout
+    const oppOwner = (c.oppOwner || '').trim();
+    const oppOwnerNote = (oppOwner && oppOwner !== c.oldAE && oppOwner !== c.newAE)
+      ? '<div class="conflict-opp-owner-note">Opp Owner in SFDC: ' + escapeHtml(oppOwner) + '</div>' : '';
+
     html += `<div class="conflict-item">
       <div class="conflict-item-header" onclick="navigateToConflict(${idx})">
-        <div class="conflict-name">${c.name} ${stratBadge}</div>
-        <div class="conflict-detail">${c.state || '—'} &bull; ${enrollment} students &bull; ${c.source === 'customers' ? 'Customer' : 'Account'} data</div>
+        <div class="conflict-name">${escapeHtml(c.name)} ${stratBadge}</div>
+        <div class="conflict-detail">${c.state || '—'} &bull; ${enrollment} students &bull; <span class="conflict-account-type">${escapeHtml(accountType)}</span></div>
       </div>
-      <div class="conflict-ae-row">
-        <span class="conflict-ae conflict-ae-old" title="Previously assigned">${escapeHtml(c.oldAE)}</span>
-        <span class="conflict-vs">vs</span>
-        <span class="conflict-ae conflict-ae-new" title="From latest upload">${escapeHtml(c.newAE)}</span>
+      <div class="conflict-type-label">\u26A1 ${escapeHtml(conflictType.label)}</div>
+      <div class="conflict-type-desc">${escapeHtml(conflictType.description)}</div>
+      <div class="conflict-rep-card conflict-rep-old">
+        <div class="conflict-rep-card-title">Current Owner</div>
+        <div class="conflict-rep-card-name">${escapeHtml(c.oldAE)}${oldTeamStr}</div>
+        ${oldOppHtml}
       </div>
+      <div class="conflict-rep-card conflict-rep-new">
+        <div class="conflict-rep-card-title">From SFDC Upload</div>
+        <div class="conflict-rep-card-name">${escapeHtml(c.newAE)}${newTeamStr}</div>
+        ${newOppHtml}
+      </div>
+      ${oppOwnerNote}
       <div class="conflict-actions">
         <button class="conflict-resolve-btn" onclick="resolveConflict(${idx}, '${escapeAttr(c.oldAE)}')">Keep ${escapeHtml(c.oldAE.split(' ')[0])}</button>
         <button class="conflict-resolve-btn conflict-resolve-new" onclick="resolveConflict(${idx}, '${escapeAttr(c.newAE)}')">Assign ${escapeHtml(c.newAE.split(' ')[0])}</button>
