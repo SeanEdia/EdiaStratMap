@@ -1,6 +1,7 @@
 // Import data
 import accountData from '../data/accounts.json';
 import customerData from '../data/customers.json';
+import oppData from '../data/opps.json';
 
 // Import per-team config files
 // To move a rep between teams, edit only the two affected team JSON files.
@@ -16,6 +17,7 @@ const LS_ACCOUNTS_KEY = 'edia_account_data';
 const LS_CUSTOMERS_KEY = 'edia_customer_data';
 const LS_DATA_SAVED_KEY = 'edia_data_saved_at';
 const LS_CONFLICTS_KEY = 'edia_conflicts';
+const LS_OPPS_KEY = 'edia_opp_data';
 
 /** Save account and/or customer data to localStorage. */
 function saveDataToLocalStorage(accounts, customers) {
@@ -52,8 +54,17 @@ function loadDataFromLocalStorage() {
 function clearPersistedData() {
   localStorage.removeItem(LS_ACCOUNTS_KEY);
   localStorage.removeItem(LS_CUSTOMERS_KEY);
+  localStorage.removeItem(LS_OPPS_KEY);
   localStorage.removeItem(LS_DATA_SAVED_KEY);
   console.log('[Persist] Cleared saved data — will use bundled JSON on next load');
+}
+
+function saveOppsToLocalStorage(opps) {
+  try {
+    localStorage.setItem(LS_OPPS_KEY, JSON.stringify(opps));
+  } catch (e) {
+    console.warn('[Persist] Could not save opps to localStorage:', e.message);
+  }
 }
 
 /** Load conflict records from localStorage. */
@@ -82,6 +93,13 @@ const OPP_ENTRY_FIELDS = new Set([
   'opp_stage', 'opp_forecast', 'opp_areas', 'opp_acv', 'opp_probability',
   'opp_contact', 'opp_contact_title', 'opp_next_step', 'opp_last_activity',
   'opp_sdr', 'opp_champion', 'opp_economic_buyer', 'opp_competition'
+]);
+
+const OPP_WRAPPER_FIELDS = new Set([
+  'opp_owner', 'opportunity_name', 'intro_meeting_date',
+  'created_date', 'last_modified', 'age',
+  'metric_improvement_goal', 'decision_criteria', 'decision_process',
+  'paper_process', 'implication_of_pain'
 ]);
 
 function normalizeOppArea(area) {
@@ -290,6 +308,54 @@ function crossLinkCustomers() {
 
   if (linked) console.log(`[CrossLink] ${linked} account(s) matched to customer records`);
   if (parentLinked) console.log(`[CrossLink] ${parentLinked} customer(s) linked to parent district`);
+}
+
+// ============ JOIN OPPS INTO ACCOUNTS ============
+// Merges bundled opps.json data into ACCOUNT_DATA at startup.
+// Only runs when loading from bundled JSON (not localStorage, which already has opps embedded).
+function joinOppsToAccounts(accounts, opps) {
+  const acctByKey = new Map();
+  accounts.forEach(d => {
+    const key = (d.name || '').toLowerCase().trim() + '|' + (d.state || '').toUpperCase().trim();
+    acctByKey.set(key, d);
+    const normKey = normalizeDistrictName(d.name) + '|' + (d.state || '').toUpperCase().trim();
+    if (!acctByKey.has(normKey)) acctByKey.set(normKey, d);
+  });
+
+  const orphans = [];
+  opps.forEach(opp => {
+    const key = (opp.account_name || '').toLowerCase().trim() + '|' + (opp.state || '').toUpperCase().trim();
+    const normKey = normalizeDistrictName(opp.account_name) + '|' + (opp.state || '').toUpperCase().trim();
+    const acct = acctByKey.get(key) || acctByKey.get(normKey);
+    if (acct) {
+      acct.opp_owner = opp.opp_owner || '';
+      acct.opportunity_name = opp.opportunity_name || '';
+      acct.intro_meeting_date = opp.intro_meeting_date || '';
+      acct.created_date = opp.created_date || '';
+      acct.last_modified = opp.last_modified || '';
+      acct.age = opp.age || '';
+      acct._hasUploadedOpp = opp._hasUploadedOpp || false;
+      if (opp.metric_improvement_goal) acct.metric_improvement_goal = opp.metric_improvement_goal;
+      if (opp.decision_criteria) acct.decision_criteria = opp.decision_criteria;
+      if (opp.decision_process) acct.decision_process = opp.decision_process;
+      if (opp.paper_process) acct.paper_process = opp.paper_process;
+      if (opp.implication_of_pain) acct.implication_of_pain = opp.implication_of_pain;
+      acct.opps = opp.opps || [];
+      deriveOppSummary(acct);
+    } else {
+      orphans.push(opp.account_name);
+    }
+  });
+
+  accounts.forEach(d => {
+    if (!d.opps) d.opps = [];
+    if (!d.opp_count) deriveOppSummary(d);
+  });
+
+  if (orphans.length > 0) {
+    console.warn('[Opps Join] Orphaned opps (no matching account):', orphans);
+  }
+  console.log(`[Opps Join] Joined ${opps.length - orphans.length} opp records into accounts`);
 }
 
 // ============ PERFORMANCE INDICES ============
@@ -798,6 +864,12 @@ function initMap() {
   // otherwise from the bundled JSON files (accounts.json / customers.json).
   // After a merge, updated JSON is also downloaded for committing to the repo
   // so all users get the update on the next deploy.
+
+  // Join bundled opp data into accounts (only when loading from bundled JSON,
+  // not localStorage which already has opps embedded from a previous merge)
+  if (_dataSource === 'bundled') {
+    joinOppsToAccounts(ACCOUNT_DATA, oppData);
+  }
 
   // Cross-link customer ↔ account flags before building indices
   crossLinkCustomers();
@@ -4032,6 +4104,7 @@ function readSpreadsheetFile(file) {
 
 // ============ SFDC DATA REFRESH ============
 let sfdcDataType = 'accounts';
+let _userSelectedType = false;
 let pendingMergeData = null;
 let pendingMergeStats = null;
 // Type-split state: when CSV has a 'type' column, rows are split into accounts + customers
@@ -4044,12 +4117,16 @@ function openSfdcModal() {
 }
 function closeSfdcModal() {
   document.getElementById('sfdcModal').classList.remove('open');
+  _userSelectedType = false;
 }
 
 function setSfdcType(type) {
   sfdcDataType = type;
+  _userSelectedType = true;
   document.getElementById('sfdcTypeStrat').className = 'sfdc-type-btn' + (type === 'accounts' ? ' active-strat' : '');
   document.getElementById('sfdcTypeCust').className = 'sfdc-type-btn' + (type === 'customers' ? ' active-cust' : '');
+  const oppsBtn = document.getElementById('sfdcTypeOpps');
+  if (oppsBtn) oppsBtn.className = 'sfdc-type-btn' + (type === 'opps' ? ' active-strat' : '');
 }
 
 // Setup drag-and-drop
@@ -4984,7 +5061,251 @@ function runMerge(csvData, existingData, source) {
   return { mergedData, stats };
 }
 
+// ============ OPP-ONLY MERGE ============
+// Dedicated merge path for Opportunity CSV uploads.
+// Matches CSV rows to existing accounts and upserts opp data only.
+// Does NOT create new accounts, geocode, or modify account-level fields.
+function runOppMerge(csvData) {
+  if (csvData.length > 0) {
+    console.log('[Opp Merge] CSV columns:', Object.keys(csvData[0]));
+    console.log('[Opp Merge] Sample row:', csvData[0]);
+  }
+
+  // Build set of reps who currently have data loaded
+  const loadedReps = new Set();
+  ACCOUNT_DATA.forEach(item => {
+    if (item.ae) loadedReps.add(item.ae);
+  });
+  console.log('[Opp Merge] Loaded reps:', [...loadedReps].sort().join(', '));
+
+  // Build lookup for accounts by name+state
+  const acctByKey = new Map();
+  ACCOUNT_DATA.forEach((item, idx) => {
+    const exactKey = (item.name || '').toLowerCase().trim() + '|' + (item.state || '').toUpperCase().trim();
+    acctByKey.set(exactKey, { item, idx });
+    const normKey = normalizeDistrictName(item.name) + '|' + (item.state || '').toUpperCase().trim();
+    if (!acctByKey.has(normKey)) acctByKey.set(normKey, { item, idx });
+  });
+
+  const stats = {
+    total: csvData.length,
+    newRecords: 0,
+    updatedRecords: 0,
+    notesPreserved: 0,
+    consolidatedRecords: 0,
+    changes: [],
+    conflicts: [],
+    resolutions: [],
+    orphans: [],
+  };
+
+  // Track which accounts have been touched (for full replacement on first CSV row)
+  const touchedAccounts = new Set();
+
+  // Deep-clone ACCOUNT_DATA for the merge result
+  const mergedAccounts = ACCOUNT_DATA.map(a => JSON.parse(JSON.stringify(a)));
+  // Rebuild lookup on cloned array
+  const clonedByKey = new Map();
+  mergedAccounts.forEach((item, idx) => {
+    const exactKey = (item.name || '').toLowerCase().trim() + '|' + (item.state || '').toUpperCase().trim();
+    clonedByKey.set(exactKey, { item, idx });
+    const normKey = normalizeDistrictName(item.name) + '|' + (item.state || '').toUpperCase().trim();
+    if (!clonedByKey.has(normKey)) clonedByKey.set(normKey, { item, idx });
+  });
+
+  csvData.forEach((csvRow, rowIdx) => {
+    // Extract account name from the raw CSV row (before mapFieldName, which maps it to 'name')
+    const rawName = (csvRow.account_name || csvRow.name || '').trim();
+    if (!rawName) return;
+
+    // Find the state from the CSV row
+    const csvState = getStateFromRow(csvRow).toUpperCase().trim();
+
+    // Look up matching account
+    const exactKey = rawName.toLowerCase().trim() + '|' + csvState;
+    const normKey = normalizeDistrictName(rawName) + '|' + csvState;
+    const match = clonedByKey.get(exactKey) || clonedByKey.get(normKey);
+
+    if (!match) {
+      // Orphaned opp — no matching account
+      if (!stats.orphans.includes(rawName)) {
+        stats.orphans.push(rawName);
+        console.log('[Opp Merge] ORPHAN (no matching account):', rawName, csvState);
+      }
+      return;
+    }
+
+    const acct = match.item;
+    const acctKey = acct.name + '|' + (acct.state || '');
+
+    // Map CSV fields through mapFieldName
+    const oppFields = {};
+    const wrapperFields = {};
+    let csvAE = '';
+    let oppOwner = '';
+
+    Object.keys(csvRow).forEach(key => {
+      const val = csvRow[key];
+      if (typeof val !== 'string' || !val.trim()) return;
+      const trimmed = val.trim();
+      const mappedKey = mapFieldName(key);
+
+      if (mappedKey === 'ae') {
+        csvAE = trimmed;
+      } else if (mappedKey === 'opp_owner') {
+        oppOwner = trimmed;
+      } else if (mappedKey === 'enrollment') {
+        // CSV enrollment used for resolveOwner context only, NOT written to account
+      } else if (OPP_ENTRY_FIELDS.has(mappedKey)) {
+        oppFields[mappedKey] = trimmed;
+      } else if (OPP_WRAPPER_FIELDS.has(mappedKey)) {
+        wrapperFields[mappedKey] = trimmed;
+      } else if (mappedKey === 'name') {
+        // Skip — don't overwrite account name
+      } else if (['state', 'address', 'city', 'zip'].includes(mappedKey)) {
+        // Fill in MISSING values only, don't overwrite
+        if (!acct[mappedKey] && trimmed) acct[mappedKey] = trimmed;
+      }
+    });
+
+    // FULL REPLACEMENT: On the first CSV row for this account, clear its opps array
+    const isFirstTouch = !touchedAccounts.has(acctKey);
+    if (isFirstTouch) {
+      touchedAccounts.add(acctKey);
+      acct.opps = [];
+
+      // Apply wrapper fields on first row
+      if (oppOwner) acct.opp_owner = oppOwner;
+      if (wrapperFields.opportunity_name) acct.opportunity_name = wrapperFields.opportunity_name;
+      if (wrapperFields.intro_meeting_date) acct.intro_meeting_date = wrapperFields.intro_meeting_date;
+      if (wrapperFields.created_date) acct.created_date = wrapperFields.created_date;
+      if (wrapperFields.last_modified) acct.last_modified = wrapperFields.last_modified;
+      if (wrapperFields.age) acct.age = wrapperFields.age;
+      // MEDDPICC fields
+      if (wrapperFields.metric_improvement_goal) acct.metric_improvement_goal = wrapperFields.metric_improvement_goal;
+      if (wrapperFields.decision_criteria) acct.decision_criteria = wrapperFields.decision_criteria;
+      if (wrapperFields.decision_process) acct.decision_process = wrapperFields.decision_process;
+      if (wrapperFields.paper_process) acct.paper_process = wrapperFields.paper_process;
+      if (wrapperFields.implication_of_pain) acct.implication_of_pain = wrapperFields.implication_of_pain;
+      acct._hasUploadedOpp = true;
+    } else {
+      // Subsequent rows: update MEDDPICC if provided (may come from different opp rows)
+      if (wrapperFields.metric_improvement_goal) acct.metric_improvement_goal = wrapperFields.metric_improvement_goal;
+      if (wrapperFields.decision_criteria) acct.decision_criteria = wrapperFields.decision_criteria;
+      if (wrapperFields.decision_process) acct.decision_process = wrapperFields.decision_process;
+      if (wrapperFields.paper_process) acct.paper_process = wrapperFields.paper_process;
+      if (wrapperFields.implication_of_pain) acct.implication_of_pain = wrapperFields.implication_of_pain;
+    }
+
+    // Upsert opp entry
+    if (Object.keys(oppFields).length > 0) {
+      const oppEntry = buildOppEntry(oppFields);
+      upsertOpp(acct, oppEntry);
+    }
+
+    // Parse numeric fields within opps
+    (acct.opps || []).forEach(o => {
+      if (o.acv !== undefined && o.acv !== '') {
+        const cleaned = String(o.acv).replace(/[$,]/g, '');
+        const val = parseFloat(cleaned);
+        if (!isNaN(val)) o.acv = val;
+      }
+      if (o.probability !== undefined && o.probability !== '') {
+        const cleaned = String(o.probability).replace(/[$,]/g, '');
+        const val = parseFloat(cleaned);
+        if (!isNaN(val)) o.probability = val;
+      }
+    });
+
+    // Owner resolution (only on first row per account — subsequent rows skip)
+    if (isFirstTouch) {
+      if (!isDOE(acct.name)) {
+        const priorAE = (ACCOUNT_DATA[match.idx].ae || '').trim();
+        const ownerResult = resolveOwner(csvAE, priorAE, {
+          enrollment: acct.enrollment, // Use account's existing enrollment
+          hasUploadedOpp: true,
+          oppOwner: oppOwner,
+          loadedReps,
+          accountName: acct.name || '',
+        });
+        acct.ae = ownerResult.ae;
+        // Tag source team
+        if (csvAE) {
+          acct._source_team = getTeamForRep(csvAE) || getTeamForRep(priorAE) || acct._source_team || null;
+        }
+        // territory_ae handling
+        if (ownerResult.reason === 'no_data_loaded' && csvAE) {
+          acct.territory_ae = csvAE;
+        } else {
+          delete acct.territory_ae;
+        }
+
+        // Track resolution
+        if (csvAE) {
+          stats.resolutions.push({
+            name: acct.name,
+            csvOwner: csvAE,
+            resolvedAE: ownerResult.ae || '(unassigned)',
+            reason: ownerResult.reason,
+            oppOwner: oppOwner,
+            isNew: false,
+          });
+          if (ownerResult.reason !== 'direct_assign') {
+            console.log('[Opp Merge] Owner resolved:', acct.name,
+              '- CSV owner', csvAE, '→', ownerResult.ae || '(unassigned)',
+              '(reason:', ownerResult.reason + ')');
+          }
+        }
+
+        // Conflict detection
+        if (csvAE && priorAE && csvAE !== priorAE
+            && ALL_ACTIVE_REPS.has(csvAE) && ALL_ACTIVE_REPS.has(priorAE)
+            && priorAE !== ACCOUNT_PRIMARY_AE) {
+          console.log('[Opp Merge] CONFLICT:', acct.name, '- was', priorAE, ', CSV says', csvAE);
+          stats.conflicts.push({
+            name: acct.name,
+            enrollment: parseInt(acct.enrollment) || 0,
+            state: acct.state || '',
+            oldAE: priorAE,
+            newAE: csvAE,
+            source: 'opps',
+          });
+        }
+      } else {
+        // DOE account — strip ownership
+        delete acct.ae;
+        delete acct.csm;
+      }
+
+      // Track the change
+      stats.updatedRecords++;
+      stats.changes.push({ name: acct.name, action: 'updated' });
+    }
+  });
+
+  // Add orphan count to stats
+  if (stats.orphans.length > 0) {
+    console.log(`[Opp Merge] ${stats.orphans.length} orphaned opp(s) — no matching account`);
+  }
+
+  return { mergedAccounts, stats };
+}
+
 function previewMerge(csvData) {
+  // Opp-only merge path — skip type detection and auto-detection entirely
+  if (sfdcDataType === 'opps') {
+    mergeHasTypeSplit = false;
+    pendingAccountMerge = null;
+    pendingCustomerMerge = null;
+    const consolidation = consolidateParentAccounts(csvData);
+    const result = runOppMerge(consolidation.rows);
+    pendingMergeData = result.mergedAccounts;
+    pendingMergeStats = result.stats;
+    pendingMergeStats.consolidatedRecords = consolidation.consolidatedCount;
+    showMergeModal(result.stats);
+    return;
+  }
+
   // Check if CSV has a 'type' column for per-row customer/account splitting.
   // Type values: "Customer" → customer dataset, "Inactive Customer"/blank/"Prospect" → account dataset.
   const hasTypeColumn = csvData.length > 0 && csvData[0].hasOwnProperty('type');
@@ -5037,10 +5358,10 @@ function previewMerge(csvData) {
   pendingAccountMerge = null;
   pendingCustomerMerge = null;
 
-  // Auto-detect data type from CSV columns.
+  // Auto-detect data type from CSV columns (only if user hasn't explicitly selected).
   // Customer data has distinctive fields (arr, csm, segment, gdr, ndr)
   // that account data never has. If we find them, override the toggle.
-  if (csvData.length > 0) {
+  if (!_userSelectedType && csvData.length > 0) {
     const cols = new Set(Object.keys(csvData[0]).map(k => k.toLowerCase().replace(/\s+/g, '_')));
     const customerSignals = ['arr', 'active_arr', 'annual_recurring_revenue', 'revenue',
                              'csm', 'csm_name', 'customer_success_manager',
@@ -5201,7 +5522,18 @@ function mapFieldName(csvField) {
     'last_modified_date': 'last_modified',
     // Leadership
     'superintendent': 'superintendent',
-    'super': 'superintendent'
+    'super': 'superintendent',
+    // Opp-specific CSV fields
+    'opportunity_name': 'opportunity_name',
+    'intro_meeting_date': 'intro_meeting_date',
+    'age': 'age',
+    'created_date': 'created_date',
+    'metric_-_improvement_goal': 'metric_improvement_goal',
+    'metric_improvement_goal': 'metric_improvement_goal',
+    'decision_criteria': 'decision_criteria',
+    'decision_process': 'decision_process',
+    'paper_process': 'paper_process',
+    'implication_of_pain': 'implication_of_pain',
   };
 
   const normalized = csvField.toLowerCase().replace(/[\/()&:]+/g, '_').replace(/\s+/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
@@ -5379,7 +5711,7 @@ function showMergeModal(stats) {
 
   const mergeTitle = mergeHasTypeSplit
     ? 'Merge Preview: Accounts + Customers (split by Type)'
-    : `Merge Preview: ${sfdcDataType === 'accounts' ? 'Accounts' : 'Customers'}`;
+    : `Merge Preview: ${sfdcDataType === 'accounts' ? 'Accounts' : sfdcDataType === 'opps' ? 'Opportunities' : 'Customers'}`;
   document.getElementById('mergeModalTitle').textContent = mergeTitle;
   document.getElementById('mergeTotalRecords').textContent = stats.total;
   document.getElementById('mergeNewRecords').textContent = stats.newRecords;
@@ -5408,7 +5740,8 @@ function showMergeModal(stats) {
   // Show change list
   const changesList = document.getElementById('mergeChangesList');
   const conflictCount = stats.conflicts ? stats.conflicts.length : 0;
-  if (stats.changes.length > 0 || needsGeocode > 0 || conflictCount > 0) {
+  const orphanCount = stats.orphans ? stats.orphans.length : 0;
+  if (stats.changes.length > 0 || needsGeocode > 0 || conflictCount > 0 || orphanCount > 0) {
     const maxShow = 30;
     let html = '';
 
@@ -5419,6 +5752,16 @@ function showMergeModal(stats) {
         <div style="color:var(--text-dim);margin-top:4px;">Accounts assigned to multiple reps. Resolve via the Conflicts dropdown after merge.</div>
         ${stats.conflicts.slice(0, 5).map(c => `<div style="margin-top:4px;font-size:10px;color:var(--text-dim);">&bull; ${c.name}: ${c.oldAE} &rarr; ${c.newAE} <span style="opacity:0.6;">(${c.source === 'customers' ? 'Customer' : 'Account'})</span></div>`).join('')}
         ${conflictCount > 5 ? `<div style="margin-top:4px;font-size:10px;color:var(--text-muted);font-style:italic;">...and ${conflictCount - 5} more</div>` : ''}
+      </div>`;
+    }
+
+    // Show orphaned opps notice (opp merge only)
+    if (orphanCount > 0) {
+      html += `<div style="background:#E8853D22;border:1px solid #E8853D44;border-radius:6px;padding:8px 10px;margin-bottom:10px;font-size:11px;">
+        <strong style="color:#E8853D;">${orphanCount} orphaned opp${orphanCount > 1 ? 's' : ''} (no matching account)</strong>
+        <div style="color:var(--text-dim);margin-top:4px;">These opps will be skipped — add the account first via an Account upload.</div>
+        ${stats.orphans.slice(0, 5).map(n => `<div style="margin-top:4px;font-size:10px;color:var(--text-dim);">&bull; ${n}</div>`).join('')}
+        ${orphanCount > 5 ? `<div style="margin-top:4px;font-size:10px;color:var(--text-muted);font-style:italic;">...and ${orphanCount - 5} more</div>` : ''}
       </div>`;
     }
 
@@ -5747,6 +6090,57 @@ function downloadJsonFile(data, filename) {
   downloadLink.href = URL.createObjectURL(jsonBlob);
   downloadLink.download = filename;
   downloadLink.click();
+}
+
+// Extract opp data from accounts for opps.json download (reverse of joinOppsToAccounts)
+function extractOppsFromAccounts(accounts) {
+  const opps = [];
+  for (const acct of accounts) {
+    const hasOpps = acct.opps && acct.opps.length > 0;
+    const hasOppWrapper = acct.opp_owner || acct.opportunity_name || acct._hasUploadedOpp;
+    if (!hasOpps && !hasOppWrapper) continue;
+
+    const oppRecord = {
+      account_name: acct.name,
+      state: acct.state || '',
+      opp_owner: acct.opp_owner || '',
+      opportunity_name: acct.opportunity_name || '',
+      intro_meeting_date: acct.intro_meeting_date || '',
+      created_date: acct.created_date || '',
+      last_modified: acct.last_modified || '',
+      age: acct.age || '',
+      opps: acct.opps || [],
+    };
+    if (acct._hasUploadedOpp) oppRecord._hasUploadedOpp = true;
+    if (acct.metric_improvement_goal) oppRecord.metric_improvement_goal = acct.metric_improvement_goal;
+    if (acct.decision_criteria) oppRecord.decision_criteria = acct.decision_criteria;
+    if (acct.decision_process) oppRecord.decision_process = acct.decision_process;
+    if (acct.paper_process) oppRecord.paper_process = acct.paper_process;
+    if (acct.implication_of_pain) oppRecord.implication_of_pain = acct.implication_of_pain;
+    opps.push(oppRecord);
+  }
+  return opps;
+}
+
+// Strip opp fields from accounts for clean accounts.json download
+function stripOppsFromAccounts(accounts) {
+  const OPP_STRIP_FIELDS = new Set([
+    'opp_owner', 'opportunity_name', 'intro_meeting_date',
+    'created_date', 'last_modified', 'age', '_hasUploadedOpp',
+    'metric_improvement_goal', 'metric_-_improvement_goal',
+    'decision_criteria', 'decision_process', 'paper_process', 'implication_of_pain',
+    'opp_count', 'opp_stage', 'opp_forecast', 'opp_areas', 'opp_acv',
+    'opp_probability', 'opp_next_step', 'opp_contact', 'opp_contact_title',
+    'opp_sdr', 'opp_champion', 'opp_economic_buyer', 'opp_competition',
+    'opp_last_activity', 'opps',
+  ]);
+  return accounts.map(acct => {
+    const cleaned = {};
+    for (const key of Object.keys(acct)) {
+      if (!OPP_STRIP_FIELDS.has(key)) cleaned[key] = acct[key];
+    }
+    return cleaned;
+  });
 }
 
 // Helper: geocode records missing lat/lng, updating confirmBtn text. Returns { geocodedCount, errors, inheritedCount }.
@@ -6114,6 +6508,47 @@ async function confirmMerge() {
     // Disable button and show loading state
     confirmBtn.disabled = true;
     confirmBtn.textContent = 'Processing...';
+
+    // Opp-only merge path — no geocoding needed
+    if (sfdcDataType === 'opps') {
+      confirmBtn.textContent = 'Saving data...';
+
+      // Apply to in-memory array
+      ACCOUNT_DATA.length = 0;
+      pendingMergeData.forEach(item => ACCOUNT_DATA.push(item));
+
+      // Persist to localStorage
+      saveDataToLocalStorage(ACCOUNT_DATA, null);
+      _dataSource = 'localStorage';
+
+      // Download opps.json (extracted from merged ACCOUNT_DATA)
+      const extractedOpps = extractOppsFromAccounts(ACCOUNT_DATA);
+      downloadJsonFile(extractedOpps, 'opps.json');
+      await new Promise(resolve => setTimeout(resolve, 500));
+      // Also download accounts.json (may have AE changes from holdout resolution)
+      const strippedAccounts = stripOppsFromAccounts(ACCOUNT_DATA);
+      downloadJsonFile(strippedAccounts, 'accounts.json');
+
+      // Also persist extracted opps to localStorage for the opp-only path
+      saveOppsToLocalStorage(extractedOpps);
+
+      localStorage.setItem('edia_sfdc_last_refresh', new Date().toISOString());
+      // Capture stats BEFORE closeMergeModal() nulls pendingMergeStats
+      const savedStats = pendingMergeStats;
+      storeNewConflicts(savedStats);
+      closeMergeModal();
+      postMergeRefresh();
+
+      showUploadSummary({
+        stats: savedStats,
+        geocodedCount: 0,
+        inheritedCount: 0,
+        errors: [],
+        missingCoords: [],
+        hiddenByFilter: 0,
+      });
+      return;
+    }
 
     if (mergeHasTypeSplit) {
       // Type-split merge: process both accounts and customers
