@@ -1183,6 +1183,76 @@ input[type="range"]::-webkit-slider-thumb {
 /* Conflicts overlay positioning — appears below the Conflicts button */
 .conflicts-overlay { right: 16px; }
 
+/* Export trigger button */
+.export-trigger-wrap { display: none; }
+.export-trigger { border-color: var(--accent-strat) !important; border-color: rgba(99,163,255,0.25) !important; }
+.export-trigger:hover { border-color: var(--accent-strat) !important; }
+.export-trigger.active { border-color: var(--accent-strat) !important; background: var(--surface) !important; }
+
+/* Export overlay */
+.export-overlay { width: 340px; }
+.export-overlay .export-scope {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--panel-border);
+}
+.export-overlay .export-scope strong { color: var(--text); }
+.export-overlay .export-sheet-list { list-style: none; padding: 0; margin: 0 0 14px; }
+.export-overlay .export-sheet-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  font-size: 11px;
+  color: var(--text-dim);
+}
+.export-overlay .export-sheet-list li.disabled { opacity: 0.4; pointer-events: none; }
+.export-overlay .export-sheet-list input[type="checkbox"] {
+  accent-color: var(--accent-strat);
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+}
+.export-overlay .export-sheet-list .sheet-count {
+  margin-left: auto;
+  font-size: 10px;
+  color: var(--text-muted);
+  font-family: 'JetBrains Mono', monospace;
+}
+.export-overlay .export-format-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  font-size: 11px;
+  color: var(--text-dim);
+}
+.export-overlay .export-format-row label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+}
+.export-overlay .export-format-row input[type="radio"] {
+  accent-color: var(--accent-strat);
+}
+.export-overlay .export-btn {
+  width: 100%;
+  padding: 9px 0;
+  background: var(--accent-strat);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.export-overlay .export-btn:hover { opacity: 0.85; }
+.export-overlay .export-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
 /* Conflict list items */
 .conflict-item {
   background: var(--surface);
