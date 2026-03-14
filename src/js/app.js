@@ -7593,342 +7593,293 @@ function protectedOpenSfdcModal() {
   });
 }
 
-// ============ EXPORT DATA ============
+// ============ DATA EXPORT ============
 
-let exportOverlayOpen = false;
+function exportData() {
+  if (!selectedTeam) {
+    alert('Select a team first to export data.');
+    return;
+  }
 
-function toggleExportOverlay() {
-  exportOverlayOpen = !exportOverlayOpen;
-  const overlay = document.getElementById('exportOverlay');
-  const trigger = document.getElementById('exportTrigger');
-  if (overlay) overlay.classList.toggle('open', exportOverlayOpen);
-  if (trigger) trigger.classList.toggle('active', exportOverlayOpen);
-  if (exportOverlayOpen) renderExportOverlay();
+  const scopeLabel = selectedRep && selectedRep !== '__unassigned__'
+    ? selectedRep
+    : selectedTeam;
+
+  // Use the already-filtered arrays (respects team, rep, stage, and sidebar filters)
+  const accounts = filteredAccountData || [];
+  const customers = filteredCustData || [];
+
+  const wb = XLSX.utils.book_new();
+  let sheetCount = 0;
+
+  // --- Sheet 1: Account Summary ---
+  if (accounts.length > 0) {
+    const headers = [
+      'District Name', 'State', 'Region', 'Enrollment', 'Account Executive',
+      'Holdout AE', 'SIS Platform', 'Opp Stage', 'Total ACV', 'Forecast',
+      'Next Step', 'Last Activity', 'Contact', 'Contact Title', 'SDR',
+      '# Opps', 'Product Areas', 'Superintendent', 'Is Customer', 'Has Notes',
+      'Latitude', 'Longitude'
+    ];
+    const rows = [headers];
+    accounts.forEach(d => {
+      const opps = d.opps && d.opps.length > 0 ? d.opps : (d.opp_stage ? [buildOppEntry(d)] : []);
+      const totalAcv = opps.reduce((sum, o) => sum + (Number(o.acv) || 0), 0);
+      const noteKey = 'edia_notes_' + d.name.replace(/[^a-zA-Z0-9]/g, '_');
+      let hasNotes = false;
+      try { hasNotes = JSON.parse(localStorage.getItem(noteKey) || '[]').length > 0; } catch(e) {}
+      const nextStep = (d.opp_next_step || '').substring(0, 500);
+      rows.push([
+        d.name || '',
+        d.state || '',
+        d.region || '',
+        parseInt(d.enrollment) || '',
+        getTerritoryAE(d) || '',
+        getHoldoutAE(d) || '',
+        d.sis || '',
+        d.opp_stage || '',
+        totalAcv || '',
+        d.opp_forecast || '',
+        nextStep,
+        d.opp_last_activity || '',
+        d.opp_contact || '',
+        d.opp_contact_title || '',
+        d.opp_sdr || '',
+        opps.length,
+        d.opp_areas || '',
+        d.superintendent || '',
+        d.is_customer ? 'Yes' : 'No',
+        hasNotes ? 'Yes' : 'No',
+        d.lat || '',
+        d.lng || ''
+      ]);
+    });
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    // Set column widths for readability
+    ws['!cols'] = [
+      { wch: 35 }, { wch: 6 }, { wch: 14 }, { wch: 12 }, { wch: 18 },
+      { wch: 18 }, { wch: 18 }, { wch: 18 }, { wch: 12 }, { wch: 12 },
+      { wch: 40 }, { wch: 12 }, { wch: 20 }, { wch: 25 }, { wch: 18 },
+      { wch: 7 }, { wch: 30 }, { wch: 25 }, { wch: 12 }, { wch: 10 },
+      { wch: 10 }, { wch: 10 }
+    ];
+    XLSX.utils.book_append_sheet(wb, ws, 'Accounts');
+    sheetCount++;
+  }
+
+  // --- Sheet 2: Pipeline (one row per opportunity) ---
+  {
+    const pHeaders = [
+      'District Name', 'State', 'Enrollment', 'Account Executive',
+      'Product Area', 'Stage', 'Forecast', 'ACV', 'Probability',
+      'Contact', 'Contact Title', 'Next Step', 'Last Activity', 'SDR',
+      'Champion', 'Economic Buyer', 'Competition'
+    ];
+    const pRows = [pHeaders];
+    accounts.forEach(d => {
+      const opps = d.opps && d.opps.length > 0 ? d.opps : (d.opp_stage ? [buildOppEntry(d)] : []);
+      opps.forEach(opp => {
+        if (!opp.stage) return; // skip empty opps
+        pRows.push([
+          d.name || '',
+          d.state || '',
+          parseInt(d.enrollment) || '',
+          getTerritoryAE(d) || '',
+          opp.area || '',
+          opp.stage || '',
+          opp.forecast || '',
+          Number(opp.acv) || '',
+          opp.probability || '',
+          opp.contact || '',
+          opp.contact_title || '',
+          opp.next_step || '',
+          opp.last_activity || '',
+          opp.sdr || '',
+          (opp.champion || '').substring(0, 300),
+          (opp.economic_buyer || '').substring(0, 300),
+          (opp.competition || '').substring(0, 300)
+        ]);
+      });
+    });
+    if (pRows.length > 1) {
+      const ws = XLSX.utils.aoa_to_sheet(pRows);
+      ws['!cols'] = [
+        { wch: 35 }, { wch: 6 }, { wch: 12 }, { wch: 18 },
+        { wch: 25 }, { wch: 18 }, { wch: 12 }, { wch: 12 }, { wch: 10 },
+        { wch: 20 }, { wch: 28 }, { wch: 50 }, { wch: 12 }, { wch: 18 },
+        { wch: 40 }, { wch: 40 }, { wch: 40 }
+      ];
+      XLSX.utils.book_append_sheet(wb, ws, 'Pipeline');
+      sheetCount++;
+    }
+  }
+
+  // --- Sheet 3: Action Items ---
+  {
+    const aHeaders = ['District Name', 'Category', 'Days Since Activity', 'Last Activity', 'Enrollment', 'Opp Stage', 'Next Step(s)'];
+    const aRows = [aHeaders];
+
+    // Gather all accounts with their action-relevant data
+    const allForActions = [];
+    accounts.forEach(d => {
+      const opps = d.opps && d.opps.length > 0 ? d.opps : (d.opp_stage ? [buildOppEntry(d)] : []);
+      const lastAct = d.opp_last_activity || '';
+      const nextSteps = opps.map(o => {
+        const ns = (o.next_step || '').trim();
+        return o.area ? o.area + ': ' + ns : ns;
+      }).filter(Boolean).join(' | ');
+      allForActions.push({
+        name: d.name,
+        lastActivity: lastAct,
+        enrollment: d.enrollment,
+        oppStage: d.opp_stage || '',
+        nextSteps: nextSteps,
+        opps: opps
+      });
+    });
+
+    // Stalest (have activity dates, sorted oldest first)
+    const withActivity = allForActions
+      .filter(a => a.lastActivity && parseUSDate(a.lastActivity))
+      .map(a => ({ ...a, daysSince: daysAgo(a.lastActivity) }))
+      .sort((a, b) => b.daysSince - a.daysSince);
+    withActivity.forEach(a => {
+      aRows.push([a.name, 'Stalest', a.daysSince, a.lastActivity, parseInt(a.enrollment) || '', a.oppStage, a.nextSteps]);
+    });
+
+    // Due This Week
+    allForActions.forEach(a => {
+      let isDue = false;
+      a.opps.forEach(opp => {
+        if (opp.next_step) {
+          const dates = extractDatesFromText(opp.next_step);
+          if (dates.some(d => isThisWeek(d))) isDue = true;
+        }
+      });
+      if (isDue) {
+        aRows.push([a.name, 'Due This Week', '', a.lastActivity, parseInt(a.enrollment) || '', a.oppStage, a.nextSteps]);
+      }
+    });
+
+    // Untouched (no activity date)
+    allForActions.filter(a => !a.lastActivity || !parseUSDate(a.lastActivity)).forEach(a => {
+      aRows.push([a.name, 'Untouched', '', '', parseInt(a.enrollment) || '', a.oppStage, a.nextSteps]);
+    });
+
+    if (aRows.length > 1) {
+      const ws = XLSX.utils.aoa_to_sheet(aRows);
+      ws['!cols'] = [
+        { wch: 35 }, { wch: 16 }, { wch: 18 }, { wch: 14 }, { wch: 12 }, { wch: 18 }, { wch: 60 }
+      ];
+      XLSX.utils.book_append_sheet(wb, ws, 'Action Items');
+      sheetCount++;
+    }
+  }
+
+  // --- Sheet 4: Conflicts ---
+  {
+    const conflicts = CONFLICTS || [];
+    // Filter conflicts relevant to the selected team/rep
+    const teamReps = selectedTeam ? _teamRepsSet[selectedTeam] : null;
+    const relevantConflicts = conflicts.filter(c => {
+      if (selectedRep && selectedRep !== '__unassigned__') {
+        return c.oldAE === selectedRep || c.newAE === selectedRep;
+      }
+      if (teamReps) {
+        return teamReps.has(c.oldAE) || teamReps.has(c.newAE);
+      }
+      return true;
+    });
+
+    if (relevantConflicts.length > 0) {
+      const cHeaders = ['District Name', 'Enrollment', 'State', 'Previous AE', 'New AE (from CSV)'];
+      const cRows = [cHeaders];
+      relevantConflicts.forEach(c => {
+        cRows.push([c.name || '', c.enrollment || '', c.state || '', c.oldAE || '', c.newAE || '']);
+      });
+      const ws = XLSX.utils.aoa_to_sheet(cRows);
+      ws['!cols'] = [{ wch: 35 }, { wch: 12 }, { wch: 6 }, { wch: 20 }, { wch: 20 }];
+      XLSX.utils.book_append_sheet(wb, ws, 'Conflicts');
+      sheetCount++;
+    }
+  }
+
+  // --- Sheet 5: Customer Book ---
+  if (customers.length > 0) {
+    const cuHeaders = [
+      'District Name', 'State', 'Region', 'Segment', 'Students', 'ARR',
+      'ARR 12mo Ago', 'GDR', 'NDR', 'Lapsed Renewal', 'CSM',
+      'Account Executive', 'Last Activity', 'SIS', 'Math Supplemental',
+      'Attendance/Comms', 'Also Strategic Account'
+    ];
+    const cuRows = [cuHeaders];
+    customers.forEach(d => {
+      cuRows.push([
+        d.name || '',
+        d.state || '',
+        d.region || '',
+        d.segment || '',
+        parseInt(d.students || d.enrollment) || '',
+        parseFloat(d.arr) || '',
+        parseFloat(d.arr_12mo_ago) || '',
+        d.gdr || '',
+        d.ndr || '',
+        d.lapsed_renewal || '',
+        d.csm || '',
+        d.ae || '',
+        d.last_activity || '',
+        d.sis || '',
+        d.math_supplemental || '',
+        d.attendance_comms || '',
+        (d.also_account || d.also_strategic) ? 'Yes' : 'No'
+      ]);
+    });
+    const ws = XLSX.utils.aoa_to_sheet(cuRows);
+    ws['!cols'] = [
+      { wch: 35 }, { wch: 6 }, { wch: 14 }, { wch: 14 }, { wch: 10 }, { wch: 12 },
+      { wch: 14 }, { wch: 8 }, { wch: 8 }, { wch: 14 }, { wch: 18 },
+      { wch: 18 }, { wch: 14 }, { wch: 18 }, { wch: 20 },
+      { wch: 20 }, { wch: 20 }
+    ];
+    XLSX.utils.book_append_sheet(wb, ws, 'Customers');
+    sheetCount++;
+  }
+
+  if (sheetCount === 0) {
+    alert('No data to export for the current selection.');
+    return;
+  }
+
+  // Generate filename
+  const safeName = scopeLabel.replace(/[^a-zA-Z0-9]/g, '_');
+  const dateStr = new Date().toISOString().slice(0, 10);
+  const filename = 'edia_export_' + safeName + '_' + dateStr + '.xlsx';
+
+  XLSX.writeFile(wb, filename);
+
+  // Show confirmation toast
+  showExportToast(sheetCount, scopeLabel);
+}
+
+function showExportToast(sheetCount, scopeLabel) {
+  const existing = document.querySelector('.export-toast');
+  if (existing) existing.remove();
+
+  const toast = document.createElement('div');
+  toast.className = 'export-toast';
+  toast.innerHTML = '<span class="toast-icon">✓</span> Exported ' + sheetCount + ' sheet' + (sheetCount > 1 ? 's' : '') + ' for ' + scopeLabel;
+  document.body.appendChild(toast);
+  requestAnimationFrame(() => toast.classList.add('show'));
+  setTimeout(() => {
+    toast.classList.remove('show');
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
 }
 
 /** Show/hide the export button based on whether a team is selected. */
 function updateExportButtonVisibility() {
-  const wrap = document.getElementById('exportTriggerWrap');
-  if (!wrap) return;
-  wrap.style.display = selectedTeam ? '' : 'none';
-  if (!selectedTeam && exportOverlayOpen) {
-    exportOverlayOpen = false;
-    const overlay = document.getElementById('exportOverlay');
-    if (overlay) overlay.classList.remove('open');
-  }
-}
-
-function renderExportOverlay() {
-  const body = document.getElementById('exportOverlayBody');
-  const title = document.getElementById('exportOverlayTitle');
-  if (!body) return;
-
-  // Scope label
-  let scopeLabel = selectedTeam || 'All';
-  if (selectedRep && !MANAGERS.has(selectedRep)) {
-    scopeLabel = selectedRep + ' (' + selectedTeam + ')';
-  }
-  if (title) title.textContent = 'Export Data';
-
-  // Count rows for each sheet
-  const accountCount = filteredAccountData.length;
-  let pipelineCount = 0;
-  filteredAccountData.forEach(d => {
-    const opps = d.opps && d.opps.length > 0 ? d.opps : (d.opp_stage ? [buildOppEntry(d)] : []);
-    pipelineCount += opps.length;
-  });
-  const actionData = gatherActionItems();
-  const actionCount = actionData.stalest.length + actionData.dueThisWeek.length + actionData.untouched.length;
-
-  // Conflicts scoped to team
-  const scopedConflicts = getScopedConflicts();
-  const conflictCount = scopedConflicts.length;
-
-  const customerCount = filteredCustData.length;
-
-  let html = '';
-  html += '<div class="export-scope">Exporting: <strong>' + escapeHtml(scopeLabel) + '</strong></div>';
-  html += '<ul class="export-sheet-list">';
-  html += '<li><input type="checkbox" id="expAccounts" checked' + (accountCount === 0 ? ' disabled' : '') + '><span>Account Summary</span><span class="sheet-count">' + accountCount + '</span></li>';
-  html += '<li><input type="checkbox" id="expPipeline" checked' + (pipelineCount === 0 ? ' disabled' : '') + '><span>Pipeline / Opportunities</span><span class="sheet-count">' + pipelineCount + '</span></li>';
-  html += '<li><input type="checkbox" id="expActions" checked' + (actionCount === 0 ? ' disabled' : '') + '><span>Action Items</span><span class="sheet-count">' + actionCount + '</span></li>';
-  html += '<li' + (conflictCount === 0 ? ' class="disabled"' : '') + '><input type="checkbox" id="expConflicts"' + (conflictCount > 0 ? ' checked' : ' disabled') + '><span>Conflicts</span><span class="sheet-count">' + conflictCount + '</span></li>';
-  html += '<li' + (customerCount === 0 ? ' class="disabled"' : '') + '><input type="checkbox" id="expCustomers"' + (customerCount > 0 ? ' checked' : ' disabled') + '><span>Customer Book</span><span class="sheet-count">' + customerCount + '</span></li>';
-  html += '</ul>';
-
-  html += '<div class="export-format-row">';
-  html += '<span>Format:</span>';
-  html += '<label><input type="radio" name="exportFormat" value="xlsx" checked> Excel (.xlsx)</label>';
-  html += '<label><input type="radio" name="exportFormat" value="csv"> CSV</label>';
-  html += '</div>';
-
-  html += '<button class="export-btn" onclick="executeExport()">Download Export</button>';
-  body.innerHTML = html;
-}
-
-function getScopedConflicts() {
-  if (!CONFLICTS || CONFLICTS.length === 0) return [];
-  if (!selectedTeam) return [];
-  // Get reps for the selected team
-  const teamInfo = TEAM_REP_DATA[selectedTeam];
-  const teamReps = teamInfo ? teamInfo.reps.map(r => r.name) : [];
-  if (selectedRep && !MANAGERS.has(selectedRep)) {
-    return CONFLICTS.filter(c => c.oldAE === selectedRep || c.newAE === selectedRep);
-  }
-  return CONFLICTS.filter(c => teamReps.includes(c.oldAE) || teamReps.includes(c.newAE));
-}
-
-function gatherActionItems() {
-  const allAccounts = [];
-  filteredAccountData.forEach(d => {
-    allAccounts.push({
-      name: d.name,
-      lastActivity: d.opp_last_activity || '',
-      nextStep: d.opp_next_step || '',
-      opps: d.opps && d.opps.length > 0 ? d.opps : (d.opp_stage ? [buildOppEntry(d)] : []),
-      data: d
-    });
-  });
-  if (currentView === 'customers' || currentView === 'all') {
-    filteredCustData.forEach(d => {
-      if (currentView === 'all' && allAccounts.some(a => a.name === d.name)) return;
-      allAccounts.push({
-        name: d.name,
-        lastActivity: d.last_activity || '',
-        nextStep: '',
-        opps: [],
-        data: d
-      });
-    });
-  }
-
-  // Stalest
-  const withActivity = allAccounts
-    .filter(a => a.lastActivity && parseUSDate(a.lastActivity))
-    .map(a => ({ ...a, daysSince: daysAgo(a.lastActivity) }))
-    .sort((a, b) => b.daysSince - a.daysSince);
-  const stalest = withActivity.slice(0, 50);
-
-  // Due this week
-  const dueThisWeek = [];
-  allAccounts.forEach(a => {
-    if (a.nextStep) {
-      const dates = extractDatesFromText(a.nextStep);
-      if (dates.some(dt => isThisWeek(dt))) { dueThisWeek.push(a); return; }
-    }
-    if (a.opps && a.opps.length > 0) {
-      for (const opp of a.opps) {
-        if (opp.next_step) {
-          const dates = extractDatesFromText(opp.next_step);
-          if (dates.some(dt => isThisWeek(dt))) { dueThisWeek.push(a); return; }
-        }
-      }
-    }
-  });
-
-  // Untouched
-  const untouched = allAccounts.filter(a => !a.lastActivity || !parseUSDate(a.lastActivity));
-
-  return { stalest, dueThisWeek, untouched };
-}
-
-function buildAccountSheet() {
-  const headers = [
-    'District Name', 'State', 'Region', 'Enrollment', 'Account Executive',
-    'Holdout AE', 'SIS Platform', 'Opp Stage (Primary)', 'Opp ACV (Total)',
-    'Opp Forecast', 'Opp Next Step', 'Last Activity', 'Opp Contact',
-    'Opp Contact Title', 'SDR', '# of Opps', 'Product Areas',
-    'Superintendent', 'Is Customer', 'Has Notes', 'Latitude', 'Longitude'
-  ];
-  const rows = [headers];
-  filteredAccountData.forEach(d => {
-    const opps = d.opps && d.opps.length > 0 ? d.opps : (d.opp_stage ? [buildOppEntry(d)] : []);
-    const totalAcv = opps.reduce((sum, o) => sum + (parseFloat(String(o.acv || '0').replace(/[$,]/g, '')) || 0), 0);
-    const noteKey = 'edia_notes_' + d.name.replace(/[^a-zA-Z0-9]/g, '_');
-    const hasNotes = (() => { try { const n = localStorage.getItem(noteKey); return n && JSON.parse(n).length > 0 ? 'Yes' : 'No'; } catch(e) { return 'No'; } })();
-    const nextStep = (d.opp_next_step || '').slice(0, 500);
-    rows.push([
-      d.name || '',
-      d.state || '',
-      d.region || '',
-      parseFloat(String(d.enrollment || '0').replace(/,/g, '')) || '',
-      getTerritoryAE(d) || '',
-      getHoldoutAE(d) || '',
-      d.sis || '',
-      d.opp_stage || '',
-      totalAcv || '',
-      d.opp_forecast || '',
-      nextStep,
-      d.opp_last_activity || '',
-      d.opp_contact || '',
-      d.opp_contact_title || '',
-      d.opp_sdr || '',
-      opps.length || '',
-      d.opp_areas || (opps.map(o => o.area).filter(Boolean).join(', ')),
-      d.superintendent || '',
-      d.is_customer ? 'Yes' : 'No',
-      hasNotes,
-      d.lat || '',
-      d.lng || ''
-    ]);
-  });
-  return rows;
-}
-
-function buildPipelineSheet() {
-  const headers = [
-    'District Name', 'State', 'Enrollment', 'Account Executive',
-    'Product Area', 'Stage', 'Forecast', 'ACV', 'Probability',
-    'Contact', 'Contact Title', 'Next Step', 'Last Activity',
-    'SDR', 'Champion', 'Economic Buyer', 'Competition'
-  ];
-  const rows = [headers];
-  filteredAccountData.forEach(d => {
-    const opps = d.opps && d.opps.length > 0 ? d.opps : (d.opp_stage ? [buildOppEntry(d)] : []);
-    opps.forEach(opp => {
-      rows.push([
-        d.name || '',
-        d.state || '',
-        parseFloat(String(d.enrollment || '0').replace(/,/g, '')) || '',
-        getTerritoryAE(d) || '',
-        opp.area || '',
-        opp.stage || '',
-        opp.forecast || '',
-        parseFloat(String(opp.acv || '0').replace(/[$,]/g, '')) || '',
-        opp.probability || '',
-        opp.contact || '',
-        opp.contact_title || '',
-        opp.next_step || '',
-        opp.last_activity || '',
-        opp.sdr || '',
-        (opp.champion || '').slice(0, 200),
-        (opp.economic_buyer || '').slice(0, 200),
-        (opp.competition || '').slice(0, 200)
-      ]);
-    });
-  });
-  return rows;
-}
-
-function buildActionItemsSheet() {
-  const headers = ['District Name', 'Category', 'Days Since Last Activity', 'Last Activity Date', 'Next Step(s)', 'Enrollment', 'Opp Stage'];
-  const rows = [headers];
-  const items = gatherActionItems();
-
-  items.stalest.forEach(a => {
-    const nextSteps = a.opps.map(o => o.next_step).filter(Boolean).join(' | ');
-    rows.push([a.name, 'Stalest', a.daysSince, a.lastActivity, nextSteps, parseFloat(String((a.data.enrollment) || '0').replace(/,/g, '')) || '', a.data.opp_stage || '']);
-  });
-  items.dueThisWeek.forEach(a => {
-    const nextSteps = a.nextStep || a.opps.map(o => o.next_step).filter(Boolean).join(' | ');
-    rows.push([a.name, 'Due This Week', '', '', nextSteps, parseFloat(String((a.data.enrollment) || '0').replace(/,/g, '')) || '', a.data.opp_stage || '']);
-  });
-  items.untouched.forEach(a => {
-    rows.push([a.name, 'Untouched', '', '', '', parseFloat(String((a.data.enrollment) || '0').replace(/,/g, '')) || '', a.data.opp_stage || '']);
-  });
-  return rows;
-}
-
-function buildConflictsSheet() {
-  const headers = ['District Name', 'Enrollment', 'State', 'Previous AE', 'New AE (from CSV)'];
-  const rows = [headers];
-  getScopedConflicts().forEach(c => {
-    rows.push([
-      c.name || '',
-      parseFloat(String(c.enrollment || '0').replace(/,/g, '')) || '',
-      c.state || '',
-      c.oldAE || '',
-      c.newAE || ''
-    ]);
-  });
-  return rows;
-}
-
-function buildCustomerSheet() {
-  const headers = [
-    'District Name', 'State', 'Region', 'Segment', 'Students', 'ARR',
-    'ARR 12mo Ago', 'GDR', 'NDR', 'Lapsed Renewal', 'CSM',
-    'Account Executive', 'Last Activity', 'SIS', 'Math Supplemental',
-    'Attendance/Comms', 'Also Strategic Account'
-  ];
-  const rows = [headers];
-  filteredCustData.forEach(d => {
-    rows.push([
-      d.name || '',
-      d.state || '',
-      d.region || '',
-      d.segment || '',
-      parseFloat(String(d.students || d.enrollment || '0').replace(/,/g, '')) || '',
-      parseFloat(String(d.arr || '0').replace(/[$,]/g, '')) || '',
-      parseFloat(String(d.arr_12mo_ago || '0').replace(/[$,]/g, '')) || '',
-      d.gdr || '',
-      d.ndr || '',
-      d.lapsed_renewal || '',
-      d.csm || '',
-      d.ae || '',
-      d.last_activity || '',
-      d.sis || '',
-      d.math_supplemental || '',
-      d.attendance_comms || '',
-      (d.also_account || d.also_strategic) ? 'Yes' : 'No'
-    ]);
-  });
-  return rows;
-}
-
-function getExportFilename(ext) {
-  let slug = selectedTeam || 'all';
-  if (selectedRep && !MANAGERS.has(selectedRep)) {
-    slug = selectedRep;
-  }
-  slug = slug.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_-]/g, '');
-  const date = new Date().toISOString().slice(0, 10);
-  return 'edia_export_' + slug + '_' + date + '.' + ext;
-}
-
-function executeExport() {
-  const format = document.querySelector('input[name="exportFormat"]:checked')?.value || 'xlsx';
-  const sheets = [];
-
-  if (document.getElementById('expAccounts')?.checked) {
-    sheets.push({ name: 'Accounts', data: buildAccountSheet() });
-  }
-  if (document.getElementById('expPipeline')?.checked) {
-    sheets.push({ name: 'Pipeline', data: buildPipelineSheet() });
-  }
-  if (document.getElementById('expActions')?.checked) {
-    sheets.push({ name: 'Action Items', data: buildActionItemsSheet() });
-  }
-  if (document.getElementById('expConflicts')?.checked) {
-    sheets.push({ name: 'Conflicts', data: buildConflictsSheet() });
-  }
-  if (document.getElementById('expCustomers')?.checked) {
-    sheets.push({ name: 'Customer Book', data: buildCustomerSheet() });
-  }
-
-  if (sheets.length === 0) return;
-
-  if (format === 'xlsx') {
-    const wb = XLSX.utils.book_new();
-    sheets.forEach(s => {
-      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(s.data), s.name);
-    });
-    XLSX.writeFile(wb, getExportFilename('xlsx'));
-  } else {
-    // CSV — one file per sheet
-    sheets.forEach(s => {
-      const ws = XLSX.utils.aoa_to_sheet(s.data);
-      const csv = XLSX.utils.sheet_to_csv(ws);
-      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = getExportFilename('csv').replace('.csv', '_' + s.name.replace(/\s+/g, '_') + '.csv');
-      a.click();
-    });
-  }
-
-  // Close overlay after export
-  toggleExportOverlay();
+  const exportBtn = document.getElementById('exportTrigger');
+  if (exportBtn) exportBtn.style.display = selectedTeam ? '' : 'none';
 }
 
 // ============ EXPOSE TO WINDOW (for HTML inline handlers) ============
@@ -7968,9 +7919,8 @@ Object.assign(window, {
   toggleStageDropdown,
   // Action Dashboard
   toggleActionDashboard,
-  // Export
-  toggleExportOverlay,
-  executeExport,
+  // Data export
+  exportData,
   // Conflicts
   toggleConflictsOverlay,
   navigateToConflict,
