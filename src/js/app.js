@@ -6847,10 +6847,59 @@ function navigateToConflict(idx) {
   }
 }
 
-/** Resolve a conflict — password-protected. */
+/** Resolve a conflict — password-protected (independent from data refresh). */
+const CONFLICT_RESOLVE_PASSWORD = 'EdiaManager26';
+let conflictResolveAuthed = false;
+
+function promptConflictPassword() {
+  return new Promise((resolve) => {
+    const backdrop = document.createElement('div');
+    backdrop.className = 'pw-modal-backdrop';
+    backdrop.innerHTML = `
+      <div class="pw-modal">
+        <h3>Conflict Resolution</h3>
+        <p>Enter the password to resolve account conflicts.</p>
+        <input type="password" id="pwInput" placeholder="Password" autocomplete="off">
+        <div class="pw-modal-btns">
+          <button onclick="this.closest('.pw-modal-backdrop').remove()">Cancel</button>
+          <button class="pw-confirm" id="pwConfirmBtn">Unlock</button>
+        </div>
+        <div class="pw-error" id="pwError">Incorrect password</div>
+      </div>
+    `;
+    document.body.appendChild(backdrop);
+
+    const input = backdrop.querySelector('#pwInput');
+    const confirmBtn = backdrop.querySelector('#pwConfirmBtn');
+    const errorEl = backdrop.querySelector('#pwError');
+
+    function tryPassword() {
+      if (input.value === CONFLICT_RESOLVE_PASSWORD) {
+        conflictResolveAuthed = true;
+        backdrop.remove();
+        resolve(true);
+      } else {
+        errorEl.style.display = 'block';
+        input.value = '';
+        input.focus();
+      }
+    }
+
+    confirmBtn.addEventListener('click', tryPassword);
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') tryPassword();
+    });
+    backdrop.addEventListener('click', (e) => {
+      if (e.target === backdrop) { backdrop.remove(); resolve(false); }
+    });
+
+    input.focus();
+  });
+}
+
 function resolveConflict(idx, chosenAE) {
-  if (!dataRefreshAuthed) {
-    promptDataRefreshPassword().then(ok => {
+  if (!conflictResolveAuthed) {
+    promptConflictPassword().then(ok => {
       if (ok) resolveConflictConfirmed(idx, chosenAE);
     });
     return;
@@ -6862,7 +6911,7 @@ function resolveConflict(idx, chosenAE) {
 let _conflictResolving = false;
 
 /** Apply conflict resolution after authentication. */
-function resolveConflictConfirmed(idx, chosenAE) {
+async function resolveConflictConfirmed(idx, chosenAE) {
   _conflictResolving = true;
   const c = CONFLICTS[idx];
   if (!c) return;
@@ -6892,6 +6941,14 @@ function resolveConflictConfirmed(idx, chosenAE) {
   renderConflictsOverlay();
   updateConflictsBadge();
   applyFilters();
+
+  // Auto-download updated JSON files when all conflicts are resolved
+  if (CONFLICTS.length === 0) {
+    console.log('[Conflicts] All conflicts resolved — downloading updated JSON files');
+    downloadJsonFile(ACCOUNT_DATA, 'accounts.json');
+    await new Promise(resolve => setTimeout(resolve, 500));
+    downloadJsonFile(CUSTOMER_DATA, 'customers.json');
+  }
 }
 
 // Close conflicts overlay when clicking outside
