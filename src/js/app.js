@@ -7444,15 +7444,6 @@ function getConflictAccountType(c) {
   return 'Account';
 }
 
-/** Format a number compactly (e.g. 125000 → 125k). */
-function formatCompactNumber(n) {
-  const num = parseFloat(n);
-  if (isNaN(num)) return String(n);
-  if (num >= 1000000) return (num / 1000000).toFixed(num % 1000000 === 0 ? 0 : 1) + 'M';
-  if (num >= 1000) return (num / 1000).toFixed(num % 1000 === 0 ? 0 : 1) + 'k';
-  return String(num);
-}
-
 /** Render the conflicts list in the overlay panel. */
 function renderConflictsOverlay() {
   const body = document.getElementById('conflictsBody');
