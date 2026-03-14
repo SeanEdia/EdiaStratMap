@@ -11,6 +11,13 @@ import entWestTeam from '../data/teams/ent-west.json';
 import entEastTeam from '../data/teams/ent-east.json';
 import smbTeam from '../data/teams/smb.json';
 
+// ============ ADA STATES ============
+const ADA_STATES = new Set(['CA', 'TX', 'ID', 'KY', 'MS', 'MO']);
+
+function isAdaAccount(d) {
+  return !!d.ada_adm || ADA_STATES.has(d.state);
+}
+
 // ============ LOCAL STORAGE PERSISTENCE ============
 // Keys used to store merged data so it survives page refreshes.
 const LS_ACCOUNTS_KEY = 'edia_account_data';
@@ -1499,7 +1506,7 @@ function applyFilters() {
       if (filters.strat_state && d.state !== filters.strat_state) return false;
       if (filters.strat_sis && d.sis !== filters.strat_sis) return false;
       if (filters.strat_enrollment && parseInt(d.enrollment) < parseInt(filters.strat_enrollment)) return false;
-      if (adaFilterOn && !d.ada_adm) return false;
+      if (adaFilterOn && !isAdaAccount(d)) return false;
       return true;
     });
 
