@@ -904,15 +904,17 @@ function renderTeamRepSelectors() {
   const repSel = document.getElementById('repSelect');
   if (selectedTeam) {
     repRow.style.display = '';
-    const reps = getAllRepsForTeam(selectedTeam);
     const info = TEAM_REP_DATA[selectedTeam];
-    // "All [Team]" option at top — shows every account across the team
-    const allSel = !selectedRep ? ' selected' : '';
-    repSel.innerHTML = `<option value=""${allSel}>All ${selectedTeam}</option>`;
-    reps.forEach(rep => {
+    repSel.innerHTML = '';
+    // Manager first — selecting the manager shows the full team view
+    if (info.manager) {
+      const mgrSel = (!selectedRep || selectedRep === info.manager) ? ' selected' : '';
+      repSel.innerHTML += `<option value="${info.manager}"${mgrSel}>${info.manager} (Manager)</option>`;
+    }
+    // Individual reps
+    info.reps.forEach(rep => {
       const sel = selectedRep === rep ? ' selected' : '';
-      const suffix = info.manager === rep ? ' (Manager)' : '';
-      repSel.innerHTML += `<option value="${rep}"${sel}>${rep}${suffix}</option>`;
+      repSel.innerHTML += `<option value="${rep}"${sel}>${rep}</option>`;
     });
     // "Unassigned Accounts" option — shows accounts with no owner assigned
     const unSel = selectedRep === '__unassigned__' ? ' selected' : '';
@@ -937,7 +939,7 @@ function getDefaultRepForTeam(team) {
 
 function onTeamChange(team) {
   selectedTeam = team;
-  selectedRep = ''; // Default to "All [Team]" view
+  selectedRep = getDefaultRepForTeam(team); // Default to manager (team-level view)
   // Clear filters that may no longer be valid for the new team scope
   delete filters.strat_region;
   delete filters.strat_state;
@@ -991,6 +993,11 @@ function getScopedStratData() {
       (isManagerHeld(d) || (!getTerritoryAE(d) && !getHoldoutAE(d))) &&
       (!selectedTeam || d._source_team === selectedTeam)
     );
+  }
+  if (selectedRep && MANAGERS.has(selectedRep)) {
+    // Manager selected → team-level view (all accounts for this team)
+    const indices = selectedTeam && _teamToAccounts[selectedTeam];
+    return indices ? indices.map(i => ACCOUNT_DATA[i]) : [];
   }
   if (selectedRep) {
     const indices = _repToAccounts[selectedRep];
@@ -1309,12 +1316,21 @@ function applyFilters() {
         const managerHeld = isManagerHeld(d);
         if (!managerHeld && (territoryAE || holdoutAE)) return false;
         if (selectedTeam && d._source_team !== selectedTeam) return false;
+      } else if (selectedRep && MANAGERS.has(selectedRep)) {
+        // Manager selected → team-level view (all accounts for this team, including manager-held)
+        const teamReps = selectedTeam && _teamRepsSet[selectedTeam];
+        if (!teamReps) return false;
+        if (isManagerHeld(d)) {
+          if (!teamReps.has(d.ae)) return false;
+        } else if (!teamReps.has(territoryAE) && !(holdoutAE && teamReps.has(holdoutAE))) {
+          return false;
+        }
       } else if (selectedRep) {
-        // Manager-held accounts should NOT appear under the manager's individual filter
+        // Individual rep — manager-held accounts don't appear here
         if (isManagerHeld(d)) return false;
         if (territoryAE !== selectedRep && holdoutAE !== selectedRep) return false;
       } else if (selectedTeam) {
-        // Team-level view — show all accounts owned by any team member (including manager-held)
+        // Team-level view (fallback for teams without a manager)
         const teamReps = _teamRepsSet[selectedTeam];
         if (!teamReps) return false;
         if (isManagerHeld(d)) {
