@@ -126,10 +126,14 @@ Data refresh is **password-protected**. After authentication:
 
 1. Click **Data Refresh** (bottom-right corner)
 2. Click **SFDC Data**
-3. Choose dataset type: **Accounts** or **Customers**
+3. Choose dataset type: **Accounts**, **Customers**, or **Opportunities**
 4. Upload a CSV or Excel file exported from Salesforce
 5. Preview the merge — see new, updated, and conflicting records
 6. Click **Apply** to merge
+
+### Data separation
+
+Opp data changes frequently and is stored separately in `opps.json`. Account data is relatively static in `accounts.json`. At load time, opps are joined into accounts by name + state. After an **Opportunities** upload, both `opps.json` and `accounts.json` are downloaded for committing to the repo. After an **Accounts** upload, only `accounts.json` is downloaded.
 
 ### Merge intelligence
 
@@ -227,7 +231,8 @@ src/
   styles/
     main.css            All styles (~3k lines)
   data/
-    accounts.json       Strategic account dataset
+    accounts.json       Strategic account dataset (no opp fields)
+    opps.json           Opportunity data (joined into accounts at load time)
     customers.json      Active customer dataset
     teams/
       ent-east.json     ENT East team roster
