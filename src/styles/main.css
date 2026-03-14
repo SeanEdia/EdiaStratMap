@@ -288,6 +288,19 @@ body {
   vertical-align: middle;
 }
 
+.manager-held-badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: #fdcb6e;
+  color: #1a1a2e;
+  padding: 1px 6px;
+  border-radius: 3px;
+  vertical-align: middle;
+}
+
 .modal-holdout {
   font-size: 10px;
   padding: 2px 8px;
