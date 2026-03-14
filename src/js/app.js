@@ -750,6 +750,7 @@ let selectedStages = new Set();  // multi-select stage filter
 let map;
 let stratLayer, custLayer, proxLayer;
 let filters = {};
+const MULTI_SELECT_FILTERS = new Set(['strat_state', 'strat_sis', 'cust_state']);
 let proximityOn = false;
 let PROXIMITY_MILES = 50;
 let adaFilterOn = false;
@@ -939,8 +940,12 @@ function initMap() {
 // ============ VIEWS ============
 function setView(view) {
   // Save current view's filter state before switching
+  const filtersCopy = {};
+  Object.keys(filters).forEach(k => {
+    filtersCopy[k] = filters[k] instanceof Set ? new Set(filters[k]) : filters[k];
+  });
   savedViewState[currentView] = {
-    filters: { ...filters },
+    filters: filtersCopy,
     selectedTeam,
     selectedRep,
     selectedStages: new Set(selectedStages),
@@ -965,7 +970,11 @@ function setView(view) {
   // Restore saved state for the target view, or start fresh
   const saved = savedViewState[view];
   if (saved) {
-    filters = { ...saved.filters };
+    const restoredFilters = {};
+    Object.keys(saved.filters).forEach(k => {
+      restoredFilters[k] = saved.filters[k] instanceof Set ? new Set(saved.filters[k]) : saved.filters[k];
+    });
+    filters = restoredFilters;
     selectedTeam = saved.selectedTeam;
     selectedRep = saved.selectedRep;
     selectedStages = new Set(saved.selectedStages);
@@ -985,8 +994,9 @@ function setView(view) {
       const fromPrefix = previousView === 'accounts' ? 'strat_' : 'cust_';
       const toPrefix = view === 'accounts' ? 'strat_' : 'cust_';
       ['region', 'state'].forEach(dim => {
-        if (prevFilters.filters[fromPrefix + dim]) {
-          newFilters[toPrefix + dim] = prevFilters.filters[fromPrefix + dim];
+        const val = prevFilters.filters[fromPrefix + dim];
+        if (val) {
+          newFilters[toPrefix + dim] = val instanceof Set ? new Set(val) : val;
         }
       });
     }
@@ -1189,8 +1199,8 @@ function renderFilters() {
     // Scope filter options to the selected team/rep
     const scopedStrat = getScopedStratData();
     html += buildFilterGroup('Region', 'strat_region', getUnique(scopedStrat, 'region'), 'chips');
-    html += buildFilterGroup('State', 'strat_state', getUnique(scopedStrat, 'state'), 'select');
-    html += buildFilterGroup('SIS Platform', 'strat_sis', getUnique(scopedStrat, 'sis'), 'select');
+    html += buildFilterGroup('State', 'strat_state', getUnique(scopedStrat, 'state'), 'multiselect');
+    html += buildFilterGroup('SIS Platform', 'strat_sis', getUnique(scopedStrat, 'sis'), 'multiselect');
     html += buildSliderGroup('Min Enrollment', 'strat_enrollment', 0, 1100000);
   }
 
@@ -1200,7 +1210,7 @@ function renderFilters() {
       html += `<div style="font-size:10px;font-weight:600;color:var(--accent-cust);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;">Customer Filters</div>`;
     }
     html += buildFilterGroup('Region', 'cust_region', getUnique(CUSTOMER_DATA, 'region'), 'chips', true);
-    html += buildFilterGroup('State', 'cust_state', getUnique(CUSTOMER_DATA, 'state'), 'select');
+    html += buildFilterGroup('State', 'cust_state', getUnique(CUSTOMER_DATA, 'state'), 'multiselect');
     html += buildFilterGroup('Segment', 'cust_segment', getUnique(CUSTOMER_DATA, 'segment'), 'chips', true);
     html += buildFilterGroup('CSM', 'cust_csm', getUnique(CUSTOMER_DATA, 'csm'), 'select');
     html += buildFilterGroup('Account Owner', 'cust_ae', getUnique(CUSTOMER_DATA, 'ae'), 'select');
@@ -1212,7 +1222,8 @@ function renderFilters() {
 function buildFilterGroup(label, key, options, type, isCust) {
   let html = `<div class="filter-group">`;
   html += `<div class="filter-label">${label}`;
-  if (filters[key]) html += `<span class="clear-btn" onclick="clearFilter('${key}')">clear</span>`;
+  const hasValue = filters[key] instanceof Set ? filters[key].size > 0 : !!filters[key];
+  if (hasValue) html += `<span class="clear-btn" onclick="clearFilter('${key}')">clear</span>`;
   html += `</div>`;
 
   if (type === 'select') {
@@ -1223,6 +1234,15 @@ function buildFilterGroup(label, key, options, type, isCust) {
       html += `<option value="${o}" ${sel}>${o}</option>`;
     });
     html += `</select>`;
+  } else if (type === 'multiselect') {
+    const selected = filters[key] || new Set();
+    html += `<div class="filter-chips filter-chips-scroll">`;
+    options.forEach(o => {
+      const active = selected.has(o) ? (isCust ? ' cust-active' : ' active') : '';
+      const escaped = o.replace(/'/g, "\\'");
+      html += `<div class="filter-chip${active}" onclick="toggleMultiFilter('${key}','${escaped}')">${o}</div>`;
+    });
+    html += `</div>`;
   } else if (type === 'chips') {
     html += `<div class="filter-chips">`;
     options.forEach(o => {
@@ -1281,6 +1301,18 @@ function setFilter(key, val) {
 function toggleChip(key, val) {
   if (filters[key] === val) delete filters[key];
   else filters[key] = val;
+  renderFilters();
+  applyFilters();
+}
+
+function toggleMultiFilter(key, val) {
+  if (!filters[key]) filters[key] = new Set();
+  if (filters[key].has(val)) {
+    filters[key].delete(val);
+    if (filters[key].size === 0) delete filters[key];
+  } else {
+    filters[key].add(val);
+  }
   renderFilters();
   applyFilters();
 }
@@ -1407,7 +1439,9 @@ function toggleFiltersPanel() {
 }
 
 function updateFiltersActiveCount() {
-  const count = Object.keys(filters).length + selectedStages.size;
+  const count = Object.keys(filters).reduce((n, k) => {
+    return n + (filters[k] instanceof Set ? filters[k].size : 1);
+  }, 0) + selectedStages.size;
   const el = document.getElementById('filtersActiveCount');
   if (el) el.textContent = count > 0 ? count + ' active' : '';
 }
@@ -1503,8 +1537,8 @@ function applyFilters() {
       // SMB team-level view: only show accounts with open opportunities
       if (isSmbTeamLevelView() && !d.opp_stage) return false;
       if (filters.strat_region && d.region !== filters.strat_region) return false;
-      if (filters.strat_state && d.state !== filters.strat_state) return false;
-      if (filters.strat_sis && d.sis !== filters.strat_sis) return false;
+      if (filters.strat_state && !filters.strat_state.has(d.state)) return false;
+      if (filters.strat_sis && !filters.strat_sis.has(d.sis)) return false;
       if (filters.strat_enrollment && parseInt(d.enrollment) < parseInt(filters.strat_enrollment)) return false;
       if (adaFilterOn && !isAdaAccount(d)) return false;
       return true;
@@ -1570,7 +1604,7 @@ function applyFilters() {
         }
       }
       if (filters.cust_region && d.region !== filters.cust_region) return false;
-      if (filters.cust_state && d.state !== filters.cust_state) return false;
+      if (filters.cust_state && !filters.cust_state.has(d.state)) return false;
       if (filters.cust_segment && d.segment !== filters.cust_segment) return false;
       if (filters.cust_csm && d.csm !== filters.cust_csm) return false;
       if (filters.cust_ae && d.ae !== filters.cust_ae) return false;
