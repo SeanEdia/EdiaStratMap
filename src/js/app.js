@@ -986,6 +986,20 @@ function renderTeamRepSelectors() {
     repSel.innerHTML = '';
     repSel.classList.remove('select-active');
   }
+
+  // SMB opp-only info banner
+  const smbBanner = document.getElementById('smbOppBanner');
+  if (smbBanner) {
+    smbBanner.style.display = isSmbTeamLevelView() ? '' : 'none';
+  }
+}
+
+// Returns true when SMB is selected at the team level (no individual rep).
+// Used to limit SMB to accounts with open opps for performance.
+function isSmbTeamLevelView() {
+  return selectedTeam === 'SMB' &&
+    selectedRep !== '__unassigned__' &&
+    (!selectedRep || MANAGERS.has(selectedRep));
 }
 
 function getDefaultRepForTeam(team) {
@@ -1020,6 +1034,9 @@ function onRepChange(rep) {
 
   delete filters.strat_sis;
   invalidateCaches(); // Scoped unique values changed
+  // Update SMB opp banner visibility when switching between manager and individual rep
+  const smbBanner = document.getElementById('smbOppBanner');
+  if (smbBanner) smbBanner.style.display = isSmbTeamLevelView() ? '' : 'none';
   renderFilters();
   applyFilters();
 }
@@ -1058,7 +1075,9 @@ function getScopedStratData() {
   if (selectedRep && MANAGERS.has(selectedRep)) {
     // Manager selected → team-level view (all accounts for this team)
     const indices = selectedTeam && _teamToAccounts[selectedTeam];
-    return indices ? indices.map(i => ACCOUNT_DATA[i]) : [];
+    const data = indices ? indices.map(i => ACCOUNT_DATA[i]) : [];
+    // SMB team-level: only accounts with open opps
+    return isSmbTeamLevelView() ? data.filter(d => d.opp_stage) : data;
   }
   if (selectedRep) {
     const indices = _repToAccounts[selectedRep];
@@ -1066,7 +1085,9 @@ function getScopedStratData() {
   }
   if (selectedTeam) {
     const indices = _teamToAccounts[selectedTeam];
-    return indices ? indices.map(i => ACCOUNT_DATA[i]) : [];
+    const data = indices ? indices.map(i => ACCOUNT_DATA[i]) : [];
+    // SMB team-level: only accounts with open opps
+    return isSmbTeamLevelView() ? data.filter(d => d.opp_stage) : data;
   }
   return ACCOUNT_DATA;
 }
@@ -1400,6 +1421,8 @@ function applyFilters() {
           return false;
         }
       }
+      // SMB team-level view: only show accounts with open opportunities
+      if (isSmbTeamLevelView() && !d.opp_stage) return false;
       if (filters.strat_region && d.region !== filters.strat_region) return false;
       if (filters.strat_state && d.state !== filters.strat_state) return false;
       if (filters.strat_sis && d.sis !== filters.strat_sis) return false;

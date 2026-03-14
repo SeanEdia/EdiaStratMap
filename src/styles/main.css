@@ -188,8 +188,20 @@ body {
 /* Team / Rep selectors */
 .team-rep-selectors {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   padding: 8px 12px 4px;
+}
+
+.smb-opp-banner {
+  width: 100%;
+  font-size: 11px;
+  color: #b8a9ff;
+  background: rgba(108, 92, 231, 0.12);
+  border: 1px solid rgba(108, 92, 231, 0.25);
+  border-radius: 6px;
+  padding: 6px 10px;
+  line-height: 1.4;
 }
 
 .team-rep-row {
