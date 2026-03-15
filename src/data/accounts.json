@@ -17,7 +17,9 @@
     "_source_team": "ENT East",
     "territory_ae": "Samantha Santucci",
     "lat": 40.1693742,
-    "lng": -75.2266557
+    "lng": -75.2266557,
+    "is_customer": false,
+    "customer_name": ""
   },
   {
     "ae": "Victoria Macoul",
@@ -41,8 +43,7 @@
       "LeTort Elementary School",
       "Mount Holly Springs Elementary School",
       "Wilson Middle School"
-    ],
-    "territory_ae": "Samantha Santucci"
+    ]
   },
   {
     "ae": "Victoria Macoul",
@@ -64,8 +65,7 @@
     "enrollment": 16339,
     "city": "Stamford",
     "zip": "6902",
-    "_source_team": "ENT East",
-    "territory_ae": "Samantha Santucci"
+    "_source_team": "ENT East"
   },
   {
     "ae": "",
@@ -275,7 +275,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Jonathan Pacheco",
     "school_type": "District",
     "name": "Alliance Gertz-Ressler Richard Merkin 6-12 Complex",
     "region": "West",
@@ -287,7 +287,6 @@
     "sis": "PowerSchool",
     "website": "https://www.gertzresslerhigh.org/",
     "_source_team": "SMB",
-    "territory_ae": "Jonathan Pacheco",
     "lat": 34.0369889,
     "lng": -118.2822485,
     "is_customer": false,
@@ -313,7 +312,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Jonathan Pacheco",
     "school_type": "District",
     "name": "Macomb Community Unit School District 185",
     "region": "Midwest",
@@ -332,7 +331,6 @@
       "Macomb Senior High School"
     ],
     "_source_team": "SMB",
-    "territory_ae": "Jonathan Pacheco",
     "lat": 40.4574148,
     "lng": -90.6760966,
     "is_customer": false,
@@ -983,7 +981,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Jonathan Pacheco",
     "school_type": "District",
     "name": "Martinez Unified",
     "region": "West",
@@ -995,7 +993,6 @@
     "sis": "Aeries",
     "website": "martinez.k12.ca.us",
     "_source_team": "SMB",
-    "territory_ae": "Jonathan Pacheco",
     "lat": 38.0148043,
     "lng": -122.1324833,
     "is_customer": false,
@@ -1894,7 +1891,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Jonathan Pacheco",
     "school_type": "District",
     "name": "Bellwood School District 88",
     "region": "Midwest",
@@ -1914,7 +1911,6 @@
       "Roosevelt Middle School"
     ],
     "_source_team": "SMB",
-    "territory_ae": "Jonathan Pacheco",
     "lat": 41.8811161,
     "lng": -87.8734949,
     "is_customer": false,
@@ -2752,7 +2748,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Jonathan Pacheco",
     "school_type": "District",
     "name": "Nevada Joint Union High School District",
     "region": "West",
@@ -2764,7 +2760,6 @@
     "sis": "Aeries",
     "website": "njuhsd.com",
     "_source_team": "SMB",
-    "territory_ae": "Jonathan Pacheco",
     "lat": 39.2330075,
     "lng": -121.0681638,
     "is_customer": false,
@@ -4356,7 +4351,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Jonathan Pacheco",
     "school_type": "District",
     "name": "Orinda Union",
     "region": "West",
@@ -4368,7 +4363,6 @@
     "sis": "Aeries",
     "website": "orinda.k12.ca.us",
     "_source_team": "SMB",
-    "territory_ae": "Jonathan Pacheco",
     "lat": 37.8771476,
     "lng": -122.1796888,
     "is_customer": false,
@@ -4921,7 +4915,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Jonathan Pacheco",
     "school_type": "District",
     "name": "Community High School District 99",
     "region": "Midwest",
@@ -4939,7 +4933,6 @@
       "Downers Grove South High School"
     ],
     "_source_team": "SMB",
-    "territory_ae": "Jonathan Pacheco",
     "lat": 41.772576,
     "lng": -88.02476,
     "is_customer": false,
@@ -8146,7 +8139,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Jonathan Pacheco",
     "school_type": "District",
     "name": "Elementary School District 159",
     "region": "Midwest",
@@ -8164,7 +8157,6 @@
       "Woodgate Elementary School"
     ],
     "_source_team": "SMB",
-    "territory_ae": "Jonathan Pacheco",
     "lat": 41.517181,
     "lng": -87.7377313,
     "is_customer": false,
@@ -8297,7 +8289,7 @@
     "customer_name": ""
   },
   {
-    "ae": "Brad Halsey",
+    "ae": "Jonathan Pacheco",
     "name": "Evergreen School District",
     "region": "West",
     "state": "CA",
@@ -9145,7 +9137,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Jonathan Pacheco",
     "school_type": "District",
     "name": "Galt Joint Union High School District",
     "region": "West",
@@ -9157,7 +9149,6 @@
     "sis": "PowerSchool",
     "website": "ghsd.k12.ca.us",
     "_source_team": "SMB",
-    "territory_ae": "Jonathan Pacheco",
     "lat": 38.2564589,
     "lng": -121.2958478,
     "is_customer": false,
@@ -9787,7 +9778,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Jonathan Pacheco",
     "school_type": "District",
     "name": "Taos Municipal Schools",
     "region": "South-Central",
@@ -9808,7 +9799,6 @@
       "Taos Municipal Charter School"
     ],
     "_source_team": "SMB",
-    "territory_ae": "Jonathan Pacheco",
     "lat": 36.4099383,
     "lng": -105.5759742,
     "is_customer": false,
@@ -9932,7 +9922,7 @@
     "city": "Tecumseh",
     "address": "1301 East Highland Street",
     "zip": "74873",
-    "enrollment": 1951,
+    "enrollment": 2488,
     "sis": "Infinite Campus",
     "website": "tecumsehschools.org",
     "_schools": [
@@ -12537,7 +12527,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Jonathan Pacheco",
     "school_type": "District",
     "name": "Konocti Unified School District",
     "region": "West",
@@ -12549,7 +12539,6 @@
     "sis": "Aeries",
     "website": "konoctiusd.org",
     "_source_team": "SMB",
-    "territory_ae": "Jonathan Pacheco",
     "lat": 38.9103532,
     "lng": -122.6097059,
     "is_customer": false,
@@ -13343,7 +13332,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Jonathan Pacheco",
     "school_type": "Elementary School",
     "name": "Bloomfield School District (Bloomfield Schools)",
     "region": "South-Central",
@@ -13364,7 +13353,6 @@
     "lat": 36.7112,
     "lng": -107.9848,
     "_source_team": "SMB",
-    "territory_ae": "Jonathan Pacheco",
     "is_customer": true,
     "customer_name": "Bloomfield School District (Bloomfield Schools)"
   },
@@ -13892,7 +13880,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Jonathan Pacheco",
     "school_type": "High School",
     "name": "Aztec Municipal Schools",
     "region": "South-Central",
@@ -13911,7 +13899,6 @@
     "lat": 36.8225,
     "lng": -107.9929,
     "_source_team": "SMB",
-    "territory_ae": "Jonathan Pacheco",
     "is_customer": true,
     "customer_name": "Aztec Municipal Schools"
   },
@@ -13967,7 +13954,7 @@
     "customer_name": "Belen Consolidated Schools"
   },
   {
-    "ae": "",
+    "ae": "Jonathan Pacheco",
     "school_type": "Elementary School",
     "name": "Grants Cibola County Schools",
     "region": "South-Central",
@@ -13988,7 +13975,6 @@
     "lat": 35.1464,
     "lng": -107.8519,
     "_source_team": "SMB",
-    "territory_ae": "Jonathan Pacheco",
     "is_customer": true,
     "customer_name": "Grants Cibola County Schools"
   },
@@ -14684,7 +14670,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Paulina Famiano",
     "school_type": "District",
     "name": "Lyford Consolidated Independent School District",
     "region": "South-Central",
@@ -14701,7 +14687,6 @@
       "Lyford Middle School"
     ],
     "_source_team": "SMB",
-    "territory_ae": "Paulina Famiano",
     "lat": 26.4122916,
     "lng": -97.7897176,
     "is_customer": false,
@@ -14788,7 +14773,7 @@
     "city": "Tuskegee",
     "address": "303 Union Springs Road",
     "zip": "36083",
-    "enrollment": 1769,
+    "enrollment": 4235,
     "sis": "Skyward",
     "website": "maconk12.org",
     "_schools": [
@@ -14903,7 +14888,7 @@
     "city": "Marshall",
     "address": "5738 US 25-70 Hwy",
     "zip": "28753",
-    "enrollment": 11241,
+    "enrollment": 12971,
     "sis": "Infinite Campus",
     "website": "madisonk12.net",
     "_schools": [
@@ -15013,7 +14998,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Paulina Famiano",
     "school_type": "District",
     "name": "Alvarado Independent School District",
     "region": "South-Central",
@@ -15038,7 +15023,6 @@
       "Lillian Elementary School"
     ],
     "_source_team": "SMB",
-    "territory_ae": "Paulina Famiano",
     "lat": 32.4095565,
     "lng": -97.2102881,
     "is_customer": false,
@@ -15399,7 +15383,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Paulina Famiano",
     "school_type": "District",
     "name": "Marble Falls Independent School District",
     "region": "South-Central",
@@ -15420,7 +15404,6 @@
       "Spicewood Elementary School"
     ],
     "_source_team": "SMB",
-    "territory_ae": "Paulina Famiano",
     "lat": 30.5944995,
     "lng": -98.2748796,
     "is_customer": false,
@@ -15574,7 +15557,7 @@
     "city": "Buena Vista",
     "address": "P. O. Box 391",
     "zip": "31803",
-    "enrollment": 1294,
+    "enrollment": 1890,
     "sis": "PowerSchool",
     "website": "marion.k12.ga.us",
     "_schools": [
@@ -15611,7 +15594,7 @@
     "city": "Marion",
     "address": "P O BOX 189",
     "zip": "78124",
-    "enrollment": 1570,
+    "enrollment": 2167,
     "sis": "Ascender",
     "website": "marionisd.net",
     "_schools": [
@@ -15822,7 +15805,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Paulina Famiano",
     "school_type": "District",
     "name": "Arlington Classics Academy",
     "region": "South-Central",
@@ -15837,7 +15820,6 @@
       "ARLINGTON CLASSICS ACADEMY"
     ],
     "_source_team": "SMB",
-    "territory_ae": "Paulina Famiano",
     "lat": 32.6625431,
     "lng": -97.1499594,
     "is_customer": false,
@@ -17759,7 +17741,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Daniel Way",
     "school_type": "District",
     "name": "Milford Public Schools",
     "region": "Northeast",
@@ -17791,7 +17773,7 @@
     "city": "Milford",
     "address": "100 West St.",
     "zip": "3055",
-    "enrollment": 2015,
+    "enrollment": 4595,
     "sis": "PowerSchool",
     "website": "milfordk12.org",
     "_schools": [
@@ -17882,7 +17864,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Brittney Hall",
     "name": "New Bedford Public Schools",
     "region": "Northeast",
     "state": "MA",
@@ -17905,8 +17887,7 @@
     "lng": -70.9316397,
     "is_customer": false,
     "customer_name": "",
-    "territory_ae": "Paulina Famiano",
-    "_source_team": "SMB",
+    "_source_team": "ENT East",
     "school_type": "District"
   },
   {
@@ -18269,7 +18250,7 @@
     "city": "Camilla",
     "address": "108 South Harney Street",
     "zip": "31730",
-    "enrollment": 1249,
+    "enrollment": 1705,
     "sis": "Infinite Campus",
     "website": "mitchell.k12.ga.us",
     "_schools": [
@@ -18939,7 +18920,7 @@
     "city": "Troy",
     "address": "PO Box 427",
     "zip": "27371",
-    "enrollment": 3648,
+    "enrollment": 4510,
     "sis": "Infinite Campus",
     "website": "mgschools.org",
     "_schools": [
@@ -21092,7 +21073,7 @@
     "city": "Norfolk",
     "address": "70 Boardman Street",
     "zip": "2056",
-    "enrollment": 1041,
+    "enrollment": 4541,
     "sis": "Other",
     "website": "norfolk.k12.ma.us",
     "student_information_system_sis_-_other": "ipass",
@@ -21326,7 +21307,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Paulina Famiano",
     "school_type": "District",
     "name": "Burke County Public Schools",
     "region": "Southeast",
@@ -21334,7 +21315,7 @@
     "city": "Waynesboro",
     "address": "P.O. Box 908",
     "zip": "30830",
-    "enrollment": 3910,
+    "enrollment": 11690,
     "sis": "PowerSchool",
     "website": "burke.k12.ga.us",
     "_schools": [
@@ -21345,7 +21326,6 @@
       "Waynesboro Primary School"
     ],
     "_source_team": "SMB",
-    "territory_ae": "Paulina Famiano",
     "lat": 33.0898731,
     "lng": -82.0156736,
     "is_customer": false,
@@ -21641,7 +21621,7 @@
     "city": "Blountstown",
     "address": "20859 CENTRAL AVE E",
     "zip": "32424",
-    "enrollment": 2051,
+    "enrollment": 2054,
     "sis": "Focus",
     "website": "calhounflschools.org",
     "_schools": [
@@ -22425,7 +22405,6 @@
     "address": "64 West Main Street",
     "city": "Norton",
     "zip": "2766",
-    "territory_ae": "Paulina Famiano",
     "lat": 41.9620101,
     "lng": -71.1916403,
     "is_customer": false,
@@ -22584,7 +22563,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Paulina Famiano",
     "school_type": "District",
     "name": "Cartersville City Schools",
     "region": "Southeast",
@@ -22601,7 +22580,6 @@
       "Cartersville Primary School"
     ],
     "_source_team": "SMB",
-    "territory_ae": "Paulina Famiano",
     "lat": 34.1652304,
     "lng": -84.7997613,
     "is_customer": false,
@@ -24136,7 +24114,7 @@
     "city": "Butler",
     "address": "107 Tom Orr Dr",
     "zip": "36904",
-    "enrollment": 1034,
+    "enrollment": 1254,
     "sis": "PowerSchool",
     "website": "choctawal.org",
     "_source_team": "SMB",
@@ -24304,7 +24282,7 @@
     "city": "Hayesville",
     "address": "154 Yellow Jacket Drive",
     "zip": "28904",
-    "enrollment": 1301,
+    "enrollment": 1530,
     "sis": "Infinite Campus",
     "website": "clayschools.org",
     "_schools": [
@@ -25647,7 +25625,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Paulina Famiano",
     "school_type": "District",
     "name": "Colleton County School District",
     "region": "Southeast",
@@ -25669,7 +25647,6 @@
       "Northside Elementary School"
     ],
     "_source_team": "SMB",
-    "territory_ae": "Paulina Famiano",
     "lat": 32.915356,
     "lng": -80.679575,
     "is_customer": false,
@@ -26759,7 +26736,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Paulina Famiano",
     "school_type": "District",
     "name": "Presidio Independent School District",
     "region": "South-Central",
@@ -26775,7 +26752,6 @@
       "Presidio High School"
     ],
     "_source_team": "SMB",
-    "territory_ae": "Paulina Famiano",
     "lat": 29.5635581,
     "lng": -104.371552,
     "is_customer": false,
@@ -26936,7 +26912,7 @@
     "city": "Mountain Top",
     "address": "281 S Mountain Blvd",
     "zip": "18707",
-    "enrollment": 2775,
+    "enrollment": 3692,
     "sis": "Skyward",
     "website": "csdcomets.org",
     "_schools": [
@@ -27484,7 +27460,7 @@
     "city": "Wedowee",
     "address": "182 Circle Drive",
     "zip": "36278",
-    "enrollment": 2092,
+    "enrollment": 15261,
     "sis": "PowerSchool",
     "website": "randolphboe.org",
     "_schools": [
@@ -28108,7 +28084,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Paulina Famiano",
     "school_type": "District",
     "name": "Denison Independent School District",
     "region": "South-Central",
@@ -28129,7 +28105,6 @@
       "Terrell Elementary School"
     ],
     "_source_team": "SMB",
-    "territory_ae": "Paulina Famiano",
     "lat": 33.744073,
     "lng": -96.539054,
     "is_customer": false,
@@ -28601,7 +28576,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Paulina Famiano",
     "school_type": "District",
     "name": "Dodge County School District",
     "region": "Southeast",
@@ -28619,7 +28594,6 @@
       "South Dodge Elementary School"
     ],
     "_source_team": "SMB",
-    "territory_ae": "Paulina Famiano",
     "lat": 32.1906483,
     "lng": -83.1736051,
     "is_customer": false,
@@ -29004,7 +28978,7 @@
     "city": "Taylor",
     "address": "601 S Main St",
     "zip": "18517",
-    "enrollment": 1497,
+    "enrollment": 1604,
     "sis": "Focus",
     "website": "riversidesd.com",
     "_schools": [
@@ -31401,7 +31375,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Paulina Famiano",
     "school_type": "District",
     "name": "Sanger Independent School District",
     "region": "South-Central",
@@ -31419,7 +31393,6 @@
       "Sanger Middle School"
     ],
     "_source_team": "SMB",
-    "territory_ae": "Paulina Famiano",
     "lat": 33.3637399,
     "lng": -97.1743916,
     "is_customer": false,
@@ -32127,7 +32100,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Paulina Famiano",
     "school_type": "District",
     "name": "Seminole Independent School District",
     "region": "South-Central",
@@ -32146,7 +32119,6 @@
       "Seminole Primary School"
     ],
     "_source_team": "SMB",
-    "territory_ae": "Paulina Famiano",
     "lat": 32.7167351,
     "lng": -102.6490967,
     "is_customer": false,
@@ -32900,7 +32872,7 @@
     "city": "Fayette",
     "address": "PO Box 686",
     "zip": "35555",
-    "enrollment": 2238,
+    "enrollment": 3195,
     "sis": "Infinite Campus",
     "website": "fayettetn.us",
     "_schools": [
@@ -33653,7 +33625,7 @@
     "city": "Franklin",
     "address": "355 East Central Street",
     "zip": "2038",
-    "enrollment": 4680,
+    "enrollment": 4721,
     "sis": "PowerSchool",
     "website": "franklin.k12.ma.us",
     "_schools": [
@@ -33676,7 +33648,7 @@
     "city": "Eastpoint",
     "address": "85 SCHOOL RD STE 1",
     "zip": "32328",
-    "enrollment": 1206,
+    "enrollment": 1224,
     "sis": "Focus",
     "website": "fcsdfl.org",
     "_schools": [
@@ -33763,7 +33735,7 @@
     "city": "Carnesville",
     "address": "P.O. Box 99",
     "zip": "30521",
-    "enrollment": 3557,
+    "enrollment": 7994,
     "sis": "Infinite Campus",
     "website": "franklin.k12.ga.us",
     "_schools": [
@@ -33884,7 +33856,7 @@
     "city": "Freedom",
     "address": "1702 School Street",
     "zip": "15042",
-    "enrollment": 1164,
+    "enrollment": 1539,
     "sis": "PowerSchool",
     "website": "freedomarea.org",
     "_schools": [
@@ -34017,9 +33989,8 @@
     "customer_name": "",
     "city": "South Portland",
     "zip": "4106",
-    "_source_team": "SMB",
-    "school_type": "District",
-    "territory_ae": "Paulina Famiano"
+    "_source_team": "ENT East",
+    "school_type": "District"
   },
   {
     "ae": "",
@@ -34521,7 +34492,7 @@
     "city": "Springfield",
     "address": "303 South Street",
     "zip": "5156",
-    "enrollment": 1218,
+    "enrollment": 4425,
     "sis": "PowerSchool",
     "_schools": [
       "E. T. Richardson Middle School",
@@ -36396,7 +36367,7 @@
     "city": "Butler",
     "address": "P.O. Box 1930",
     "zip": "31006",
-    "enrollment": 1190,
+    "enrollment": 2712,
     "sis": "Focus",
     "website": "taylorboe.org",
     "_schools": [
@@ -36592,7 +36563,7 @@
     "address": "301 Kingold Boulevard",
     "zip": "28580",
     "type": "Inactive Customer",
-    "enrollment": 2694,
+    "enrollment": 2996,
     "sis": "Infinite Campus",
     "website": "greene.k12.nc.us",
     "_schools": [
@@ -36779,7 +36750,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Paulina Famiano",
     "school_type": "District",
     "name": "Telfair County School District",
     "region": "Southeast",
@@ -36796,7 +36767,6 @@
       "Telfair County Middle School"
     ],
     "_source_team": "SMB",
-    "territory_ae": "Paulina Famiano",
     "lat": 32.066509,
     "lng": -82.9071227,
     "is_customer": false,
@@ -36934,7 +36904,7 @@
     "customer_name": ""
   },
   {
-    "ae": "Andy Graham",
+    "ae": "Paulina Famiano",
     "name": "Thomas County Schools",
     "region": "Southeast",
     "state": "GA",
@@ -36962,10 +36932,9 @@
     "lng": -83.9779,
     "is_customer": true,
     "customer_name": "Thomas County Schools",
-    "_source_team": "SMB",
+    "_source_team": "ENT East",
     "school_type": "District",
-    "enrollment": 2664,
-    "territory_ae": "Paulina Famiano"
+    "enrollment": 2664
   },
   {
     "ae": "",
@@ -36976,7 +36945,7 @@
     "city": "Thomasville",
     "address": "750 Gates Drive",
     "zip": "36784",
-    "enrollment": 1029,
+    "enrollment": 2177,
     "sis": "PowerSchool",
     "website": "thomasvilleschools.org",
     "_schools": [
@@ -38166,7 +38135,7 @@
     "city": "Troy",
     "address": "PO Box 529",
     "zip": "36081",
-    "enrollment": 1777,
+    "enrollment": 4060,
     "sis": "eSchoolPlus",
     "website": "troyschools.net",
     "_schools": [
@@ -38392,7 +38361,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Paulina Famiano",
     "school_type": "District",
     "name": "Heard County School System",
     "region": "Southeast",
@@ -38408,7 +38377,6 @@
       "Heard County Middle School"
     ],
     "_source_team": "SMB",
-    "territory_ae": "Paulina Famiano",
     "lat": 33.2776182,
     "lng": -85.0979973,
     "is_customer": false,
@@ -38714,7 +38682,7 @@
     "city": "Lake Butler",
     "address": "55 SW 6TH ST",
     "zip": "32054",
-    "enrollment": 2370,
+    "enrollment": 3047,
     "sis": "Skyward",
     "website": "union.k12.fl.us",
     "_schools": [
@@ -39293,7 +39261,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Paulina Famiano",
     "school_type": "District",
     "name": "Holyoke Public Schools",
     "region": "Northeast",
@@ -39317,7 +39285,6 @@
       "William R. Peck Elementary School"
     ],
     "_source_team": "SMB",
-    "territory_ae": "Paulina Famiano",
     "lat": 42.206424,
     "lng": -72.609294,
     "is_customer": false,
@@ -39504,7 +39471,7 @@
     "city": "Archbald",
     "address": "1 Columbus Dr",
     "zip": "18403",
-    "enrollment": 2345,
+    "enrollment": 2995,
     "sis": "Other",
     "website": "valleyviewsd.org",
     "_schools": [
@@ -40041,7 +40008,7 @@
     "customer_name": ""
   },
   {
-    "ae": "Brad Halsey",
+    "ae": "Paulina Famiano",
     "name": "Rockwall Independent School District",
     "region": "South-Central",
     "state": "TX",
@@ -40407,7 +40374,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Paulina Famiano",
     "school_type": "District",
     "name": "Warren Independent School District",
     "region": "South-Central",
@@ -40425,7 +40392,6 @@
       "Warren Junior High School"
     ],
     "_source_team": "SMB",
-    "territory_ae": "Paulina Famiano",
     "lat": 30.6146489,
     "lng": -94.408529,
     "is_customer": false,
@@ -41579,7 +41545,7 @@
     "city": "Wrightsville",
     "address": "P. O. Box 110",
     "zip": "31096",
-    "enrollment": 1040,
+    "enrollment": 3304,
     "sis": "Infinite Campus",
     "website": "johnson.k12.ga.us",
     "_schools": [
@@ -41595,7 +41561,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Paulina Famiano",
     "school_type": "District",
     "name": "Jones County School System",
     "region": "Southeast",
@@ -41618,7 +41584,6 @@
       "Wells Elementary School"
     ],
     "_source_team": "SMB",
-    "territory_ae": "Paulina Famiano",
     "lat": 33.0096709,
     "lng": -83.5339913,
     "is_customer": false,
@@ -41849,8 +41814,7 @@
       "Tatham Elementary School",
       "West Springfield Middle School"
     ],
-    "territory_ae": "Paulina Famiano",
-    "_source_team": "SMB",
+    "_source_team": "ENT East",
     "school_type": "District"
   },
   {
@@ -42034,7 +41998,7 @@
     "city": "Weston",
     "address": "89 Wellesley Street",
     "zip": "2493",
-    "enrollment": 2036,
+    "enrollment": 2168,
     "sis": "PowerSchool",
     "website": "weston.org",
     "_schools": [
@@ -42261,7 +42225,7 @@
     "customer_name": ""
   },
   {
-    "ae": "Victoria Macoul",
+    "ae": "Paulina Famiano",
     "name": "Keene SAU #29",
     "state": "NH",
     "address": "193 Maple Avenue",
@@ -42284,8 +42248,7 @@
       "Keene High School",
       "Keene Middle School",
       "Wheelock Elementary School"
-    ],
-    "territory_ae": "Paulina Famiano"
+    ]
   },
   {
     "ae": "",
@@ -42700,7 +42663,7 @@
     "city": "Washington",
     "address": "313-A North Alexander Avenue",
     "zip": "30673",
-    "enrollment": 1252,
+    "enrollment": 8625,
     "sis": "Infinite Campus",
     "_schools": [
       "Washington Wilkes Elementary School",
@@ -42877,7 +42840,7 @@
     "customer_name": ""
   },
   {
-    "ae": "Victoria Macoul",
+    "ae": "Paulina Famiano",
     "name": "Wilson School District",
     "region": "Northeast",
     "state": "PA",
@@ -43102,7 +43065,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Paulina Famiano",
     "school_type": "District",
     "name": "Winchendon Public Schools",
     "region": "Northeast",
@@ -43118,7 +43081,6 @@
       "Toy Town Elementary School"
     ],
     "_source_team": "SMB",
-    "territory_ae": "Paulina Famiano",
     "lat": 42.6868116,
     "lng": -72.0541581,
     "is_customer": false,
@@ -43147,7 +43109,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Paulina Famiano",
     "school_type": "District",
     "name": "Windber Area School District",
     "region": "Northeast",
@@ -43164,7 +43126,6 @@
       "Windber Elementary School"
     ],
     "_source_team": "SMB",
-    "territory_ae": "Paulina Famiano",
     "lat": 40.230683,
     "lng": -78.8223947,
     "is_customer": false,
@@ -43825,7 +43786,7 @@
     "lng": -96.797,
     "is_customer": false,
     "customer_name": "",
-    "_source_team": "SMB",
+    "_source_team": "Strategic",
     "school_type": "District",
     "city": "Lake Dallas",
     "address": "P O BOX 548",
@@ -43836,8 +43797,7 @@
       "Lake Dallas High School",
       "Lake Dallas Middle School",
       "Shady Shores Elementary School"
-    ],
-    "territory_ae": "Paulina Famiano"
+    ]
   },
   {
     "ae": "",
@@ -44162,7 +44122,7 @@
     "city": "York",
     "address": "469 U.S. Route 1",
     "zip": "3909",
-    "enrollment": 1511,
+    "enrollment": 1581,
     "sis": "Other",
     "website": "yorkschools.org",
     "_schools": [
@@ -44511,7 +44471,7 @@
     "customer_name": ""
   },
   {
-    "ae": "Victoria Macoul",
+    "ae": "Paulina Famiano",
     "name": "Mt. Lebanon School District",
     "region": "Northeast",
     "state": "PA",
@@ -44571,7 +44531,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "David Thomas",
     "name": "Lee County Schools",
     "region": "Southeast",
     "state": "AL",
@@ -44589,12 +44549,11 @@
       "Leeds Middle School",
       "Leeds Primary School"
     ],
-    "territory_ae": "Paulina Famiano",
     "lat": 32.6138982,
     "lng": -85.3905091,
     "is_customer": false,
     "customer_name": "",
-    "_source_team": "SMB",
+    "_source_team": "ENT East",
     "school_type": "District"
   },
   {
@@ -44855,7 +44814,7 @@
     "customer_name": ""
   },
   {
-    "ae": "Brad Halsey",
+    "ae": "Paulina Famiano",
     "name": "Liberty Hill Independent School District",
     "region": "South-Central",
     "state": "TX",
@@ -44953,7 +44912,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Paulina Famiano",
     "school_type": "District",
     "name": "Lincoln County Schools",
     "region": "Southeast",
@@ -44961,7 +44920,7 @@
     "city": "Lincolnton",
     "address": "P O Box 39",
     "zip": "30817",
-    "enrollment": 1247,
+    "enrollment": 11642,
     "sis": "Infinite Campus",
     "website": "lcboe.us",
     "_schools": [
@@ -44970,7 +44929,6 @@
       "Lincoln County Middle School"
     ],
     "_source_team": "SMB",
-    "territory_ae": "Paulina Famiano",
     "lat": 33.7924993,
     "lng": -82.4793806,
     "is_customer": false,
@@ -45434,7 +45392,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Paulina Famiano",
     "school_type": "District",
     "name": "Lowndes County Public Schools",
     "region": "Southeast",
@@ -45455,7 +45413,6 @@
       "Lowndes County Middle School"
     ],
     "_source_team": "SMB",
-    "territory_ae": "Paulina Famiano",
     "lat": 32.1840315,
     "lng": -86.5802533,
     "is_customer": false,
@@ -45948,7 +45905,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Paulina Famiano",
     "school_type": "Elementary School",
     "name": "Celina Independent School District",
     "region": "South-Central",
@@ -47168,7 +47125,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Paulina Famiano",
     "school_type": "Middle School",
     "name": "South Fayette Township School District",
     "region": "Northeast",
@@ -47184,7 +47141,6 @@
       "South Fayette Middle School"
     ],
     "_source_team": "SMB",
-    "territory_ae": "Paulina Famiano",
     "lat": 40.3709025,
     "lng": -80.2347814,
     "is_customer": true,
@@ -47215,7 +47171,7 @@
     "customer_name": "Twin Valley School District"
   },
   {
-    "ae": "",
+    "ae": "Paulina Famiano",
     "school_type": "Middle School",
     "name": "Taylor Independent School District",
     "region": "South-Central",
@@ -47234,7 +47190,6 @@
       "Taylor Middle School"
     ],
     "_source_team": "SMB",
-    "territory_ae": "Paulina Famiano",
     "lat": 30.5728854,
     "lng": -97.4141053,
     "is_customer": true,
@@ -47772,7 +47727,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Caroline Uhlarik",
     "school_type": "District",
     "name": "Allen Park Public Schools",
     "region": "Midwest",
@@ -47870,7 +47825,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Caroline Uhlarik",
     "school_type": "District",
     "name": "Alpena Public Schools",
     "region": "Midwest",
@@ -49219,7 +49174,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Caroline Uhlarik",
     "school_type": "District",
     "name": "McKenzie County Public School District #1",
     "region": "Midwest",
@@ -49391,7 +49346,7 @@
     "city": "Sanford",
     "address": "3361 N MERIDIAN RD",
     "zip": "48657",
-    "enrollment": 1362,
+    "enrollment": 4499,
     "sis": "PowerSchool",
     "website": "merps.org",
     "_schools": [
@@ -49842,7 +49797,7 @@
     "city": "Middletown",
     "address": "26 Oliphant Lane",
     "zip": "2842",
-    "enrollment": 1961,
+    "enrollment": 4378,
     "sis": "PowerSchool",
     "website": "mpsri.net",
     "_schools": [
@@ -51810,7 +51765,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Caroline Uhlarik",
     "school_type": "District",
     "name": "Boonton Town Public School District",
     "region": "Northeast",
@@ -53281,9 +53236,8 @@
     "lng": -74.447444,
     "is_customer": false,
     "customer_name": "",
-    "_source_team": "SMB",
-    "school_type": "District",
-    "territory_ae": "Caroline Uhlarik"
+    "_source_team": "ENT East",
+    "school_type": "District"
   },
   {
     "ae": "",
@@ -53892,7 +53846,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Caroline Uhlarik",
     "school_type": "District",
     "name": "Carbon County School District #1",
     "region": "West",
@@ -55673,7 +55627,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Caroline Uhlarik",
     "school_type": "District",
     "name": "Circle Public Schools (USD 375)",
     "region": "Midwest",
@@ -55766,7 +55720,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Daniel Way",
     "school_type": "District",
     "name": "Clarke County Public Schools",
     "region": "Southeast",
@@ -56968,7 +56922,7 @@
     "city": "Brooklyn",
     "address": "11775 HEWITT RD",
     "zip": "49230",
-    "enrollment": 1431,
+    "enrollment": 1630,
     "sis": "PowerSchool",
     "website": "myeagles.org",
     "_schools": [
@@ -57672,7 +57626,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Daniel Way",
     "school_type": "District",
     "name": "Powhatan County Public Schools",
     "region": "Southeast",
@@ -59014,7 +58968,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Caroline Uhlarik",
     "name": "Richmond Public Schools",
     "region": "Southeast",
     "state": "VA",
@@ -59048,7 +59002,7 @@
     "city": "Richmond",
     "address": "35276 Division Rd",
     "zip": "48062",
-    "enrollment": 1542,
+    "enrollment": 4481,
     "sis": "PowerSchool",
     "website": "richmond.k12.mi.us",
     "_schools": [
@@ -59090,7 +59044,7 @@
     "city": "Ridgefield",
     "address": "555 Chestnut Street",
     "zip": "7657",
-    "enrollment": 1438,
+    "enrollment": 4118,
     "sis": "Other",
     "website": "ridgefieldschools.com",
     "student_information_system_sis_-_other": "Skyward Family Access",
@@ -60494,7 +60448,7 @@
     "city": "Salem",
     "address": "205 WALNUT ST",
     "zip": "8079",
-    "enrollment": 1277,
+    "enrollment": 1940,
     "sis": "Other",
     "website": "salemnj.org",
     "_schools": [
@@ -60698,7 +60652,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Caroline Uhlarik",
     "school_type": "District",
     "name": "Emporia Public Schools (USD 253)",
     "region": "Midwest",
@@ -61486,7 +61440,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Caroline Uhlarik",
     "school_type": "District",
     "name": "Sheridan County School District #2",
     "region": "West",
@@ -62206,7 +62160,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Daniel Way",
     "school_type": "District",
     "name": "Fluvanna County Public Schools",
     "region": "Southeast",
@@ -62276,7 +62230,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Caroline Uhlarik",
     "school_type": "District",
     "name": "Fort Scott Unified School District 234",
     "region": "Midwest",
@@ -62440,7 +62394,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Caroline Uhlarik",
     "school_type": "District",
     "name": "Fredericksburg City Public Schools",
     "region": "Southeast",
@@ -64504,7 +64458,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Caroline Uhlarik",
     "school_type": "District",
     "name": "Swartz Creek Community Schools",
     "region": "Midwest",
@@ -70884,7 +70838,7 @@
     "city": "Laurel",
     "address": "1160 South Central Avenue",
     "zip": "19956",
-    "enrollment": 2529,
+    "enrollment": 2648,
     "sis": "Infinite Campus",
     "website": "laurel.k12.de.us",
     "_schools": [
@@ -71561,7 +71515,7 @@
     "customer_name": "Belcourt 7"
   },
   {
-    "ae": "",
+    "ae": "Sydney Smith",
     "school_type": "High School",
     "name": "Big Horn County School District #1",
     "region": "West",
@@ -71585,7 +71539,7 @@
     "customer_name": "Big Horn County School District #1"
   },
   {
-    "ae": "",
+    "ae": "Caroline Uhlarik",
     "school_type": "Elementary School",
     "name": "Manassas Park City Public Schools",
     "region": "Southeast",
@@ -72845,7 +72799,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Daniel Way",
     "school_type": "District",
     "name": "Mahopac Central School District",
     "region": "Northeast",
@@ -72862,7 +72816,6 @@
       "Mahopac Middle School"
     ],
     "_source_team": "SMB",
-    "territory_ae": "Daniel Way",
     "lat": 41.3671141,
     "lng": -73.7583888,
     "is_customer": false,
@@ -73660,7 +73613,7 @@
     "city": "Maysville",
     "address": "PO Box 130",
     "zip": "41056",
-    "enrollment": 2616,
+    "enrollment": 3632,
     "sis": "Infinite Campus",
     "website": "mason.kyschools.us",
     "_schools": [
@@ -73976,7 +73929,7 @@
     "city": "Welch",
     "address": "30 Central Ave",
     "zip": "24801",
-    "enrollment": 2444,
+    "enrollment": 5661,
     "sis": "Other",
     "website": "k12.wv.us",
     "_schools": [
@@ -74334,7 +74287,7 @@
     "customer_name": ""
   },
   {
-    "ae": "Victoria Macoul",
+    "ae": "Daniel Way",
     "name": "Baldwinsville Central School District",
     "region": "Northeast",
     "state": "NY",
@@ -75086,7 +75039,7 @@
     "customer_name": ""
   },
   {
-    "ae": "Brad Halsey",
+    "ae": "Daniel Way",
     "name": "Campbell County Schools",
     "region": "Southeast",
     "state": "KY",
@@ -75621,14 +75574,13 @@
     "customer_name": ""
   },
   {
-    "ae": "Victoria Macoul",
+    "ae": "Daniel Way",
     "name": "Bethlehem Central School District",
     "enrollment": 4130,
     "state": "NY",
     "address": "700 DELAWARE AVE",
     "city": "Delmar",
     "zip": "12054",
-    "territory_ae": "Daniel Way",
     "lat": 42.6223484,
     "lng": -73.8324759,
     "is_customer": false,
@@ -75702,7 +75654,7 @@
     "city": "Tompkinsville",
     "address": "309 Emberton Street",
     "zip": "42167",
-    "enrollment": 1823,
+    "enrollment": 2099,
     "sis": "Infinite Campus",
     "website": "monroe.kyschools.us",
     "_schools": [
@@ -77135,7 +77087,7 @@
     "customer_name": ""
   },
   {
-    "ae": "Victoria Macoul",
+    "ae": "Daniel Way",
     "name": "Fairfield School District",
     "region": "Northeast",
     "state": "CT",
@@ -77532,7 +77484,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Daniel Way",
     "school_type": "District",
     "name": "Bristol Virginia Public Schools",
     "region": "Southeast",
@@ -77551,7 +77503,6 @@
       "Washington-Lee Elementary School"
     ],
     "_source_team": "SMB",
-    "territory_ae": "Daniel Way",
     "lat": 36.5981427,
     "lng": -82.1813649,
     "is_customer": false,
@@ -78350,7 +78301,7 @@
     "city": "Princeton",
     "address": "612 W Washington St",
     "zip": "42445",
-    "enrollment": 1905,
+    "enrollment": 10665,
     "sis": "Infinite Campus",
     "website": "caldwell.kyschools.us",
     "_schools": [
@@ -79840,7 +79791,7 @@
     "city": "Hartford",
     "address": "315 E Union St",
     "zip": "42347",
-    "enrollment": 3869,
+    "enrollment": 4897,
     "sis": "Infinite Campus",
     "website": "ohio.kyschools.us",
     "_schools": [
@@ -80632,7 +80583,7 @@
     "city": "Oxford",
     "address": "50 Great Oak Road",
     "zip": "6478",
-    "enrollment": 1667,
+    "enrollment": 4790,
     "sis": "PowerSchool",
     "website": "oxfordpublicschools.org",
     "_schools": [
@@ -81013,7 +80964,7 @@
     "city": "Celina",
     "address": "P. O. Box 469 ST",
     "zip": "38551",
-    "enrollment": 1070,
+    "enrollment": 1530,
     "sis": "Skyward",
     "website": "clayedu.com",
     "_schools": [
@@ -81532,7 +81483,6 @@
     "address": "21 PAGE AVE",
     "city": "Cohoes",
     "zip": "12047",
-    "territory_ae": "Daniel Way",
     "lat": 42.7742952,
     "lng": -73.6916096,
     "is_customer": false,
@@ -82271,7 +82221,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Daniel Way",
     "school_type": "District",
     "name": "Corinth Central School District",
     "region": "Northeast",
@@ -82288,7 +82238,6 @@
       "Corinth Central Middle School"
     ],
     "_source_team": "SMB",
-    "territory_ae": "Daniel Way",
     "lat": 43.242875,
     "lng": -73.8272442,
     "is_customer": false,
@@ -82702,7 +82651,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Daniel Way",
     "school_type": "District",
     "name": "Prince Edward County Public Schools",
     "region": "Southeast",
@@ -82718,7 +82667,6 @@
       "Prince Edward Middle School"
     ],
     "_source_team": "SMB",
-    "territory_ae": "Daniel Way",
     "lat": 37.3024713,
     "lng": -78.3923813,
     "is_customer": false,
@@ -82946,7 +82894,7 @@
     "customer_name": "Cumberland County Public Schools"
   },
   {
-    "ae": "",
+    "ae": "Daniel Way",
     "school_type": "District",
     "name": "Pulaski County Public Schools",
     "region": "Southeast",
@@ -82964,7 +82912,6 @@
       "Riverlawn Elementary School"
     ],
     "_source_team": "SMB",
-    "territory_ae": "Daniel Way",
     "lat": 37.0479109,
     "lng": -80.7798284,
     "is_customer": false,
@@ -83448,7 +83395,6 @@
     "address": "PO BOX 100",
     "city": "Ravena",
     "zip": "12143",
-    "territory_ae": "Daniel Way",
     "lat": 42.4684148,
     "lng": -73.8162354,
     "is_customer": false,
@@ -85407,7 +85353,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Daniel Way",
     "school_type": "District",
     "name": "Eden Central School District",
     "region": "Northeast",
@@ -85423,7 +85369,6 @@
       "Grover L. Priess Primary School"
     ],
     "_source_team": "SMB",
-    "territory_ae": "Daniel Way",
     "lat": 42.6608062,
     "lng": -78.8909346,
     "is_customer": false,
@@ -85622,7 +85567,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Daniel Way",
     "school_type": "District",
     "name": "Salamanca City School District",
     "region": "Northeast",
@@ -85637,7 +85582,6 @@
       "Salamanca High School"
     ],
     "_source_team": "SMB",
-    "territory_ae": "Daniel Way",
     "lat": 42.1608069,
     "lng": -78.7385729,
     "is_customer": false,
@@ -85670,7 +85614,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Daniel Way",
     "school_type": "District",
     "name": "Salem City Public Schools",
     "region": "Southeast",
@@ -85685,7 +85629,6 @@
       "East Salem Elementary School"
     ],
     "_source_team": "SMB",
-    "territory_ae": "Daniel Way",
     "lat": 37.2880131,
     "lng": -80.053053,
     "is_customer": false,
@@ -86441,7 +86384,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Daniel Way",
     "school_type": "District",
     "name": "Scott County Public Schools",
     "region": "Southeast",
@@ -86464,7 +86407,6 @@
       "Weber City Elementary School"
     ],
     "_source_team": "SMB",
-    "territory_ae": "Daniel Way",
     "lat": 36.6412488,
     "lng": -82.5758896,
     "is_customer": false,
@@ -87085,7 +87027,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Daniel Way",
     "school_type": "District",
     "name": "Fallsburg Central School District",
     "region": "Northeast",
@@ -87101,7 +87043,6 @@
       "Fallsburg Junior-Senior High School"
     ],
     "_source_team": "SMB",
-    "territory_ae": "Daniel Way",
     "lat": 41.7320362,
     "lng": -74.6012711,
     "is_customer": false,
@@ -87374,7 +87315,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Daniel Way",
     "school_type": "District",
     "name": "Solvay Union Free School District",
     "region": "Northeast",
@@ -87390,7 +87331,6 @@
       "Solvay Middle School"
     ],
     "_source_team": "SMB",
-    "territory_ae": "Daniel Way",
     "lat": 43.0481221,
     "lng": -76.1474244,
     "is_customer": false,
@@ -87499,7 +87439,6 @@
     "address": "102 LORALEE DR",
     "city": "Albany",
     "zip": "12205",
-    "territory_ae": "Daniel Way",
     "lat": 42.73288,
     "lng": -73.8387082,
     "is_customer": false,
@@ -89888,7 +89827,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Daniel Way",
     "school_type": "District",
     "name": "Sussex County Public Schools",
     "region": "Southeast",
@@ -89903,7 +89842,6 @@
       "Sussex Central Elementary School"
     ],
     "_source_team": "SMB",
-    "territory_ae": "Daniel Way",
     "lat": 36.9458043,
     "lng": -77.4184812,
     "is_customer": false,
@@ -90425,10 +90363,9 @@
     ],
     "lat": 36.1627,
     "lng": -82.8032,
-    "territory_ae": "Daniel Way",
     "is_customer": true,
     "customer_name": "Greene County Schools",
-    "_source_team": "SMB",
+    "_source_team": "ENT East",
     "school_type": "District",
     "enrollment": 2996
   },
@@ -90837,7 +90774,6 @@
     "address": "PO BOX 18",
     "city": "Guilderland Center",
     "zip": "12085",
-    "territory_ae": "Daniel Way",
     "lat": 42.7020217,
     "lng": -73.9662368,
     "is_customer": false,
@@ -91043,7 +90979,7 @@
     "city": "Hawesville",
     "address": "83 State Route 3543",
     "zip": "42348",
-    "enrollment": 1481,
+    "enrollment": 3382,
     "sis": "Infinite Campus",
     "website": "hancock.kyschools.us",
     "_schools": [
@@ -91959,7 +91895,7 @@
     "city": "Brownsville",
     "address": "900 East Main ST",
     "zip": "38012",
-    "enrollment": 2574,
+    "enrollment": 6566,
     "sis": "PowerSchool",
     "website": "hcsk12.net",
     "_schools": [
@@ -93342,7 +93278,6 @@
     "address": "PO BOX 498",
     "city": "Voorheesville",
     "zip": "12186",
-    "territory_ae": "Daniel Way",
     "lat": 42.653967,
     "lng": -73.9287366,
     "is_customer": false,
@@ -93744,7 +93679,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Daniel Way",
     "school_type": "District",
     "name": "Waterford Public Schools",
     "region": "Northeast",
@@ -93764,7 +93699,6 @@
       "Waterford High School"
     ],
     "_source_team": "SMB",
-    "territory_ae": "Daniel Way",
     "lat": 41.342845,
     "lng": -72.1311906,
     "is_customer": false,
@@ -93856,7 +93790,6 @@
     "address": "1245 HILLSIDE DR",
     "city": "Watervliet",
     "zip": "12189",
-    "territory_ae": "Daniel Way",
     "lat": 42.731096,
     "lng": -73.7159531,
     "is_customer": false,
@@ -94397,7 +94330,7 @@
     "city": "Webster Springs",
     "address": "315 S Main St",
     "zip": "26288",
-    "enrollment": 1118,
+    "enrollment": 1750,
     "sis": "Other",
     "website": "k12.wv.us",
     "_source_team": "SMB",
@@ -96563,7 +96496,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Daniel Way",
     "school_type": "District",
     "name": "Lee County Public Schools",
     "region": "Southeast",
@@ -96581,7 +96514,6 @@
       "Rose Hill Elementary School"
     ],
     "_source_team": "SMB",
-    "territory_ae": "Daniel Way",
     "lat": 36.6889777,
     "lng": -83.1110047,
     "is_customer": false,
@@ -96697,7 +96629,7 @@
     "city": "Vanceburg",
     "address": "65 Central Elementary",
     "zip": "41179",
-    "enrollment": 1981,
+    "enrollment": 2358,
     "sis": "Infinite Campus",
     "website": "lewis.kyschools.us",
     "_schools": [
@@ -96922,7 +96854,7 @@
     "city": "Fayetteville",
     "address": "909 Main Avenue South AVE",
     "zip": "37334",
-    "enrollment": 3930,
+    "enrollment": 11642,
     "sis": "Infinite Campus",
     "website": "lcdoe.org",
     "_schools": [
@@ -96956,7 +96888,7 @@
     "city": "Stanford",
     "address": "305 Danville Ave",
     "zip": "40484",
-    "enrollment": 3320,
+    "enrollment": 11642,
     "sis": "Infinite Campus",
     "website": "lincoln.kyschools.us",
     "_schools": [
@@ -96990,7 +96922,7 @@
     "city": "Hamlin",
     "address": "10 Marland Ave",
     "zip": "25523",
-    "enrollment": 2865,
+    "enrollment": 11642,
     "sis": "Other",
     "website": "k12.wv.us",
     "_schools": [
@@ -97169,7 +97101,7 @@
     "city": "Russellville",
     "address": "2222 Bowling Green Rd",
     "zip": "42276",
-    "enrollment": 3461,
+    "enrollment": 4795,
     "sis": "Infinite Campus",
     "website": "logan.kyschools.us",
     "_schools": [
@@ -98212,7 +98144,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Daniel Way",
     "school_type": "Elementary School",
     "name": "Boone County Schools",
     "region": "Southeast",
@@ -98231,7 +98163,6 @@
     "lat": 38.0491,
     "lng": -81.7137,
     "_source_team": "SMB",
-    "territory_ae": "Daniel Way",
     "enrollment": 20356,
     "is_customer": true,
     "customer_name": "Boone County Schools"
@@ -103454,7 +103385,7 @@
     "city": "Booneville",
     "address": "201 N First St",
     "zip": "38829",
-    "enrollment": 1320,
+    "enrollment": 1336,
     "sis": "Other",
     "website": "boonevilleschools.org",
     "_schools": [
@@ -104377,7 +104308,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Callie Brennan",
     "school_type": "District",
     "name": "Buena Park School District",
     "region": "West",
@@ -104389,7 +104320,6 @@
     "sis": "Aeries",
     "website": "bpsd.k12.ca.us",
     "_source_team": "SMB",
-    "territory_ae": "Callie Brennan",
     "lat": 33.8589708,
     "lng": -118.0142306,
     "is_customer": false,
@@ -105299,7 +105229,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Callie Brennan",
     "school_type": "District",
     "name": "Northwest Arctic Borough School District",
     "region": "West",
@@ -105323,7 +105253,6 @@
       "Napaaqtugmiut School"
     ],
     "_source_team": "SMB",
-    "territory_ae": "Callie Brennan",
     "lat": 66.8982057,
     "lng": -162.5977621,
     "is_customer": false,
@@ -106678,7 +106607,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Callie Brennan",
     "school_type": "District",
     "name": "Oregon Trail School District (Oregon Trail SD 46)",
     "region": "West",
@@ -106696,7 +106625,6 @@
       "Welches School"
     ],
     "_source_team": "SMB",
-    "territory_ae": "Callie Brennan",
     "lat": 45.3969212,
     "lng": -122.2616283,
     "is_customer": false,
@@ -107526,7 +107454,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Callie Brennan",
     "school_type": "District",
     "name": "Churchill County School District",
     "region": "West",
@@ -107546,7 +107474,6 @@
       "Numa Elementary School"
     ],
     "_source_team": "SMB",
-    "territory_ae": "Callie Brennan",
     "lat": 39.4682105,
     "lng": -118.7770043,
     "is_customer": false,
@@ -109162,7 +109089,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Callie Brennan",
     "school_type": "District",
     "name": "Cottonwood-Oak Creek Elementary District",
     "region": "West",
@@ -109179,7 +109106,6 @@
       "Oak Creek Elementary School"
     ],
     "_source_team": "SMB",
-    "territory_ae": "Callie Brennan",
     "lat": 34.7402868,
     "lng": -112.0268412,
     "is_customer": false,
@@ -110370,7 +110296,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Callie Brennan",
     "school_type": "District",
     "name": "Reef-Sunset Unified School District",
     "region": "West",
@@ -110385,14 +110311,13 @@
       "Sunrise High"
     ],
     "_source_team": "SMB",
-    "territory_ae": "Callie Brennan",
     "lat": 35.994173,
     "lng": -120.128724,
     "is_customer": false,
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Callie Brennan",
     "school_type": "District",
     "name": "Delano Joint Union High School District",
     "region": "West",
@@ -110404,7 +110329,6 @@
     "sis": "Aeries",
     "website": "djuhsd.org",
     "_source_team": "SMB",
-    "territory_ae": "Callie Brennan",
     "lat": 35.7805955,
     "lng": -119.2408105,
     "is_customer": false,
@@ -110691,7 +110615,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Callie Brennan",
     "school_type": "District",
     "name": "Rhinelander School District",
     "region": "Midwest",
@@ -110711,7 +110635,6 @@
       "Rhinelander Environmental Stewardship Academy"
     ],
     "_source_team": "SMB",
-    "territory_ae": "Callie Brennan",
     "lat": 45.636623,
     "lng": -89.412075,
     "is_customer": false,
@@ -110835,7 +110758,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Callie Brennan",
     "school_type": "District",
     "name": "Rim of the World Unified School District",
     "region": "West",
@@ -110847,7 +110770,6 @@
     "sis": "Aeries",
     "website": "rimsd.k12.ca.us",
     "_source_team": "SMB",
-    "territory_ae": "Callie Brennan",
     "lat": 34.2489684,
     "lng": -117.1913321,
     "is_customer": false,
@@ -111706,7 +111628,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Callie Brennan",
     "school_type": "District",
     "name": "Ruidoso Municipal Schools",
     "region": "South-Central",
@@ -111724,7 +111646,6 @@
       "White Mountain Elementary School"
     ],
     "_source_team": "SMB",
-    "territory_ae": "Callie Brennan",
     "lat": 33.3235904,
     "lng": -105.6319774,
     "is_customer": false,
@@ -111907,7 +111828,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Callie Brennan",
     "school_type": "District",
     "name": "Saddle Mountain Unified School District",
     "region": "West",
@@ -111918,7 +111839,6 @@
     "enrollment": 3245,
     "sis": "PowerSchool",
     "_source_team": "SMB",
-    "territory_ae": "Callie Brennan",
     "lat": 33.4918575,
     "lng": -112.8731469,
     "is_customer": false,
@@ -114649,7 +114569,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Callie Brennan",
     "school_type": "District",
     "name": "Soledad Unified",
     "region": "West",
@@ -114661,7 +114581,6 @@
     "sis": "Aeries",
     "website": "soledad.k12.ca.us",
     "_source_team": "SMB",
-    "territory_ae": "Callie Brennan",
     "lat": 36.4272146,
     "lng": -121.3184169,
     "is_customer": false,
@@ -115165,7 +115084,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Callie Brennan",
     "school_type": "District",
     "name": "Fort Osage R-I School District",
     "region": "Midwest",
@@ -115187,7 +115106,6 @@
       "Osage Trail Middle School"
     ],
     "_source_team": "SMB",
-    "territory_ae": "Callie Brennan",
     "lat": 39.0924792,
     "lng": -94.4137923,
     "is_customer": false,
@@ -115483,7 +115401,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Callie Brennan",
     "school_type": "District",
     "name": "Fremont Re-2",
     "region": "West",
@@ -115500,7 +115418,6 @@
       "Penrose Elementary School"
     ],
     "_source_team": "SMB",
-    "territory_ae": "Callie Brennan",
     "lat": 38.3948795,
     "lng": -105.1217652,
     "is_customer": false,
@@ -115604,7 +115521,7 @@
     "customer_name": ""
   },
   {
-    "ae": "Brad Halsey",
+    "ae": "Callie Brennan",
     "name": "Pasadena Unified School District",
     "region": "West",
     "state": "CA",
@@ -116333,7 +116250,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Callie Brennan",
     "school_type": "District",
     "name": "Garfield School District No. Re-2",
     "region": "West",
@@ -116353,7 +116270,6 @@
       "Wamsley Elementary School"
     ],
     "_source_team": "SMB",
-    "territory_ae": "Callie Brennan",
     "lat": 39.536897,
     "lng": -107.7809987,
     "is_customer": false,
@@ -116958,7 +116874,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Callie Brennan",
     "school_type": "District",
     "name": "Strasburg School District 31J",
     "region": "West",
@@ -116973,7 +116889,6 @@
       "Strasburg Elementary School"
     ],
     "_source_team": "SMB",
-    "territory_ae": "Callie Brennan",
     "lat": 39.7381894,
     "lng": -104.3238505,
     "is_customer": false,
@@ -117210,7 +117125,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Callie Brennan",
     "school_type": "District",
     "name": "Golden Valley Unified",
     "region": "West",
@@ -117222,7 +117137,6 @@
     "sis": "Aeries",
     "website": "gvusd.org",
     "_source_team": "SMB",
-    "territory_ae": "Callie Brennan",
     "lat": 36.923134,
     "lng": -119.8675661,
     "is_customer": false,
@@ -118351,7 +118265,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Callie Brennan",
     "school_type": "District",
     "name": "Gunnison Watershed School District Re1J",
     "region": "West",
@@ -118366,7 +118280,6 @@
       "Gunnison Elementary School"
     ],
     "_source_team": "SMB",
-    "territory_ae": "Callie Brennan",
     "lat": 38.5527438,
     "lng": -106.9327861,
     "is_customer": false,
@@ -120945,7 +120858,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Callie Brennan",
     "school_type": "District",
     "name": "Wasco Union Elementary School District",
     "region": "West",
@@ -120956,7 +120869,6 @@
     "enrollment": 3473,
     "sis": "Aeries",
     "_source_team": "SMB",
-    "territory_ae": "Callie Brennan",
     "lat": 35.5941238,
     "lng": -119.3409457,
     "is_customer": false,
@@ -121033,7 +120945,7 @@
     "customer_name": ""
   },
   {
-    "ae": "Aric Walden",
+    "ae": "Callie Brennan",
     "name": "Washington Unified School District",
     "region": "West",
     "state": "CA",
@@ -123143,7 +123055,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Callie Brennan",
     "school_type": "District",
     "name": "Willits Unified School District",
     "region": "West",
@@ -123155,7 +123067,6 @@
     "sis": "Aeries",
     "website": "willitsunified.com",
     "_source_team": "SMB",
-    "territory_ae": "Callie Brennan",
     "lat": 39.3992649,
     "lng": -123.3595695,
     "is_customer": false,
@@ -123185,7 +123096,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Callie Brennan",
     "school_type": "District",
     "name": "Wilsona School District",
     "region": "West",
@@ -123197,7 +123108,6 @@
     "sis": "Skyward",
     "website": "wilsona.k12.ca.us",
     "_source_team": "SMB",
-    "territory_ae": "Callie Brennan",
     "lat": 34.6165449,
     "lng": -117.8986562,
     "is_customer": false,
@@ -124175,7 +124085,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Callie Brennan",
     "school_type": "District",
     "name": "Lake Hamilton School District",
     "region": "South-Central",
@@ -124195,7 +124105,6 @@
       "Lake Hamilton Primary School"
     ],
     "_source_team": "SMB",
-    "territory_ae": "Callie Brennan",
     "lat": 34.4431541,
     "lng": -93.2103308,
     "is_customer": false,
@@ -125230,7 +125139,7 @@
     "city": "Brookhaven",
     "address": "PO BOX 826",
     "zip": "39602",
-    "enrollment": 2824,
+    "enrollment": 4981,
     "sis": "Edupoint Synergy",
     "website": "lincoln.k12.ms.us",
     "_schools": [
@@ -125408,7 +125317,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Callie Brennan",
     "school_type": "District",
     "name": "Lockwood K-12",
     "region": "West",
@@ -125425,7 +125334,6 @@
       "Lockwood Primary School"
     ],
     "_source_team": "SMB",
-    "territory_ae": "Callie Brennan",
     "lat": 45.7982481,
     "lng": -108.4363075,
     "is_customer": false,
@@ -125852,7 +125760,7 @@
     "customer_name": ""
   },
   {
-    "ae": "Aric Walden",
+    "ae": "Callie Brennan",
     "name": "Greenfield Union School District",
     "region": "West",
     "state": "CA",
@@ -125868,9 +125776,8 @@
     "lng": -119.0075227,
     "is_customer": false,
     "customer_name": "",
-    "_source_team": "SMB",
-    "school_type": "District",
-    "territory_ae": "Callie Brennan"
+    "_source_team": "ENT West",
+    "school_type": "District"
   },
   {
     "ae": "",
@@ -127856,7 +127763,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Andy Graham",
     "name": "Richland County School District One",
     "region": "Southeast",
     "state": "SC",
@@ -127902,7 +127809,6 @@
       "William S. Sandel Elementary School"
     ],
     "_source_team": "ENT East",
-    "territory_ae": "Wesley Yarber",
     "lat": 34.0123098,
     "lng": -81.0302416,
     "is_customer": false,
@@ -129290,7 +129196,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Andy Graham",
     "name": "Laurens County School District 55",
     "region": "Southeast",
     "state": "SC",
@@ -129311,7 +129217,6 @@
       "Laurens Middle School"
     ],
     "_source_team": "ENT East",
-    "territory_ae": "Wesley Yarber",
     "lat": 34.505085,
     "lng": -82.016017,
     "is_customer": false,
@@ -129421,7 +129326,6 @@
       "White Knoll Elementary School"
     ],
     "_source_team": "ENT East",
-    "territory_ae": "Wesley Yarber",
     "lat": 33.9804494,
     "lng": -81.2374167,
     "is_customer": false,
@@ -129483,7 +129387,6 @@
       "Seven Oaks Elementary School"
     ],
     "_source_team": "ENT East",
-    "territory_ae": "Wesley Yarber",
     "lat": 34.1263199,
     "lng": -81.2267349,
     "is_customer": false,
@@ -129529,7 +129432,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Wesley Yarber",
     "name": "Granville County Public Schools",
     "region": "Southeast",
     "state": "NC",
@@ -129564,7 +129467,7 @@
     "customer_name": "Granville County Public Schools"
   },
   {
-    "ae": "",
+    "ae": "Andy Graham",
     "name": "Wilson County Schools",
     "region": "Southeast",
     "state": "NC",
@@ -129601,7 +129504,6 @@
     "lat": 35.7252,
     "lng": -77.9132,
     "_source_team": "ENT East",
-    "territory_ae": "Wesley Yarber",
     "enrollment": 20548,
     "is_customer": true,
     "customer_name": "Wilson County Schools"
@@ -129630,7 +129532,7 @@
     "territory_ae": "Wesley Yarber"
   },
   {
-    "ae": "",
+    "ae": "Wesley Yarber",
     "name": "Charter Institute at Erskine",
     "region": "Southeast",
     "state": "SC",
@@ -129653,7 +129555,7 @@
     "customer_name": "Charter Institute at Erskine"
   },
   {
-    "ae": "",
+    "ae": "David Thomas",
     "name": "Aiken County Public School District (Aiken County Public Schools)",
     "region": "Southeast",
     "state": "SC",
@@ -129666,7 +129568,6 @@
     "math_supplemental": "Exact Path",
     "attendance_comms": "Other",
     "strategic_plan_url": "https://www.acpsd.net/article/1637684",
-    "territory_ae": "Wesley Yarber",
     "lat": 33.500956,
     "lng": -81.709297,
     "is_customer": false,
@@ -130054,7 +129955,7 @@
     "city": "Richmond",
     "address": "PO Box 768",
     "zip": "40476",
-    "enrollment": 11241,
+    "enrollment": 12971,
     "sis": "Infinite Campus",
     "website": "madison.kyschools.us",
     "math_curriculum": "District-developed units; Math Design Collaborative",
@@ -134890,7 +134791,7 @@
     "city": "Eastern",
     "address": "442 KY RT 550",
     "zip": "41622",
-    "enrollment": 5449,
+    "enrollment": 8847,
     "sis": "Infinite Campus",
     "website": "floyd.kyschools.us",
     "math_curriculum": "Carnegie Learning",
@@ -135126,7 +135027,7 @@
       "Roy P. Benavidez Elementary School",
       "South San Antonio High School"
     ],
-    "_source_team": "ENT West"
+    "_source_team": "Strategic"
   },
   {
     "ae": "Brad Halsey",
@@ -138284,7 +138185,7 @@
     "_source_team": "ENT West"
   },
   {
-    "ae": "Brad Halsey",
+    "ae": "Christina Ceballos",
     "name": "Sedalia School District 200",
     "region": "Midwest",
     "state": "MO",
@@ -138304,7 +138205,8 @@
     "lng": -93.2480989,
     "is_customer": false,
     "customer_name": "",
-    "_source_team": "ENT West"
+    "_source_team": "SMB",
+    "territory_ae": "Christina Ceballos"
   },
   {
     "ae": "Brad Halsey",
@@ -138638,7 +138540,9 @@
     "address": "2060 Challenger Dr",
     "is_customer": true,
     "customer_name": "Alameda Unified School District",
-    "_source_team": "ENT West"
+    "_source_team": "ENT West",
+    "city": "Alameda",
+    "zip": "94501"
   },
   {
     "ae": "Brad Halsey",
@@ -138991,7 +138895,7 @@
     "_source_team": "ENT East"
   },
   {
-    "ae": "",
+    "ae": "Susan Speiser",
     "name": "Midland Public Schools",
     "region": "Midwest",
     "state": "MI",
@@ -139012,7 +138916,6 @@
       "Northeast Middle School",
       "Plymouth Elementary School"
     ],
-    "territory_ae": "Susan Speiser",
     "lat": 43.614604,
     "lng": -84.234335,
     "is_customer": false,
@@ -139408,7 +139311,7 @@
     "_source_team": "ENT East"
   },
   {
-    "ae": "",
+    "ae": "Susan Speiser",
     "name": "Oak Hills Local School District",
     "region": "Midwest",
     "state": "OH",
@@ -139428,7 +139331,6 @@
       "Delhi Middle School",
       "Delshire Elementary School"
     ],
-    "territory_ae": "Susan Speiser",
     "lat": 39.1074239,
     "lng": -84.6819497,
     "is_customer": false,
@@ -139751,7 +139653,7 @@
     "_source_team": "ENT East"
   },
   {
-    "ae": "",
+    "ae": "Susan Speiser",
     "name": "Plymouth-Canton Community Schools",
     "region": "Midwest",
     "state": "MI",
@@ -139773,7 +139675,6 @@
       "Ruth Eriksson Elementary School",
       "Starkweather Academy"
     ],
-    "territory_ae": "Susan Speiser",
     "lat": 42.3696066,
     "lng": -83.472395,
     "is_customer": false,
@@ -140257,7 +140158,7 @@
     "_source_team": "ENT East"
   },
   {
-    "ae": "",
+    "ae": "Susan Speiser",
     "name": "Forest Hills Public Schools",
     "region": "Midwest",
     "state": "MI",
@@ -140279,7 +140180,6 @@
       "Northern High School",
       "Orchard View Elementary School"
     ],
-    "territory_ae": "Susan Speiser",
     "lat": 42.9518336,
     "lng": -85.5557281,
     "is_customer": false,
@@ -140543,7 +140443,7 @@
     "_source_team": "ENT East"
   },
   {
-    "ae": "",
+    "ae": "Susan Speiser",
     "name": "Grandville Public Schools",
     "region": "Midwest",
     "state": "MI",
@@ -140562,7 +140462,6 @@
       "Grandville Middle School",
       "West Elementary School"
     ],
-    "territory_ae": "Susan Speiser",
     "lat": 42.906409,
     "lng": -85.7592479,
     "is_customer": false,
@@ -140651,7 +140550,7 @@
     "_source_team": "ENT East"
   },
   {
-    "ae": "",
+    "ae": "Susan Speiser",
     "name": "Grosse Pointe Public Schools",
     "region": "Midwest",
     "state": "MI",
@@ -140671,7 +140570,6 @@
       "Parcells Middle School",
       "Stevens T. Mason Elementary School"
     ],
-    "territory_ae": "Susan Speiser",
     "lat": 42.437496,
     "lng": -82.885548,
     "is_customer": false,
@@ -141184,7 +141082,7 @@
     "_source_team": "ENT East"
   },
   {
-    "ae": "",
+    "ae": "Susan Speiser",
     "name": "Wayne-Westland Community School District",
     "region": "Midwest",
     "state": "MI",
@@ -141216,7 +141114,6 @@
       "Wayne-Westland Innovative Academy",
       "Wildwood Elementary School"
     ],
-    "territory_ae": "Susan Speiser",
     "lat": 42.3168578,
     "lng": -83.4023385,
     "is_customer": false,
@@ -141251,7 +141148,7 @@
     "_source_team": "ENT East"
   },
   {
-    "ae": "",
+    "ae": "Susan Speiser",
     "name": "Jenison Public Schools",
     "region": "Midwest",
     "state": "MI",
@@ -141272,7 +141169,6 @@
       "Jenison Junior High School",
       "Pinewood Elementary School"
     ],
-    "territory_ae": "Susan Speiser",
     "lat": 42.9209568,
     "lng": -85.832678,
     "is_customer": false,
@@ -141402,7 +141298,7 @@
     "_source_team": "ENT East"
   },
   {
-    "ae": "",
+    "ae": "Susan Speiser",
     "name": "Woodhaven-Brownstown School District",
     "region": "Midwest",
     "state": "MI",
@@ -141421,7 +141317,6 @@
       "Gudith Elementary School",
       "Maple Grove Alternative High School"
     ],
-    "territory_ae": "Susan Speiser",
     "lat": 42.1258452,
     "lng": -83.2459501,
     "is_customer": false,
@@ -141912,7 +141807,6 @@
     ],
     "lat": 41.6926,
     "lng": -83.6267,
-    "territory_ae": "Susan Speiser",
     "is_customer": true,
     "customer_name": "Washington Local Schools",
     "_source_team": "ENT East"
@@ -142069,7 +141963,7 @@
     "_source_team": "ENT East"
   },
   {
-    "ae": "",
+    "ae": "Hannah O'Brien",
     "name": "Aurora East USD 131 (East Aurora School District 131 / East Aurora Public School District 131)",
     "region": "Midwest",
     "state": "IL",
@@ -142112,7 +142006,7 @@
     "_source_team": "ENT East"
   },
   {
-    "ae": "",
+    "ae": "Hannah O'Brien",
     "name": "Aurora West USD 129",
     "region": "Midwest",
     "state": "IL",
@@ -142152,7 +142046,7 @@
     "_source_team": "ENT East"
   },
   {
-    "ae": "",
+    "ae": "Hannah O'Brien",
     "name": "McLean County Unit District No. 5",
     "region": "Midwest",
     "state": "IL",
@@ -142185,7 +142079,7 @@
     "_source_team": "ENT East"
   },
   {
-    "ae": "",
+    "ae": "Hannah O'Brien",
     "name": "Merrillville Community School Corporation",
     "region": "Midwest",
     "state": "IN",
@@ -142716,7 +142610,7 @@
     "_source_team": "ENT East"
   },
   {
-    "ae": "",
+    "ae": "Hannah O'Brien",
     "name": "Muncie Community Schools",
     "region": "Midwest",
     "state": "IN",
@@ -142889,7 +142783,7 @@
     "_source_team": "ENT East"
   },
   {
-    "ae": "",
+    "ae": "Hannah O'Brien",
     "name": "Glenbrook High School District 225",
     "region": "Midwest",
     "state": "IL",
@@ -142974,7 +142868,7 @@
     "_source_team": "ENT East"
   },
   {
-    "ae": "",
+    "ae": "Hannah O'Brien",
     "name": "Carmel Clay Schools",
     "region": "Midwest",
     "state": "IN",
@@ -143142,7 +143036,7 @@
     "_source_team": "ENT East"
   },
   {
-    "ae": "",
+    "ae": "Hannah O'Brien",
     "name": "Community High School District 155",
     "region": "Midwest",
     "state": "IL",
@@ -143193,7 +143087,7 @@
     "_source_team": "ENT East"
   },
   {
-    "ae": "",
+    "ae": "Hannah O'Brien",
     "name": "Cicero District 99 (Cicero Public School District 99)",
     "region": "Midwest",
     "state": "IL",
@@ -143372,7 +143266,7 @@
     "_source_team": "ENT East"
   },
   {
-    "ae": "",
+    "ae": "Hannah O'Brien",
     "name": "Collinsville Community Unit School District #10",
     "region": "Midwest",
     "state": "IL",
@@ -143404,7 +143298,7 @@
     "_source_team": "ENT East"
   },
   {
-    "ae": "",
+    "ae": "Hannah O'Brien",
     "name": "Community Consolidated School District 59",
     "region": "Midwest",
     "state": "IL",
@@ -143658,7 +143552,7 @@
     "_source_team": "ENT East"
   },
   {
-    "ae": "",
+    "ae": "Hannah O'Brien",
     "name": "Community Unit School District 300",
     "region": "Midwest",
     "state": "IL",
@@ -143755,7 +143649,7 @@
     "_source_team": "ENT East"
   },
   {
-    "ae": "",
+    "ae": "Hannah O'Brien",
     "name": "Decatur Public Schools District 61",
     "region": "Midwest",
     "state": "IL",
@@ -143890,7 +143784,7 @@
     "_source_team": "ENT East"
   },
   {
-    "ae": "",
+    "ae": "Hannah O'Brien",
     "name": "Rockford Public Schools",
     "region": "Midwest",
     "state": "IL",
@@ -144248,7 +144142,7 @@
     "_source_team": "ENT East"
   },
   {
-    "ae": "",
+    "ae": "Hannah O'Brien",
     "name": "Evansville Vanderburgh School Corp",
     "region": "Midwest",
     "state": "IN",
@@ -144327,7 +144221,7 @@
     "_source_team": "ENT East"
   },
   {
-    "ae": "",
+    "ae": "Hannah O'Brien",
     "name": "South Bend Community School Corporation",
     "region": "Midwest",
     "state": "IN",
@@ -144366,7 +144260,7 @@
     "_source_team": "ENT East"
   },
   {
-    "ae": "",
+    "ae": "Hannah O'Brien",
     "name": "Fort Wayne Community Schools",
     "region": "Midwest",
     "state": "IN",
@@ -144504,7 +144398,7 @@
     "_source_team": "ENT East"
   },
   {
-    "ae": "",
+    "ae": "Hannah O'Brien",
     "name": "St. Charles Community Unit School District 303",
     "region": "Midwest",
     "state": "IL",
@@ -144754,7 +144648,7 @@
     "_source_team": "ENT East"
   },
   {
-    "ae": "",
+    "ae": "Hannah O'Brien",
     "name": "Township High School District 211",
     "region": "Midwest",
     "state": "IL",
@@ -144780,7 +144674,7 @@
     "_source_team": "ENT East"
   },
   {
-    "ae": "",
+    "ae": "Hannah O'Brien",
     "name": "Township High School District 214",
     "region": "Midwest",
     "state": "IL",
@@ -144954,7 +144848,7 @@
     "_source_team": "ENT East"
   },
   {
-    "ae": "",
+    "ae": "Hannah O'Brien",
     "name": "Vigo County School Corporation",
     "region": "Midwest",
     "state": "IN",
@@ -145384,7 +145278,7 @@
     "_source_team": "ENT East"
   },
   {
-    "ae": "",
+    "ae": "Hannah O'Brien",
     "name": "Woodstock Community Unit School District 200",
     "region": "Midwest",
     "state": "IL",
@@ -145518,7 +145412,7 @@
     "_source_team": "ENT East"
   },
   {
-    "ae": "",
+    "ae": "Hannah O'Brien",
     "name": "Lake Zurich Community Unit School District 95",
     "region": "Midwest",
     "state": "IL",
@@ -145629,7 +145523,7 @@
     "_source_team": "ENT East"
   },
   {
-    "ae": "",
+    "ae": "Hannah O'Brien",
     "name": "Lincoln-Way Community High School District 210",
     "region": "Midwest",
     "state": "IL",
@@ -145686,7 +145580,7 @@
     "_source_team": "ENT East"
   },
   {
-    "ae": "",
+    "ae": "David Thomas",
     "name": "Alabaster City Schools",
     "region": "Southeast",
     "state": "AL",
@@ -145705,7 +145599,6 @@
       "Meadow View Elementary School",
       "Thompson Intermediate School"
     ],
-    "territory_ae": "David Thomas",
     "lat": 33.2442813,
     "lng": -86.8163773,
     "is_customer": false,
@@ -145802,7 +145695,7 @@
     "_source_team": "ENT East"
   },
   {
-    "ae": "",
+    "ae": "David Thomas",
     "name": "Madison County School System",
     "region": "Southeast",
     "state": "AL",
@@ -145829,7 +145722,6 @@
       "Sparkman Middle School",
       "Walnut Grove Elementary School"
     ],
-    "territory_ae": "David Thomas",
     "lat": 34.729847,
     "lng": -86.5859011,
     "is_customer": false,
@@ -146090,7 +145982,7 @@
     "_source_team": "ENT East"
   },
   {
-    "ae": "",
+    "ae": "David Thomas",
     "name": "Autauga County Schools",
     "region": "Southeast",
     "state": "AL",
@@ -146113,7 +146005,6 @@
       "Prattville Kindergarten School",
       "Prattville Primary School"
     ],
-    "territory_ae": "David Thomas",
     "lat": 32.4630516,
     "lng": -86.476325,
     "is_customer": false,
@@ -146154,7 +146045,7 @@
     "_source_team": "ENT East"
   },
   {
-    "ae": "",
+    "ae": "David Thomas",
     "name": "Bedford County Schools",
     "region": "Southeast",
     "state": "TN",
@@ -146178,7 +146069,6 @@
       "Shelbyville Central High School",
       "South Side Elementary School"
     ],
-    "territory_ae": "David Thomas",
     "lat": 35.4879868,
     "lng": -86.4535238,
     "is_customer": false,
@@ -146623,7 +146513,7 @@
     "_source_team": "ENT East"
   },
   {
-    "ae": "",
+    "ae": "David Thomas",
     "name": "Bradley County Schools",
     "region": "Southeast",
     "state": "TN",
@@ -146646,7 +146536,6 @@
       "Valley View Elementary School",
       "Waterville Community Elementary School"
     ],
-    "territory_ae": "David Thomas",
     "lat": 35.155515,
     "lng": -84.890538,
     "is_customer": false,
@@ -147191,7 +147080,7 @@
     "_source_team": "ENT East"
   },
   {
-    "ae": "",
+    "ae": "David Thomas",
     "name": "Rankin County School District",
     "region": "Southeast",
     "state": "MS",
@@ -147221,7 +147110,6 @@
       "Richland Upper Elementary School",
       "Steens Creek Elementary School"
     ],
-    "territory_ae": "David Thomas",
     "lat": 32.2731475,
     "lng": -89.9868058,
     "is_customer": false,
@@ -147395,7 +147283,7 @@
     "_source_team": "ENT East"
   },
   {
-    "ae": "",
+    "ae": "David Thomas",
     "name": "Robertson County Schools",
     "region": "Southeast",
     "state": "TN",
@@ -147415,7 +147303,6 @@
       "Springfield Middle School",
       "Westside Elementary School"
     ],
-    "territory_ae": "David Thomas",
     "lat": 36.5092119,
     "lng": -86.8849984,
     "is_customer": false,
@@ -147487,7 +147374,7 @@
     "_source_team": "ENT East"
   },
   {
-    "ae": "",
+    "ae": "David Thomas",
     "name": "Enterprise City School District",
     "region": "Southeast",
     "state": "AL",
@@ -147507,7 +147394,6 @@
       "Pinedale Elementary School",
       "Rucker Boulevard Elementary School"
     ],
-    "territory_ae": "David Thomas",
     "lat": 31.322642,
     "lng": -85.8523028,
     "is_customer": false,
@@ -147880,7 +147766,7 @@
     "_source_team": "ENT East"
   },
   {
-    "ae": "",
+    "ae": "David Thomas",
     "name": "Gulfport School District",
     "region": "Southeast",
     "state": "MS",
@@ -147904,7 +147790,6 @@
       "Twenty Eighth Street Elementary School",
       "West Elementary School"
     ],
-    "territory_ae": "David Thomas",
     "lat": 30.3674198,
     "lng": -89.0928155,
     "is_customer": false,
@@ -147984,7 +147869,7 @@
     "_source_team": "ENT East"
   },
   {
-    "ae": "",
+    "ae": "David Thomas",
     "name": "Harrison County School District",
     "region": "Southeast",
     "state": "MS",
@@ -148018,7 +147903,6 @@
       "West Wortham Elementary and Middle School",
       "Woolmarket Elementary School"
     ],
-    "territory_ae": "David Thomas",
     "lat": 30.4853115,
     "lng": -89.1095706,
     "is_customer": false,
@@ -148946,7 +148830,7 @@
     "_source_team": "ENT East"
   },
   {
-    "ae": "",
+    "ae": "David Thomas",
     "name": "Lowndes County School District",
     "region": "Southeast",
     "state": "MS",
@@ -148968,7 +148852,6 @@
       "West Lowndes Elementary School",
       "West Lowndes High School"
     ],
-    "territory_ae": "David Thomas",
     "lat": 33.4956744,
     "lng": -88.4272627,
     "is_customer": false,
@@ -149086,7 +148969,6 @@
     ],
     "lat": 36.3321,
     "lng": -94.1185,
-    "territory_ae": "David Thomas",
     "is_customer": true,
     "customer_name": "Rogers Public Schools",
     "_source_team": "ENT East"
@@ -149119,7 +149001,6 @@
     ],
     "lat": 36.4776,
     "lng": -82.9671,
-    "territory_ae": "David Thomas",
     "is_customer": true,
     "customer_name": "Hawkins County Schools",
     "_source_team": "ENT East"
@@ -149405,7 +149286,6 @@
     "_schools": [
       "Blackshere Elementary School"
     ],
-    "territory_ae": "Brittney Hall",
     "_source_team": "ENT East"
   },
   {
@@ -149606,7 +149486,7 @@
     "_source_team": "ENT East"
   },
   {
-    "ae": "",
+    "ae": "Brittney Hall",
     "name": "Berkeley County Schools",
     "region": "Southeast",
     "state": "WV",
@@ -149640,11 +149520,10 @@
     "lng": -77.9835595,
     "is_customer": false,
     "customer_name": "",
-    "territory_ae": "Brittney Hall",
     "_source_team": "ENT East"
   },
   {
-    "ae": "",
+    "ae": "Brittney Hall",
     "name": "Montgomery County Public Schools",
     "region": "Southeast",
     "state": "VA",
@@ -149670,7 +149549,6 @@
     "lng": -80.3922284,
     "is_customer": false,
     "customer_name": "",
-    "territory_ae": "Brittney Hall",
     "_source_team": "ENT East"
   },
   {
@@ -150108,7 +149986,7 @@
     "_source_team": "ENT East"
   },
   {
-    "ae": "",
+    "ae": "Brittney Hall",
     "name": "Capital School District",
     "region": "Northeast",
     "state": "DE",
@@ -150135,7 +150013,6 @@
     "lng": -75.550433,
     "is_customer": false,
     "customer_name": "",
-    "territory_ae": "Brittney Hall",
     "_source_team": "ENT East"
   },
   {
@@ -150248,7 +150125,7 @@
     "_source_team": "ENT East"
   },
   {
-    "ae": "",
+    "ae": "Brittney Hall",
     "name": "Charles County Public Schools",
     "region": "Northeast",
     "state": "MD",
@@ -150285,7 +150162,6 @@
     "lng": -76.9766569,
     "is_customer": false,
     "customer_name": "",
-    "territory_ae": "Brittney Hall",
     "_source_team": "ENT East"
   },
   {
@@ -150547,7 +150423,7 @@
     "_source_team": "ENT East"
   },
   {
-    "ae": "",
+    "ae": "Brittney Hall",
     "name": "Portsmouth City Public Schools",
     "region": "Southeast",
     "state": "VA",
@@ -150572,7 +150448,6 @@
     "lng": -76.297699,
     "is_customer": false,
     "customer_name": "",
-    "territory_ae": "Brittney Hall",
     "_source_team": "ENT East"
   },
   {
@@ -150741,7 +150616,7 @@
     "_source_team": "ENT East"
   },
   {
-    "ae": "",
+    "ae": "Brittney Hall",
     "name": "Danville City Public Schools",
     "region": "Southeast",
     "state": "VA",
@@ -150767,7 +150642,6 @@
     "lng": -79.3916713,
     "is_customer": false,
     "customer_name": "",
-    "territory_ae": "Brittney Hall",
     "_source_team": "ENT East"
   },
   {
@@ -150808,7 +150682,7 @@
     "_source_team": "ENT East"
   },
   {
-    "ae": "",
+    "ae": "Brittney Hall",
     "name": "Revere Public Schools",
     "region": "Northeast",
     "state": "MA",
@@ -150837,7 +150711,6 @@
     "lng": -71.0064568,
     "is_customer": false,
     "customer_name": "",
-    "territory_ae": "Brittney Hall",
     "_source_team": "ENT East"
   },
   {
@@ -151273,7 +151146,6 @@
       "Nansemond Parkway Elementary School",
       "Southwestern Elementary School"
     ],
-    "territory_ae": "Brittney Hall",
     "_source_team": "ENT East"
   },
   {
@@ -151332,7 +151204,7 @@
     "_source_team": "ENT East"
   },
   {
-    "ae": "",
+    "ae": "Brittney Hall",
     "name": "Harrison County Schools",
     "region": "Southeast",
     "state": "WV",
@@ -151359,7 +151231,6 @@
     "lng": -80.3445341,
     "is_customer": false,
     "customer_name": "",
-    "territory_ae": "Brittney Hall",
     "_source_team": "ENT East"
   },
   {
@@ -152233,7 +152104,7 @@
     "_source_team": "ENT East"
   },
   {
-    "ae": "",
+    "ae": "Brittney Hall",
     "name": "Haverhill Public Schools",
     "region": "Northeast",
     "state": "MA",
@@ -152263,7 +152134,6 @@
     "lng": -71.0599477,
     "is_customer": true,
     "customer_name": "Haverhill Public Schools",
-    "territory_ae": "Brittney Hall",
     "_source_team": "ENT East"
   },
   {
@@ -152384,7 +152254,7 @@
     "_source_team": "ENT East"
   },
   {
-    "ae": "",
+    "ae": "Brittney Hall",
     "name": "Hanover County Public Schools",
     "region": "Southeast",
     "state": "VA",
@@ -152402,7 +152272,6 @@
     "lng": -77.4718,
     "is_customer": true,
     "customer_name": "Hanover County Public Schools",
-    "territory_ae": "Brittney Hall",
     "_source_team": "ENT East"
   },
   {
@@ -152465,7 +152334,6 @@
     "lng": -71.155,
     "is_customer": true,
     "customer_name": "Fall River Public Schools",
-    "territory_ae": "Brittney Hall",
     "_source_team": "ENT East"
   },
   {
@@ -155148,7 +155016,8 @@
     "lng": -83.2264063,
     "is_customer": false,
     "customer_name": "",
-    "_source_team": "ENT East"
+    "_source_team": "ENT East",
+    "enrollment": 2300
   },
   {
     "ae": "Andy Graham",
@@ -155995,7 +155864,7 @@
     "_source_team": "ENT West"
   },
   {
-    "ae": "",
+    "ae": "Jimmy Koerner",
     "name": "Cedar Rapids Community School District",
     "region": "Midwest",
     "state": "IA",
@@ -156036,7 +155905,6 @@
       "Wilson Middle School",
       "Wright Elementary School"
     ],
-    "territory_ae": "Jimmy Koerner",
     "lat": 42.0032772,
     "lng": -91.7106529,
     "is_customer": false,
@@ -156242,7 +156110,7 @@
     "_source_team": "ENT West"
   },
   {
-    "ae": "",
+    "ae": "Jimmy Koerner",
     "name": "Council Bluffs Comm School District",
     "region": "Midwest",
     "state": "IA",
@@ -156273,7 +156141,6 @@
       "Thomas Jefferson High School",
       "Woodrow Wilson Middle School"
     ],
-    "territory_ae": "Jimmy Koerner",
     "lat": 41.2620743,
     "lng": -95.8482721,
     "is_customer": false,
@@ -156385,7 +156252,7 @@
     "_source_team": "ENT West"
   },
   {
-    "ae": "",
+    "ae": "Jimmy Koerner",
     "name": "Rapid City Area School District 51-4",
     "region": "Midwest",
     "state": "SD",
@@ -156415,7 +156282,6 @@
       "Valley View Elementary School",
       "Wilson Elementary School"
     ],
-    "territory_ae": "Jimmy Koerner",
     "lat": 44.0806041,
     "lng": -103.228023,
     "is_customer": false,
@@ -156423,7 +156289,7 @@
     "_source_team": "ENT West"
   },
   {
-    "ae": "",
+    "ae": "Jimmy Koerner",
     "name": "Davenport Community School District",
     "region": "Midwest",
     "state": "IA",
@@ -156457,7 +156323,6 @@
       "Wilson Elementary School",
       "Wood Intermediate School"
     ],
-    "territory_ae": "Jimmy Koerner",
     "lat": 41.5372528,
     "lng": -90.575658,
     "is_customer": false,
@@ -156465,7 +156330,7 @@
     "_source_team": "ENT West"
   },
   {
-    "ae": "",
+    "ae": "Jimmy Koerner",
     "name": "Duluth Public Schools (Independent School District No. 709)",
     "region": "Midwest",
     "state": "MN",
@@ -156495,7 +156360,6 @@
       "Piedmont Elementary School",
       "Stowe Elementary School"
     ],
-    "territory_ae": "Jimmy Koerner",
     "lat": 46.7950363,
     "lng": -92.1198156,
     "is_customer": false,
@@ -156788,7 +156652,7 @@
     "_source_team": "ENT West"
   },
   {
-    "ae": "",
+    "ae": "Jimmy Koerner",
     "name": "Elk River Public School District (Independent School District 728)",
     "region": "Midwest",
     "state": "MN",
@@ -156820,7 +156684,6 @@
       "Zimmerman Middle School",
       "Zimmerman Middle/High School"
     ],
-    "territory_ae": "Jimmy Koerner",
     "lat": 45.3213618,
     "lng": -93.558634,
     "is_customer": false,
@@ -156887,7 +156750,7 @@
     "_source_team": "ENT West"
   },
   {
-    "ae": "",
+    "ae": "Jimmy Koerner",
     "name": "Sheboygan Area School District",
     "region": "Midwest",
     "state": "WI",
@@ -156914,7 +156777,6 @@
       "Sheridan Elementary School",
       "Wilson Elementary School"
     ],
-    "territory_ae": "Jimmy Koerner",
     "lat": 43.6882105,
     "lng": -87.7497809,
     "is_customer": false,
@@ -157092,7 +156954,7 @@
     "_source_team": "ENT West"
   },
   {
-    "ae": "",
+    "ae": "Jimmy Koerner",
     "name": "South Washington County Schools (SoWashCo Schools) ? Independent School District No. 833",
     "region": "Midwest",
     "state": "MN",
@@ -157131,7 +156993,6 @@
       "Woodbury High School",
       "Woodbury Middle School"
     ],
-    "territory_ae": "Jimmy Koerner",
     "lat": 44.8105205,
     "lng": -92.9226026,
     "is_customer": false,
@@ -157296,7 +157157,7 @@
     "_source_team": "ENT West"
   },
   {
-    "ae": "",
+    "ae": "Jimmy Koerner",
     "name": "Grand Forks Public Schools",
     "region": "Midwest",
     "state": "ND",
@@ -157320,7 +157181,6 @@
       "Wilder Elementary School",
       "Winship Elementary School"
     ],
-    "territory_ae": "Jimmy Koerner",
     "lat": 47.9252104,
     "lng": -97.0306325,
     "is_customer": false,
@@ -157358,7 +157218,7 @@
     "_source_team": "ENT West"
   },
   {
-    "ae": "",
+    "ae": "Jimmy Koerner",
     "name": "Green Bay Area Public School District",
     "region": "Midwest",
     "state": "WI",
@@ -157397,7 +157257,6 @@
       "Washington Middle School",
       "West High School"
     ],
-    "territory_ae": "Jimmy Koerner",
     "lat": 44.515127,
     "lng": -88.022737,
     "is_customer": false,
@@ -157508,7 +157367,7 @@
     "_source_team": "ENT West"
   },
   {
-    "ae": "",
+    "ae": "Jimmy Koerner",
     "name": "Howard-Suamico School District",
     "region": "Midwest",
     "state": "WI",
@@ -157527,7 +157386,6 @@
       "Howard Elementary School",
       "Lineville Intermediate School"
     ],
-    "territory_ae": "Jimmy Koerner",
     "lat": 44.5834047,
     "lng": -88.0781167,
     "is_customer": false,
@@ -157795,7 +157653,7 @@
     "_source_team": "ENT West"
   },
   {
-    "ae": "",
+    "ae": "Jimmy Koerner",
     "name": "Wayzata Public Schools",
     "region": "Midwest",
     "state": "MN",
@@ -157821,7 +157679,6 @@
       "Wayzata High School",
       "Wayzata West Middle School"
     ],
-    "territory_ae": "Jimmy Koerner",
     "lat": 44.9914108,
     "lng": -93.449184,
     "is_customer": false,
@@ -158318,7 +158175,6 @@
     ],
     "lat": 45.5616,
     "lng": -94.1636,
-    "territory_ae": "Jimmy Koerner",
     "is_customer": true,
     "customer_name": "St. Cloud Public School District",
     "_source_team": "ENT West"
@@ -158894,7 +158750,7 @@
     "_source_team": "ENT West"
   },
   {
-    "ae": "",
+    "ae": "Ben Skillman",
     "name": "Mount Vernon School District",
     "region": "West",
     "state": "WA",
@@ -159303,7 +159159,7 @@
     "_source_team": "ENT West"
   },
   {
-    "ae": "",
+    "ae": "Ben Skillman",
     "name": "Northshore School District",
     "region": "West",
     "state": "WA",
@@ -159410,7 +159266,7 @@
     "_source_team": "ENT West"
   },
   {
-    "ae": "",
+    "ae": "Ben Skillman",
     "name": "Carson City School District",
     "region": "West",
     "state": "NV",
@@ -160780,7 +160636,7 @@
     "_source_team": "ENT West"
   },
   {
-    "ae": "",
+    "ae": "Ben Skillman",
     "name": "Galena City School District",
     "region": "West",
     "state": "AK",
@@ -161114,7 +160970,7 @@
     "_source_team": "ENT West"
   },
   {
-    "ae": "",
+    "ae": "Ben Skillman",
     "name": "Tumwater School District #33",
     "region": "West",
     "state": "WA",
@@ -161533,7 +161389,7 @@
     "_source_team": "ENT West"
   },
   {
-    "ae": "",
+    "ae": "Ben Skillman",
     "name": "Wenatchee School District",
     "region": "West",
     "state": "WA",
@@ -162008,7 +161864,7 @@
     "_source_team": "ENT West"
   },
   {
-    "ae": "",
+    "ae": "Ben Skillman",
     "name": "Federal Way Public Schools",
     "region": "West",
     "state": "WA",
@@ -164671,7 +164527,7 @@
     "_source_team": "ENT West"
   },
   {
-    "ae": "",
+    "ae": "Lance Baretz",
     "name": "Madison Elementary School District",
     "region": "West",
     "state": "AZ",
@@ -164824,7 +164680,7 @@
     "_source_team": "ENT West"
   },
   {
-    "ae": "",
+    "ae": "Lance Baretz",
     "name": "Anaheim Elementary School District",
     "region": "West",
     "state": "CA",
@@ -164866,7 +164722,7 @@
     "_source_team": "ENT West"
   },
   {
-    "ae": "",
+    "ae": "Lance Baretz",
     "name": "Marana Unified School District",
     "region": "West",
     "state": "AZ",
@@ -164900,7 +164756,7 @@
     "_source_team": "ENT West"
   },
   {
-    "ae": "",
+    "ae": "Sydney Smith",
     "name": "Maricopa Unified School District",
     "region": "West",
     "state": "AZ",
@@ -165358,7 +165214,7 @@
     "_source_team": "ENT West"
   },
   {
-    "ae": "",
+    "ae": "Lance Baretz",
     "name": "Oceanside Unified School District",
     "region": "West",
     "state": "CA",
@@ -165379,7 +165235,7 @@
     "_source_team": "ENT West"
   },
   {
-    "ae": "",
+    "ae": "Lance Baretz",
     "name": "Chaffey Joint Union High School District",
     "region": "West",
     "state": "CA",
@@ -165603,7 +165459,7 @@
     "_source_team": "ENT West"
   },
   {
-    "ae": "",
+    "ae": "Lance Baretz",
     "name": "Coachella Valley Unified School District",
     "region": "West",
     "state": "CA",
@@ -165695,7 +165551,7 @@
     "_source_team": "ENT West"
   },
   {
-    "ae": "",
+    "ae": "Lance Baretz",
     "name": "Colton Joint Unified School District",
     "region": "West",
     "state": "CA",
@@ -165848,7 +165704,7 @@
     "_source_team": "ENT West"
   },
   {
-    "ae": "",
+    "ae": "Lance Baretz",
     "name": "Desert Sands Unified School District",
     "region": "West",
     "state": "CA",
@@ -165870,7 +165726,7 @@
     "_source_team": "ENT West"
   },
   {
-    "ae": "",
+    "ae": "Lance Baretz",
     "name": "Rialto Unified School District",
     "region": "West",
     "state": "CA",
@@ -166169,7 +166025,7 @@
     "_source_team": "ENT West"
   },
   {
-    "ae": "",
+    "ae": "Lance Baretz",
     "name": "Scottsdale Unified School District",
     "region": "West",
     "state": "AZ",
@@ -166371,7 +166227,7 @@
     "_source_team": "ENT West"
   },
   {
-    "ae": "",
+    "ae": "Ben Skillman",
     "name": "Fullerton School District",
     "region": "West",
     "state": "CA",
@@ -166587,7 +166443,7 @@
     "_source_team": "ENT West"
   },
   {
-    "ae": "",
+    "ae": "Lance Baretz",
     "name": "Tempe Union High School District",
     "region": "West",
     "state": "AZ",
@@ -166710,7 +166566,7 @@
     "_source_team": "ENT West"
   },
   {
-    "ae": "",
+    "ae": "Lance Baretz",
     "name": "Upland Unified School District",
     "region": "West",
     "state": "CA",
@@ -167352,7 +167208,7 @@
     "_source_team": "ENT West"
   },
   {
-    "ae": "",
+    "ae": "Sydney Smith",
     "name": "Acadia Parish Schools",
     "region": "South-Central",
     "state": "LA",
@@ -167541,8 +167397,8 @@
     "territory_ae": "Sydney Smith",
     "lat": 30.100564,
     "lng": -90.9827255,
-    "is_customer": false,
-    "customer_name": "",
+    "is_customer": true,
+    "customer_name": "Ascension Public Schools",
     "_source_team": "ENT West"
   },
   {
@@ -167594,7 +167450,7 @@
     "_source_team": "ENT West"
   },
   {
-    "ae": "",
+    "ae": "Sydney Smith",
     "name": "Bartlesville Public Schools",
     "region": "South-Central",
     "state": "OK",
@@ -167746,7 +167602,7 @@
     "_source_team": "ENT West"
   },
   {
-    "ae": "",
+    "ae": "Sydney Smith",
     "name": "Moore Public Schools (Moore Public School District I-2)",
     "region": "South-Central",
     "state": "OK",
@@ -168041,7 +167897,7 @@
     "_source_team": "ENT West"
   },
   {
-    "ae": "",
+    "ae": "Sydney Smith",
     "name": "Broken Arrow Public Schools",
     "region": "South-Central",
     "state": "OK",
@@ -168295,7 +168151,7 @@
     "_source_team": "ENT West"
   },
   {
-    "ae": "",
+    "ae": "Sydney Smith",
     "name": "Channelview Independent School District",
     "region": "South-Central",
     "state": "TX",
@@ -168329,7 +168185,7 @@
     "_source_team": "ENT West"
   },
   {
-    "ae": "",
+    "ae": "Sydney Smith",
     "name": "Choctaw-Nicoma Park School District",
     "region": "South-Central",
     "state": "OK",
@@ -168674,7 +168530,7 @@
     "_source_team": "ENT West"
   },
   {
-    "ae": "",
+    "ae": "Sydney Smith",
     "name": "Deer Creek School District",
     "region": "South-Central",
     "state": "OK",
@@ -169108,7 +168964,7 @@
     "_source_team": "ENT West"
   },
   {
-    "ae": "",
+    "ae": "Sydney Smith",
     "name": "Gadsden Independent School District",
     "region": "South-Central",
     "state": "NM",
@@ -169560,7 +169416,7 @@
     "_source_team": "ENT West"
   },
   {
-    "ae": "",
+    "ae": "Sydney Smith",
     "name": "Greenville Independent School District",
     "region": "South-Central",
     "state": "TX",
@@ -170071,7 +169927,7 @@
     "_source_team": "ENT West"
   },
   {
-    "ae": "",
+    "ae": "Sydney Smith",
     "name": "Jenks Public Schools",
     "region": "South-Central",
     "state": "OK",
@@ -170281,7 +170137,7 @@
     "_source_team": "ENT West"
   },
   {
-    "ae": "",
+    "ae": "Sydney Smith",
     "name": "Las Cruces Public Schools",
     "region": "South-Central",
     "state": "NM",
@@ -170674,7 +170530,7 @@
     "_source_team": "ENT West"
   },
   {
-    "ae": "",
+    "ae": "Sydney Smith",
     "name": "Central Consolidated School District",
     "region": "South-Central",
     "state": "NM",
@@ -172619,7 +172475,6 @@
     "address": "131 W BROAD ST",
     "city": "Rochester",
     "zip": "14614",
-    "territory_ae": "Ally McCready",
     "lat": 43.1535976,
     "lng": -77.6160496,
     "is_customer": false,
@@ -174544,7 +174399,7 @@
     "region": "Southeast",
     "is_customer": true,
     "customer_name": "Stafford County Public Schools",
-    "_source_team": "Strategic"
+    "_source_team": "ENT East"
   },
   {
     "ae": "Victoria Macoul",
@@ -174920,7 +174775,7 @@
     "lng": -71.6553992,
     "is_customer": false,
     "customer_name": "",
-    "_source_team": "ENT East"
+    "_source_team": "SMB"
   },
   {
     "ae": "Victoria Macoul",
@@ -174930,7 +174785,6 @@
     "address": "1738 HELDERBERG TRAIL",
     "city": "Berne",
     "zip": "12023",
-    "territory_ae": "Daniel Way",
     "lat": 42.6258962,
     "lng": -74.1430331,
     "is_customer": false,
@@ -174973,7 +174827,6 @@
     "address": "171 HUDSON AVE",
     "city": "Green Island",
     "zip": "12183",
-    "territory_ae": "Daniel Way",
     "lat": 42.7457366,
     "lng": -73.6898303,
     "is_customer": false,
@@ -175003,7 +174856,6 @@
     "address": "213 Main St.",
     "city": "Epping",
     "zip": "3042",
-    "territory_ae": "Paulina Famiano",
     "lat": 43.043141,
     "lng": -71.073431,
     "is_customer": false,
@@ -175689,7 +175541,9 @@
     "lng": -74.3862653,
     "is_customer": false,
     "customer_name": "",
-    "_source_team": "ENT East"
+    "_source_team": "ENT East",
+    "city": "Middletown",
+    "zip": "10940"
   },
   {
     "ae": "Victoria Macoul",
@@ -176134,7 +175988,9 @@
     "lng": -75.2326641,
     "is_customer": false,
     "customer_name": "",
-    "_source_team": "ENT East"
+    "_source_team": "ENT East",
+    "city": "Utica",
+    "zip": "13502"
   },
   {
     "ae": "Victoria Macoul",
@@ -176156,7 +176012,9 @@
     "lng": -74.0060152,
     "is_customer": false,
     "customer_name": "",
-    "_source_team": "ENT East"
+    "_source_team": "ENT East",
+    "city": "Hopewell Junction",
+    "zip": "12533"
   },
   {
     "ae": "Victoria Macoul",
@@ -176214,7 +176072,9 @@
     "lng": -74.0060152,
     "is_customer": false,
     "customer_name": "",
-    "_source_team": "ENT East"
+    "_source_team": "ENT East",
+    "city": "Webster",
+    "zip": "14580"
   },
   {
     "ae": "Victoria Macoul",
@@ -177761,7 +177621,10 @@
     "lng": -82.4572,
     "is_customer": false,
     "customer_name": "",
-    "_source_team": "Strategic"
+    "_source_team": "Strategic",
+    "address": "PO BOX 3408",
+    "city": "Tampa",
+    "zip": "33601"
   },
   {
     "name": "Orange County Public Schools",
@@ -177896,7 +177759,10 @@
     "lng": -84.0375,
     "is_customer": false,
     "customer_name": "",
-    "_source_team": "Strategic"
+    "_source_team": "Strategic",
+    "address": "52 Gwinnett Dr",
+    "city": "Lawrenceville",
+    "zip": "30045"
   },
   {
     "name": "Hawaii Department Of Education",
@@ -178058,7 +177924,10 @@
     "lng": -76.8464,
     "is_customer": false,
     "customer_name": "",
-    "_source_team": "Strategic"
+    "_source_team": "Strategic",
+    "address": "14201 School Lane",
+    "city": "Upper Marlboro",
+    "zip": "20772"
   },
   {
     "name": "Duval County Public Schools",
@@ -178112,7 +177981,10 @@
     "lng": -95.3792,
     "is_customer": false,
     "customer_name": "",
-    "_source_team": "Strategic"
+    "_source_team": "Strategic",
+    "address": "2520 W W THORNE DR",
+    "city": "Houston",
+    "zip": "77073"
   },
   {
     "name": "Philadelphia City School District",
@@ -178301,7 +178173,10 @@
     "lng": -81.9498,
     "is_customer": false,
     "customer_name": "",
-    "_source_team": "Strategic"
+    "_source_team": "Strategic",
+    "address": "PO BOX 391",
+    "city": "Bartow",
+    "zip": "33831"
   },
   {
     "name": "San Diego Unified",
@@ -178355,7 +178230,10 @@
     "lng": -82.7131,
     "is_customer": true,
     "customer_name": "Pinellas County Schools",
-    "_source_team": "Strategic"
+    "_source_team": "ENT East",
+    "address": "301 4TH ST SW",
+    "city": "Largo",
+    "zip": "33770"
   },
   {
     "name": "Jefferson County",
@@ -178409,7 +178287,10 @@
     "lng": -81.8303,
     "is_customer": true,
     "customer_name": "The School District of Lee County",
-    "_source_team": "Strategic"
+    "_source_team": "ENT East",
+    "address": "2855 COLONIAL BLVD",
+    "city": "Fort Myers",
+    "zip": "33966"
   },
   {
     "name": "Dekalb County",
@@ -178463,7 +178344,10 @@
     "lng": -84.3963,
     "is_customer": true,
     "customer_name": "Fulton County Schools",
-    "_source_team": "Strategic"
+    "_source_team": "ENT East",
+    "address": "6201 Powers Ferry Road",
+    "city": "Atlanta",
+    "zip": "30339"
   },
   {
     "name": "Prince William Co Public Schools",
@@ -178707,7 +178591,10 @@
     "lng": -76.6122,
     "is_customer": false,
     "customer_name": "",
-    "_source_team": "Strategic"
+    "_source_team": "Strategic",
+    "address": "200 East North Avenue",
+    "city": "Baltimore",
+    "zip": "21202"
   },
   {
     "name": "Milwaukee School District",
@@ -178734,7 +178621,10 @@
     "lng": -87.9065,
     "is_customer": false,
     "customer_name": "",
-    "_source_team": "Strategic"
+    "_source_team": "Strategic",
+    "address": "PO Box 2181",
+    "city": "Milwaukee",
+    "zip": "53201"
   },
   {
     "name": "Pasco",
@@ -178869,7 +178759,10 @@
     "lng": -82.394,
     "is_customer": false,
     "customer_name": "",
-    "_source_team": "Strategic"
+    "_source_team": "Strategic",
+    "address": "P.O. Box 2848",
+    "city": "Greenville",
+    "zip": "29602"
   },
   {
     "name": "Davis District",
@@ -178950,7 +178843,10 @@
     "lng": -119.7871,
     "is_customer": false,
     "customer_name": "",
-    "_source_team": "Strategic"
+    "_source_team": "Strategic",
+    "address": "2309 Tulare St.",
+    "city": "Fresno",
+    "zip": "93721"
   },
   {
     "name": "Guilford County Schools",
@@ -179139,7 +179035,10 @@
     "lng": -95.4561,
     "is_customer": false,
     "customer_name": "",
-    "_source_team": "Strategic"
+    "_source_team": "Strategic",
+    "address": "3205 W DAVIS",
+    "city": "Conroe",
+    "zip": "77304"
   },
   {
     "name": "Frisco ISD",
@@ -179868,7 +179767,10 @@
     "lng": -84.388,
     "is_customer": false,
     "customer_name": "",
-    "_source_team": "Strategic"
+    "_source_team": "ENT East",
+    "address": "210 Pryor Rd.",
+    "city": "Atlanta",
+    "zip": "30335"
   },
   {
     "name": "El Paso ISD",
@@ -179949,7 +179851,10 @@
     "lng": -77.0369,
     "is_customer": false,
     "customer_name": "",
-    "_source_team": "Strategic"
+    "_source_team": "Strategic",
+    "address": "1200 First St NE",
+    "city": "Washington",
+    "zip": "20002"
   },
   {
     "name": "Henrico Co Public Schools",
@@ -180084,7 +179989,10 @@
     "lng": -82.5749,
     "is_customer": false,
     "customer_name": "",
-    "_source_team": "Strategic"
+    "_source_team": "Strategic",
+    "address": "PO BOX 9069",
+    "city": "Bradenton",
+    "zip": "34206"
   },
   {
     "name": "Detroit Public Schools Community District",
@@ -180219,7 +180127,10 @@
     "lng": -71.0589,
     "is_customer": true,
     "customer_name": "Boston Public Schools",
-    "_source_team": "Strategic"
+    "_source_team": "Strategic",
+    "address": "2300 Washington Street",
+    "city": "Roxbury",
+    "zip": "2119"
   },
   {
     "name": "Rutherford County",
@@ -180327,7 +180238,10 @@
     "lng": -97.3301,
     "is_customer": true,
     "customer_name": "Wichita Public Schools",
-    "_source_team": "Strategic"
+    "_source_team": "ENT West",
+    "address": "903 S Edgemoor",
+    "city": "Wichita",
+    "zip": "67218"
   },
   {
     "name": "San Bernardino City Unified",
@@ -180462,7 +180376,10 @@
     "lng": -81.3145,
     "is_customer": false,
     "customer_name": "",
-    "_source_team": "Strategic"
+    "_source_team": "Strategic",
+    "address": "40 ORANGE ST",
+    "city": "St Augustine",
+    "zip": "32084"
   },
   {
     "name": "Horry County Schools",
@@ -180786,7 +180703,10 @@
     "lng": -119.0187,
     "is_customer": true,
     "customer_name": "Kern High School District",
-    "_source_team": "Strategic"
+    "_source_team": "Strategic",
+    "address": "5801 Sundale Ave.",
+    "city": "Bakersfield",
+    "zip": "93309"
   },
   {
     "name": "United ISD",
@@ -180894,7 +180814,10 @@
     "lng": -80.331,
     "is_customer": false,
     "customer_name": "",
-    "_source_team": "Strategic"
+    "_source_team": "Strategic",
+    "address": "9461 Brandywine Lane",
+    "city": "Port St Lucie",
+    "zip": "34986"
   },
   {
     "name": "Lincoln Public Schools",
@@ -181785,7 +181708,10 @@
     "lng": -80.1678,
     "is_customer": false,
     "customer_name": "",
-    "_source_team": "Strategic"
+    "_source_team": "Strategic",
+    "address": "P.O. Box 608",
+    "city": "Monks Corner",
+    "zip": "29461"
   },
   {
     "name": "Lamar CISD",
@@ -182325,7 +182251,10 @@
     "lng": -84.512,
     "is_customer": true,
     "customer_name": "Cincinnati Public Schools",
-    "_source_team": "Strategic"
+    "_source_team": "ENT East",
+    "address": "PO Box 5381",
+    "city": "Cincinnati",
+    "zip": "45201"
   },
   {
     "name": "Corpus Christi ISD",
@@ -182487,7 +182416,10 @@
     "lng": -84.312,
     "is_customer": true,
     "customer_name": "Leon County Schools",
-    "_source_team": "Strategic"
+    "_source_team": "ENT East",
+    "address": "2757 W PENSACOLA ST",
+    "city": "Tallahassee",
+    "zip": "32304"
   },
   {
     "name": "Cabarrus County Schools",
