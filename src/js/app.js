@@ -132,6 +132,29 @@ function buildOppEntry(oppFields) {
   };
 }
 
+function clampFutureLastActivity(record) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  (record.opps || []).forEach(o => {
+    if (o.last_activity) {
+      const parsed = parseUSDate(o.last_activity);
+      if (parsed && parsed > today) {
+        o.last_activity = '';
+      }
+    }
+  });
+}
+
+function formatLastActivity(dateStr) {
+  if (!dateStr) return '—';
+  const parsed = parseUSDate(dateStr);
+  if (!parsed) return dateStr;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  if (parsed > today) return '—';
+  return dateStr;
+}
+
 function migrateToOppsArray(record) {
   if (record.opps && record.opps.length > 0) return;
   if (!record.opp_stage && !record.opp_areas) return;
@@ -2100,7 +2123,9 @@ function daysAgo(dateStr) {
   const now = new Date();
   now.setHours(0,0,0,0);
   d.setHours(0,0,0,0);
-  return Math.floor((now - d) / 86400000);
+  const diff = Math.floor((now - d) / 86400000);
+  if (diff < 0) return Infinity; // Future dates treated as no activity
+  return diff;
 }
 
 function extractDatesFromText(text) {
@@ -2722,7 +2747,7 @@ function buildStratPopup(d) {
       ['Probability', opp.probability ? opp.probability + '%' : '', false],
       ['Contact', opp.contact ? (opp.contact + (opp.contact_title ? ' (' + opp.contact_title + ')' : '')) : '', opp.contact],
       ['Next Step', opp.next_step, false],
-      ['Last Activity', opp.last_activity, false],
+      ['Last Activity', formatLastActivity(opp.last_activity), false],
       ['SDR', opp.sdr, false],
       ['Champion', opp.champion, opp.champion],
       ['Econ. Buyer', opp.economic_buyer, opp.economic_buyer],
@@ -2865,7 +2890,7 @@ function buildCustPopup(d) {
   html += `<div class="popup-section-label">Team</div>`;
   if (d.csm) html += `<div class="popup-row"><span class="pk">CSM</span><span class="pv">${d.csm}</span></div>`;
   if (d.ae) html += `<div class="popup-row"><span class="pk">Account Owner</span><span class="pv">${d.ae}</span></div>`;
-  if (d.last_activity) html += `<div class="popup-row"><span class="pk">Last Activity</span><span class="pv">${d.last_activity}</span></div>`;
+  if (d.last_activity) html += `<div class="popup-row"><span class="pk">Last Activity</span><span class="pv">${formatLastActivity(d.last_activity)}</span></div>`;
 
   html += `</div>`;
   return html;
@@ -3421,7 +3446,7 @@ function populateInfoTab(d) {
       ${modalRow('Year 1 ACV', opp.acv ? '$' + Number(opp.acv).toLocaleString() : '—')}
       ${modalRow('Contact', opp.contact ? opp.contact + (opp.contact_title ? ' (' + opp.contact_title + ')' : '') : '—')}
       ${modalRow('Next Step', opp.next_step || '—')}
-      ${modalRow('Last Activity', opp.last_activity || '—')}
+      ${modalRow('Last Activity', formatLastActivity(opp.last_activity))}
       ${modalRow('SDR', opp.sdr || '—')}
     </div>`;
   });
@@ -3655,7 +3680,7 @@ function populateDistrictIntelTab(d) {
     html += modalRow('Year 1 ACV', diOpp.acv ? '$' + Number(diOpp.acv).toLocaleString() : '—');
     html += modalRow('Probability', diOpp.probability ? diOpp.probability + '%' : '—');
     html += modalRow('Next Step', diOpp.next_step || '—');
-    html += modalRow('Last Activity', diOpp.last_activity || '—');
+    html += modalRow('Last Activity', formatLastActivity(diOpp.last_activity));
   } else {
     html += `<div style="color:var(--text-muted);font-size:12px;">No District Intelligence opportunity recorded</div>`;
   }
@@ -4755,6 +4780,7 @@ function runMerge(csvData, existingData, source) {
         const oppEntry = buildOppEntry(csvOppFields);
         upsertOpp(alreadyMerged, oppEntry);
       }
+      clampFutureLastActivity(alreadyMerged);
       parseNumericFields(alreadyMerged);
       (alreadyMerged.opps || []).forEach(o => {
         if (o.acv !== undefined && o.acv !== '') {
@@ -4818,6 +4844,7 @@ function runMerge(csvData, existingData, source) {
         const oppEntry = buildOppEntry(csvOppFields);
         upsertOpp(merged, oppEntry);
       }
+      clampFutureLastActivity(merged);
 
       // Parse numeric fields (account-level + opp acv/probability inside opps)
       parseNumericFields(merged);
@@ -5040,6 +5067,7 @@ function runMerge(csvData, existingData, source) {
         const oppEntry = buildOppEntry(newOppFields);
         upsertOpp(newRecord, oppEntry);
       }
+      clampFutureLastActivity(newRecord);
 
       // Parse numeric fields
       parseNumericFields(newRecord);
