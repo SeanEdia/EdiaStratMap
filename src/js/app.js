@@ -156,8 +156,8 @@ function formatLastActivity(dateStr) {
 }
 
 function migrateToOppsArray(record) {
-  if (record.opps && record.opps.length > 0) return;
-  if (!record.opp_stage && !record.opp_areas) return;
+  if (record.opps && record.opps.length > 0) return; // Already has opps entries
+  if (!record.opp_stage && !record.opp_areas) return; // No flat opp fields to migrate
   const oppFields = {};
   OPP_ENTRY_FIELDS.forEach(f => {
     if (record[f]) oppFields[f] = record[f];
@@ -194,12 +194,23 @@ if (_persisted) {
   // Migrate flat opp fields into opps array for existing localStorage data
   let _migrated = 0;
   ACCOUNT_DATA.forEach(d => {
-    if (!d.opps && (d.opp_stage || d.opp_areas)) {
+    // Migrate if no opps array, OR opps is empty but flat fields exist
+    if ((!d.opps || d.opps.length === 0) && (d.opp_stage || d.opp_areas)) {
       migrateToOppsArray(d);
       _migrated++;
     }
   });
   if (_migrated) console.log(`[Persist] Migrated ${_migrated} account(s) from flat opp fields to opps array`);
+
+  // Repair: ensure deriveOppSummary has run on all accounts with opps
+  let _derivedRepairs = 0;
+  ACCOUNT_DATA.forEach(d => {
+    if (d.opps && d.opps.length > 0 && !d.opp_stage) {
+      deriveOppSummary(d);
+      _derivedRepairs++;
+    }
+  });
+  if (_derivedRepairs) console.log(`[Persist] Repaired derived opp fields for ${_derivedRepairs} account(s)`);
 
   // Repair unmapped SFDC field names from earlier CSV merges.
   // Old code didn't map "Billing State/Province" → state, "Active ARR" → arr, etc.
@@ -5264,10 +5275,11 @@ function runOppMerge(csvData) {
 
     // FULL REPLACEMENT: On the first CSV row for this account, clear its opps array
     const isFirstTouch = !touchedAccounts.has(acctKey);
+    let priorOpps = [];
     if (isFirstTouch) {
       touchedAccounts.add(acctKey);
       // Capture existing opps before clearing (used for conflict context)
-      const priorOpps = (acct.opps || []).map(o => ({ area: o.area || '', stage: o.stage || '', acv: o.acv || '' }));
+      priorOpps = (acct.opps || []).map(o => ({ area: o.area || '', stage: o.stage || '', acv: o.acv || '' }));
       acct.opps = [];
 
       // Apply wrapper fields on first row
