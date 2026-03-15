@@ -1906,7 +1906,7 @@ function applyFilters() {
       if (!_visiblePoolKeys.has(poolKey)) {
         const entry = S._markerPool.get(poolKey);
         if (entry) {
-          const layer = poolKey.startsWith('a:') ? stratLayer : S.custLayer;
+          const layer = poolKey.startsWith('a:') ? S.stratLayer : S.custLayer;
           layer.removeLayer(entry.marker);
         }
       }
