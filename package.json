@@ -5,8 +5,8 @@
   "description": "Edia Learning Territory Map — interactive sales territory visualization",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
+    "dev": "node scripts/prebuild-data.js && vite",
+    "build": "node scripts/prebuild-data.js && vite build",
     "preview": "vite preview",
     "lint": "eslint src/**/*.js",
     "lint:fix": "eslint src/**/*.js --fix",

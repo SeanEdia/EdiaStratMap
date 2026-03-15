@@ -38,6 +38,7 @@ export default defineConfig({
       output: {
         manualChunks: {
           'data-accounts': ['./src/data/accounts-with-opps.json'],
+          'data-schools': ['./src/data/school-map.json'],
           'data-customers': ['./src/data/customers.json'],
         }
       }

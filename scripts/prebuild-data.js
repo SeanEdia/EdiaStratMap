@@ -20,6 +20,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const ACCOUNTS_PATH = resolve(__dirname, '../src/data/accounts.json');
 const OPPS_PATH = resolve(__dirname, '../src/data/opps.json');
 const OUTPUT_PATH = resolve(__dirname, '../src/data/accounts-with-opps.json');
+const SCHOOL_MAP_PATH = resolve(__dirname, '../src/data/school-map.json');
 
 const accounts = JSON.parse(readFileSync(ACCOUNTS_PATH, 'utf-8'));
 const opps = JSON.parse(readFileSync(OPPS_PATH, 'utf-8'));
@@ -94,11 +95,38 @@ accounts.forEach(d => {
   if (!d.opps) d.opps = [];
 });
 
-// Write combined output
+// Extract _schools arrays into separate school-map.json to reduce main payload
+const schoolMap = {};
+let schoolEntries = 0;
+accounts.forEach(d => {
+  if (d._schools && d._schools.length > 0) {
+    const key = (d.name || '') + '|' + (d.state || '');
+    schoolMap[key] = d._schools;
+    schoolEntries += d._schools.length;
+    delete d._schools;
+  }
+});
+
+// Strip empty-string and null/undefined fields to reduce JSON size
+let strippedFields = 0;
+accounts.forEach(d => {
+  for (const key of Object.keys(d)) {
+    if (d[key] === '' || d[key] === null || d[key] === undefined) {
+      delete d[key];
+      strippedFields++;
+    }
+  }
+});
+
+// Write combined output (without _schools, with empty fields stripped)
 writeFileSync(OUTPUT_PATH, JSON.stringify(accounts));
+// Write school map
+writeFileSync(SCHOOL_MAP_PATH, JSON.stringify(schoolMap));
 
 console.log(`[Prebuild] Joined ${joined} opp records into accounts`);
 if (orphans.length > 0) {
   console.warn(`[Prebuild] ${orphans.length} orphaned opp records (no matching account)`);
 }
+console.log(`[Prebuild] Stripped ${strippedFields} empty fields from accounts`);
+console.log(`[Prebuild] Extracted ${schoolEntries} school entries into ${SCHOOL_MAP_PATH} (${(readFileSync(SCHOOL_MAP_PATH).length / 1024).toFixed(0)} KB)`);
 console.log(`[Prebuild] Wrote ${OUTPUT_PATH} (${(readFileSync(OUTPUT_PATH).length / 1024 / 1024).toFixed(1)} MB)`);
