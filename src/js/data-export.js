@@ -1,5 +1,7 @@
 import S from './state.js';
-import { districtKey } from './helpers.js';
+import { districtKey, parseUSDate, daysAgo, extractDatesFromText, isThisWeek } from './helpers.js';
+import { buildOppEntry, getTerritoryAE, getHoldoutAE } from './app.js';
+import { formatCompactNumber } from './account-list.js';
 
 // ============ DATA EXPORT ============
 
@@ -34,7 +36,7 @@ export function exportData() {
       const opps = d.opps && d.opps.length > 0 ? d.opps : (d.opp_stage ? [buildOppEntry(d)] : []);
       const totalAcv = opps.reduce((sum, o) => sum + (Number(o.acv) || 0), 0);
       const noteKey = 'edia_notes_' + d.name.replace(/[^a-zA-Z0-9]/g, '_');
-      const hasNotes = _accountsWithNotes.has(noteKey);
+      const hasNotes = S._accountsWithNotes.has(noteKey);
       const nextStep = (d.opp_next_step || '').substring(0, 500);
       rows.push([
         d.name || '',
@@ -185,9 +187,9 @@ export function exportData() {
 
   // --- Sheet 4: Conflicts ---
   {
-    const conflicts = CONFLICTS || [];
+    const conflicts = S.CONFLICTS || [];
     // Filter conflicts relevant to the selected team/rep
-    const teamReps = S.selectedTeam ? _teamRepsSet[S.selectedTeam] : null;
+    const teamReps = S.selectedTeam ? S._teamRepsSet[S.selectedTeam] : null;
     const relevantConflicts = conflicts.filter(c => {
       if (S.selectedRep && S.selectedRep !== '__unassigned__') {
         return c.oldAE === S.selectedRep || c.newAE === S.selectedRep;

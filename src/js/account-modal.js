@@ -1,5 +1,10 @@
 import S from './state.js';
-import { districtKey, escapeHtml } from './helpers.js';
+import { districtKey, escapeHtml, escapeAttr, formatLastActivity, isDOE } from './helpers.js';
+import { buildOppEntry, isManagerHeld, getTerritoryAE, getHoldoutAE } from './app.js';
+import { getConflictForAccount, getConflictTypeLabel } from './conflict.js';
+import { getAccountNotes, formatNoteTime } from './notes.js';
+import { closeMergeModal } from './multi-opp.js';
+import { processUploadFile } from './data-merge.js';
 
 S.currentModalData = null;
 
@@ -630,7 +635,7 @@ export function removePrepLinkInline(key, districtName) {
 
 export function findMarkerByDistrict(districtName) {
   let foundMarker = null;
-  stratLayer.eachLayer(layer => {
+  S.stratLayer.eachLayer(layer => {
     if (layer._popup) {
       const content = layer._popup.getContent();
       if (content && content.includes(districtName)) {
@@ -692,7 +697,7 @@ export function formatMeetingPrepPrompt(d) {
   // Check if also a customer and get that data
   let customerData = null;
   if (d.is_customer) {
-    customerData = _custByName.get(d.customer_name);
+    customerData = S._custByName.get(d.customer_name);
   }
 
   let prompt = `Meeting With: (Enter name and title)\n\n`;
