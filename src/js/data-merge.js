@@ -1,0 +1,1529 @@
+import S from './state.js';
+import { districtKey, normalizeDistrictName } from './helpers.js';
+
+// ============ SPREADSHEET FILE READER (CSV + Excel) ============
+
+export function isExcelFile(filename) {
+  return /\.(xlsx?|xls)$/i.test(filename);
+}
+
+export function readSpreadsheetFile(file) {
+  return new Promise((resolve, reject) => {
+    if (isExcelFile(file.name)) {
+      // Excel file — use SheetJS
+      const reader = new FileReader();
+      reader.onload = e => {
+        try {
+          const workbook = XLSX.read(e.target.result, { type: 'array', cellDates: true });
+          const sheetName = workbook.SheetNames[0];
+          const sheet = workbook.Sheets[sheetName];
+          // Convert to array of objects with lowercase underscore keys
+          const rawRows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+          const rows = rawRows.map(row => {
+            const mapped = {};
+            Object.keys(row).forEach(key => {
+              const normKey = key.trim().toLowerCase().replace(/[\/()&:]+/g, '_').replace(/\s+/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
+              const val = row[key];
+              // Handle Date objects from Excel (cellDates: true)
+              if (val instanceof Date && !isNaN(val.getTime())) {
+                mapped[normKey] = (val.getMonth() + 1) + '/' + val.getDate() + '/' + val.getFullYear();
+              } else {
+                mapped[normKey] = String(val).trim();
+              }
+            });
+            return mapped;
+          });
+          resolve(rows);
+        } catch (err) {
+          reject(new Error('Failed to parse Excel file: ' + err.message));
+        }
+      };
+      reader.onerror = () => reject(new Error('Failed to read file'));
+      reader.readAsArrayBuffer(file);
+    } else {
+      // CSV file — use existing parser
+      const reader = new FileReader();
+      reader.onload = e => {
+        const parsed = parseCSV(e.target.result);
+        resolve(parsed);
+      };
+      reader.onerror = () => reject(new Error('Failed to read file'));
+      reader.readAsText(file);
+    }
+  });
+}
+
+// ============ SFDC DATA REFRESH ============
+S.sfdcDataType = 'accounts';
+S._userSelectedType = false;
+S.pendingMergeData = null;
+S.pendingMergeStats = null;
+// Type-split state: when CSV has a 'type' column, rows are split into accounts + customers
+S.pendingAccountMerge = null;
+S.pendingCustomerMerge = null;
+S.mergeHasTypeSplit = false;
+
+export function openSfdcModal() {
+  document.getElementById('sfdcModal').classList.add('open');
+}
+export function closeSfdcModal() {
+  document.getElementById('sfdcModal').classList.remove('open');
+  S._userSelectedType = false;
+}
+
+export function setSfdcType(type) {
+  S.sfdcDataType = type;
+  S._userSelectedType = true;
+  document.getElementById('sfdcTypeStrat').className = 'sfdc-type-btn' + (type === 'accounts' ? ' active-strat' : '');
+  document.getElementById('sfdcTypeCust').className = 'sfdc-type-btn' + (type === 'customers' ? ' active-cust' : '');
+  const oppsBtn = document.getElementById('sfdcTypeOpps');
+  if (oppsBtn) oppsBtn.className = 'sfdc-type-btn' + (type === 'opps' ? ' active-strat' : '');
+}
+
+// Setup drag-and-drop
+document.addEventListener('DOMContentLoaded', () => {
+  const dropzone = document.getElementById('sfdcDropzone');
+  if (!dropzone) return;
+
+  ['dragenter', 'dragover'].forEach(evt => {
+    dropzone.addEventListener(evt, e => {
+      e.preventDefault();
+      e.stopPropagation();
+      dropzone.classList.add('dragover');
+    });
+  });
+
+  ['dragleave', 'drop'].forEach(evt => {
+    dropzone.addEventListener(evt, e => {
+      e.preventDefault();
+      e.stopPropagation();
+      dropzone.classList.remove('dragover');
+    });
+  });
+
+  dropzone.addEventListener('drop', e => {
+    const files = e.dataTransfer.files;
+    if (files.length > 0 && /\.(csv|xlsx?|xls)$/i.test(files[0].name)) {
+      processUploadFile(files[0]);
+    }
+  });
+
+  // Load last refresh time
+  const lastRefresh = localStorage.getItem('edia_sfdc_last_refresh');
+  if (lastRefresh) {
+    document.getElementById('sfdcLastRefresh').textContent = 'Last: ' + new Date(lastRefresh).toLocaleDateString();
+  }
+});
+
+export function handleSfdcFile(event) {
+  const file = event.target.files[0];
+  if (file && /\.(csv|xlsx?|xls)$/i.test(file.name)) {
+    processUploadFile(file);
+  }
+  event.target.value = '';
+}
+
+export function processUploadFile(file) {
+  readSpreadsheetFile(file).then(parsed => {
+    if (parsed.length === 0) {
+      alert('No data found in file');
+      return;
+    }
+    previewMerge(parsed);
+  }).catch(err => {
+    alert('Error reading file: ' + err.message);
+  });
+}
+
+export function parseCSV(text) {
+  // Split into rows while respecting quoted fields that may contain newlines
+  const rows = [];
+  let currentRow = '';
+  let inQuotes = false;
+
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i];
+
+    if (char === '"') {
+      // Handle escaped quotes (doubled)
+      if (inQuotes && text[i + 1] === '"') {
+        currentRow += '""';
+        i++;
+      } else {
+        inQuotes = !inQuotes;
+        currentRow += char;
+      }
+    } else if ((char === '\n' || (char === '\r' && text[i + 1] === '\n')) && !inQuotes) {
+      // End of row (only if not inside quotes)
+      if (currentRow.trim()) {
+        rows.push(currentRow);
+      }
+      currentRow = '';
+      if (char === '\r') i++; // Skip the \n in \r\n
+    } else if (char === '\r' && !inQuotes) {
+      // Handle \r alone as line ending
+      if (currentRow.trim()) {
+        rows.push(currentRow);
+      }
+      currentRow = '';
+    } else {
+      currentRow += char;
+    }
+  }
+  // Don't forget the last row
+  if (currentRow.trim()) {
+    rows.push(currentRow);
+  }
+
+  if (rows.length < 2) return [];
+
+  // Parse header row
+  const headers = parseCSVLine(rows[0]);
+  const data = [];
+
+  let skippedRows = [];
+  for (let i = 1; i < rows.length; i++) {
+    const values = parseCSVLine(rows[i]);
+    if (values.length === headers.length) {
+      const row = {};
+      headers.forEach((h, idx) => {
+        // Normalize header names to match mapFieldName format
+        const key = h.trim().toLowerCase().replace(/[\/()&:]+/g, '_').replace(/\s+/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
+        row[key] = values[idx].trim();
+      });
+      data.push(row);
+    } else if (values.length > headers.length) {
+      // More fields than headers: join trailing fields into the last column
+      const reconciled = values.slice(0, headers.length - 1);
+      reconciled.push(values.slice(headers.length - 1).join(', '));
+      const row = {};
+      headers.forEach((h, idx) => {
+        const key = h.trim().toLowerCase().replace(/[\/()&:]+/g, '_').replace(/\s+/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
+        row[key] = reconciled[idx].trim();
+      });
+      data.push(row);
+    } else {
+      // Fewer fields than headers — skip
+      const preview = rows[i].substring(0, 100);
+      skippedRows.push({ line: i + 1, expected: headers.length, got: values.length, preview });
+    }
+  }
+  if (skippedRows.length > 0) {
+    console.warn('[CSV Parse] Skipped', skippedRows.length, 'rows due to column count mismatch:');
+    skippedRows.slice(0, 5).forEach(r => {
+      console.warn('  Row', r.line + ':', r.got, 'cols (expected', r.expected + '):', r.preview + '...');
+    });
+  }
+  console.log('[CSV Parse] Successfully parsed', data.length, 'rows from', rows.length - 1, 'data rows');
+  data._skippedCount = skippedRows.length;
+  return data;
+}
+
+export function parseCSVLine(line) {
+  const result = [];
+  let current = '';
+  let inQuotes = false;
+
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+    if (char === '"') {
+      if (inQuotes && line[i + 1] === '"') {
+        current += '"';
+        i++;
+      } else {
+        inQuotes = !inQuotes;
+      }
+    } else if (char === ',' && !inQuotes) {
+      result.push(current);
+      current = '';
+    } else {
+      current += char;
+    }
+  }
+  result.push(current);
+  return result;
+}
+
+// Helper to get name from CSV row - checks all name field variations.
+// account_name is checked BEFORE name because Salesforce CSVs often have both
+// a "Name" column (record/opp name) and "Account Name" — we want the account name.
+export function getNameFromRow(row) {
+  return row.account_name || row.district_name || row.district ||
+         row.organization || row.org_name || row.account || row.name || '';
+}
+
+// Helper to get state from CSV row - checks all state field variations
+export function getStateFromRow(row) {
+  return row.state || row.billing_state_province || row.billing_state ||
+         row.shipping_state_province || row.shipping_state || '';
+}
+
+// Consolidate parent/child account rows into district-level records.
+// - Rows with no parent_account are districts → keep as-is with their enrollment.
+// - Rows with a parent_account are schools → skip them. Enrollment comes from the parent row only.
+// - If a child's parent doesn't have its own row, create a synthetic district row (no enrollment).
+export function consolidateParentAccounts(csvData) {
+  const parentRows = [];
+  const childRows = [];
+
+  csvData.forEach(row => {
+    const parentAccount = (row.parent_account || '').trim();
+    if (parentAccount) {
+      childRows.push(row);
+    } else {
+      parentRows.push(row);
+    }
+  });
+
+  if (childRows.length === 0) return { rows: csvData, consolidatedCount: 0 }; // no parent account relationships
+
+  console.log('[SFDC Merge] Parent account consolidation:', parentRows.length, 'districts,', childRows.length, 'schools');
+
+  // Build a set of parent row names (lowered) for quick lookup
+  const parentNames = new Set();
+  parentRows.forEach(row => {
+    const name = getNameFromRow(row);
+    if (name) parentNames.add(name.toLowerCase().trim());
+  });
+
+  // Group children by parent account name
+  const childrenByParent = new Map();
+  childRows.forEach(row => {
+    const key = row.parent_account.trim().toLowerCase();
+    if (!childrenByParent.has(key)) childrenByParent.set(key, []);
+    childrenByParent.get(key).push(row);
+  });
+
+  // For children whose parent doesn't have its own row, create a synthetic district row
+  childrenByParent.forEach((children, parentKeyLower) => {
+    if (!parentNames.has(parentKeyLower)) {
+      // Create a synthetic district from the first child but with parent's name and no enrollment
+      const first = children[0];
+      const synthetic = {};
+      Object.keys(first).forEach(key => { synthetic[key] = first[key]; });
+
+      // Use the parent account name as the account name
+      const parentName = first.parent_account.trim();
+      if (synthetic.account_name !== undefined) synthetic.account_name = parentName;
+      if (synthetic.name !== undefined) synthetic.name = parentName;
+
+      // Clear enrollment fields — we don't have a parent-level count
+      ['students_in_district', 'enrollment', 'student_count', 'total_students', 'total_enrollment'].forEach(k => {
+        if (synthetic[k] !== undefined) synthetic[k] = '';
+      });
+      delete synthetic.parent_account;
+
+      parentRows.push(synthetic);
+      console.log('[SFDC Merge] Created synthetic district row for:', parentName, '(from', children.length, 'school records)');
+    }
+  });
+
+  // Attach school names (_schools) to each parent row from their child rows,
+  // and roll up any opp data from child rows into the parent district.
+  parentRows.forEach(row => {
+    const rowName = getNameFromRow(row);
+    if (!rowName) return;
+    const key = rowName.toLowerCase().trim();
+    const children = childrenByParent.get(key);
+    if (children && children.length > 0) {
+      row._schools = children.map(c => getNameFromRow(c)).filter(Boolean).sort();
+      console.log('[SFDC Merge] Attached', row._schools.length, 'schools to:', rowName);
+
+      // Roll up opp data from child rows into the parent district.
+      // This prevents school-level opps from being silently dropped during consolidation.
+      children.forEach(child => {
+        const childOppFields = {};
+        Object.keys(child).forEach(k => {
+          if (typeof child[k] !== 'string') return;
+          const mapped = mapFieldName(k);
+          if (OPP_ENTRY_FIELDS.has(mapped) && child[k].trim()) {
+            childOppFields[mapped] = child[k].trim();
+          }
+        });
+        if (Object.keys(childOppFields).length > 0) {
+          const oppEntry = buildOppEntry(childOppFields);
+          upsertOpp(row, oppEntry);
+          console.log('[SFDC Merge] Rolled up opp from school', getNameFromRow(child), 'to district:', rowName);
+        }
+      });
+    }
+  });
+
+  // Number of child rows absorbed into parents (original CSV rows minus output rows)
+  const consolidatedCount = csvData.length - parentRows.length;
+  return { rows: parentRows, consolidatedCount };
+}
+
+// Core merge logic: merges csvData rows against an existing dataset.
+// Returns { mergedData, stats }.
+export function runMerge(csvData, existingData, source) {
+  // Log CSV columns for debugging
+  if (csvData.length > 0) {
+    console.log('[SFDC Merge] CSV columns:', Object.keys(csvData[0]));
+    console.log('[SFDC Merge] Sample row:', csvData[0]);
+  }
+
+  // Build set of reps who currently have data loaded in the system.
+  // This reflects ALL data in S.ACCOUNT_DATA at call time, including earlier uploads
+  // in the same session. Active reps NOT in this set will fall through to Opp Owner.
+  const loadedReps = new Set();
+  existingData.forEach(item => {
+    if (item.ae) loadedReps.add(item.ae);
+  });
+  console.log('[SFDC Merge] Loaded reps (have data in system):', [...loadedReps].sort().join(', '));
+
+  // Create a map of existing data by name for quick lookup
+  // Use both exact name and normalized name for matching
+  // Store ARRAYS of entries per key to handle same-name different-state accounts
+  // (e.g., "Jefferson County" in KY and AL, "Arlington" in TX and NY)
+  const existingByName = new Map();
+  const existingByNormalized = new Map();
+  const existingByState = new Map(); // Group by state for fuzzy matching
+  existingData.forEach((item, idx) => {
+    const exactKey = item.name.toLowerCase().trim();
+    const normalizedKey = normalizeDistrictName(item.name);
+    // Store arrays to handle multiple accounts with the same name in different states
+    if (!existingByName.has(exactKey)) existingByName.set(exactKey, []);
+    existingByName.get(exactKey).push({ item, idx });
+    if (!existingByNormalized.has(normalizedKey)) existingByNormalized.set(normalizedKey, []);
+    existingByNormalized.get(normalizedKey).push({ item, idx });
+    // Group by state
+    const state = (item.state || '').toUpperCase().trim();
+    if (state) {
+      if (!existingByState.has(state)) existingByState.set(state, []);
+      existingByState.get(state).push({ item, idx, normalizedKey });
+    }
+  });
+  console.log('[SFDC Merge] Existing exact keys:', Array.from(existingByName.keys()).slice(0, 10), '...');
+  console.log('[SFDC Merge] Existing normalized keys:', Array.from(existingByNormalized.keys()).slice(0, 10), '...');
+  console.log('[SFDC Merge] States indexed:', Array.from(existingByState.keys()).join(', '));
+
+  // Cascading match: Name → State → Enrollment → Address/City
+  // If any check finds a mismatch against ALL candidates, the CSV row is a new account.
+  // Returns the best matching entry, or null if no match (→ new pin).
+  function pickBestMatch(entries, csvRow) {
+    if (!entries || entries.length === 0) return null;
+    let candidates = entries;
+
+    // --- Check 1: State ---
+    const csvSt = getStateFromRow(csvRow).toUpperCase().trim();
+    if (csvSt) {
+      const sameState = candidates.filter(e => (e.item.state || '').toUpperCase().trim() === csvSt);
+      if (sameState.length > 0) {
+        candidates = sameState;
+      } else {
+        // CSV state doesn't match ANY candidate — different account, drop a new pin
+        console.log('[SFDC Merge] State mismatch → new record:', candidates[0].item.name,
+          '- CSV state', csvSt, 'vs existing', candidates.map(e => e.item.state || '?').join(', '));
+        return null;
+      }
+    }
+    if (candidates.length === 1) return candidates[0];
+
+    // --- Check 2: Enrollment ---
+    const csvEnrollmentRaw = csvRow.enrollment || csvRow.enrollment_count ||
+      csvRow.student_count || csvRow.total_students || csvRow.students ||
+      csvRow.total_enrollment || csvRow.students_in_d || csvRow.students_in_district || '';
+    const csvEnrollment = parseInt(String(csvEnrollmentRaw).replace(/[$,]/g, '')) || 0;
+    if (csvEnrollment > 0) {
+      // Match if within 30% — handles year-to-year enrollment changes
+      const closeEnrollment = candidates.filter(e => {
+        const existing = parseInt(e.item.enrollment) || 0;
+        if (existing === 0) return true; // Can't rule out if existing has no enrollment
+        const diff = Math.abs(existing - csvEnrollment);
+        const larger = Math.max(existing, csvEnrollment);
+        return (diff / larger) <= 0.30;
+      });
+      if (closeEnrollment.length > 0) {
+        candidates = closeEnrollment;
+      } else {
+        // Enrollment differs significantly from ALL candidates — different account
+        console.log('[SFDC Merge] Enrollment mismatch → new record:', candidates[0].item.name,
+          '- CSV enrollment', csvEnrollment, 'vs existing',
+          candidates.map(e => (e.item.enrollment || '?')).join(', '));
+        return null;
+      }
+    }
+    if (candidates.length === 1) return candidates[0];
+
+    // --- Check 3: Address / City ---
+    const csvAddress = (csvRow.address || csvRow.billing_address_line_1 ||
+      csvRow.billing_address || csvRow.shipping_address_line_1 ||
+      csvRow.shipping_address || '').toLowerCase().trim();
+    const csvCity = (csvRow.city || csvRow.billing_city || csvRow.shipping_city || '').toLowerCase().trim();
+    if (csvAddress || csvCity) {
+      const sameLocation = candidates.filter(e => {
+        const existAddr = (e.item.address || '').toLowerCase().trim();
+        const existCity = (e.item.city || '').toLowerCase().trim();
+        // If existing has no address/city data, can't rule it out
+        if (!existAddr && !existCity) return true;
+        // Match on address if both have it, otherwise match on city
+        if (csvAddress && existAddr) return existAddr === csvAddress;
+        if (csvCity && existCity) return existCity === csvCity;
+        return true; // Not enough data to distinguish
+      });
+      if (sameLocation.length > 0) {
+        candidates = sameLocation;
+      } else {
+        // Address/city differs from ALL candidates — different account
+        console.log('[SFDC Merge] Address mismatch → new record:', candidates[0].item.name,
+          '- CSV address/city', csvAddress || csvCity, 'vs existing',
+          candidates.map(e => e.item.address || e.item.city || '?').join(', '));
+        return null;
+      }
+    }
+
+    // Return best remaining candidate (pick closest enrollment if we have CSV enrollment)
+    if (candidates.length > 1 && csvEnrollment > 0) {
+      candidates.sort((a, b) => {
+        const aDiff = Math.abs((parseInt(a.item.enrollment) || 0) - csvEnrollment);
+        const bDiff = Math.abs((parseInt(b.item.enrollment) || 0) - csvEnrollment);
+        return aDiff - bDiff;
+      });
+    }
+    if (candidates.length > 1) {
+      console.log('[SFDC Merge] Multiple candidates remain after all checks for:', candidates[0].item.name,
+        '- using first match in', (candidates[0].item.state || '?'));
+    }
+    return candidates[0];
+  }
+
+  // Fuzzy match by state + core name contains
+  function findByStateAndName(csvName, csvState) {
+    if (!csvState) return null;
+    const stateKey = csvState.toUpperCase().trim();
+    const stateRecords = existingByState.get(stateKey);
+    if (!stateRecords) return null;
+
+    const csvNormalized = normalizeDistrictName(csvName);
+
+    for (const { item, idx, normalizedKey } of stateRecords) {
+      // Check if either name contains the other (handles "Dallas" matching "Dallas ISD")
+      if (csvNormalized.includes(normalizedKey) || normalizedKey.includes(csvNormalized)) {
+        // Guard against false positives where a short normalized parent name is embedded
+        // in a much longer sub-entity name (e.g. "new york city" inside
+        // "new york city geographic district #16"). Require the shorter name to be at
+        // least half the length of the longer to confirm they refer to the same entity.
+        const shorter = Math.min(csvNormalized.length, normalizedKey.length);
+        const longer = Math.max(csvNormalized.length, normalizedKey.length);
+        if (shorter < longer * 0.5) {
+          console.log('[SFDC Merge] State+Name SKIPPED (length mismatch):', csvName, '→', item.name,
+            '(normalized:', csvNormalized, 'vs', normalizedKey + ')');
+          continue;
+        }
+        console.log('[SFDC Merge] State+Name match:', csvName, '→', item.name, '(state:', stateKey, ')');
+        return { item, idx };
+      }
+    }
+    return null;
+  }
+  // Count notes that exist in localStorage
+  let notesCount = 0;
+  existingData.forEach(d => {
+    const noteKey = 'edia_notes_' + d.name.replace(/[^a-zA-Z0-9]/g, '_');
+    try {
+      const notes = JSON.parse(localStorage.getItem(noteKey) || '[]');
+      if (notes.length > 0) notesCount++;
+    } catch(e) { /* ignored */ }
+  });
+
+  // Analyze merge impact
+  const stats = {
+    total: csvData.length,
+    newRecords: 0,
+    updatedRecords: 0,
+    duplicateRows: 0,   // CSV rows for accounts already merged (multiple opps per account)
+    notesPreserved: notesCount,
+    changes: [],
+    conflicts: [],
+    resolutions: []  // Track every owner resolution: { name, csvOwner, resolvedAE, reason, oppOwner }
+  };
+
+  const mergedData = [];
+  const matchedIndices = new Set(); // Track which existing-data indices were matched (by index, not name)
+  const mergedByName = new Map(); // Track already-merged records to handle duplicate CSV rows
+
+  csvData.forEach((csvRow, idx) => {
+    const name = getNameFromRow(csvRow);
+    if (!name) {
+      console.log('[SFDC Merge] Row', idx, 'has no name field. Keys:', Object.keys(csvRow));
+      return;
+    }
+
+    const nameKey = name.toLowerCase().trim();
+    const normalizedKey = normalizeDistrictName(name);
+
+    // Get CSV row state for state-aware matching
+    const csvState = getStateFromRow(csvRow);
+    // Use composite key (name + state) for already-merged lookup to avoid
+    // folding same-name different-state accounts into each other
+    const csvStateKey = (csvState || '').toUpperCase().trim();
+    const compositeKey = nameKey + '|' + csvStateKey;
+    const compositeNormKey = normalizedKey + '|' + csvStateKey;
+
+    // First check if we already merged this account from an earlier CSV row (handles multiple opps per account)
+    // Use composite key first (name+state), fall back to name-only for backwards compat
+    let alreadyMerged = mergedByName.get(compositeKey) || mergedByName.get(compositeNormKey);
+    if (!alreadyMerged && !csvStateKey) {
+      // Only fall back to name-only lookup when CSV has no state info
+      alreadyMerged = mergedByName.get(nameKey) || mergedByName.get(normalizedKey);
+    }
+
+    // Try exact match first, then normalized match, then state+name fuzzy match
+    // pickBestMatch cascades: Name → State → Enrollment → Address
+    let existing = pickBestMatch(existingByName.get(nameKey), csvRow);
+    if (!existing) {
+      existing = pickBestMatch(existingByNormalized.get(normalizedKey), csvRow);
+      if (existing) {
+        console.log('[SFDC Merge] Normalized match:', name, '→', existing.item.name);
+        // Check if we already merged this existing record
+        const existingComposite = existing.item.name.toLowerCase().trim() + '|' + (existing.item.state || '').toUpperCase().trim();
+        alreadyMerged = alreadyMerged || mergedByName.get(existingComposite) || mergedByName.get(existing.item.name.toLowerCase().trim());
+      }
+    }
+    // Fallback: try state + name contains match
+    if (!existing) {
+      existing = findByStateAndName(name, csvState);
+      if (existing) {
+        const existingComposite = existing.item.name.toLowerCase().trim() + '|' + (existing.item.state || '').toUpperCase().trim();
+        alreadyMerged = alreadyMerged || mergedByName.get(existingComposite) || mergedByName.get(existing.item.name.toLowerCase().trim());
+      }
+    }
+    if (!existing && !alreadyMerged && idx < 10) {
+      console.log('[SFDC Merge] No match for:', name, '(exact:', nameKey, ', normalized:', normalizedKey, ', state:', csvStateKey || 'none', ')');
+    }
+
+    // If this account was already merged from a previous CSV row, update that record (multiple opps scenario)
+    if (alreadyMerged) {
+      stats.duplicateRows++;
+      console.log('[SFDC Merge] Multiple opps for:', name, '- updating existing merged record');
+      // Pre-scan for opp fields so resolveOwner knows if this row has opp data
+      const rowHasOppData = Object.keys(csvRow).some(key => {
+        if (typeof csvRow[key] !== 'string') return false;
+        return OPP_ENTRY_FIELDS.has(mapFieldName(key)) && csvRow[key].trim();
+      });
+      if (rowHasOppData) alreadyMerged._hasUploadedOpp = true;
+      // Pre-extract Opp Owner from this row for resolveOwner fallback
+      const rowOppOwner = Object.keys(csvRow).reduce((found, k) =>
+        found || (mapFieldName(k) === 'opp_owner' ? (csvRow[k] || '').trim() : ''), '');
+      // Separate opp fields from account fields, then upsert each opp by product area
+      const csvOppFields = {};
+      Object.keys(csvRow).forEach(key => {
+        const val = csvRow[key];
+        if (typeof val !== 'string') {
+          if (val) alreadyMerged[key] = val;
+          return;
+        }
+        if (val && val.trim()) {
+          const mappedKey = mapFieldName(key);
+          if (mappedKey === 'name') return;
+          if (OPP_ENTRY_FIELDS.has(mappedKey)) {
+            csvOppFields[mappedKey] = val.trim();
+          } else if (mappedKey === 'ae') {
+            // Don't blindly overwrite ae — it was already resolved on the first row.
+            // Only update if the new CSV value resolves to a valid active rep.
+            const result = resolveOwner(val.trim(), alreadyMerged.ae || '', {
+              enrollment: alreadyMerged.enrollment,
+              hasUploadedOpp: alreadyMerged._hasUploadedOpp,
+              oppOwner: rowOppOwner,
+              loadedReps,
+              accountName: alreadyMerged.name || '',
+            });
+            if (result.ae) alreadyMerged.ae = result.ae;
+            // Tag source team from the CSV AE
+            const aeTeam = getTeamForRep(val.trim());
+            if (aeTeam) alreadyMerged._source_team = aeTeam;
+          } else {
+            // For non-opp fields, update if the CSV has a value (e.g. region)
+            alreadyMerged[mappedKey] = val.trim();
+          }
+        }
+      });
+      // Upsert this opp into the opps array (each product area gets its own entry)
+      if (Object.keys(csvOppFields).length > 0) {
+        const oppEntry = buildOppEntry(csvOppFields);
+        upsertOpp(alreadyMerged, oppEntry);
+      }
+      clampFutureLastActivity(alreadyMerged);
+      parseNumericFields(alreadyMerged);
+      (alreadyMerged.opps || []).forEach(o => {
+        if (o.acv !== undefined && o.acv !== '') {
+          const cleaned = String(o.acv).replace(/[$,]/g, '');
+          const val = parseFloat(cleaned);
+          if (!isNaN(val)) o.acv = val;
+        }
+        if (o.probability !== undefined && o.probability !== '') {
+          const cleaned = String(o.probability).replace(/[$,]/g, '');
+          const val = parseFloat(cleaned);
+          if (!isNaN(val)) o.probability = val;
+        }
+      });
+      return; // Skip to next CSV row (return in forEach acts like continue)
+    }
+
+    if (existing) {
+      // Mark this existing account as matched so it won't be re-added in the preservation step
+      matchedIndices.add(existing.idx);
+      // Update existing record but preserve certain local fields
+      const merged = { ...existing.item };
+
+      // Debug: Log CSV columns for first few rows
+      if (import.meta.env.DEV && idx < 2) {
+        console.log('[SFDC Merge] Processing:', name);
+        console.log('[SFDC Merge] CSV columns:', Object.keys(csvRow));
+        console.log('[SFDC Merge] Key fields from CSV:');
+        ['stage', 'opp_stage', 'year_1_acv', 'acv', 'probability'].forEach(k => {
+          if (csvRow[k] !== undefined) console.log(`  ${k}: "${csvRow[k]}"`);
+        });
+      }
+
+      // Update with CSV data, mapping common field variations
+      // Separate opp fields from account fields — opp fields go into opps array
+      const csvOppFields = {};
+      Object.keys(csvRow).forEach(key => {
+        const val = csvRow[key];
+        if (typeof val !== 'string') {
+          // Preserve non-string values (e.g. _schools array) as-is
+          if (val) merged[key] = val;
+          return;
+        }
+        if (val && val.trim()) {
+          // Map common CSV column names to our field names
+          const mappedKey = mapFieldName(key);
+          // Never overwrite the existing account name — it's the source of truth.
+          // CSV names may be sub-districts or alternate labels that shouldn't replace
+          // the canonical name (e.g. "NYC Geographic District #16" overwriting "NYC Public Schools").
+          if (mappedKey === 'name') return;
+          if (OPP_ENTRY_FIELDS.has(mappedKey)) {
+            csvOppFields[mappedKey] = val.trim();
+          } else {
+            merged[mappedKey] = val.trim();
+          }
+        }
+      });
+
+      // Migrate any existing flat opp data into opps array, then upsert new opp
+      migrateToOppsArray(merged);
+      if (Object.keys(csvOppFields).length > 0) {
+        const oppEntry = buildOppEntry(csvOppFields);
+        upsertOpp(merged, oppEntry);
+      }
+      clampFutureLastActivity(merged);
+
+      // Parse numeric fields (account-level + opp acv/probability inside opps)
+      parseNumericFields(merged);
+      (merged.opps || []).forEach(o => {
+        if (o.acv !== undefined && o.acv !== '') {
+          const cleaned = String(o.acv).replace(/[$,]/g, '');
+          const val = parseFloat(cleaned);
+          if (!isNaN(val)) o.acv = val;
+        }
+        if (o.probability !== undefined && o.probability !== '') {
+          const cleaned = String(o.probability).replace(/[$,]/g, '');
+          const val = parseFloat(cleaned);
+          if (!isNaN(val)) o.probability = val;
+        }
+      });
+
+      // Strip ownership from DOE accounts
+      if (isDOE(merged.name)) { delete merged.ae; delete merged.csm; }
+
+      // Owner resolution: handle inactive/former reps, managers, reps with no data,
+      // blank owners, and active-vs-active conflicts.
+      if (!isDOE(merged.name)) {
+        const csvAE = (merged.ae || '').trim();
+        const priorAE = (existing.item.ae || '').trim();
+        const hasUploadedOpp = Object.keys(csvOppFields).length > 0;
+        const ownerResult = resolveOwner(csvAE, priorAE, {
+          enrollment: merged.enrollment,
+          hasUploadedOpp,
+          oppOwner: (merged.opp_owner || '').trim(),
+          loadedReps,
+          accountName: merged.name || '',
+        });
+        merged.ae = ownerResult.ae;
+        if (hasUploadedOpp) merged._hasUploadedOpp = true;
+        // Tag source team from the CSV AE — used by "Unassigned Accounts" filter
+        // to scope unowned accounts to the correct team.
+        if (csvAE) {
+          merged._source_team = getTeamForRep(csvAE) || getTeamForRep(priorAE) || merged._source_team || null;
+        }
+        // When an active rep's data isn't loaded yet, preserve them as the
+        // territory owner so the popup can show the dual-assignment display
+        // (Assigned = original Account Owner, Holdout = Opp Owner fallback).
+        if (ownerResult.reason === 'no_data_loaded' && csvAE) {
+          merged.territory_ae = csvAE;
+        } else {
+          // Clear stale territory_ae from a prior upload (rep's data now loaded)
+          delete merged.territory_ae;
+        }
+
+        // Track resolution for post-upload summary
+        if (csvAE) {
+          stats.resolutions.push({
+            name: merged.name,
+            csvOwner: csvAE,
+            resolvedAE: ownerResult.ae || '(unassigned)',
+            reason: ownerResult.reason,
+            oppOwner: (merged.opp_owner || '').trim(),
+            isNew: false,
+          });
+          if (ownerResult.reason !== 'direct_assign') {
+            console.log('[SFDC Merge] Owner resolved:', merged.name,
+              '- CSV owner', csvAE, '→', ownerResult.ae || '(unassigned)',
+              '(reason:', ownerResult.reason + ')');
+          }
+        }
+
+        // Conflict: CSV brings a different active rep than the current active rep
+        if (csvAE && priorAE && csvAE !== priorAE
+            && ALL_ACTIVE_REPS.has(csvAE) && ALL_ACTIVE_REPS.has(priorAE)
+            && priorAE !== ACCOUNT_PRIMARY_AE) {
+          console.log('[SFDC Merge] CONFLICT:', merged.name, '- was', priorAE, ', CSV says', csvAE);
+          stats.conflicts.push({
+            name: merged.name,
+            enrollment: parseInt(merged.enrollment) || 0,
+            state: merged.state || '',
+            oldAE: priorAE,
+            newAE: csvAE,
+            source: source || 'accounts',
+            // Context about the conflict
+            isCustomer: !!merged.is_customer,
+            isInactiveCustomer: merged.type === 'Inactive Customer',
+            arr: merged.arr || null,
+            // What the OLD rep (priorAE / existing owner) has
+            oldSource: 'existing',
+            oldTeam: getTeamForRep(priorAE) || null,
+            // What the NEW rep (csvAE / from upload) brings
+            newSource: 'csv',
+            newTeam: getTeamForRep(csvAE) || null,
+            // Opp context from CSV row
+            hasOpp: Object.keys(csvOppFields).length > 0,
+            oppStage: csvOppFields.opp_stage || merged.opp_stage || '',
+            oppAcv: csvOppFields.opp_acv || '',
+            oppAreas: csvOppFields.opp_areas || merged.opp_areas || '',
+            oppOwner: (merged.opp_owner || '').trim(),
+            // Existing record opps
+            existingOpps: (existing.item.opps || []).map(o => ({
+              area: o.area || '',
+              stage: o.stage || '',
+              acv: o.acv || '',
+            })),
+            // Resolution reason
+            ownerResolution: ownerResult.reason,
+          });
+        }
+      }
+
+      // Check if anything actually changed - compare key opp fields
+      const keyFields = ['opp_stage', 'opp_acv', 'opp_probability', 'opp_forecast', 'opp_next_step'];
+      const changedFields = [];
+
+      const hasChanges = Object.keys(csvRow).some(key => {
+        if (typeof csvRow[key] !== 'string') return false;
+        const mappedKey = mapFieldName(key);
+        const oldVal = existing.item[mappedKey];
+        const newVal = (csvRow[key] || '').trim();
+        // Handle numeric comparisons
+        if (oldVal === undefined || oldVal === null) {
+          if (newVal !== '') {
+            changedFields.push({ field: mappedKey, old: oldVal, new: newVal });
+            return true;
+          }
+          return false;
+        }
+        if (oldVal.toString() !== newVal) {
+          changedFields.push({ field: mappedKey, old: oldVal.toString(), new: newVal });
+          return true;
+        }
+        return false;
+      });
+
+      if (import.meta.env.DEV) {
+        // Debug logging for change detection
+        console.log('[SFDC Merge] Change detection for:', name);
+        console.log('  hasChanges:', hasChanges);
+        console.log('  changedFields:', changedFields);
+        console.log('  existing opp_stage:', existing.item.opp_stage);
+        console.log('  merged opp_stage:', merged.opp_stage);
+      }
+
+      if (hasChanges) {
+        stats.updatedRecords++;
+        stats.changes.push({ name, action: 'updated', oldData: existing.item, newData: merged });
+      }
+
+      mergedData.push(merged);
+      // Track this merged record to handle duplicate CSV rows (multiple opps per account)
+      // Use composite keys (name+state) so same-name different-state accounts stay separate
+      const mergedState = (merged.state || '').toUpperCase().trim();
+      mergedByName.set(nameKey + '|' + mergedState, merged);
+      mergedByName.set(normalizedKey + '|' + mergedState, merged);
+      mergedByName.set(existing.item.name.toLowerCase().trim() + '|' + mergedState, merged);
+      // Also set name-only keys for backwards compat (CSV rows without state info)
+      mergedByName.set(nameKey, merged);
+      mergedByName.set(normalizedKey, merged);
+      mergedByName.set(existing.item.name.toLowerCase().trim(), merged);
+    } else {
+      // New record - check if name might be a partial match
+      const possibleMatch = findPartialMatch(name, existingByName);
+      if (possibleMatch) {
+        stats.changes.push({ name, action: 'new', warning: `Similar to existing: "${possibleMatch}"` });
+      }
+
+      // Log ALL new records so we can debug matching issues
+      console.log('[SFDC Merge] NEW RECORD (no match):', name);
+      console.log('  - Normalized key tried:', normalizedKey);
+      console.log('  - State:', getStateFromRow(csvRow) || 'NOT SET');
+      if (possibleMatch) {
+        console.log('  - Possible match found:', possibleMatch);
+      }
+
+      const newRecord = {};
+      const newOppFields = {};
+      Object.keys(csvRow).forEach(key => {
+        if (typeof csvRow[key] !== 'string') {
+          if (csvRow[key]) newRecord[key] = csvRow[key];
+          return;
+        }
+        const trimmed = (csvRow[key] || '').trim();
+        if (!trimmed) return; // Skip empty values so they don't overwrite non-empty ones (e.g. empty shipping overwrites billing)
+        const mappedKey = mapFieldName(key);
+        if (OPP_ENTRY_FIELDS.has(mappedKey)) {
+          newOppFields[mappedKey] = trimmed;
+        } else {
+          newRecord[mappedKey] = trimmed;
+        }
+      });
+      newRecord.name = name;
+
+      // Cross-reference: if this new record is missing location data, try to
+      // find a match in the OTHER dataset (e.g. opp introduces a new account
+      // that already exists as a customer, or vice versa). This is the primary
+      // fix for the "data exists but no pin" issue.
+      const otherDataset = (existingData === S.ACCOUNT_DATA) ? S.CUSTOMER_DATA
+        : (existingData === S.CUSTOMER_DATA) ? S.ACCOUNT_DATA : null;
+      if (otherDataset && (!newRecord.lat || !newRecord.lng)) {
+        const newNorm = normalizeDistrictName(name);
+        for (const other of otherDataset) {
+          if (!other.lat || !other.lng) continue;
+          const otherNorm = normalizeDistrictName(other.name);
+          if (other.name.toLowerCase().trim() === name.toLowerCase().trim() || otherNorm === newNorm) {
+            // Verify state if both records have it
+            const nState = (newRecord.state || '').toUpperCase().trim();
+            const oState = (other.state || '').toUpperCase().trim();
+            if (nState && oState && nState !== oState) continue;
+            console.log('[SFDC Merge] Cross-dataset match for new record:', name, '→ inherited coords from', other.name);
+            newRecord.lat = other.lat;
+            newRecord.lng = other.lng;
+            // Also inherit missing location fields
+            if (!newRecord.state && other.state) newRecord.state = other.state;
+            if (!newRecord.city && other.city) newRecord.city = other.city;
+            if (!newRecord.address && other.address) newRecord.address = other.address;
+            if (!newRecord.region && other.region) newRecord.region = other.region;
+            break;
+          }
+        }
+      }
+
+      // Build opps array for new record
+      if (Object.keys(newOppFields).length > 0) {
+        const oppEntry = buildOppEntry(newOppFields);
+        upsertOpp(newRecord, oppEntry);
+      }
+      clampFutureLastActivity(newRecord);
+
+      // Parse numeric fields
+      parseNumericFields(newRecord);
+      (newRecord.opps || []).forEach(o => {
+        if (o.acv !== undefined && o.acv !== '') {
+          const cleaned = String(o.acv).replace(/[$,]/g, '');
+          const val = parseFloat(cleaned);
+          if (!isNaN(val)) o.acv = val;
+        }
+        if (o.probability !== undefined && o.probability !== '') {
+          const cleaned = String(o.probability).replace(/[$,]/g, '');
+          const val = parseFloat(cleaned);
+          if (!isNaN(val)) o.probability = val;
+        }
+      });
+
+      // Strip ownership from DOE accounts
+      if (isDOE(newRecord.name)) { delete newRecord.ae; delete newRecord.csm; }
+
+      // Owner resolution for new records: inactive/former owners, managers,
+      // reps with no data → Opp Owner fallback. Active reps with data → assigned normally.
+      if (!isDOE(newRecord.name)) {
+        const csvAE = (newRecord.ae || '').trim();
+        const hasUploadedOpp = Object.keys(newOppFields).length > 0;
+        const ownerResult = resolveOwner(csvAE, '', {
+          enrollment: newRecord.enrollment,
+          hasUploadedOpp,
+          oppOwner: (newRecord.opp_owner || '').trim(),
+          loadedReps,
+          accountName: newRecord.name || '',
+        });
+        newRecord.ae = ownerResult.ae;
+        if (hasUploadedOpp) newRecord._hasUploadedOpp = true;
+        // Tag source team from the CSV AE — used by "Unassigned Accounts" filter
+        if (csvAE) {
+          newRecord._source_team = getTeamForRep(csvAE) || null;
+        }
+        // When an active rep's data isn't loaded yet, preserve them as the
+        // territory owner so the popup can show the dual-assignment display.
+        if (ownerResult.reason === 'no_data_loaded' && csvAE) {
+          newRecord.territory_ae = csvAE;
+        }
+
+        // Track resolution for post-upload summary
+        if (csvAE) {
+          stats.resolutions.push({
+            name: newRecord.name,
+            csvOwner: csvAE,
+            resolvedAE: ownerResult.ae || '(unassigned)',
+            reason: ownerResult.reason,
+            oppOwner: (newRecord.opp_owner || '').trim(),
+            isNew: true,
+          });
+          if (ownerResult.reason !== 'direct_assign') {
+            console.log('[SFDC Merge] New record owner resolved:', newRecord.name,
+              '- CSV owner', csvAE, '→', ownerResult.ae || '(unassigned)',
+              '(reason:', ownerResult.reason + ')');
+          }
+        }
+      }
+
+      stats.newRecords++;
+      if (!possibleMatch) {
+        stats.changes.push({ name, action: 'new' });
+      }
+      mergedData.push(newRecord);
+      // Track this new record to handle duplicate CSV rows
+      // Use composite keys (name+state) so same-name different-state accounts stay separate
+      const newState = (newRecord.state || '').toUpperCase().trim();
+      mergedByName.set(nameKey + '|' + newState, newRecord);
+      mergedByName.set(normalizedKey + '|' + newState, newRecord);
+      // Also set name-only keys for backwards compat
+      mergedByName.set(nameKey, newRecord);
+      mergedByName.set(normalizedKey, newRecord);
+    }
+  });
+
+  // Keep existing records that were NOT matched by any CSV row
+  existingData.forEach((item, idx) => {
+    if (!matchedIndices.has(idx)) {
+      mergedData.push(item);
+    }
+  });
+
+  return { mergedData, stats };
+}
+
+// ============ OPP-ONLY MERGE ============
+// Dedicated merge path for Opportunity CSV uploads.
+// Matches CSV rows to existing accounts and upserts opp data only.
+// Does NOT create new accounts, geocode, or modify account-level fields.
+export function runOppMerge(csvData) {
+  if (csvData.length > 0) {
+    console.log('[Opp Merge] CSV columns:', Object.keys(csvData[0]));
+    console.log('[Opp Merge] Sample row:', csvData[0]);
+  }
+
+  // Build set of reps who currently have data loaded
+  const loadedReps = new Set();
+  S.ACCOUNT_DATA.forEach(item => {
+    if (item.ae) loadedReps.add(item.ae);
+  });
+  console.log('[Opp Merge] Loaded reps:', [...loadedReps].sort().join(', '));
+
+  // Build lookup for accounts by name+state
+  const acctByKey = new Map();
+  S.ACCOUNT_DATA.forEach((item, idx) => {
+    const exactKey = (item.name || '').toLowerCase().trim() + '|' + (item.state || '').toUpperCase().trim();
+    acctByKey.set(exactKey, { item, idx });
+    const normKey = normalizeDistrictName(item.name) + '|' + (item.state || '').toUpperCase().trim();
+    if (!acctByKey.has(normKey)) acctByKey.set(normKey, { item, idx });
+  });
+
+  const stats = {
+    total: csvData.length,
+    newRecords: 0,
+    updatedRecords: 0,
+    notesPreserved: 0,
+    consolidatedRecords: 0,
+    changes: [],
+    conflicts: [],
+    resolutions: [],
+    orphans: [],
+  };
+
+  // Track which accounts have been touched (for full replacement on first CSV row)
+  const touchedAccounts = new Set();
+
+  // Deep-clone S.ACCOUNT_DATA for the merge result
+  const mergedAccounts = S.ACCOUNT_DATA.map(a => JSON.parse(JSON.stringify(a)));
+  // Rebuild lookup on cloned array
+  const clonedByKey = new Map();
+  mergedAccounts.forEach((item, idx) => {
+    const exactKey = (item.name || '').toLowerCase().trim() + '|' + (item.state || '').toUpperCase().trim();
+    clonedByKey.set(exactKey, { item, idx });
+    const normKey = normalizeDistrictName(item.name) + '|' + (item.state || '').toUpperCase().trim();
+    if (!clonedByKey.has(normKey)) clonedByKey.set(normKey, { item, idx });
+  });
+
+  csvData.forEach((csvRow, rowIdx) => {
+    // Extract account name from the raw CSV row (before mapFieldName, which maps it to 'name')
+    const rawName = (csvRow.account_name || csvRow.name || '').trim();
+    if (!rawName) return;
+
+    // Find the state from the CSV row
+    const csvState = getStateFromRow(csvRow).toUpperCase().trim();
+
+    // Look up matching account
+    const exactKey = rawName.toLowerCase().trim() + '|' + csvState;
+    const normKey = normalizeDistrictName(rawName) + '|' + csvState;
+    const match = clonedByKey.get(exactKey) || clonedByKey.get(normKey);
+
+    if (!match) {
+      // Orphaned opp — no matching account
+      if (!stats.orphans.includes(rawName)) {
+        stats.orphans.push(rawName);
+        console.log('[Opp Merge] ORPHAN (no matching account):', rawName, csvState);
+      }
+      return;
+    }
+
+    const acct = match.item;
+    const acctKey = acct.name + '|' + (acct.state || '');
+
+    // Map CSV fields through mapFieldName
+    const oppFields = {};
+    const wrapperFields = {};
+    let csvAE = '';
+    let oppOwner = '';
+
+    Object.keys(csvRow).forEach(key => {
+      const val = csvRow[key];
+      if (typeof val !== 'string' || !val.trim()) return;
+      const trimmed = val.trim();
+      const mappedKey = mapFieldName(key);
+
+      if (mappedKey === 'ae') {
+        csvAE = trimmed;
+      } else if (mappedKey === 'opp_owner') {
+        oppOwner = trimmed;
+      } else if (mappedKey === 'enrollment') {
+        // CSV enrollment used for resolveOwner context only, NOT written to account
+      } else if (OPP_ENTRY_FIELDS.has(mappedKey)) {
+        oppFields[mappedKey] = trimmed;
+      } else if (OPP_WRAPPER_FIELDS.has(mappedKey)) {
+        wrapperFields[mappedKey] = trimmed;
+      } else if (mappedKey === 'name') {
+        // Skip — don't overwrite account name
+      } else if (['state', 'address', 'city', 'zip'].includes(mappedKey)) {
+        // Fill in MISSING values only, don't overwrite
+        if (!acct[mappedKey] && trimmed) acct[mappedKey] = trimmed;
+      }
+    });
+
+    // FULL REPLACEMENT: On the first CSV row for this account, clear its opps array
+    const isFirstTouch = !touchedAccounts.has(acctKey);
+    let priorOpps = [];
+    if (isFirstTouch) {
+      touchedAccounts.add(acctKey);
+      // Capture existing opps before clearing (used for conflict context)
+      priorOpps = (acct.opps || []).map(o => ({ area: o.area || '', stage: o.stage || '', acv: o.acv || '' }));
+      acct.opps = [];
+
+      // Apply wrapper fields on first row
+      if (oppOwner) acct.opp_owner = oppOwner;
+      if (wrapperFields.opportunity_name) acct.opportunity_name = wrapperFields.opportunity_name;
+      if (wrapperFields.intro_meeting_date) acct.intro_meeting_date = wrapperFields.intro_meeting_date;
+      if (wrapperFields.created_date) acct.created_date = wrapperFields.created_date;
+      if (wrapperFields.last_modified) acct.last_modified = wrapperFields.last_modified;
+      if (wrapperFields.age) acct.age = wrapperFields.age;
+      // MEDDPICC fields
+      if (wrapperFields.metric_improvement_goal) acct.metric_improvement_goal = wrapperFields.metric_improvement_goal;
+      if (wrapperFields.decision_criteria) acct.decision_criteria = wrapperFields.decision_criteria;
+      if (wrapperFields.decision_process) acct.decision_process = wrapperFields.decision_process;
+      if (wrapperFields.paper_process) acct.paper_process = wrapperFields.paper_process;
+      if (wrapperFields.implication_of_pain) acct.implication_of_pain = wrapperFields.implication_of_pain;
+      acct._hasUploadedOpp = true;
+    } else {
+      // Subsequent rows: update MEDDPICC if provided (may come from different opp rows)
+      if (wrapperFields.metric_improvement_goal) acct.metric_improvement_goal = wrapperFields.metric_improvement_goal;
+      if (wrapperFields.decision_criteria) acct.decision_criteria = wrapperFields.decision_criteria;
+      if (wrapperFields.decision_process) acct.decision_process = wrapperFields.decision_process;
+      if (wrapperFields.paper_process) acct.paper_process = wrapperFields.paper_process;
+      if (wrapperFields.implication_of_pain) acct.implication_of_pain = wrapperFields.implication_of_pain;
+    }
+
+    // Upsert opp entry
+    if (Object.keys(oppFields).length > 0) {
+      const oppEntry = buildOppEntry(oppFields);
+      upsertOpp(acct, oppEntry);
+    }
+
+    // Parse numeric fields within opps
+    (acct.opps || []).forEach(o => {
+      if (o.acv !== undefined && o.acv !== '') {
+        const cleaned = String(o.acv).replace(/[$,]/g, '');
+        const val = parseFloat(cleaned);
+        if (!isNaN(val)) o.acv = val;
+      }
+      if (o.probability !== undefined && o.probability !== '') {
+        const cleaned = String(o.probability).replace(/[$,]/g, '');
+        const val = parseFloat(cleaned);
+        if (!isNaN(val)) o.probability = val;
+      }
+    });
+
+    // Owner resolution (only on first row per account — subsequent rows skip)
+    if (isFirstTouch) {
+      if (!isDOE(acct.name)) {
+        const priorAE = (S.ACCOUNT_DATA[match.idx].ae || '').trim();
+        const ownerResult = resolveOwner(csvAE, priorAE, {
+          enrollment: acct.enrollment, // Use account's existing enrollment
+          hasUploadedOpp: true,
+          oppOwner: oppOwner,
+          loadedReps,
+          accountName: acct.name || '',
+        });
+        acct.ae = ownerResult.ae;
+        // Tag source team
+        if (csvAE) {
+          acct._source_team = getTeamForRep(csvAE) || getTeamForRep(priorAE) || acct._source_team || null;
+        }
+        // territory_ae handling
+        if (ownerResult.reason === 'no_data_loaded' && csvAE) {
+          acct.territory_ae = csvAE;
+        } else {
+          delete acct.territory_ae;
+        }
+
+        // Track resolution
+        if (csvAE) {
+          stats.resolutions.push({
+            name: acct.name,
+            csvOwner: csvAE,
+            resolvedAE: ownerResult.ae || '(unassigned)',
+            reason: ownerResult.reason,
+            oppOwner: oppOwner,
+            isNew: false,
+          });
+          if (ownerResult.reason !== 'direct_assign') {
+            console.log('[Opp Merge] Owner resolved:', acct.name,
+              '- CSV owner', csvAE, '→', ownerResult.ae || '(unassigned)',
+              '(reason:', ownerResult.reason + ')');
+          }
+        }
+
+        // Conflict detection
+        if (csvAE && priorAE && csvAE !== priorAE
+            && ALL_ACTIVE_REPS.has(csvAE) && ALL_ACTIVE_REPS.has(priorAE)
+            && priorAE !== ACCOUNT_PRIMARY_AE) {
+          console.log('[Opp Merge] CONFLICT:', acct.name, '- was', priorAE, ', CSV says', csvAE);
+          stats.conflicts.push({
+            name: acct.name,
+            enrollment: parseInt(acct.enrollment) || 0,
+            state: acct.state || '',
+            oldAE: priorAE,
+            newAE: csvAE,
+            source: 'opps',
+            // Context about the conflict
+            isCustomer: !!acct.is_customer,
+            isInactiveCustomer: acct.type === 'Inactive Customer',
+            arr: acct.arr || null,
+            // What the OLD rep (priorAE / existing owner) has
+            oldSource: 'existing',
+            oldTeam: getTeamForRep(priorAE) || null,
+            // What the NEW rep (csvAE / from upload) brings
+            newSource: 'csv',
+            newTeam: getTeamForRep(csvAE) || null,
+            // Opp context from CSV row
+            hasOpp: Object.keys(oppFields).length > 0,
+            oppStage: oppFields.opp_stage || acct.opp_stage || '',
+            oppAcv: oppFields.opp_acv || '',
+            oppAreas: oppFields.opp_areas || acct.opp_areas || '',
+            oppOwner: (oppOwner || '').trim(),
+            // Existing record opps (captured before clearing)
+            existingOpps: priorOpps,
+            // Resolution reason
+            ownerResolution: ownerResult.reason,
+          });
+        }
+      } else {
+        // DOE account — strip ownership
+        delete acct.ae;
+        delete acct.csm;
+      }
+
+      // Track the change
+      stats.updatedRecords++;
+      stats.changes.push({ name: acct.name, action: 'updated' });
+    }
+  });
+
+  // Add orphan count to stats
+  if (stats.orphans.length > 0) {
+    console.log(`[Opp Merge] ${stats.orphans.length} orphaned opp(s) — no matching account`);
+  }
+
+  return { mergedAccounts, stats };
+}
+
+export function previewMerge(csvData) {
+  // Track CSV parse skipped rows for display in merge modal
+  const _csvSkippedCount = csvData._skippedCount || 0;
+
+  // Opp-only merge path — skip type detection and auto-detection entirely
+  if (S.sfdcDataType === 'opps') {
+    S.mergeHasTypeSplit = false;
+    S.pendingAccountMerge = null;
+    S.pendingCustomerMerge = null;
+    const consolidation = consolidateParentAccounts(csvData);
+    const result = runOppMerge(consolidation.rows);
+    S.pendingMergeData = result.mergedAccounts;
+    S.pendingMergeStats = result.stats;
+    S.pendingMergeStats.consolidatedRecords = consolidation.consolidatedCount;
+    result.stats.csvSkippedRows = _csvSkippedCount;
+    showMergeModal(result.stats);
+    return;
+  }
+
+  // Check if CSV has a 'type' column for per-row customer/account splitting.
+  // Type values: "Customer" → customer dataset, "Inactive Customer"/blank/"Prospect" → account dataset.
+  const hasTypeColumn = csvData.length > 0 && csvData[0].hasOwnProperty('type');
+
+  if (hasTypeColumn) {
+    // Split rows by type
+    const customerRows = [];
+    const accountRows = [];
+    csvData.forEach(row => {
+      const rowType = (row.type || '').trim().toLowerCase();
+      if (rowType === 'customer') {
+        customerRows.push(row);
+      } else {
+        // Prospect, blank, or Inactive Customer → account dataset
+        // The type field is preserved on each record for display purposes
+        accountRows.push(row);
+      }
+    });
+
+    console.log('[SFDC Merge] Type column detected — splitting:', customerRows.length, 'customer rows,', accountRows.length, 'account rows');
+
+    S.mergeHasTypeSplit = true;
+    const consolidation = consolidateParentAccounts(accountRows);
+    const accountResult = runMerge(consolidation.rows, S.ACCOUNT_DATA, 'accounts');
+    const customerResult = runMerge(customerRows, S.CUSTOMER_DATA, 'customers');
+
+    S.pendingAccountMerge = accountResult.mergedData;
+    S.pendingCustomerMerge = customerResult.mergedData;
+    S.pendingMergeData = null; // Clear single-mode state
+
+    // Combined stats for the modal
+    const combinedStats = {
+      total: csvData.length,
+      newRecords: accountResult.stats.newRecords + customerResult.stats.newRecords,
+      updatedRecords: accountResult.stats.updatedRecords + customerResult.stats.updatedRecords,
+      notesPreserved: accountResult.stats.notesPreserved + customerResult.stats.notesPreserved,
+      consolidatedRecords: consolidation.consolidatedCount + (accountResult.stats.duplicateRows || 0) + (customerResult.stats.duplicateRows || 0),
+      changes: [...accountResult.stats.changes, ...customerResult.stats.changes],
+      conflicts: [...(accountResult.stats.conflicts || []), ...(customerResult.stats.conflicts || [])],
+      resolutions: [...(accountResult.stats.resolutions || []), ...(customerResult.stats.resolutions || [])],
+    };
+
+    combinedStats.csvSkippedRows = _csvSkippedCount;
+    S.pendingMergeStats = combinedStats;
+    showMergeModal(combinedStats);
+    return;
+  }
+
+  // No type column — use auto-detection (existing behavior)
+  S.mergeHasTypeSplit = false;
+  S.pendingAccountMerge = null;
+  S.pendingCustomerMerge = null;
+
+  // Auto-detect data type from CSV columns (only if user hasn't explicitly selected).
+  // Customer data has distinctive fields (arr, csm, segment, gdr, ndr)
+  // that account data never has. If we find them, override the toggle.
+  if (!S._userSelectedType && csvData.length > 0) {
+    const cols = new Set(Object.keys(csvData[0]).map(k => k.toLowerCase().replace(/\s+/g, '_')));
+    const customerSignals = ['arr', 'active_arr', 'annual_recurring_revenue', 'revenue',
+                             'csm', 'csm_name', 'customer_success_manager',
+                             'segment', 'gdr', 'ndr', 'lapsed_renewal', 'arr_12mo_ago'];
+    const accountSignals = ['superintendent', 'super', 'sis', 'sis_platform', 'sis_system',
+                              'student_information_system_sis',
+                              'ada_adm', 'math_products', 'math_curriculum', 'core_math_curriculum',
+                              'math_supplemental', 'attendance', 'attendance_comms', 'attendance_comms_tools',
+                              'parent_account', 'website', 'strategic_plan',
+                              'enrollment', 'enrollment_count', 'student_count', 'total_enrollment', 'students_in_d', 'students_in_district',
+                              'opp_stage', 'stage', 'opportunity_stage',
+                              'opp_acv', 'acv', 'year_1_acv', 'amount',
+                              'opp_forecast', 'forecast', 'forecast_category',
+                              'opp_probability', 'probability',
+                              'opp_areas', 'areas', 'product_areas', 'areas_of_interest',
+                              'opp_next_step', 'next_step', 'next_steps',
+                              'opp_contact', 'primary_contact', 'contact_name',
+                              'opp_sdr', 'sdr_name',
+                              'opp_champion', 'champion',
+                              'opp_economic_buyer', 'economic_buyer',
+                              'opp_competition', 'competition', 'competitors'];
+    const custHits = customerSignals.filter(s => cols.has(s)).length;
+    const accountHits = accountSignals.filter(s => cols.has(s)).length;
+    if (custHits > accountHits && custHits >= 2) {
+      console.log('[SFDC Merge] Auto-detected CUSTOMER data (matched columns:', customerSignals.filter(s => cols.has(s)).join(', '), ')');
+      S.sfdcDataType = 'customers';
+      setSfdcType('customers');
+    } else if (accountHits > custHits && accountHits >= 2) {
+      console.log('[SFDC Merge] Auto-detected ACCOUNT data (matched columns:', accountSignals.filter(s => cols.has(s)).join(', '), ')');
+      S.sfdcDataType = 'accounts';
+      setSfdcType('accounts');
+    } else {
+      console.log('[SFDC Merge] Could not auto-detect type (cust signals:', custHits, ', acct signals:', accountHits, '). Using selected type:', S.sfdcDataType);
+    }
+  }
+
+  let consolidatedCount = 0;
+  let dataToMerge;
+  if (S.sfdcDataType === 'accounts') {
+    const consolidation = consolidateParentAccounts(csvData);
+    dataToMerge = consolidation.rows;
+    consolidatedCount = consolidation.consolidatedCount;
+  } else {
+    dataToMerge = csvData;
+  }
+  const result = runMerge(dataToMerge, S.sfdcDataType === 'accounts' ? S.ACCOUNT_DATA : S.CUSTOMER_DATA, S.sfdcDataType);
+  result.stats.consolidatedRecords = consolidatedCount + (result.stats.duplicateRows || 0);
+  S.pendingMergeData = result.mergedData;
+  S.pendingMergeStats = result.stats;
+  result.stats.csvSkippedRows = _csvSkippedCount;
+  showMergeModal(result.stats);
+}
+
+export function mapFieldName(csvField) {
+  // Map common CSV field names to our internal field names
+  const mappings = {
+    // Name variations
+    'district_name': 'name',
+    'account_name': 'name',
+    'district': 'name',
+    'account': 'name',
+    'organization': 'name',
+    'org_name': 'name',
+    // Location
+    'latitude': 'lat',
+    'longitude': 'lng',
+    'long': 'lng',
+    // People
+    'account_executive': 'ae',
+    'account_owner': 'ae',
+    'owner': 'ae',
+    'ae_name': 'ae',
+    'opportunity_owner': 'opp_owner',
+    'csm_name': 'csm',
+    'customer_success_manager': 'csm',
+    'sdr_name': 'opp_sdr',
+    'sales_develop': 'opp_sdr',
+    'sales_development_representative_sdr': 'opp_sdr',
+    'sales_development_representative': 'opp_sdr',
+    'primary_contact': 'opp_contact',
+    'contact_name': 'opp_contact',
+    'contact_title': 'opp_contact_title',
+    // Enrollment
+    'enrollment_count': 'enrollment',
+    'student_count': 'enrollment',
+    'total_students': 'enrollment',
+    'students': 'enrollment',
+    'total_enrollment': 'enrollment',
+    'students_in_d': 'enrollment',
+    'students_in_district': 'enrollment',
+    // SIS
+    'sis_platform': 'sis',
+    'sis_system': 'sis',
+    'student_information_system': 'sis',
+    'student_information_system_sis': 'sis',
+    // New account fields
+    'core_math_curriculum': 'math_curriculum',
+    'math_supplemental': 'math_supplemental',
+    'attendance_comms_tools': 'attendance_comms',
+    'strategic_plan': 'strategic_plan_url',
+    // Legacy field name aliases
+    'math_products': 'math_curriculum',
+    'attendance': 'attendance_comms',
+    // Opportunity fields
+    'opportunity_stage': 'opp_stage',
+    'stage': 'opp_stage',
+    'forecast_category': 'opp_forecast',
+    'forecast': 'opp_forecast',
+    'active_forecast': 'opp_forecast',
+    'active_forecast_category': 'opp_forecast',
+    'probability': 'opp_probability',
+    'probability_%': 'opp_probability',
+    'probability_(%)': 'opp_probability',
+    'acv': 'opp_acv',
+    'amount': 'opp_acv',
+    'opportunity_amount': 'opp_acv',
+    'year_1_acv': 'opp_acv',
+    'next_step': 'opp_next_step',
+    'next_steps': 'opp_next_step',
+    'intro_meeting_next_step': 'opp_next_step',
+    'last_activity_date': 'opp_last_activity',
+    'last_activity': 'opp_last_activity',
+    'competition': 'opp_competition',
+    'competitors': 'opp_competition',
+    'economic_buyer': 'opp_economic_buyer',
+    'champion': 'opp_champion',
+    'opportunity_areas': 'opp_areas',
+    'areas': 'opp_areas',
+    'product_areas': 'opp_areas',
+    'areas_of_interest': 'opp_areas',
+    // Revenue
+    'annual_recurring_revenue': 'arr',
+    'active_arr': 'arr',
+    'total_active_arr': 'arr',
+    'revenue': 'arr',
+    'total_active_arr_total_12_months_ago': 'arr_12mo_ago',
+    // State / Address (SFDC column names)
+    'billing_state_province': 'state',
+    'billing_state': 'state',
+    'shipping_state_province': 'state',
+    'shipping_state': 'state',
+    'billing_address_line_1': 'address',
+    'billing_address': 'address',
+    'shipping_address_line_1': 'address',
+    'shipping_address': 'address',
+    'billing_city': 'city',
+    'shipping_city': 'city',
+    // Zip / postal code (header "Billing Zip/Postal Code" normalizes to "billing_zip_postal_code")
+    'billing_zip_postal_code': 'zip',
+    'billing_zip': 'zip',
+    'billing_zipcode': 'zip',
+    'billing_postal_code': 'zip',
+    'shipping_zip_postal_code': 'zip',
+    'shipping_zip': 'zip',
+    'zip_code': 'zip',
+    'zipcode': 'zip',
+    'postal_code': 'zip',
+    // Customer fields
+    'last_modified_date': 'last_modified',
+    // Leadership
+    'superintendent': 'superintendent',
+    'super': 'superintendent',
+    // Opp-specific CSV fields
+    'opportunity_name': 'opportunity_name',
+    'intro_meeting_date': 'intro_meeting_date',
+    'age': 'age',
+    'created_date': 'created_date',
+    'metric_-_improvement_goal': 'metric_improvement_goal',
+    'metric_improvement_goal': 'metric_improvement_goal',
+    'decision_criteria': 'decision_criteria',
+    'decision_process': 'decision_process',
+    'paper_process': 'paper_process',
+    'implication_of_pain': 'implication_of_pain',
+  };
+
+  const normalized = csvField.toLowerCase().replace(/[\/()&:]+/g, '_').replace(/\s+/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
+  return mappings[normalized] || normalized;
+}
+
