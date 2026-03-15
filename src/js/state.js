@@ -113,6 +113,10 @@ const S = {
   _openAccountModalByKey: null,
   _renderAccountList: null,
   _updatePipeline: null,
+  _updateLegend: null,
+  _readSpreadsheetFile: null,
+  _saveDataToLocalStorage: null,
+  _rebuildNoteIndex: null,
 };
 
 export default S;

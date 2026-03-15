@@ -16,7 +16,7 @@ import smbTeam from '../data/teams/smb.json';
 import S from './state.js';
 
 // Import pure helpers
-import { districtKey, haversine, escapeHtml, parseUSDate, normalizeDistrictName, precomputeSearchFields } from './helpers.js';
+import { districtKey, haversine, escapeHtml, escapeAttr, parseUSDate, normalizeDistrictName, precomputeSearchFields } from './helpers.js';
 
 // Import extracted modules
 import { getUserName, getAccountNotes, addNote, handleNoteKey, formatNoteTime, copyAccountNotes,
@@ -44,7 +44,7 @@ import { exportData, updateExportButtonVisibility } from './data-export.js';
 import { toggleTheme, protectedToggleDataRefreshPanel, protectedOpenSfdcModal } from './features.js';
 
 // Re-export districtKey so extracted modules can import it
-export { districtKey, normalizeDistrictName, escapeHtml, parseUSDate, haversine };
+export { districtKey, normalizeDistrictName, escapeHtml, escapeAttr, parseUSDate, haversine };
 
 // Re-hydrate _schools from the separate school-map.json onto account records
 function hydrateSchools(accounts) {
@@ -136,7 +136,7 @@ function saveConflicts(conflicts) {
 }
 
 // Active conflicts (loaded on startup, updated during merges)
-let CONFLICTS = loadConflicts();
+S.CONFLICTS = loadConflicts();
 
 // ============ OPP HELPERS (must be above DATA INITIALIZATION for migration) ============
 // These are needed at module-load time when migrating localStorage data.
@@ -215,19 +215,19 @@ function migrateToOppsArray(record) {
 // On startup, prefer localStorage data (from a previous merge) over the bundled JSON.
 // This ensures that a CSV merge persists across page refreshes without redeploying.
 const _persisted = loadDataFromLocalStorage();
-let _dataSource = 'bundled'; // 'bundled' or 'localStorage'
+S._dataSource = 'bundled';
 
 // Mutable data arrays (can be replaced on refresh)
-let ACCOUNT_DATA = _persisted && _persisted.accounts ? [..._persisted.accounts] : [...accountData];
-let CUSTOMER_DATA = _persisted && _persisted.customers ? [..._persisted.customers] : [...customerData];
+S.ACCOUNT_DATA = _persisted && _persisted.accounts ? [..._persisted.accounts] : [...accountData];
+S.CUSTOMER_DATA = _persisted && _persisted.customers ? [..._persisted.customers] : [...customerData];
 if (_persisted) {
-  _dataSource = 'localStorage';
+  S._dataSource = 'localStorage';
   // Repair enrollment values corrupted by CSV comma formatting (e.g. "30,210" → 30).
   // Bundled accounts.json is the enrollment source of truth.
   const _bundledEnrollment = new Map();
   accountData.forEach(d => { if (d.enrollment) _bundledEnrollment.set(d.name, d.enrollment); });
   let _repaired = 0;
-  ACCOUNT_DATA.forEach(d => {
+  S.ACCOUNT_DATA.forEach(d => {
     const bundled = _bundledEnrollment.get(d.name);
     if (bundled && (!d.enrollment || d.enrollment < bundled)) {
       d.enrollment = bundled;
@@ -237,7 +237,7 @@ if (_persisted) {
   if (_repaired) console.log(`[Persist] Repaired enrollment for ${_repaired} account(s) from bundled data`);
   // Migrate flat opp fields into opps array for existing localStorage data
   let _migrated = 0;
-  ACCOUNT_DATA.forEach(d => {
+  S.ACCOUNT_DATA.forEach(d => {
     // Migrate if no opps array, OR opps is empty but flat fields exist
     if ((!d.opps || d.opps.length === 0) && (d.opp_stage || d.opp_areas)) {
       migrateToOppsArray(d);
@@ -248,7 +248,7 @@ if (_persisted) {
 
   // Repair: ensure deriveOppSummary has run on all accounts with opps
   let _derivedRepairs = 0;
-  ACCOUNT_DATA.forEach(d => {
+  S.ACCOUNT_DATA.forEach(d => {
     if (d.opps && d.opps.length > 0 && !d.opp_stage) {
       deriveOppSummary(d);
       _derivedRepairs++;
@@ -292,12 +292,12 @@ if (_persisted) {
       });
     });
   };
-  _repairRecords(ACCOUNT_DATA);
-  _repairRecords(CUSTOMER_DATA);
+  _repairRecords(S.ACCOUNT_DATA);
+  _repairRecords(S.CUSTOMER_DATA);
   if (_fieldRepairs) {
     console.log(`[Persist] Repaired ${_fieldRepairs} unmapped SFDC field(s) in localStorage data`);
     // Save repaired data back to localStorage so this migration only runs once
-    saveDataToLocalStorage(ACCOUNT_DATA, CUSTOMER_DATA);
+    saveDataToLocalStorage(S.ACCOUNT_DATA, S.CUSTOMER_DATA);
   }
 }
 
@@ -308,22 +308,22 @@ if (_persisted) {
 function crossLinkCustomers() {
   // Build a lookup of normalized customer names → customer records
   const custByNorm = new Map();
-  _custByName = new Map();
-  CUSTOMER_DATA.forEach(c => {
+  S._custByName = new Map();
+  S.CUSTOMER_DATA.forEach(c => {
     const norm = normalizeDistrictName(c.name);
     // If multiple customers share the same normalized name, keep the first
     if (!custByNorm.has(norm)) custByNorm.set(norm, c);
-    _custByName.set(c.name, c);
+    S._custByName.set(c.name, c);
   });
 
   // Build a lookup of normalized account names for the reverse link
   const acctNorms = new Set();
-  ACCOUNT_DATA.forEach(d => acctNorms.add(normalizeDistrictName(d.name)));
+  S.ACCOUNT_DATA.forEach(d => acctNorms.add(normalizeDistrictName(d.name)));
 
   // Build school-to-district map: normalized school name → district name.
   // Used to set parent_district on customer records for school-level customers.
   const schoolToDistrict = new Map();
-  ACCOUNT_DATA.forEach(d => {
+  S.ACCOUNT_DATA.forEach(d => {
     if (d._schools && d._schools.length > 0) {
       d._schools.forEach(schoolName => {
         const norm = normalizeDistrictName(schoolName);
@@ -336,7 +336,7 @@ function crossLinkCustomers() {
 
   // Forward link: account → customer
   let linked = 0;
-  ACCOUNT_DATA.forEach(d => {
+  S.ACCOUNT_DATA.forEach(d => {
     const norm = normalizeDistrictName(d.name);
     const match = custByNorm.get(norm);
     if (match) {
@@ -352,7 +352,7 @@ function crossLinkCustomers() {
   // Reverse link: customer → account
   // Also set parent_district for school-level customers
   let parentLinked = 0;
-  CUSTOMER_DATA.forEach(c => {
+  S.CUSTOMER_DATA.forEach(c => {
     const norm = normalizeDistrictName(c.name);
     c.also_account = acctNorms.has(norm);
 
@@ -367,22 +367,22 @@ function crossLinkCustomers() {
   // Count how many customers share the same parent_account (sibling count)
   // and determine if the parent district is itself a customer
   const acctByName = new Map();
-  ACCOUNT_DATA.forEach(d => acctByName.set(d.name, d));
+  S.ACCOUNT_DATA.forEach(d => acctByName.set(d.name, d));
 
   const siblingCounts = new Map(); // parent_district → count of customers with that parent
-  CUSTOMER_DATA.forEach(c => {
+  S.CUSTOMER_DATA.forEach(c => {
     if (c.parent_district) {
       siblingCounts.set(c.parent_district, (siblingCounts.get(c.parent_district) || 0) + 1);
     }
   });
 
-  CUSTOMER_DATA.forEach(c => {
+  S.CUSTOMER_DATA.forEach(c => {
     if (c.parent_district) {
       c.sibling_customer_count = siblingCounts.get(c.parent_district) || 0;
       const parentAcct = acctByName.get(c.parent_district);
       c.district_is_customer = parentAcct ? !!parentAcct.is_customer : false;
       // Flag expansion opportunity: only school from this district in our customer base,
-      // district is NOT a customer, and district exists in ACCOUNT_DATA
+      // district is NOT a customer, and district exists in S.ACCOUNT_DATA
       c.expand_opp = c.sibling_customer_count === 1
         && !c.district_is_customer
         && !!parentAcct;
@@ -398,7 +398,7 @@ function crossLinkCustomers() {
 }
 
 // ============ JOIN OPPS INTO ACCOUNTS ============
-// Merges bundled opps.json data into ACCOUNT_DATA at startup.
+// Merges bundled opps.json data into S.ACCOUNT_DATA at startup.
 // Only runs when loading from bundled JSON (not localStorage, which already has opps embedded).
 function joinOppsToAccounts(accounts, opps) {
   const acctByKey = new Map();
@@ -448,36 +448,29 @@ function joinOppsToAccounts(accounts, opps) {
 // ============ PERFORMANCE INDICES ============
 // Pre-computed lookup structures rebuilt when data changes.
 // Converts O(n) scans into O(1) lookups for team/rep filtering.
-let _custByName = new Map();  // customer name -> customer record (O(1) lookup)
-let _repToTeam = {};          // rep name -> team name
-let _teamRepsSet = {};        // team name -> Set of rep names
-let _repToAccounts = {};      // rep name -> [account indices]
-let _teamToAccounts = {};     // team name -> [account indices]
-let _overlapCount = 0;        // cached count of accounts that are also customers
-let _uniqueCache = {};        // key -> sorted unique values (invalidated on scope change)
-let _autocompleteCache = null; // pre-built state/region counts
+// Performance indices are stored on S (initialized in state.js)
 
 // Look up which team a rep belongs to. Returns team name or null.
 function getTeamForRep(rep) {
   if (!rep) return null;
-  return _repToTeam[rep] || null;
+  return S._repToTeam[rep] || null;
 }
 
 function buildIndices() {
   // Map reps to teams (Set-based for O(1) lookup)
-  _repToTeam = {};
-  _teamRepsSet = {};
+  S._repToTeam = {};
+  S._teamRepsSet = {};
   Object.entries(TEAM_REP_DATA).forEach(([team, info]) => {
     const reps = new Set(info.reps);
     if (info.manager) reps.add(info.manager);
-    _teamRepsSet[team] = reps;
-    reps.forEach(rep => { _repToTeam[rep] = team; });
+    S._teamRepsSet[team] = reps;
+    reps.forEach(rep => { S._repToTeam[rep] = team; });
   });
 
   // Index accounts by rep and team
-  _repToAccounts = {};
-  _teamToAccounts = {};
-  ACCOUNT_DATA.forEach((d, i) => {
+  S._repToAccounts = {};
+  S._teamToAccounts = {};
+  S.ACCOUNT_DATA.forEach((d, i) => {
     const tAE = getTerritoryAE(d);
     const hAE = getHoldoutAE(d);
     const managerHeld = isManagerHeld(d);
@@ -487,30 +480,30 @@ function buildIndices() {
     if (!managerHeld) {
       // Index by territory AE
       if (tAE) {
-        if (!_repToAccounts[tAE]) _repToAccounts[tAE] = [];
-        _repToAccounts[tAE].push(i);
+        if (!S._repToAccounts[tAE]) S._repToAccounts[tAE] = [];
+        S._repToAccounts[tAE].push(i);
       }
       // Index by holdout AE (if different)
       if (hAE && hAE !== tAE) {
-        if (!_repToAccounts[hAE]) _repToAccounts[hAE] = [];
-        _repToAccounts[hAE].push(i);
+        if (!S._repToAccounts[hAE]) S._repToAccounts[hAE] = [];
+        S._repToAccounts[hAE].push(i);
       }
     }
     // Index by team — include manager-held accounts so they appear in team-level views
-    // Use direct _repToTeam lookup (O(1)) instead of iterating all teams (O(teams))
+    // Use direct S._repToTeam lookup (O(1)) instead of iterating all teams (O(teams))
     if (managerHeld) {
-      const team = _repToTeam[d.ae];
+      const team = S._repToTeam[d.ae];
       if (team) {
-        if (!_teamToAccounts[team]) _teamToAccounts[team] = [];
-        _teamToAccounts[team].push(i);
+        if (!S._teamToAccounts[team]) S._teamToAccounts[team] = [];
+        S._teamToAccounts[team].push(i);
       }
     } else {
       const teams = new Set();
-      if (tAE && _repToTeam[tAE]) teams.add(_repToTeam[tAE]);
-      if (hAE && _repToTeam[hAE]) teams.add(_repToTeam[hAE]);
+      if (tAE && S._repToTeam[tAE]) teams.add(S._repToTeam[tAE]);
+      if (hAE && S._repToTeam[hAE]) teams.add(S._repToTeam[hAE]);
       teams.forEach(team => {
-        if (!_teamToAccounts[team]) _teamToAccounts[team] = [];
-        _teamToAccounts[team].push(i);
+        if (!S._teamToAccounts[team]) S._teamToAccounts[team] = [];
+        S._teamToAccounts[team].push(i);
       });
     }
 
@@ -528,42 +521,42 @@ function buildIndices() {
   });
 
   // De-duplicate team indices (an account may be added for both territory and holdout AE)
-  Object.keys(_teamToAccounts).forEach(team => {
-    _teamToAccounts[team] = [...new Set(_teamToAccounts[team])];
+  Object.keys(S._teamToAccounts).forEach(team => {
+    S._teamToAccounts[team] = [...new Set(S._teamToAccounts[team])];
   });
 
   // Cache overlap count
-  _overlapCount = ACCOUNT_DATA.filter(d => d.is_customer).length;
+  S._overlapCount = S.ACCOUNT_DATA.filter(d => d.is_customer).length;
 
   // Invalidate caches
-  _uniqueCache = {};
-  _autocompleteCache = null;
+  S._uniqueCache = {};
+  S._autocompleteCache = null;
 }
 
 function invalidateCaches() {
-  _uniqueCache = {};
-  _autocompleteCache = null;
+  S._uniqueCache = {};
+  S._autocompleteCache = null;
 }
 
 // Pre-build autocomplete state/region counts (called lazily on first search)
 function getAutocompleteCache() {
-  if (_autocompleteCache) return _autocompleteCache;
+  if (S._autocompleteCache) return S._autocompleteCache;
 
   const stateCounts = {};
   const regionSet = new Set();
   const regionCounts = {};
 
-  ACCOUNT_DATA.forEach(d => {
+  S.ACCOUNT_DATA.forEach(d => {
     if (d.state) stateCounts[d.state.toLowerCase()] = (stateCounts[d.state.toLowerCase()] || 0) + 1;
     if (d.region) { regionSet.add(d.region); regionCounts[d.region] = (regionCounts[d.region] || 0) + 1; }
   });
-  CUSTOMER_DATA.forEach(d => {
+  S.CUSTOMER_DATA.forEach(d => {
     if (d.state) stateCounts[d.state.toLowerCase()] = (stateCounts[d.state.toLowerCase()] || 0) + 1;
     if (d.region) { regionSet.add(d.region); regionCounts[d.region] = (regionCounts[d.region] || 0) + 1; }
   });
 
-  _autocompleteCache = { stateCounts, regionSet: [...regionSet].sort(), regionCounts };
-  return _autocompleteCache;
+  S._autocompleteCache = { stateCounts, regionSet: [...regionSet].sort(), regionCounts };
+  return S._autocompleteCache;
 }
 
 // ============ TEAM / REP DATA ============
@@ -640,12 +633,11 @@ const CONDITIONAL_REASSIGN = new Set([
   'Nicholas Watson',  // SFDC Admin
 ]);
 
-let _accountRepsCache = null;
 function getAccountReps() {
-  if (!_accountRepsCache) {
-    _accountRepsCache = getAllRepsForTeam('Strategic');
+  if (!S._accountRepsCache) {
+    S._accountRepsCache = getAllRepsForTeam('Strategic');
   }
-  return _accountRepsCache;
+  return S._accountRepsCache;
 }
 
 // Helper: detect Department of Education accounts by name.
@@ -831,92 +823,10 @@ function resolveOwner(csvAE, existingAE, ctx) {
 }
 
 // ============ STATE ============
-let currentView = 'accounts';
-let selectedTeam = '';   // '' = all teams
-let selectedRep = '';    // '' = all reps
-let selectedStages = new Set();  // multi-select stage filter
-let map;
-let stratLayer, custLayer, proxLayer;
-let filters = {};
+// All state variables are stored on S (see state.js). Accessed via S.xxx throughout.
 const MULTI_SELECT_FILTERS = new Set(['strat_state', 'strat_sis', 'cust_state']);
-let proximityOn = false;
-let PROXIMITY_MILES = 50;
-let adaFilterOn = false;
-let welcomeActive = true;  // Show welcome prompt until user selects a filter
-
-// Saved filter state per view — preserves context when switching between views
-let savedViewState = {};
-
-// Account list state
-let markerLookup = {};          // "name|state" -> { marker, data, type }
-let filteredAccountData = [];     // current filtered account data
-let filteredCustData = [];      // current filtered customer data
-let accountListSort = 'enrollment_desc';
-let accountListGroupBy = null;  // null | 'state' | 'stage'
-let accountListOpen = false;
-let collapsedGroups = {};       // track collapsed group headers
-let accountListDisplayLimit = 200; // cap DOM rows; increased by "Show more"
-
-// Conference state
-let CONFERENCE_DATA = [];
-let conferencesOn = false;
-let confRangeMode = 'all';
-let confDateFrom = null;
-let confDateTo = null;
-let confLayer = null;
-let confProxLayer = null;
-let filteredConfData = [];
-
-// ============ DOM ELEMENT CACHE ============
-// Cached references to frequently accessed DOM elements (set in initMap)
-let _elSearchInput = null;
-let _elPipelinePanel = null;
-let _elAdTrigger = null;
-let _elSearchAutocomplete = null;
-let _elCountBadge = null;
-let _elAdOverlay = null;
-
-// ============ MARKER POOL ============
-// Persistent marker pool — markers are created once and added/removed from layers
-// instead of being destroyed and recreated on every filter change.
-let _markerPool = new Map();        // "a:name|state" or "c:name|state" -> { marker, data, type, currentClass }
-let _markerPoolBuilt = false;       // true after first buildMarkerPool() call
-let _previouslyVisiblePoolKeys = new Set(); // diff-based removal: track last cycle's visible keys
 
 // ============ STATE SYNC ============
-// Sync local variables → S so extracted modules see current values.
-// Called before entering module code (applyFilters, view changes, etc.)
-function syncToS() {
-  S.currentView = currentView;
-  S.selectedTeam = selectedTeam;
-  S.selectedRep = selectedRep;
-  S.selectedStages = selectedStages;
-  S.filters = filters;
-  S.proximityOn = proximityOn;
-  S.PROXIMITY_MILES = PROXIMITY_MILES;
-  S.adaFilterOn = adaFilterOn;
-  S.welcomeActive = welcomeActive;
-  S.filteredAccountData = filteredAccountData;
-  S.filteredCustData = filteredCustData;
-  S.filteredConfData = filteredConfData;
-  S.accountListSort = accountListSort;
-  S.accountListGroupBy = accountListGroupBy;
-  S.accountListOpen = accountListOpen;
-  S.accountListDisplayLimit = accountListDisplayLimit;
-  S.collapsedGroups = collapsedGroups;
-  S.savedViewState = savedViewState;
-  S.conferencesOn = conferencesOn;
-  S.confRangeMode = confRangeMode;
-  S.confDateFrom = confDateFrom;
-  S.confDateTo = confDateTo;
-  S.CONFERENCE_DATA = CONFERENCE_DATA;
-  S.actionDashboardOpen = actionDashboardOpen;
-  S.markerLookup = markerLookup;
-  S._markerPool = _markerPool;
-  S._markerPoolBuilt = _markerPoolBuilt;
-  S._accountsWithNotes = _accountsWithNotes;
-  S._dataSource = _dataSource;
-}
 
 function computeStratIconClass(d) {
   const students = parseInt(d.enrollment) || 0;
@@ -932,7 +842,7 @@ function computeStratIconClass(d) {
     else oppClass = ' has-opp';
   }
   const noteKey = 'edia_notes_' + d.name.replace(/[^a-zA-Z0-9]/g, '_');
-  const hasNote = _accountsWithNotes.has(noteKey) ? ' has-note' : '';
+  const hasNote = S._accountsWithNotes.has(noteKey) ? ' has-note' : '';
   const isCust = d.is_customer ? ' is-customer' : '';
   const doeClass = isDOE(d.name) ? ' is-doe' : '';
   return `marker-strat${oppClass}${hasNote}${isCust}${doeClass} ${isLarge ? 'large' : ''}`;
@@ -962,8 +872,8 @@ function getIconAnchor(d, type) {
 
 /** Build the marker pool from all accounts and customers. Called once after data load. */
 function buildMarkerPool() {
-  _markerPool = new Map();
-  ACCOUNT_DATA.forEach(d => {
+  S._markerPool = new Map();
+  S.ACCOUNT_DATA.forEach(d => {
     if (!d.lat || !d.lng) return;
     const mlKey = d.name + '|' + (d.state || '');
     const cls = computeStratIconClass(d);
@@ -976,11 +886,11 @@ function buildMarkerPool() {
     marker.on('click', function() {
       ensurePopup(marker, d, 'accounts');
       marker.openPopup();
-      map.flyTo([d.lat + 2.5, d.lng], 7, { duration: 0.6 });
+      S.map.flyTo([d.lat + 2.5, d.lng], 7, { duration: 0.6 });
     });
-    _markerPool.set('a:' + mlKey, { marker, data: d, type: 'accounts', currentClass: cls });
+    S._markerPool.set('a:' + mlKey, { marker, data: d, type: 'accounts', currentClass: cls });
   });
-  CUSTOMER_DATA.forEach(d => {
+  S.CUSTOMER_DATA.forEach(d => {
     if (!d.lat || !d.lng) return;
     const mlKey = d.name + '|' + (d.state || '');
     const cls = computeCustIconClass(d);
@@ -993,11 +903,11 @@ function buildMarkerPool() {
     marker.on('click', function() {
       ensurePopup(marker, d, 'customer');
       marker.openPopup();
-      map.flyTo([d.lat + 2.5, d.lng], 7, { duration: 0.6 });
+      S.map.flyTo([d.lat + 2.5, d.lng], 7, { duration: 0.6 });
     });
-    _markerPool.set('c:' + mlKey, { marker, data: d, type: 'customer', currentClass: cls });
+    S._markerPool.set('c:' + mlKey, { marker, data: d, type: 'customer', currentClass: cls });
   });
-  _markerPoolBuilt = true;
+  S._markerPoolBuilt = true;
 }
 
 /** Update a single marker's icon class if it has changed. */
@@ -1020,22 +930,21 @@ function updateMarkerIcon(entry, newClass) {
 /** Rebuild the marker pool after data changes (merge, crosslink, etc.) */
 function rebuildMarkerPool() {
   // Remove all existing markers from layers
-  if (stratLayer) stratLayer.clearLayers();
-  if (custLayer) custLayer.clearLayers();
-  _markerPoolBuilt = false;
-  _previouslyVisiblePoolKeys = new Set();
+  if (S.stratLayer) S.stratLayer.clearLayers();
+  if (S.custLayer) S.custLayer.clearLayers();
+  S._markerPoolBuilt = false;
+  S._previouslyVisiblePoolKeys = new Set();
   buildMarkerPool();
 }
 
 // ============ NOTE INDEX CACHE ============
 // Cache which accounts have notes to avoid 7,167 localStorage reads per filter change
-let _accountsWithNotes = new Set();
 function rebuildNoteIndex() {
-  _accountsWithNotes = new Set();
+  S._accountsWithNotes = new Set();
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i);
     if (key && key.startsWith('edia_notes_')) {
-      try { if (JSON.parse(localStorage.getItem(key)).length > 0) _accountsWithNotes.add(key); }
+      try { if (JSON.parse(localStorage.getItem(key)).length > 0) S._accountsWithNotes.add(key); }
       catch(e) {}
     }
   }
@@ -1048,14 +957,14 @@ function rebuildNoteIndex() {
 // the user selects a team, applies a filter, or clicks "Show Opps".
 
 function hasActiveFilter() {
-  return selectedTeam !== '' ||
-    selectedRep !== '' ||
-    selectedStages.size > 0 ||
-    Object.keys(filters).length > 0 ||
-    (_elSearchInput && _elSearchInput.value.trim() !== '') ||
-    adaFilterOn ||
-    proximityOn ||
-    currentView !== 'accounts';
+  return S.selectedTeam !== '' ||
+    S.selectedRep !== '' ||
+    S.selectedStages.size > 0 ||
+    Object.keys(S.filters).length > 0 ||
+    (S._elSearchInput && S._elSearchInput.value.trim() !== '') ||
+    S.adaFilterOn ||
+    S.proximityOn ||
+    S.currentView !== 'accounts';
 }
 
 function hideWelcomeOverlay() {
@@ -1064,28 +973,28 @@ function hideWelcomeOverlay() {
     overlay.classList.add('hidden');
     setTimeout(() => {
       // Guard against race: don't hide if welcome was re-activated (e.g. by resetFilters)
-      if (!welcomeActive) overlay.style.display = 'none';
+      if (!S.welcomeActive) overlay.style.display = 'none';
     }, 300);
   }
 }
 
 function dismissWelcome() {
-  welcomeActive = false;
+  S.welcomeActive = false;
   hideWelcomeOverlay();
   applyFilters();
 }
 
 function quickFilterTeam(team) {
-  welcomeActive = false;
+  S.welcomeActive = false;
   hideWelcomeOverlay();
   // Ensure we're in accounts view so team filtering works
-  currentView = 'accounts';
+  S.currentView = 'accounts';
   document.querySelectorAll('.view-btn').forEach(btn => {
     btn.className = 'view-btn';
     if (btn.dataset.view === 'accounts') btn.classList.add('active-strat');
   });
-  selectedTeam = team;
-  selectedRep = ''; // Default to "All [Team]" view
+  S.selectedTeam = team;
+  S.selectedRep = ''; // Default to "All [Team]" view
   invalidateCaches();
   renderTeamRepSelectors();
   renderFilters();
@@ -1093,15 +1002,15 @@ function quickFilterTeam(team) {
 }
 
 function quickFilterOpps() {
-  welcomeActive = false;
+  S.welcomeActive = false;
   hideWelcomeOverlay();
   // Ensure we're in accounts view so opp filtering works
-  currentView = 'accounts';
+  S.currentView = 'accounts';
   document.querySelectorAll('.view-btn').forEach(btn => {
     btn.className = 'view-btn';
     if (btn.dataset.view === 'accounts') btn.classList.add('active-strat');
   });
-  selectedStages = new Set(['Has Open Opp']);
+  S.selectedStages = new Set(['Has Open Opp']);
   invalidateCaches();
   renderTeamRepSelectors();
   renderFilters();
@@ -1119,7 +1028,7 @@ function updateDataSourceIndicator() {
   const el = document.getElementById('dataSourceStatus');
   const btn = document.getElementById('resetDataBtn');
   if (!el) return;
-  if (_dataSource === 'localStorage') {
+  if (S._dataSource === 'localStorage') {
     const savedAt = localStorage.getItem(LS_DATA_SAVED_KEY);
     const when = savedAt ? new Date(savedAt).toLocaleDateString() : 'unknown date';
     el.textContent = `Data source: saved merge (${when})`;
@@ -1139,12 +1048,12 @@ function initMap() {
 
   // Pre-joined data: opps are already embedded in accounts-with-opps.json.
   // Derive opp summary fields for bundled data that has opps arrays.
-  if (_dataSource === 'bundled') {
-    ACCOUNT_DATA.forEach(d => {
+  if (S._dataSource === 'bundled') {
+    S.ACCOUNT_DATA.forEach(d => {
       if (!d.opp_count) deriveOppSummary(d);
     });
     // Re-hydrate _schools from separate school-map.json (extracted at build time)
-    hydrateSchools(ACCOUNT_DATA);
+    hydrateSchools(S.ACCOUNT_DATA);
   }
 
   // Cross-link customer ↔ account flags before building indices
@@ -1157,17 +1066,17 @@ function initMap() {
   rebuildNoteIndex();
 
   // Pre-compute lowercase search fields for fast filtering
-  precomputeSearchFields(ACCOUNT_DATA);
-  precomputeSearchFields(CUSTOMER_DATA);
+  precomputeSearchFields(S.ACCOUNT_DATA);
+  precomputeSearchFields(S.CUSTOMER_DATA);
 
   // Pre-populate district data cache for modal access
   window.districtDataCache = {};
-  ACCOUNT_DATA.forEach(d => {
+  S.ACCOUNT_DATA.forEach(d => {
     const key = districtKey(d);
     window.districtDataCache[key] = d;
   });
 
-  map = L.map('map', {
+  S.map = L.map('map', {
     center: [39.5, -98.5],
     zoom: 5,
     zoomControl: true,
@@ -1178,73 +1087,21 @@ function initMap() {
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
-  }).addTo(map);
+  }).addTo(S.map);
 
-  stratLayer = L.layerGroup().addTo(map);
-  custLayer = L.layerGroup().addTo(map);
-  proxLayer = L.layerGroup().addTo(map);
-  confLayer = L.layerGroup().addTo(map);
-  confProxLayer = L.layerGroup().addTo(map);
+  S.stratLayer = L.layerGroup().addTo(S.map);
+  S.custLayer = L.layerGroup().addTo(S.map);
+  S.proxLayer = L.layerGroup().addTo(S.map);
+  S.confLayer = L.layerGroup().addTo(S.map);
+  S.confProxLayer = L.layerGroup().addTo(S.map);
 
   // Cache frequently accessed DOM elements
-  _elSearchInput = document.getElementById('searchInput');
-  _elPipelinePanel = document.getElementById('pipelinePanel');
-  _elAdTrigger = document.getElementById('adTrigger');
-  _elSearchAutocomplete = document.getElementById('searchAutocomplete');
-  _elCountBadge = document.getElementById('countBadge');
-  _elAdOverlay = document.getElementById('adOverlay');
-
-  // ---- Sync local state → S so extracted modules can access shared state ----
-  S.ACCOUNT_DATA = ACCOUNT_DATA;
-  S.CUSTOMER_DATA = CUSTOMER_DATA;
-  S.CONFLICTS = CONFLICTS;
-  S.map = map;
-  S.stratLayer = stratLayer;
-  S.custLayer = custLayer;
-  S.proxLayer = proxLayer;
-  S.confLayer = confLayer;
-  S.confProxLayer = confProxLayer;
-  S._elSearchInput = _elSearchInput;
-  S._elPipelinePanel = _elPipelinePanel;
-  S._elAdTrigger = _elAdTrigger;
-  S._elSearchAutocomplete = _elSearchAutocomplete;
-  S._elCountBadge = _elCountBadge;
-  S._elAdOverlay = _elAdOverlay;
-  S._markerPool = _markerPool;
-  S._markerPoolBuilt = _markerPoolBuilt;
-  S._previouslyVisiblePoolKeys = _previouslyVisiblePoolKeys;
-  S._accountsWithNotes = _accountsWithNotes;
-  S._custByName = _custByName;
-  S._repToTeam = _repToTeam;
-  S._teamRepsSet = _teamRepsSet;
-  S._repToAccounts = _repToAccounts;
-  S._teamToAccounts = _teamToAccounts;
-  S._overlapCount = _overlapCount;
-  S.markerLookup = markerLookup;
-  S.filters = filters;
-  S.selectedTeam = selectedTeam;
-  S.selectedRep = selectedRep;
-  S.selectedStages = selectedStages;
-  S.currentView = currentView;
-  S.welcomeActive = welcomeActive;
-  S.proximityOn = proximityOn;
-  S.PROXIMITY_MILES = PROXIMITY_MILES;
-  S.adaFilterOn = adaFilterOn;
-  S.filteredAccountData = filteredAccountData;
-  S.filteredCustData = filteredCustData;
-  S.accountListSort = accountListSort;
-  S.accountListGroupBy = accountListGroupBy;
-  S.accountListOpen = accountListOpen;
-  S.collapsedGroups = collapsedGroups;
-  S.accountListDisplayLimit = accountListDisplayLimit;
-  S.CONFERENCE_DATA = CONFERENCE_DATA;
-  S.conferencesOn = conferencesOn;
-  S.confRangeMode = confRangeMode;
-  S.confDateFrom = confDateFrom;
-  S.confDateTo = confDateTo;
-  S.filteredConfData = filteredConfData;
-  S.savedViewState = savedViewState;
-  S._dataSource = _dataSource;
+  S._elSearchInput = document.getElementById('searchInput');
+  S._elPipelinePanel = document.getElementById('pipelinePanel');
+  S._elAdTrigger = document.getElementById('adTrigger');
+  S._elSearchAutocomplete = document.getElementById('searchAutocomplete');
+  S._elCountBadge = document.getElementById('countBadge');
+  S._elAdOverlay = document.getElementById('adOverlay');
 
   // ---- Wire function refs so extracted modules can call back into app.js ----
   S._applyFilters = () => applyFilters();
@@ -1273,15 +1130,15 @@ function initMap() {
   // Auto-recover coordinates for localStorage records missing lat/lng:
   // 1. Cross-reference other datasets for matching names (instant, no API calls)
   // 2. Geocode remaining records via Nominatim API (handles records with or without state)
-  if (_dataSource === 'localStorage') {
-    const allRecords = [...ACCOUNT_DATA, ...CUSTOMER_DATA];
+  if (S._dataSource === 'localStorage') {
+    const allRecords = [...S.ACCOUNT_DATA, ...S.CUSTOMER_DATA];
     const needsCoords = allRecords.filter(r => !r.lat || !r.lng);
     if (needsCoords.length > 0) {
       console.log(`[Persist] ${needsCoords.length} record(s) missing coordinates — auto-recovering`);
       geocodeMissingRecords(allRecords).then(() => {
-        saveDataToLocalStorage(ACCOUNT_DATA, CUSTOMER_DATA);
+        saveDataToLocalStorage(S.ACCOUNT_DATA, S.CUSTOMER_DATA);
         buildIndices();
-        if (!welcomeActive) applyFilters();
+        if (!S.welcomeActive) applyFilters();
       });
     }
   }
@@ -1291,23 +1148,23 @@ function initMap() {
 function setView(view) {
   // Save current view's filter state before switching
   const filtersCopy = {};
-  Object.keys(filters).forEach(k => {
-    filtersCopy[k] = filters[k] instanceof Set ? new Set(filters[k]) : filters[k];
+  Object.keys(S.filters).forEach(k => {
+    filtersCopy[k] = S.filters[k] instanceof Set ? new Set(S.filters[k]) : S.filters[k];
   });
-  savedViewState[currentView] = {
+  S.savedViewState[S.currentView] = {
     filters: filtersCopy,
-    selectedTeam,
-    selectedRep,
-    selectedStages: new Set(selectedStages),
-    searchValue: _elSearchInput.value,
-    accountListSort,
-    accountListGroupBy,
-    collapsedGroups: { ...collapsedGroups },
-    adaFilterOn,
+    selectedTeam: S.selectedTeam,
+    selectedRep: S.selectedRep,
+    selectedStages: new Set(S.selectedStages),
+    searchValue: S._elSearchInput.value,
+    accountListSort: S.accountListSort,
+    accountListGroupBy: S.accountListGroupBy,
+    collapsedGroups: { ...S.collapsedGroups },
+    adaFilterOn: S.adaFilterOn,
   };
 
-  const previousView = currentView;
-  currentView = view;
+  const previousView = S.currentView;
+  S.currentView = view;
   document.querySelectorAll('.view-btn').forEach(btn => {
     btn.className = 'view-btn';
     if (btn.dataset.view === view) {
@@ -1318,27 +1175,27 @@ function setView(view) {
   });
 
   // Restore saved state for the target view, or start fresh
-  const saved = savedViewState[view];
+  const saved = S.savedViewState[view];
   if (saved) {
     const restoredFilters = {};
     Object.keys(saved.filters).forEach(k => {
       restoredFilters[k] = saved.filters[k] instanceof Set ? new Set(saved.filters[k]) : saved.filters[k];
     });
-    filters = restoredFilters;
-    selectedTeam = saved.selectedTeam;
-    selectedRep = saved.selectedRep;
-    selectedStages = new Set(saved.selectedStages);
-    _elSearchInput.value = saved.searchValue;
-    accountListSort = saved.accountListSort;
-    accountListGroupBy = saved.accountListGroupBy;
-    collapsedGroups = { ...saved.collapsedGroups };
-    adaFilterOn = saved.adaFilterOn;
+    S.filters = restoredFilters;
+    S.selectedTeam = saved.selectedTeam;
+    S.selectedRep = saved.selectedRep;
+    S.selectedStages = new Set(saved.selectedStages);
+    S._elSearchInput.value = saved.searchValue;
+    S.accountListSort = saved.accountListSort;
+    S.accountListGroupBy = saved.accountListGroupBy;
+    S.collapsedGroups = { ...saved.collapsedGroups };
+    S.adaFilterOn = saved.adaFilterOn;
     const adaCheck = document.getElementById('adaCheck');
-    if (adaCheck) adaCheck.checked = adaFilterOn;
+    if (adaCheck) adaCheck.checked = S.adaFilterOn;
   } else {
-    // No saved state — carry over applicable filters from the previous view.
-    // Region and state filters map between accounts (strat_*) and customers (cust_*).
-    const prevFilters = savedViewState[previousView];
+    // No saved state — carry over applicable S.filters from the previous view.
+    // Region and state S.filters S.map between accounts (strat_*) and customers (cust_*).
+    const prevFilters = S.savedViewState[previousView];
     const newFilters = {};
     if (prevFilters && (view === 'customers' || view === 'accounts')) {
       const fromPrefix = previousView === 'accounts' ? 'strat_' : 'cust_';
@@ -1350,19 +1207,19 @@ function setView(view) {
         }
       });
     }
-    filters = newFilters;
-    selectedTeam = '';
-    selectedRep = '';
-    selectedStages = new Set();
+    S.filters = newFilters;
+    S.selectedTeam = '';
+    S.selectedRep = '';
+    S.selectedStages = new Set();
     // Carry over search text so the search context persists across views
     if (prevFilters && prevFilters.searchValue) {
-      _elSearchInput.value = prevFilters.searchValue;
+      S._elSearchInput.value = prevFilters.searchValue;
     } else {
-      _elSearchInput.value = '';
+      S._elSearchInput.value = '';
     }
-    accountListSort = (view === 'customers') ? 'arr_desc' : 'enrollment_desc';
-    accountListGroupBy = null;
-    collapsedGroups = {};
+    S.accountListSort = (view === 'customers') ? 'arr_desc' : 'enrollment_desc';
+    S.accountListGroupBy = null;
+    S.collapsedGroups = {};
   }
 
   invalidateCaches();
@@ -1385,41 +1242,41 @@ function renderTeamRepSelectors() {
   if (!wrap) return;
 
   // Show selectors only in accounts or all view
-  const show = currentView === 'accounts' || currentView === 'all';
+  const show = S.currentView === 'accounts' || S.currentView === 'all';
   wrap.style.display = show ? '' : 'none';
   if (!show) return;
 
   // Team dropdown (no "All Teams" — user must pick a specific team)
   const teamSel = document.getElementById('teamSelect');
-  const noTeam = !selectedTeam;
+  const noTeam = !S.selectedTeam;
   teamSel.innerHTML = noTeam ? '<option value="" disabled selected>Select a team…</option>' : '';
   Object.keys(TEAM_REP_DATA).forEach(team => {
-    const sel = selectedTeam === team ? ' selected' : '';
+    const sel = S.selectedTeam === team ? ' selected' : '';
     teamSel.innerHTML += `<option value="${team}"${sel}>${team}</option>`;
   });
-  teamSel.classList.toggle('select-active', !!selectedTeam);
+  teamSel.classList.toggle('select-active', !!S.selectedTeam);
 
   // Rep dropdown (visible only when team is selected)
   const repRow = document.getElementById('repRow');
   const repSel = document.getElementById('repSelect');
-  if (selectedTeam) {
+  if (S.selectedTeam) {
     repRow.style.display = '';
-    const info = TEAM_REP_DATA[selectedTeam];
+    const info = TEAM_REP_DATA[S.selectedTeam];
     repSel.innerHTML = '';
     // Manager first — selecting the manager shows the full team view
     if (info.manager) {
-      const mgrSel = (!selectedRep || selectedRep === info.manager) ? ' selected' : '';
+      const mgrSel = (!S.selectedRep || S.selectedRep === info.manager) ? ' selected' : '';
       repSel.innerHTML += `<option value="${info.manager}"${mgrSel}>${info.manager} (Manager)</option>`;
     }
     // Individual reps
     info.reps.forEach(rep => {
-      const sel = selectedRep === rep ? ' selected' : '';
+      const sel = S.selectedRep === rep ? ' selected' : '';
       repSel.innerHTML += `<option value="${rep}"${sel}>${rep}</option>`;
     });
     // "Unassigned Accounts" option — shows accounts with no owner assigned
-    const unSel = selectedRep === '__unassigned__' ? ' selected' : '';
+    const unSel = S.selectedRep === '__unassigned__' ? ' selected' : '';
     repSel.innerHTML += `<option value="__unassigned__"${unSel}>Unassigned Accounts</option>`;
-    repSel.classList.toggle('select-active', !!selectedRep);
+    repSel.classList.toggle('select-active', !!S.selectedRep);
   } else {
     repRow.style.display = 'none';
     repSel.innerHTML = '';
@@ -1436,9 +1293,9 @@ function renderTeamRepSelectors() {
 // Returns true when SMB is selected at the team level (no individual rep).
 // Used to limit SMB to accounts with open opps for performance.
 function isSmbTeamLevelView() {
-  return selectedTeam === 'SMB' &&
-    selectedRep !== '__unassigned__' &&
-    (!selectedRep || MANAGERS.has(selectedRep));
+  return S.selectedTeam === 'SMB' &&
+    S.selectedRep !== '__unassigned__' &&
+    (!S.selectedRep || MANAGERS.has(S.selectedRep));
 }
 
 function getDefaultRepForTeam(team) {
@@ -1452,13 +1309,13 @@ function getDefaultRepForTeam(team) {
 }
 
 function onTeamChange(team) {
-  selectedTeam = team;
-  selectedRep = getDefaultRepForTeam(team); // Default to manager (team-level view)
-  // Clear filters that may no longer be valid for the new team scope
-  delete filters.strat_region;
-  delete filters.strat_state;
+  S.selectedTeam = team;
+  S.selectedRep = getDefaultRepForTeam(team); // Default to manager (team-level view)
+  // Clear S.filters that may no longer be valid for the new team scope
+  delete S.filters.strat_region;
+  delete S.filters.strat_state;
 
-  delete filters.strat_sis;
+  delete S.filters.strat_sis;
   invalidateCaches(); // Scoped unique values changed
   renderTeamRepSelectors();
   renderFilters();
@@ -1466,12 +1323,12 @@ function onTeamChange(team) {
 }
 
 function onRepChange(rep) {
-  selectedRep = rep;
-  // Clear filters that may no longer be valid for the new rep scope
-  delete filters.strat_region;
-  delete filters.strat_state;
+  S.selectedRep = rep;
+  // Clear S.filters that may no longer be valid for the new rep scope
+  delete S.filters.strat_region;
+  delete S.filters.strat_state;
 
-  delete filters.strat_sis;
+  delete S.filters.strat_sis;
   invalidateCaches(); // Scoped unique values changed
   // Update SMB opp banner visibility when switching between manager and individual rep
   const smbBanner = document.getElementById('smbOppBanner');
@@ -1492,8 +1349,8 @@ const STAGE_OPTIONS = [
 ];
 
 function onStageChange(stage) {
-  if (selectedStages.has(stage)) selectedStages.delete(stage);
-  else selectedStages.add(stage);
+  if (S.selectedStages.has(stage)) S.selectedStages.delete(stage);
+  else S.selectedStages.add(stage);
   renderFilters();
   applyFilters();
 }
@@ -1504,44 +1361,44 @@ function onStageChange(stage) {
 // Uses pre-built indices for O(1) lookups instead of scanning all accounts.
 // When the selected rep is the team manager, show all team accounts (team-level view).
 function getScopedStratData() {
-  if (selectedRep === '__unassigned__') {
+  if (S.selectedRep === '__unassigned__') {
     // Unassigned accounts (including manager-held) scoped to the selected team
-    return ACCOUNT_DATA.filter(d =>
+    return S.ACCOUNT_DATA.filter(d =>
       (isManagerHeld(d) || (!getTerritoryAE(d) && !getHoldoutAE(d))) &&
-      (!selectedTeam || d._source_team === selectedTeam)
+      (!S.selectedTeam || d._source_team === S.selectedTeam)
     );
   }
-  if (selectedRep && MANAGERS.has(selectedRep)) {
+  if (S.selectedRep && MANAGERS.has(S.selectedRep)) {
     // Manager selected → team-level view (all accounts for this team)
-    const indices = selectedTeam && _teamToAccounts[selectedTeam];
-    const data = indices ? indices.map(i => ACCOUNT_DATA[i]) : [];
+    const indices = S.selectedTeam && S._teamToAccounts[S.selectedTeam];
+    const data = indices ? indices.map(i => S.ACCOUNT_DATA[i]) : [];
     // SMB team-level: only accounts with open opps
     return isSmbTeamLevelView() ? data.filter(d => d.opp_stage) : data;
   }
-  if (selectedRep) {
-    const indices = _repToAccounts[selectedRep];
-    return indices ? indices.map(i => ACCOUNT_DATA[i]) : [];
+  if (S.selectedRep) {
+    const indices = S._repToAccounts[S.selectedRep];
+    return indices ? indices.map(i => S.ACCOUNT_DATA[i]) : [];
   }
-  if (selectedTeam) {
-    const indices = _teamToAccounts[selectedTeam];
-    const data = indices ? indices.map(i => ACCOUNT_DATA[i]) : [];
+  if (S.selectedTeam) {
+    const indices = S._teamToAccounts[S.selectedTeam];
+    const data = indices ? indices.map(i => S.ACCOUNT_DATA[i]) : [];
     // SMB team-level: only accounts with open opps
     return isSmbTeamLevelView() ? data.filter(d => d.opp_stage) : data;
   }
-  return ACCOUNT_DATA;
+  return S.ACCOUNT_DATA;
 }
 
 function renderFilters() {
   const area = document.getElementById('filtersArea');
   let html = '';
 
-  if (currentView === 'accounts' || currentView === 'all') {
+  if (S.currentView === 'accounts' || S.currentView === 'all') {
     // Stage pills (multi-select)
     html += `<div class="filter-group"><div class="filter-label">Opp Stage`;
-    if (selectedStages.size > 0) html += `<span class="clear-btn" onclick="clearStages()">clear</span>`;
+    if (S.selectedStages.size > 0) html += `<span class="clear-btn" onclick="clearStages()">clear</span>`;
     html += `</div><div class="filter-chips">`;
     STAGE_OPTIONS.forEach(opt => {
-      const active = selectedStages.has(opt.value) ? ' active' : '';
+      const active = S.selectedStages.has(opt.value) ? ' active' : '';
       html += `<div class="filter-chip stage-chip ${opt.cls}${active}" onclick="onStageChange('${opt.value}')">${opt.label}</div>`;
     });
     html += `</div></div>`;
@@ -1554,16 +1411,16 @@ function renderFilters() {
     html += buildSliderGroup('Min Enrollment', 'strat_enrollment', 0, 1100000);
   }
 
-  if (currentView === 'customers' || currentView === 'all') {
-    if (currentView === 'all') {
+  if (S.currentView === 'customers' || S.currentView === 'all') {
+    if (S.currentView === 'all') {
       html += `<div style="height:1px;background:var(--panel-border);margin:18px 0 14px;"></div>`;
       html += `<div style="font-size:10px;font-weight:600;color:var(--accent-cust);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;">Customer Filters</div>`;
     }
-    html += buildFilterGroup('Region', 'cust_region', getUnique(CUSTOMER_DATA, 'region'), 'chips', true);
-    html += buildFilterGroup('State', 'cust_state', getUnique(CUSTOMER_DATA, 'state'), 'multiselect');
-    html += buildFilterGroup('Segment', 'cust_segment', getUnique(CUSTOMER_DATA, 'segment'), 'chips', true);
-    html += buildFilterGroup('CSM', 'cust_csm', getUnique(CUSTOMER_DATA, 'csm'), 'select');
-    html += buildFilterGroup('Account Owner', 'cust_ae', getUnique(CUSTOMER_DATA, 'ae'), 'select');
+    html += buildFilterGroup('Region', 'cust_region', getUnique(S.CUSTOMER_DATA, 'region'), 'chips', true);
+    html += buildFilterGroup('State', 'cust_state', getUnique(S.CUSTOMER_DATA, 'state'), 'multiselect');
+    html += buildFilterGroup('Segment', 'cust_segment', getUnique(S.CUSTOMER_DATA, 'segment'), 'chips', true);
+    html += buildFilterGroup('CSM', 'cust_csm', getUnique(S.CUSTOMER_DATA, 'csm'), 'select');
+    html += buildFilterGroup('Account Owner', 'cust_ae', getUnique(S.CUSTOMER_DATA, 'ae'), 'select');
   }
 
   area.innerHTML = html;
@@ -1572,7 +1429,7 @@ function renderFilters() {
 function buildFilterGroup(label, key, options, type, isCust) {
   let html = `<div class="filter-group">`;
   html += `<div class="filter-label">${label}`;
-  const hasValue = filters[key] instanceof Set ? filters[key].size > 0 : !!filters[key];
+  const hasValue = S.filters[key] instanceof Set ? S.filters[key].size > 0 : !!S.filters[key];
   if (hasValue) html += `<span class="clear-btn" onclick="clearFilter('${key}')">clear</span>`;
   html += `</div>`;
 
@@ -1580,12 +1437,12 @@ function buildFilterGroup(label, key, options, type, isCust) {
     html += `<select class="filter-select" onchange="setFilter('${key}', this.value)">`;
     html += `<option value="">All</option>`;
     options.forEach(o => {
-      const sel = filters[key] === o ? 'selected' : '';
+      const sel = S.filters[key] === o ? 'selected' : '';
       html += `<option value="${o}" ${sel}>${o}</option>`;
     });
     html += `</select>`;
   } else if (type === 'multiselect') {
-    const selected = filters[key] || new Set();
+    const selected = S.filters[key] || new Set();
     html += `<div class="filter-chips filter-chips-scroll">`;
     options.forEach(o => {
       const active = selected.has(o) ? (isCust ? ' cust-active' : ' active') : '';
@@ -1596,7 +1453,7 @@ function buildFilterGroup(label, key, options, type, isCust) {
   } else if (type === 'chips') {
     html += `<div class="filter-chips">`;
     options.forEach(o => {
-      const active = (filters[key] === o) ? (isCust ? 'cust-active' : 'active') : '';
+      const active = (S.filters[key] === o) ? (isCust ? 'cust-active' : 'active') : '';
       html += `<div class="filter-chip ${active}" onclick="toggleChip('${key}','${o}')">${o}</div>`;
     });
     html += `</div>`;
@@ -1607,7 +1464,7 @@ function buildFilterGroup(label, key, options, type, isCust) {
 }
 
 function buildSliderGroup(label, key, min, max) {
-  const val = filters[key] || min;
+  const val = S.filters[key] || min;
   return `<div class="filter-group">
     <div class="filter-label">${label}</div>
     <div class="range-display">${Number(val).toLocaleString()}+ students</div>
@@ -1619,14 +1476,14 @@ function buildSliderGroup(label, key, min, max) {
 // ============ FILTER LOGIC ============
 function getUnique(data, field) {
   // Use cached result if available (cache keyed by dataset identity + field)
-  const isAccountType = data === ACCOUNT_DATA;
-  const isCustomer = data === CUSTOMER_DATA;
-  const scopeKey = isAccountType ? 'strat' : isCustomer ? 'cust' : (selectedRep || selectedTeam || 'all');
+  const isAccountType = data === S.ACCOUNT_DATA;
+  const isCustomer = data === S.CUSTOMER_DATA;
+  const scopeKey = isAccountType ? 'strat' : isCustomer ? 'cust' : (S.selectedRep || S.selectedTeam || 'all');
   const cacheKey = scopeKey + ':' + field;
-  if (_uniqueCache[cacheKey]) return _uniqueCache[cacheKey];
+  if (S._uniqueCache[cacheKey]) return S._uniqueCache[cacheKey];
 
   const result = [...new Set(data.map(d => d[field]).filter(Boolean))].sort();
-  _uniqueCache[cacheKey] = result;
+  S._uniqueCache[cacheKey] = result;
   return result;
 }
 
@@ -1643,15 +1500,15 @@ function getUniqueAEs(data) {
 }
 
 function setFilter(key, val) {
-  if (!val || val === '') delete filters[key];
-  else filters[key] = val;
+  if (!val || val === '') delete S.filters[key];
+  else S.filters[key] = val;
   applyFilters();
 }
 
 function toggleChip(key, val) {
-  const wasActive = filters[key] === val;
-  if (wasActive) delete filters[key];
-  else filters[key] = val;
+  const wasActive = S.filters[key] === val;
+  if (wasActive) delete S.filters[key];
+  else S.filters[key] = val;
   // Toggle CSS classes directly instead of full renderFilters() innerHTML rebuild
   const clicked = event && event.target;
   if (clicked && clicked.classList.contains('filter-chip')) {
@@ -1668,13 +1525,13 @@ function toggleChip(key, val) {
 }
 
 function toggleMultiFilter(key, val) {
-  if (!filters[key]) filters[key] = new Set();
-  const wasActive = filters[key].has(val);
+  if (!S.filters[key]) S.filters[key] = new Set();
+  const wasActive = S.filters[key].has(val);
   if (wasActive) {
-    filters[key].delete(val);
-    if (filters[key].size === 0) delete filters[key];
+    S.filters[key].delete(val);
+    if (S.filters[key].size === 0) delete S.filters[key];
   } else {
-    filters[key].add(val);
+    S.filters[key].add(val);
   }
   // Toggle CSS class directly instead of full renderFilters() innerHTML rebuild
   const clicked = event && event.target;
@@ -1689,30 +1546,30 @@ function toggleMultiFilter(key, val) {
 }
 
 function clearFilter(key) {
-  delete filters[key];
+  delete S.filters[key];
   renderFilters();
   applyFilters();
 }
 
 function clearStages() {
-  selectedStages = new Set();
+  S.selectedStages = new Set();
   renderFilters();
   applyFilters();
 }
 
 function resetFilters() {
-  filters = {};
-  selectedTeam = '';
-  selectedRep = '';
-  selectedStages = new Set();
-  _elSearchInput.value = '';
-  adaFilterOn = false;
+  S.filters = {};
+  S.selectedTeam = '';
+  S.selectedRep = '';
+  S.selectedStages = new Set();
+  S._elSearchInput.value = '';
+  S.adaFilterOn = false;
   const adaCheck = document.getElementById('adaCheck');
   if (adaCheck) adaCheck.checked = false;
-  savedViewState = {}; // Clear all saved view state
+  S.savedViewState = {}; // Clear all saved view state
 
   // Reset view to Accounts so the welcome overlay works correctly
-  currentView = 'accounts';
+  S.currentView = 'accounts';
   document.querySelectorAll('.view-btn').forEach(btn => {
     btn.className = 'view-btn';
     if (btn.dataset.view === 'accounts') btn.classList.add('active-strat');
@@ -1721,15 +1578,15 @@ function resetFilters() {
   invalidateCaches();
 
   // Bring back the welcome overlay so the user must pick a filter again
-  welcomeActive = true;
+  S.welcomeActive = true;
   const overlay = document.getElementById('welcomeOverlay');
   if (overlay) {
     overlay.style.display = '';
     overlay.classList.remove('hidden');
   }
-  stratLayer.clearLayers();
-  custLayer.clearLayers();
-  proxLayer.clearLayers();
+  S.stratLayer.clearLayers();
+  S.custLayer.clearLayers();
+  S.proxLayer.clearLayers();
 
   renderTeamRepSelectors();
   renderFilters();
@@ -1737,50 +1594,50 @@ function resetFilters() {
 
 function resetMapView() {
   // Reset view to Accounts (keeps team/rep selection)
-  currentView = 'accounts';
+  S.currentView = 'accounts';
   document.querySelectorAll('.view-btn').forEach(btn => {
     btn.className = 'view-btn';
     if (btn.dataset.view === 'accounts') btn.classList.add('active-strat');
   });
 
-  // Clear all filters and stages but keep team/rep
-  filters = {};
-  selectedStages = new Set();
-  _elSearchInput.value = '';
-  accountListSort = 'enrollment_desc';
-  accountListGroupBy = null;
-  collapsedGroups = {};
-  savedViewState = {}; // Clear all saved view state
+  // Clear all S.filters and stages but keep team/rep
+  S.filters = {};
+  S.selectedStages = new Set();
+  S._elSearchInput.value = '';
+  S.accountListSort = 'enrollment_desc';
+  S.accountListGroupBy = null;
+  S.collapsedGroups = {};
+  S.savedViewState = {}; // Clear all saved view state
 
   // Reset proximity toggles
-  proximityOn = false;
+  S.proximityOn = false;
   const proxCheck = document.getElementById('proxCheck');
   if (proxCheck) proxCheck.checked = false;
   const proxWrap = document.getElementById('proxRadiusWrap');
   if (proxWrap) proxWrap.style.display = 'none';
-  proxLayer.clearLayers();
-  adaFilterOn = false;
+  S.proxLayer.clearLayers();
+  S.adaFilterOn = false;
   const adaCheck = document.getElementById('adaCheck');
   if (adaCheck) adaCheck.checked = false;
 
   // Collapse all panels
   const filtersWrap = document.getElementById('filtersWrap');
   if (filtersWrap) filtersWrap.classList.add('collapsed');
-  if (_elPipelinePanel) _elPipelinePanel.classList.add('pl-collapsed');
+  if (S._elPipelinePanel) S._elPipelinePanel.classList.add('pl-collapsed');
   const pipelineDetail = document.getElementById('pipelineDetail');
   if (pipelineDetail) pipelineDetail.classList.add('collapsed');
 
   // Close overlays
-  if (accountListOpen) {
-    accountListOpen = false;
+  if (S.accountListOpen) {
+    S.accountListOpen = false;
     const alOverlay = document.getElementById('alOverlay');
     if (alOverlay) alOverlay.classList.remove('open');
-    if (_elCountBadge) _elCountBadge.classList.remove('active');
+    if (S._elCountBadge) S._elCountBadge.classList.remove('active');
   }
-  if (actionDashboardOpen) {
-    actionDashboardOpen = false;
-    if (_elAdOverlay) _elAdOverlay.classList.remove('open');
-    if (_elAdTrigger) _elAdTrigger.classList.remove('active');
+  if (S.actionDashboardOpen) {
+    S.actionDashboardOpen = false;
+    if (S._elAdOverlay) S._elAdOverlay.classList.remove('open');
+    if (S._elAdTrigger) S._elAdTrigger.classList.remove('active');
   }
 
   invalidateCaches();
@@ -1788,33 +1645,32 @@ function resetMapView() {
   renderFilters();
   applyFilters();
 
-  // Reset map to lower 48 US view
-  map.setView([39.5, -98.5], 5, { animate: true });
+  // Reset S.map to lower 48 US view
+  S.map.setView([39.5, -98.5], 5, { animate: true });
 }
 
 function toggleFiltersPanel() {
   const filtersWrap = document.getElementById('filtersWrap');
   const isOpening = filtersWrap.classList.contains('collapsed');
   filtersWrap.classList.toggle('collapsed');
-  // Collapse pipeline when opening filters
+  // Collapse pipeline when opening S.filters
   if (isOpening) {
     const pd = document.getElementById('pipelineDetail');
-    if (_elPipelinePanel) _elPipelinePanel.classList.add('pl-collapsed');
+    if (S._elPipelinePanel) S._elPipelinePanel.classList.add('pl-collapsed');
     if (pd) pd.classList.add('collapsed');
   }
 }
 
 function updateFiltersActiveCount() {
-  const count = Object.keys(filters).reduce((n, k) => {
-    return n + (filters[k] instanceof Set ? filters[k].size : 1);
-  }, 0) + selectedStages.size;
+  const count = Object.keys(S.filters).reduce((n, k) => {
+    return n + (S.filters[k] instanceof Set ? S.filters[k].size : 1);
+  }, 0) + S.selectedStages.size;
   const el = document.getElementById('filtersActiveCount');
   if (el) el.textContent = count > 0 ? count + ' active' : '';
 }
 
 // Track search results for zoom functionality
-let lastSearchResults = [];
-let searchExactMatch = false; // true when search is from autocomplete selection
+// Search state stored on S (lastSearchResults, searchExactMatch)
 
 /** Lazily bind popup to a marker on first interaction. */
 function ensurePopup(marker, d, type) {
@@ -1825,12 +1681,9 @@ function ensurePopup(marker, d, type) {
 }
 
 function applyFilters() {
-  // Sync local state → S before calling into extracted modules
-  syncToS();
-
   // If welcome overlay is active, dismiss it once the user applies any filter.
   // Otherwise skip rendering to avoid loading all pins on initial load.
-  if (welcomeActive) {
+  if (S.welcomeActive) {
     if (hasActiveFilter()) {
       dismissWelcome();
       return; // dismissWelcome() calls applyFilters() after clearing the flag
@@ -1838,33 +1691,33 @@ function applyFilters() {
     return; // No filter yet — keep welcome visible, don't render pins
   }
 
-  const search = _elSearchInput.value.toLowerCase().trim();
+  const search = S._elSearchInput.value.toLowerCase().trim();
 
   // Use marker pool if available — toggle visibility instead of destroy/recreate
-  const usePool = _markerPoolBuilt;
+  const usePool = S._markerPoolBuilt;
   if (!usePool) {
-    stratLayer.clearLayers();
-    custLayer.clearLayers();
+    S.stratLayer.clearLayers();
+    S.custLayer.clearLayers();
   }
-  if (proximityOn) drawProximity();
-  accountListDisplayLimit = 200; // Reset pagination on filter change
+  if (S.proximityOn) drawProximity();
+  S.accountListDisplayLimit = 200; // Reset pagination on filter change
 
   let stratCount = 0, custCount = 0;
   let statesSet = new Set();
-  lastSearchResults = []; // Reset search results
-  markerLookup = {};            // Reset marker lookup
-  filteredAccountData = [];       // Reset filtered data
-  filteredCustData = [];
+  S.lastSearchResults = []; // Reset search results
+  S.markerLookup = {};            // Reset marker lookup
+  S.filteredAccountData = [];       // Reset filtered data
+  S.filteredCustData = [];
   // Track which pool markers are visible this cycle (for removal pass)
   const _visiblePoolKeys = usePool ? new Set() : null;
 
   // Accounts
-  if (currentView === 'accounts' || currentView === 'all') {
-    const filtered = ACCOUNT_DATA.filter(d => {
+  if (S.currentView === 'accounts' || S.currentView === 'all') {
+    const filtered = S.ACCOUNT_DATA.filter(d => {
       const territoryAE = getTerritoryAE(d);
       const holdoutAE = getHoldoutAE(d);
       if (search) {
-        if (searchExactMatch) {
+        if (S.searchExactMatch) {
           // Exact match for state/region selected from autocomplete
           const stMatch = d._stateLc === search;
           const regMatch = d._regionLc === search;
@@ -1881,35 +1734,35 @@ function applyFilters() {
         }
       }
       // Stage filter (multi-select, applied before team/rep for cross-team visibility)
-      if (selectedStages.size > 0) {
+      if (S.selectedStages.size > 0) {
         if (!d.opp_stage) return false;
-        if (!selectedStages.has('Has Open Opp') && !selectedStages.has(d.opp_stage)) return false;
+        if (!S.selectedStages.has('Has Open Opp') && !S.selectedStages.has(d.opp_stage)) return false;
       }
-      // Team / rep filter (applied before other filters)
+      // Team / rep filter (applied before other S.filters)
       // Holdout accounts match both the territory AE and the holdout AE
-      // Uses Set-based lookup (_teamRepsSet) for O(1) instead of Array.includes O(n)
-      if (selectedRep === '__unassigned__') {
+      // Uses Set-based lookup (S._teamRepsSet) for O(1) instead of Array.includes O(n)
+      if (S.selectedRep === '__unassigned__') {
         // "Unassigned Accounts" — includes truly unassigned AND manager-held accounts,
         // scoped to the selected team via _source_team.
         const managerHeld = isManagerHeld(d);
         if (!managerHeld && (territoryAE || holdoutAE)) return false;
-        if (selectedTeam && d._source_team !== selectedTeam) return false;
-      } else if (selectedRep && MANAGERS.has(selectedRep)) {
+        if (S.selectedTeam && d._source_team !== S.selectedTeam) return false;
+      } else if (S.selectedRep && MANAGERS.has(S.selectedRep)) {
         // Manager selected → team-level view (all accounts for this team, including manager-held)
-        const teamReps = selectedTeam && _teamRepsSet[selectedTeam];
+        const teamReps = S.selectedTeam && S._teamRepsSet[S.selectedTeam];
         if (!teamReps) return false;
         if (isManagerHeld(d)) {
           if (!teamReps.has(d.ae)) return false;
         } else if (!teamReps.has(territoryAE) && !(holdoutAE && teamReps.has(holdoutAE))) {
           return false;
         }
-      } else if (selectedRep) {
+      } else if (S.selectedRep) {
         // Individual rep — manager-held accounts don't appear here
         if (isManagerHeld(d)) return false;
-        if (territoryAE !== selectedRep && holdoutAE !== selectedRep) return false;
-      } else if (selectedTeam) {
+        if (territoryAE !== S.selectedRep && holdoutAE !== S.selectedRep) return false;
+      } else if (S.selectedTeam) {
         // Team-level view (fallback for teams without a manager)
-        const teamReps = _teamRepsSet[selectedTeam];
+        const teamReps = S._teamRepsSet[S.selectedTeam];
         if (!teamReps) return false;
         if (isManagerHeld(d)) {
           if (!teamReps.has(d.ae)) return false;
@@ -1919,11 +1772,11 @@ function applyFilters() {
       }
       // SMB team-level view: only show accounts with open opportunities
       if (isSmbTeamLevelView() && !d.opp_stage) return false;
-      if (filters.strat_region && d.region !== filters.strat_region) return false;
-      if (filters.strat_state && !filters.strat_state.has(d.state)) return false;
-      if (filters.strat_sis && !filters.strat_sis.has(d.sis)) return false;
-      if (filters.strat_enrollment && parseInt(d.enrollment) < parseInt(filters.strat_enrollment)) return false;
-      if (adaFilterOn && !isAdaAccount(d)) return false;
+      if (S.filters.strat_region && d.region !== S.filters.strat_region) return false;
+      if (S.filters.strat_state && !S.filters.strat_state.has(d.state)) return false;
+      if (S.filters.strat_sis && !S.filters.strat_sis.has(d.sis)) return false;
+      if (S.filters.strat_enrollment && parseInt(d.enrollment) < parseInt(S.filters.strat_enrollment)) return false;
+      if (S.adaFilterOn && !isAdaAccount(d)) return false;
       return true;
     });
 
@@ -1933,20 +1786,20 @@ function applyFilters() {
       const poolKey = 'a:' + mlKey;
 
       if (usePool) {
-        const entry = _markerPool.get(poolKey);
+        const entry = S._markerPool.get(poolKey);
         if (entry) {
           // Update icon class if changed
           const newClass = computeStratIconClass(d);
           updateMarkerIcon(entry, newClass);
           // Add to layer if not already there
-          if (!stratLayer.hasLayer(entry.marker)) {
-            stratLayer.addLayer(entry.marker);
+          if (!S.stratLayer.hasLayer(entry.marker)) {
+            S.stratLayer.addLayer(entry.marker);
           }
           _visiblePoolKeys.add(poolKey);
           statesSet.add(d.state);
-          markerLookup[mlKey] = { marker: entry.marker, data: d, type: 'accounts' };
+          S.markerLookup[mlKey] = { marker: entry.marker, data: d, type: 'accounts' };
           if (search) {
-            lastSearchResults.push({ marker: entry.marker, data: d, type: 'accounts' });
+            S.lastSearchResults.push({ marker: entry.marker, data: d, type: 'accounts' });
           }
         }
       } else {
@@ -1957,28 +1810,28 @@ function applyFilters() {
           iconSize: getIconSize(d, 'accounts'),
           iconAnchor: getIconAnchor(d, 'accounts'),
         });
-        const marker = L.marker([d.lat, d.lng], { icon }).addTo(stratLayer);
+        const marker = L.marker([d.lat, d.lng], { icon }).addTo(S.stratLayer);
         marker.on('click', function() {
           ensurePopup(marker, d, 'accounts');
           marker.openPopup();
-          map.flyTo([d.lat + 2.5, d.lng], 7, { duration: 0.6 });
+          S.map.flyTo([d.lat + 2.5, d.lng], 7, { duration: 0.6 });
         });
         statesSet.add(d.state);
-        markerLookup[mlKey] = { marker, data: d, type: 'accounts' };
+        S.markerLookup[mlKey] = { marker, data: d, type: 'accounts' };
         if (search) {
-          lastSearchResults.push({ marker, data: d, type: 'accounts' });
+          S.lastSearchResults.push({ marker, data: d, type: 'accounts' });
         }
       }
     });
     stratCount = filtered.length;
-    filteredAccountData = filtered;
+    S.filteredAccountData = filtered;
   }
 
   // Active customers
-  if (currentView === 'customers' || currentView === 'all') {
-    const filtered = CUSTOMER_DATA.filter(d => {
+  if (S.currentView === 'customers' || S.currentView === 'all') {
+    const filtered = S.CUSTOMER_DATA.filter(d => {
       if (search) {
-        if (searchExactMatch) {
+        if (S.searchExactMatch) {
           const stMatch = d._stateLc === search;
           const regMatch = d._regionLc === search;
           const nameMatch = d._nameLc === search;
@@ -1991,11 +1844,11 @@ function applyFilters() {
               && !(d.ae && d.ae.toLowerCase().includes(search))) return false;
         }
       }
-      if (filters.cust_region && d.region !== filters.cust_region) return false;
-      if (filters.cust_state && !filters.cust_state.has(d.state)) return false;
-      if (filters.cust_segment && d.segment !== filters.cust_segment) return false;
-      if (filters.cust_csm && d.csm !== filters.cust_csm) return false;
-      if (filters.cust_ae && d.ae !== filters.cust_ae) return false;
+      if (S.filters.cust_region && d.region !== S.filters.cust_region) return false;
+      if (S.filters.cust_state && !S.filters.cust_state.has(d.state)) return false;
+      if (S.filters.cust_segment && d.segment !== S.filters.cust_segment) return false;
+      if (S.filters.cust_csm && d.csm !== S.filters.cust_csm) return false;
+      if (S.filters.cust_ae && d.ae !== S.filters.cust_ae) return false;
       return true;
     });
 
@@ -2005,20 +1858,20 @@ function applyFilters() {
       const poolKey = 'c:' + mlKeyC;
 
       if (usePool) {
-        const entry = _markerPool.get(poolKey);
+        const entry = S._markerPool.get(poolKey);
         if (entry) {
           const newClass = computeCustIconClass(d);
           updateMarkerIcon(entry, newClass);
-          if (!custLayer.hasLayer(entry.marker)) {
-            custLayer.addLayer(entry.marker);
+          if (!S.custLayer.hasLayer(entry.marker)) {
+            S.custLayer.addLayer(entry.marker);
           }
           _visiblePoolKeys.add(poolKey);
           statesSet.add(d.state);
-          if (!markerLookup[mlKeyC]) {
-            markerLookup[mlKeyC] = { marker: entry.marker, data: d, type: 'customer' };
+          if (!S.markerLookup[mlKeyC]) {
+            S.markerLookup[mlKeyC] = { marker: entry.marker, data: d, type: 'customer' };
           }
           if (search) {
-            lastSearchResults.push({ marker: entry.marker, data: d, type: 'customer' });
+            S.lastSearchResults.push({ marker: entry.marker, data: d, type: 'customer' });
           }
         }
       } else {
@@ -2028,42 +1881,42 @@ function applyFilters() {
           iconSize: getIconSize(d, 'customer'),
           iconAnchor: getIconAnchor(d, 'customer'),
         });
-        const marker = L.marker([d.lat, d.lng], { icon }).addTo(custLayer);
+        const marker = L.marker([d.lat, d.lng], { icon }).addTo(S.custLayer);
         marker.on('click', function() {
           ensurePopup(marker, d, 'customer');
           marker.openPopup();
-          map.flyTo([d.lat + 2.5, d.lng], 7, { duration: 0.6 });
+          S.map.flyTo([d.lat + 2.5, d.lng], 7, { duration: 0.6 });
         });
         statesSet.add(d.state);
-        if (!markerLookup[mlKeyC]) {
-          markerLookup[mlKeyC] = { marker, data: d, type: 'customer' };
+        if (!S.markerLookup[mlKeyC]) {
+          S.markerLookup[mlKeyC] = { marker, data: d, type: 'customer' };
         }
         if (search) {
-          lastSearchResults.push({ marker, data: d, type: 'customer' });
+          S.lastSearchResults.push({ marker, data: d, type: 'customer' });
         }
       }
     });
     custCount = filtered.length;
-    filteredCustData = filtered;
+    S.filteredCustData = filtered;
   }
 
   // Diff-based removal: only remove markers that were visible last cycle but not this one
   if (usePool && _visiblePoolKeys) {
-    for (const poolKey of _previouslyVisiblePoolKeys) {
+    for (const poolKey of S._previouslyVisiblePoolKeys) {
       if (!_visiblePoolKeys.has(poolKey)) {
-        const entry = _markerPool.get(poolKey);
+        const entry = S._markerPool.get(poolKey);
         if (entry) {
-          const layer = poolKey.startsWith('a:') ? stratLayer : custLayer;
+          const layer = poolKey.startsWith('a:') ? stratLayer : S.custLayer;
           layer.removeLayer(entry.marker);
         }
       }
     }
-    _previouslyVisiblePoolKeys = _visiblePoolKeys;
+    S._previouslyVisiblePoolKeys = _visiblePoolKeys;
   }
 
   // Update stats - context-aware
   // For accounts view, compute overlap dynamically from the filtered set
-  const dynamicOverlapCount = filteredAccountData.filter(d => d.is_customer).length;
+  const dynamicOverlapCount = S.filteredAccountData.filter(d => d.is_customer).length;
   const stratEl = document.getElementById('stat-strat-count');
   const custEl = document.getElementById('stat-cust-count');
   const overlapEl = document.getElementById('stat-overlap-count');
@@ -2072,7 +1925,7 @@ function applyFilters() {
   const custCard = custEl.parentElement;
   const overlapCard = document.getElementById('stat-card-overlap');
 
-  if (currentView === 'accounts') {
+  if (S.currentView === 'accounts') {
     // Show: Accounts | Customers (dynamic from filtered) | Opps | States
     stratEl.textContent = stratCount;
     stratCard.style.display = '';
@@ -2081,12 +1934,12 @@ function applyFilters() {
     overlapEl.style.color = '#00b894';
     overlapLabel.textContent = 'Customers';
     overlapCard.style.display = '';
-  } else if (currentView === 'customers') {
+  } else if (S.currentView === 'customers') {
     // Show: Customers | Overlap | (hide strat) | States
     custEl.textContent = custCount;
     custCard.style.display = '';
     stratCard.style.display = 'none';
-    overlapEl.textContent = _overlapCount;
+    overlapEl.textContent = S._overlapCount;
     overlapEl.style.color = '#E8853D';
     overlapLabel.textContent = 'Also Account';
     overlapCard.style.display = '';
@@ -2096,7 +1949,7 @@ function applyFilters() {
     custEl.textContent = custCount;
     stratCard.style.display = '';
     custCard.style.display = '';
-    overlapEl.textContent = _overlapCount;
+    overlapEl.textContent = S._overlapCount;
     overlapEl.style.color = '#E8853D';
     overlapLabel.textContent = 'Overlap';
     overlapCard.style.display = '';
@@ -2104,8 +1957,8 @@ function applyFilters() {
   document.getElementById('stat-states').textContent = statesSet.size;
 
   // Hidden records indicator: count filtered records without coordinates
-  const missingAcct = filteredAccountData.filter(d => !d.lat || !d.lng).length;
-  const missingCust = filteredCustData.filter(d => !d.lat || !d.lng).length;
+  const missingAcct = S.filteredAccountData.filter(d => !d.lat || !d.lng).length;
+  const missingCust = S.filteredCustData.filter(d => !d.lat || !d.lng).length;
   const totalMissing = missingAcct + missingCust;
   const missingEl = document.getElementById('stat-missing-coords');
   if (totalMissing > 0) {
@@ -2114,9 +1967,6 @@ function applyFilters() {
   } else {
     missingEl.style.display = 'none';
   }
-
-  // Sync filtered results to S before calling module functions
-  syncToS();
 
   // Update count badge
   updateCountBadge(stratCount, custCount);
@@ -2130,8 +1980,7 @@ function applyFilters() {
 
 // ============ AUTOCOMPLETE SEARCH ============
 
-let acSelectedIndex = -1;
-let acItems = [];
+// Autocomplete state stored on S (acSelectedIndex, acItems)
 
 function buildAutocompleteList(query) {
   if (!query || query.length < 1) return [];
@@ -2140,7 +1989,7 @@ function buildAutocompleteList(query) {
   const results = [];
   const seen = new Set();
 
-  // US state abbreviation map for matching
+  // US state abbreviation S.map for matching
   const stateNames = {
     'al':'Alabama','ak':'Alaska','az':'Arizona','ar':'Arkansas','ca':'California',
     'co':'Colorado','ct':'Connecticut','de':'Delaware','fl':'Florida','ga':'Georgia',
@@ -2178,7 +2027,7 @@ function buildAutocompleteList(query) {
   });
 
   // Match districts (accounts)
-  ACCOUNT_DATA.forEach(d => {
+  S.ACCOUNT_DATA.forEach(d => {
     const nameMatch = d.name && d.name.toLowerCase().includes(q);
     if (nameMatch && !seen.has('strat:' + d.name)) {
       seen.add('strat:' + d.name);
@@ -2187,7 +2036,7 @@ function buildAutocompleteList(query) {
   });
 
   // Match districts (customers)
-  CUSTOMER_DATA.forEach(d => {
+  S.CUSTOMER_DATA.forEach(d => {
     const nameMatch = d.name && d.name.toLowerCase().includes(q);
     if (nameMatch && !seen.has('cust:' + d.name) && !seen.has('strat:' + d.name)) {
       seen.add('cust:' + d.name);
@@ -2210,18 +2059,18 @@ function buildAutocompleteList(query) {
 }
 
 function renderAutocomplete(items) {
-  const dropdown = _elSearchAutocomplete;
+  const dropdown = S._elSearchAutocomplete;
   if (items.length === 0) {
     dropdown.classList.remove('open');
     dropdown.innerHTML = '';
-    acItems = [];
-    acSelectedIndex = -1;
+    S.acItems = [];
+    S.acSelectedIndex = -1;
     return;
   }
 
-  acItems = items;
-  acSelectedIndex = -1;
-  const q = _elSearchInput.value.toLowerCase();
+  S.acItems = items;
+  S.acSelectedIndex = -1;
+  const q = S._elSearchInput.value.toLowerCase();
 
   dropdown.innerHTML = items.map((item, i) => {
     const typeLabels = { strat: 'Acct', cust: 'Cust', state: 'State', region: 'Region' };
@@ -2240,26 +2089,25 @@ function renderAutocomplete(items) {
   dropdown.classList.add('open');
 }
 
-let _searchDebounceTimer = null;
 function onSearchInput() {
-  searchExactMatch = false; // typing resets exact match mode
-  const query = _elSearchInput.value.trim();
+  S.searchExactMatch = false; // typing resets exact match mode
+  const query = S._elSearchInput.value.trim();
   // Autocomplete renders immediately for responsiveness
   const items = buildAutocompleteList(query);
   renderAutocomplete(items);
   // Debounce the expensive filter + marker rebuild (150ms)
-  clearTimeout(_searchDebounceTimer);
-  _searchDebounceTimer = setTimeout(() => {
+  clearTimeout(S._searchDebounceTimer);
+  S._searchDebounceTimer = setTimeout(() => {
     applyFilters();
     // When search is cleared, fly out to lower 48 US view (same as reset view button)
-    if (!query && map) {
-      map.setView([39.5, -98.5], 5, { animate: true });
+    if (!query && S.map) {
+      S.map.setView([39.5, -98.5], 5, { animate: true });
     }
   }, 150);
 }
 
 function onSearchKeydown(e) {
-  const dropdown = _elSearchAutocomplete;
+  const dropdown = S._elSearchAutocomplete;
   if (!dropdown.classList.contains('open')) {
     if (e.key === 'Enter') { zoomToSearchResult(); }
     return;
@@ -2267,17 +2115,17 @@ function onSearchKeydown(e) {
 
   if (e.key === 'ArrowDown') {
     e.preventDefault();
-    acSelectedIndex = Math.min(acSelectedIndex + 1, acItems.length - 1);
+    S.acSelectedIndex = Math.min(S.acSelectedIndex + 1, S.acItems.length - 1);
     updateAcSelection();
   } else if (e.key === 'ArrowUp') {
     e.preventDefault();
-    acSelectedIndex = Math.max(acSelectedIndex - 1, -1);
+    S.acSelectedIndex = Math.max(S.acSelectedIndex - 1, -1);
     updateAcSelection();
   } else if (e.key === 'Enter') {
     e.preventDefault();
-    if (acSelectedIndex >= 0) {
-      selectAutocomplete(acSelectedIndex);
-    } else if (acItems.length > 0) {
+    if (S.acSelectedIndex >= 0) {
+      selectAutocomplete(S.acSelectedIndex);
+    } else if (S.acItems.length > 0) {
       selectAutocomplete(0);
     }
   } else if (e.key === 'Escape') {
@@ -2286,9 +2134,9 @@ function onSearchKeydown(e) {
 }
 
 function updateAcSelection() {
-  const dropdown = _elSearchAutocomplete;
+  const dropdown = S._elSearchAutocomplete;
   dropdown.querySelectorAll('.search-ac-item').forEach((el, i) => {
-    el.classList.toggle('selected', i === acSelectedIndex);
+    el.classList.toggle('selected', i === S.acSelectedIndex);
   });
   // Scroll selected into view
   const selected = dropdown.querySelector('.selected');
@@ -2296,83 +2144,83 @@ function updateAcSelection() {
 }
 
 function selectAutocomplete(index) {
-  const item = acItems[index];
+  const item = S.acItems[index];
   if (!item) return;
   closeAutocomplete();
 
   if (item.type === 'state') {
     // Filter to this state and fit bounds
-    _elSearchInput.value = item.abbr.toUpperCase();
-    searchExactMatch = true;
+    S._elSearchInput.value = item.abbr.toUpperCase();
+    S.searchExactMatch = true;
     applyFilters();
-    // Fit map to all accounts in this state
+    // Fit S.map to all accounts in this state
     const bounds = [];
-    [...ACCOUNT_DATA, ...CUSTOMER_DATA].forEach(d => {
+    [...S.ACCOUNT_DATA, ...S.CUSTOMER_DATA].forEach(d => {
       const st = (d.state || '').toLowerCase();
       if ((st === item.abbr || st === item.name.toLowerCase()) && d.lat && d.lng) {
         bounds.push([d.lat, d.lng]);
       }
     });
     if (bounds.length > 0) {
-      map.fitBounds(bounds, { padding: [40, 40], maxZoom: 8 });
+      S.map.fitBounds(bounds, { padding: [40, 40], maxZoom: 8 });
     }
   } else if (item.type === 'region') {
-    _elSearchInput.value = item.region;
-    searchExactMatch = true;
+    S._elSearchInput.value = item.region;
+    S.searchExactMatch = true;
     applyFilters();
     const bounds = [];
-    [...ACCOUNT_DATA, ...CUSTOMER_DATA].forEach(d => {
+    [...S.ACCOUNT_DATA, ...S.CUSTOMER_DATA].forEach(d => {
       if (d.region === item.region && d.lat && d.lng) {
         bounds.push([d.lat, d.lng]);
       }
     });
     if (bounds.length > 0) {
-      map.fitBounds(bounds, { padding: [40, 40], maxZoom: 8 });
+      S.map.fitBounds(bounds, { padding: [40, 40], maxZoom: 8 });
     }
   } else {
     // Individual account
-    _elSearchInput.value = item.label;
-    searchExactMatch = true;
+    S._elSearchInput.value = item.label;
+    S.searchExactMatch = true;
     applyFilters();
     const acState = item.data ? (item.data.state || '') : '';
-    const entry = markerLookup[item.label + '|' + acState];
+    const entry = S.markerLookup[item.label + '|' + acState];
     if (entry && entry.marker) {
       const latLng = entry.marker.getLatLng();
-      map.setView([latLng.lat + 2.5, latLng.lng], 7, { animate: true });
+      S.map.setView([latLng.lat + 2.5, latLng.lng], 7, { animate: true });
       setTimeout(() => { ensurePopup(entry.marker, entry.data, entry.type); entry.marker.openPopup(); }, 400);
     } else if (item.data && item.data.lat && item.data.lng) {
-      map.setView([item.data.lat + 2.5, item.data.lng], 7, { animate: true });
+      S.map.setView([item.data.lat + 2.5, item.data.lng], 7, { animate: true });
     }
   }
 }
 
 function closeAutocomplete() {
-  const dropdown = _elSearchAutocomplete;
+  const dropdown = S._elSearchAutocomplete;
   dropdown.classList.remove('open');
   dropdown.innerHTML = '';
-  acItems = [];
-  acSelectedIndex = -1;
+  S.acItems = [];
+  S.acSelectedIndex = -1;
 }
 
 function zoomToSearchResult() {
   closeAutocomplete();
-  if (lastSearchResults.length === 0) return;
+  if (S.lastSearchResults.length === 0) return;
 
   // Find best match
-  const search = _elSearchInput.value.toLowerCase().trim();
-  let bestMatch = lastSearchResults.find(r => r.data.name.toLowerCase() === search);
-  if (!bestMatch) bestMatch = lastSearchResults.find(r => r.data.name.toLowerCase().startsWith(search));
-  if (!bestMatch) bestMatch = lastSearchResults[0];
+  const search = S._elSearchInput.value.toLowerCase().trim();
+  let bestMatch = S.lastSearchResults.find(r => r.data.name.toLowerCase() === search);
+  if (!bestMatch) bestMatch = S.lastSearchResults.find(r => r.data.name.toLowerCase().startsWith(search));
+  if (!bestMatch) bestMatch = S.lastSearchResults[0];
 
-  if (lastSearchResults.length === 1) {
+  if (S.lastSearchResults.length === 1) {
     const latLng = bestMatch.marker.getLatLng();
-    map.setView([latLng.lat + 2.5, latLng.lng], 7, { animate: true });
+    S.map.setView([latLng.lat + 2.5, latLng.lng], 7, { animate: true });
     setTimeout(() => { ensurePopup(bestMatch.marker, bestMatch.data, bestMatch.type); bestMatch.marker.openPopup(); }, 300);
   } else {
     // Multiple results — fit bounds
-    const bounds = lastSearchResults.map(r => r.marker.getLatLng());
+    const bounds = S.lastSearchResults.map(r => r.marker.getLatLng());
     if (bounds.length > 0) {
-      map.fitBounds(bounds, { padding: [40, 40], maxZoom: 8 });
+      S.map.fitBounds(bounds, { padding: [40, 40], maxZoom: 8 });
     }
     // Still open best match popup
     setTimeout(() => { ensurePopup(bestMatch.marker, bestMatch.data, bestMatch.type); bestMatch.marker.openPopup(); }, 400);
@@ -2380,12 +2228,12 @@ function zoomToSearchResult() {
 }
 
 function togglePipelinePanel() {
-  const panel = _elPipelinePanel;
+  const panel = S._elPipelinePanel;
   const detail = document.getElementById('pipelineDetail');
   const isOpening = panel.classList.contains('pl-collapsed');
   detail.classList.toggle('collapsed');
   panel.classList.toggle('pl-collapsed');
-  // Collapse filters when opening pipeline
+  // Collapse S.filters when opening pipeline
   if (isOpening) {
     const fw = document.getElementById('filtersWrap');
     if (fw) fw.classList.add('collapsed');
@@ -2394,9 +2242,9 @@ function togglePipelinePanel() {
 }
 
 function updatePipeline() {
-  const panel = _elPipelinePanel;
+  const panel = S._elPipelinePanel;
   const stats = document.getElementById('pipelineStats');
-  if (currentView === 'customers') { panel.style.display = 'none'; return; }
+  if (S.currentView === 'customers') { panel.style.display = 'none'; return; }
   panel.style.display = 'block';
   // Skip expensive pipeline rebuild when panel is collapsed
   if (panel.classList.contains('pl-collapsed')) return;
@@ -2475,34 +2323,32 @@ function toggleStageDropdown(stageId) {
 
 // ============ ACTION DASHBOARD ============
 
-let actionDashboardOpen = false;
-
 function toggleActionDashboard() {
-  actionDashboardOpen = !actionDashboardOpen;
-  if (_elAdOverlay) _elAdOverlay.classList.toggle('open', actionDashboardOpen);
-  if (_elAdTrigger) _elAdTrigger.classList.toggle('active', actionDashboardOpen);
+  S.actionDashboardOpen = !S.actionDashboardOpen;
+  if (S._elAdOverlay) S._elAdOverlay.classList.toggle('open', S.actionDashboardOpen);
+  if (S._elAdTrigger) S._elAdTrigger.classList.toggle('active', S.actionDashboardOpen);
 }
 
 // Close overlay when clicking outside
 document.addEventListener('click', function(e) {
-  if (!actionDashboardOpen) return;
-  if (_elAdOverlay && _elAdTrigger && !_elAdOverlay.contains(e.target) && !_elAdTrigger.contains(e.target)) {
-    actionDashboardOpen = false;
-    _elAdOverlay.classList.remove('open');
-    _elAdTrigger.classList.remove('active');
+  if (!S.actionDashboardOpen) return;
+  if (S._elAdOverlay && S._elAdTrigger && !S._elAdOverlay.contains(e.target) && !S._elAdTrigger.contains(e.target)) {
+    S.actionDashboardOpen = false;
+    S._elAdOverlay.classList.remove('open');
+    S._elAdTrigger.classList.remove('active');
   }
 });
 
 // Close account list overlay when clicking outside
 document.addEventListener('click', function(e) {
-  if (!accountListOpen) return;
+  if (!S.accountListOpen) return;
   // Skip close if a sort/group action just re-rendered (target removed from DOM)
   if (!document.body.contains(e.target)) return;
   const overlay = document.getElementById('alOverlay');
-  if (overlay && _elCountBadge && !overlay.contains(e.target) && !_elCountBadge.contains(e.target)) {
-    accountListOpen = false;
+  if (overlay && S._elCountBadge && !overlay.contains(e.target) && !S._elCountBadge.contains(e.target)) {
+    S.accountListOpen = false;
     overlay.classList.remove('open');
-    _elCountBadge.classList.remove('active');
+    S._elCountBadge.classList.remove('active');
   }
 });
 
@@ -2582,7 +2428,7 @@ function renderOppNextSteps(a) {
 
 function updateActionDashboard() {
   // Early exit: skip all data processing when dashboard is closed
-  if (!actionDashboardOpen) return;
+  if (!S.actionDashboardOpen) return;
 
   const body = document.getElementById('actionDashboardBody');
   if (!body) return;
@@ -2591,8 +2437,8 @@ function updateActionDashboard() {
   window.districtDataCache = window.districtDataCache || {};
 
   // Gather accounts based on current view, filtered by sidebar selections
-  if (currentView === 'accounts' || currentView === 'all') {
-    filteredAccountData.forEach(d => {
+  if (S.currentView === 'accounts' || S.currentView === 'all') {
+    S.filteredAccountData.forEach(d => {
       const key = districtKey(d);
       window.districtDataCache[key] = d;
       allAccounts.push({
@@ -2606,10 +2452,10 @@ function updateActionDashboard() {
       });
     });
   }
-  if (currentView === 'customers' || currentView === 'all') {
-    filteredCustData.forEach(d => {
+  if (S.currentView === 'customers' || S.currentView === 'all') {
+    S.filteredCustData.forEach(d => {
       // Avoid duplicates in 'all' view
-      if (currentView === 'all' && allAccounts.some(a => a.name === d.name)) return;
+      if (S.currentView === 'all' && allAccounts.some(a => a.name === d.name)) return;
       const key = districtKey(d);
       window.districtDataCache[key] = d;
       allAccounts.push({
@@ -2718,15 +2564,15 @@ function updateActionDashboard() {
   body.innerHTML = html;
 
   // Update alert badge on trigger button
-  if (_elAdTrigger) {
+  if (S._elAdTrigger) {
     const alertCount = dueThisWeek.length;
-    const existing = _elAdTrigger.querySelector('.ad-alert');
+    const existing = S._elAdTrigger.querySelector('.ad-alert');
     if (existing) existing.remove();
     if (alertCount > 0) {
       const alertBadge = document.createElement('span');
       alertBadge.className = 'ad-alert';
       alertBadge.textContent = alertCount;
-      _elAdTrigger.appendChild(alertBadge);
+      S._elAdTrigger.appendChild(alertBadge);
     }
   }
 }
@@ -2734,43 +2580,40 @@ function updateActionDashboard() {
 // ============ POPUPS ============
 
 function toggleProximity(on) {
-  proximityOn = on;
+  S.proximityOn = on;
   document.getElementById('proxRadiusWrap').style.display = on ? 'flex' : 'none';
   drawProximity();
 }
 
 function toggleAdaFilter(on) {
-  adaFilterOn = on;
+  S.adaFilterOn = on;
   applyFilters();
 }
 
 function updateProxRadius(val) {
-  PROXIMITY_MILES = parseInt(val);
+  S.PROXIMITY_MILES = parseInt(val);
   const miInput = document.getElementById('proxMilesInput');
-  if (miInput) miInput.value = PROXIMITY_MILES;
-  if (proximityOn) drawProximity();
+  if (miInput) miInput.value = S.PROXIMITY_MILES;
+  if (S.proximityOn) drawProximity();
 }
 
 function setProxRadiusFromInput(val) {
   let n = parseInt(val);
   if (isNaN(n) || n < 10) n = 10;
   if (n > 150) n = 150;
-  PROXIMITY_MILES = n;
+  S.PROXIMITY_MILES = n;
   const slider = document.getElementById('proxRadius');
   if (slider) slider.value = n;
-  if (proximityOn) drawProximity();
+  if (S.proximityOn) drawProximity();
 }
 
 // Spatial grid for fast proximity lookups.
-// Divides the map into ~1° cells and only checks neighbors instead of all accounts.
-let _custGrid = null;
-let _custGridMiles = null;
-
+// Divides the S.map into ~1° cells and only checks neighbors instead of all accounts.
 function buildCustGrid() {
-  if (_custGrid && _custGridMiles === PROXIMITY_MILES) return _custGrid;
-  const cellSize = Math.max(1, PROXIMITY_MILES / 50); // ~1° cells for 50mi radius
+  if (S._custGrid && S._custGridMiles === S.PROXIMITY_MILES) return S._custGrid;
+  const cellSize = Math.max(1, S.PROXIMITY_MILES / 50); // ~1° cells for 50mi radius
   const grid = {};
-  CUSTOMER_DATA.forEach(c => {
+  S.CUSTOMER_DATA.forEach(c => {
     if (!c.lat || !c.lng) return;
     const gx = Math.floor(c.lng / cellSize);
     const gy = Math.floor(c.lat / cellSize);
@@ -2778,8 +2621,8 @@ function buildCustGrid() {
     if (!grid[key]) grid[key] = [];
     grid[key].push(c);
   });
-  _custGrid = grid;
-  _custGridMiles = PROXIMITY_MILES;
+  S._custGrid = grid;
+  S._custGridMiles = S.PROXIMITY_MILES;
   return grid;
 }
 
@@ -2802,13 +2645,13 @@ function isNearAnyCustomer(lat, lng, miles) {
 }
 
 function drawProximity() {
-  proxLayer.clearLayers();
-  if (!proximityOn) return;
+  S.proxLayer.clearLayers();
+  if (!S.proximityOn) return;
 
-  const milesToMeters = PROXIMITY_MILES * 1609.34;
-  _custGrid = null; // Invalidate grid when radius changes
+  const milesToMeters = S.PROXIMITY_MILES * 1609.34;
+  S._custGrid = null; // Invalidate grid when radius changes
 
-  CUSTOMER_DATA.forEach(c => {
+  S.CUSTOMER_DATA.forEach(c => {
     if (!c.lat || !c.lng) return;
     L.circle([c.lat, c.lng], {
       radius: milesToMeters,
@@ -2818,14 +2661,14 @@ function drawProximity() {
       fillColor: '#00b894',
       fillOpacity: 0.06,
       interactive: false,
-    }).addTo(proxLayer);
+    }).addTo(S.proxLayer);
   });
 
   // Count accounts inside any customer radius — uses spatial grid
   let nearby = 0;
-  ACCOUNT_DATA.forEach(s => {
+  S.ACCOUNT_DATA.forEach(s => {
     if (!s.lat || !s.lng) return;
-    if (isNearAnyCustomer(s.lat, s.lng, PROXIMITY_MILES)) nearby++;
+    if (isNearAnyCustomer(s.lat, s.lng, S.PROXIMITY_MILES)) nearby++;
   });
 
   const nearbyEl = document.getElementById('proxNearbyCount');
@@ -2836,7 +2679,7 @@ function drawProximity() {
 
 
 function buildStratPopup(d) {
-  // Store data in global map for safe retrieval (avoids escaping issues in onclick)
+  // Store data in global S.map for safe retrieval (avoids escaping issues in onclick)
   const dKey = districtKey(d);
   window.districtDataCache = window.districtDataCache || {};
   window.districtDataCache[dKey] = d;
@@ -2902,7 +2745,7 @@ function buildStratPopup(d) {
 
   // Show customer ARR if this is also a customer
   if (d.is_customer) {
-    const custMatch = _custByName.get(d.customer_name);
+    const custMatch = S._custByName.get(d.customer_name);
     if (custMatch) {
       const custArr = parseFloat(custMatch.arr) || 0;
       const custGdr = custMatch.gdr ? parseFloat(custMatch.gdr) : null;
@@ -3055,7 +2898,7 @@ function buildCustPopup(d) {
   }
   html += `<h3>${escapeHtml(d.name)}</h3>`;
   if (d.parent_district) {
-    const parentInAccounts = ACCOUNT_DATA.find(a => a.name === d.parent_district);
+    const parentInAccounts = S.ACCOUNT_DATA.find(a => a.name === d.parent_district);
     const parentKey = parentInAccounts ? districtKey(parentInAccounts) : d.parent_district.replace(/[^a-zA-Z0-9]/g, '_');
     const districtLink = parentInAccounts
       ? `<a href="#" onclick="event.preventDefault();openAccountModalByKey('${parentKey}')" style="color:var(--text-muted);text-decoration:underline;">${escapeHtml(d.parent_district)}</a>`

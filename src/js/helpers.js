@@ -18,6 +18,10 @@ export function escapeHtml(str) {
   return div.innerHTML;
 }
 
+export function escapeAttr(str) {
+  return str.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+}
+
 export function parseUSDate(str) {
   if (!str) return null;
   const parts = str.trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);

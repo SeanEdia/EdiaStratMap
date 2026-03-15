@@ -1,5 +1,5 @@
 import S from './state.js';
-import { districtKey, escapeHtml } from './helpers.js';
+import { districtKey, escapeHtml, escapeAttr } from './helpers.js';
 
 // ============ CONFLICT MANAGEMENT ============
 S.conflictsOverlayOpen = false;
@@ -172,11 +172,7 @@ export function renderConflictsOverlay() {
   body.innerHTML = html;
 }
 
-// escapeHtml imported from helpers.js
-
-function escapeAttr(str) {
-  return str.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
-}
+// escapeHtml and escapeAttr imported from helpers.js
 
 /** Refresh the conflict banner in the account modal after resolving a conflict. */
 export function refreshModalConflictBanner(accountName) {
