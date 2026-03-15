@@ -1192,6 +1192,23 @@ input[type="range"]::-webkit-slider-thumb {
 /* Conflicts overlay positioning — appears below the Conflicts button */
 .conflicts-overlay { right: 16px; }
 
+.conflicts-export-btn {
+  background: none;
+  border: 1px solid var(--panel-border);
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-left: auto;
+  margin-right: 8px;
+  font-family: inherit;
+}
+.conflicts-export-btn:hover {
+  color: var(--text);
+  border-color: var(--text-muted);
+}
+
 /* Export trigger button */
 .export-trigger { border-color: #00b89444 !important; }
 .export-trigger:hover { border-color: #00b894 !important; color: var(--text) !important; }

@@ -39,7 +39,7 @@ import { toggleConferences, setConfRange, applyConfDateFilter, renderConferences
   handleConfFile, showGeocodeProgress, updateGeocodeProgress, hideGeocodeProgress,
   geocodeConferences } from './conference.js';
 import { toggleConflictsOverlay, refreshModalConflictBanner, navigateToConflict,
-  resolveConflict, updateConflictsBadge } from './conflict.js';
+  resolveConflict, updateConflictsBadge, exportConflicts } from './conflict.js';
 import { exportData, updateExportButtonVisibility } from './data-export.js';
 import { toggleTheme, protectedToggleDataRefreshPanel, protectedOpenSfdcModal } from './features.js';
 
@@ -2990,6 +2990,7 @@ Object.assign(window, {
   navigateToConflict,
   resolveConflict,
   refreshModalConflictBanner,
+  exportConflicts,
   // Notes
   copyAllNotes,
   exportNotes,

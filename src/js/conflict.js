@@ -42,14 +42,17 @@ export function updateConflictsBadge() {
   const wrap = document.getElementById('conflictsTriggerWrap');
   const badge = document.getElementById('conflictsCount');
   if (!wrap || !badge) return;
+  const exportBtn = document.getElementById('conflictsExportBtn');
   if (S.CONFLICTS.length > 0) {
     wrap.style.display = '';
     badge.textContent = S.CONFLICTS.length;
+    if (exportBtn) exportBtn.style.display = '';
   } else {
     wrap.style.display = 'none';
     S.conflictsOverlayOpen = false;
     const overlay = document.getElementById('conflictsOverlay');
     if (overlay) overlay.classList.remove('open');
+    if (exportBtn) exportBtn.style.display = 'none';
   }
 }
 
@@ -173,6 +176,77 @@ export function renderConflictsOverlay() {
 }
 
 // escapeHtml and escapeAttr imported from helpers.js
+
+/** Export all conflicts as a rich CSV download. */
+export function exportConflicts() {
+  if (S.CONFLICTS.length === 0) {
+    alert('No conflicts to export.');
+    return;
+  }
+
+  const headers = [
+    'Account Name', 'State', 'Enrollment', 'Strategic', 'Account Type',
+    'Conflict Type', 'Conflict Description', 'Current Owner (Kept)',
+    'Current Owner Team', 'Conflicting Owner (From CSV)', 'Conflicting Owner Team',
+    'Opp Owner (SFDC)', 'Existing Opps', 'CSV Opp Area', 'CSV Opp Stage',
+    'CSV Opp ACV', 'Region', 'City', 'Is Customer', 'ARR'
+  ];
+
+  function csvEscape(val) {
+    const s = String(val == null ? '' : val);
+    if (s.includes(',') || s.includes('"') || s.includes('\n')) {
+      return '"' + s.replace(/"/g, '""') + '"';
+    }
+    return s;
+  }
+
+  const rows = [headers.map(csvEscape).join(',')];
+
+  S.CONFLICTS.forEach(c => {
+    const acct = S.ACCOUNT_DATA.find(a => a.name === c.name);
+    const isStrategic = (parseInt(c.enrollment) || 0) >= STRATEGIC_ENROLLMENT_THRESHOLD;
+    const conflictType = getConflictTypeLabel(c);
+    const existingOpps = (c.existingOpps || []).length > 0
+      ? c.existingOpps.map(o => (o.area || 'Unknown') + ' \u2014 ' + (o.stage || 'No stage')).join(', ')
+      : 'None';
+
+    const row = [
+      c.name,
+      c.state,
+      c.enrollment,
+      isStrategic ? 'Yes' : 'No',
+      getConflictAccountType(c),
+      conflictType.label,
+      conflictType.description,
+      c.oldAE,
+      c.oldTeam || '\u2014',
+      c.newAE,
+      c.newTeam || '\u2014',
+      c.oppOwner || '\u2014',
+      existingOpps,
+      c.oppAreas || '\u2014',
+      c.oppStage || '\u2014',
+      c.oppAcv || '\u2014',
+      (acct && acct.region) || '\u2014',
+      (acct && acct.city) || '\u2014',
+      c.isCustomer ? 'Yes' : 'No',
+      c.arr || '\u2014'
+    ];
+    rows.push(row.map(csvEscape).join(','));
+  });
+
+  const csv = rows.join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const today = new Date().toISOString().slice(0, 10);
+  a.href = url;
+  a.download = 'edia_conflicts_all_' + today + '.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
 
 /** Refresh the conflict banner in the account modal after resolving a conflict. */
 export function refreshModalConflictBanner(accountName) {
