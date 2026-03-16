@@ -82,3 +82,88 @@ export function normalizeDistrictName(name) {
   normalized = normalized.replace(/\s+/g, ' ').trim();
   return normalized;
 }
+
+export function daysAgo(dateStr) {
+  const d = parseUSDate(dateStr);
+  if (!d) return Infinity;
+  const now = new Date();
+  now.setHours(0,0,0,0);
+  d.setHours(0,0,0,0);
+  const diff = Math.floor((now - d) / 86400000);
+  if (diff < 0) return Infinity; // Future dates treated as no activity
+  return diff;
+}
+
+export function extractDatesFromText(text) {
+  if (!text) return [];
+  // Match M/D, M/D/YY, M/D/YYYY, or MM/DD patterns
+  const datePatterns = text.match(/\b(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?\b/g);
+  if (!datePatterns) return [];
+  const results = [];
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  datePatterns.forEach(p => {
+    const m = p.match(/^(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?$/);
+    if (!m) return;
+    const month = parseInt(m[1]);
+    const day = parseInt(m[2]);
+    if (month < 1 || month > 12 || day < 1 || day > 31) return;
+    let year = currentYear;
+    if (m[3]) {
+      year = parseInt(m[3]);
+      if (year < 100) year += 2000;
+    }
+    results.push(new Date(year, month - 1, day));
+  });
+  return results;
+}
+
+export function isThisWeek(date) {
+  const now = new Date();
+  now.setHours(0,0,0,0);
+  // Start of week (Monday)
+  const dayOfWeek = now.getDay();
+  const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+  const weekStart = new Date(now);
+  weekStart.setDate(now.getDate() + mondayOffset);
+  const weekEnd = new Date(weekStart);
+  weekEnd.setDate(weekStart.getDate() + 6);
+  weekEnd.setHours(23,59,59,999);
+  const d = new Date(date);
+  d.setHours(0,0,0,0);
+  return d >= weekStart && d <= weekEnd;
+}
+
+export function formatLastActivity(dateStr) {
+  if (!dateStr) return '—';
+  const parsed = parseUSDate(dateStr);
+  if (!parsed) return dateStr;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  if (parsed > today) return '—';
+  return dateStr;
+}
+
+export function clampFutureLastActivity(record) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  (record.opps || []).forEach(o => {
+    if (o.last_activity) {
+      const parsed = parseUSDate(o.last_activity);
+      if (parsed && parsed > today) {
+        o.last_activity = '';
+      }
+    }
+  });
+}
+
+export function normalizeOppArea(area) {
+  if (!area) return '';
+  return area.replace(/\bMTSS\b/gi, 'District Intelligence').trim();
+}
+
+export function isDOE(name) {
+  if (!name) return false;
+  const n = name.toLowerCase();
+  return n.includes('department of education') || /\bdoe\b/.test(n);
+}

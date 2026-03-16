@@ -16,7 +16,8 @@ import smbTeam from '../data/teams/smb.json';
 import S from './state.js';
 
 // Import pure helpers
-import { districtKey, haversine, escapeHtml, escapeAttr, parseUSDate, normalizeDistrictName, precomputeSearchFields } from './helpers.js';
+import { districtKey, haversine, escapeHtml, escapeAttr, parseUSDate, normalizeDistrictName, precomputeSearchFields,
+  daysAgo, extractDatesFromText, isThisWeek, formatLastActivity, clampFutureLastActivity, normalizeOppArea, isDOE } from './helpers.js';
 
 // Import extracted modules
 import { getUserName, getAccountNotes, addNote, handleNoteKey, formatNoteTime, copyAccountNotes,
@@ -44,7 +45,8 @@ import { exportData, updateExportButtonVisibility } from './data-export.js';
 import { toggleTheme, protectedToggleDataRefreshPanel, protectedOpenSfdcModal } from './features.js';
 
 // Re-export districtKey so extracted modules can import it
-export { districtKey, normalizeDistrictName, escapeHtml, escapeAttr, parseUSDate, haversine };
+export { districtKey, normalizeDistrictName, escapeHtml, escapeAttr, parseUSDate, haversine,
+  daysAgo, extractDatesFromText, isThisWeek, formatLastActivity, clampFutureLastActivity, normalizeOppArea, isDOE };
 
 // Re-hydrate _schools from the separate school-map.json onto account records
 function hydrateSchools(accounts) {
@@ -110,7 +112,7 @@ function clearPersistedData() {
   console.log('[Persist] Cleared saved data — will use bundled JSON on next load');
 }
 
-function saveOppsToLocalStorage(opps) {
+export function saveOppsToLocalStorage(opps) {
   try {
     localStorage.setItem(LS_OPPS_KEY, JSON.stringify(opps));
   } catch (e) {
@@ -127,7 +129,7 @@ function loadConflicts() {
 }
 
 /** Save conflict records to localStorage. */
-function saveConflicts(conflicts) {
+export function saveConflicts(conflicts) {
   try {
     localStorage.setItem(LS_CONFLICTS_KEY, JSON.stringify(conflicts));
   } catch (e) {
@@ -140,25 +142,20 @@ S.CONFLICTS = loadConflicts();
 
 // ============ OPP HELPERS (must be above DATA INITIALIZATION for migration) ============
 // These are needed at module-load time when migrating localStorage data.
-const OPP_ENTRY_FIELDS = new Set([
+export const OPP_ENTRY_FIELDS = new Set([
   'opp_stage', 'opp_forecast', 'opp_areas', 'opp_acv', 'opp_probability',
   'opp_contact', 'opp_contact_title', 'opp_next_step', 'opp_last_activity',
   'opp_sdr', 'opp_champion', 'opp_economic_buyer', 'opp_competition'
 ]);
 
-const OPP_WRAPPER_FIELDS = new Set([
+export const OPP_WRAPPER_FIELDS = new Set([
   'opp_owner', 'opportunity_name', 'intro_meeting_date',
   'created_date', 'last_modified', 'age',
   'metric_improvement_goal', 'decision_criteria', 'decision_process',
   'paper_process', 'implication_of_pain'
 ]);
 
-function normalizeOppArea(area) {
-  if (!area) return '';
-  return area.replace(/\bMTSS\b/gi, 'District Intelligence').trim();
-}
-
-function buildOppEntry(oppFields) {
+export function buildOppEntry(oppFields) {
   return {
     area: normalizeOppArea(oppFields.opp_areas || ''),
     stage: oppFields.opp_stage || '',
@@ -176,30 +173,7 @@ function buildOppEntry(oppFields) {
   };
 }
 
-function clampFutureLastActivity(record) {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  (record.opps || []).forEach(o => {
-    if (o.last_activity) {
-      const parsed = parseUSDate(o.last_activity);
-      if (parsed && parsed > today) {
-        o.last_activity = '';
-      }
-    }
-  });
-}
-
-function formatLastActivity(dateStr) {
-  if (!dateStr) return '—';
-  const parsed = parseUSDate(dateStr);
-  if (!parsed) return dateStr;
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  if (parsed > today) return '—';
-  return dateStr;
-}
-
-function migrateToOppsArray(record) {
+export function migrateToOppsArray(record) {
   if (record.opps && record.opps.length > 0) return; // Already has opps entries
   if (!record.opp_stage && !record.opp_areas) return; // No flat opp fields to migrate
   const oppFields = {};
@@ -305,7 +279,7 @@ if (_persisted) {
 // Sets is_customer / customer_name on accounts that match a customer record,
 // and also_account on customer records that match an account.
 // Uses normalizeDistrictName() for fuzzy name matching (same logic as merge).
-function crossLinkCustomers() {
+export function crossLinkCustomers() {
   // Build a lookup of normalized customer names → customer records
   const custByNorm = new Map();
   S._custByName = new Map();
@@ -400,7 +374,7 @@ function crossLinkCustomers() {
 // ============ JOIN OPPS INTO ACCOUNTS ============
 // Merges bundled opps.json data into S.ACCOUNT_DATA at startup.
 // Only runs when loading from bundled JSON (not localStorage, which already has opps embedded).
-function joinOppsToAccounts(accounts, opps) {
+export function joinOppsToAccounts(accounts, opps) {
   const acctByKey = new Map();
   accounts.forEach(d => {
     const key = (d.name || '').toLowerCase().trim() + '|' + (d.state || '').toUpperCase().trim();
@@ -451,12 +425,12 @@ function joinOppsToAccounts(accounts, opps) {
 // Performance indices are stored on S (initialized in state.js)
 
 // Look up which team a rep belongs to. Returns team name or null.
-function getTeamForRep(rep) {
+export function getTeamForRep(rep) {
   if (!rep) return null;
   return S._repToTeam[rep] || null;
 }
 
-function buildIndices() {
+export function buildIndices() {
   // Map reps to teams (Set-based for O(1) lookup)
   S._repToTeam = {};
   S._teamRepsSet = {};
@@ -563,7 +537,7 @@ function getAutocompleteCache() {
 // Built from per-team JSON configs in src/data/teams/.
 // To move a rep (e.g. Aric from West to East), edit only the two team JSON files.
 const TEAM_CONFIGS = [strategicTeam, entWestTeam, entEastTeam, smbTeam];
-const TEAM_REP_DATA = {};
+export const TEAM_REP_DATA = {};
 TEAM_CONFIGS.forEach(cfg => {
   TEAM_REP_DATA[cfg.team] = {
     manager: cfg.manager || null,
@@ -574,8 +548,8 @@ TEAM_CONFIGS.forEach(cfg => {
 // ============ ACCOUNT ASSIGNMENT RULES ============
 // Rule 1: Districts with 30,000+ students → Strategic (Sean Johnson territory), holdout = actual AE
 // Rule 2: Districts with <30,000 students → assigned to account owner from data
-const ACCOUNT_PRIMARY_AE = 'Sean Johnson';
-const STRATEGIC_ENROLLMENT_THRESHOLD = 30000;
+export const ACCOUNT_PRIMARY_AE = 'Sean Johnson';
+export const STRATEGIC_ENROLLMENT_THRESHOLD = 30000;
 
 // Build holdout AEs dynamically from all non-Strategic teams
 const ACCOUNT_HOLDOUT_AES = new Set();
@@ -587,7 +561,7 @@ Object.entries(TEAM_REP_DATA).forEach(([team, info]) => {
 
 // All active sales reps across every team (including Strategic + managers).
 // Used by resolveOwner() to distinguish current reps from former/non-sales staff.
-const ALL_ACTIVE_REPS = new Set();
+export const ALL_ACTIVE_REPS = new Set();
 Object.values(TEAM_REP_DATA).forEach(info => {
   info.reps.forEach(rep => ALL_ACTIVE_REPS.add(rep));
   if (info.manager) ALL_ACTIVE_REPS.add(info.manager);
@@ -603,7 +577,7 @@ Object.values(TEAM_REP_DATA).forEach(info => {
 
 // Returns true if the account is held by a manager (placeholder until assigned to a rep).
 // Manager-held accounts are treated as "unassigned" for filtering/display purposes.
-function isManagerHeld(d) {
+export function isManagerHeld(d) {
   if (!d || !d.ae) return false;
   return MANAGERS.has(d.ae);
 }
@@ -638,14 +612,6 @@ function getAccountReps() {
     S._accountRepsCache = getAllRepsForTeam('Strategic');
   }
   return S._accountRepsCache;
-}
-
-// Helper: detect Department of Education accounts by name.
-// DOE accounts have no ownership and get a distinct marker.
-function isDOE(name) {
-  if (!name) return false;
-  const n = name.toLowerCase();
-  return n.includes('department of education') || /\bdoe\b/.test(n);
 }
 
 // Helper: detect NYC Public Schools and sub-districts/schools within NYC.
@@ -698,7 +664,7 @@ function hasOpenOppByRep(d, repName) {
 
 // Helper: returns the territory (assigned) AE for an account.
 // 30k+ enrollment → Strategic (Sean Johnson). <30k → account owner.
-function getTerritoryAE(d) {
+export function getTerritoryAE(d) {
   if (isDOE(d.name)) return null;
   // Check strategic enrollment BEFORE bailing on empty ae —
   // unassigned 30k+ accounts still belong to Sean Johnson.
@@ -717,7 +683,7 @@ function getTerritoryAE(d) {
 // Two cases: (1) 30k+ strategic account whose AE is not the default (Sean Johnson),
 // (2) Opp Owner fallback — territory rep's data isn't loaded yet, so the account is
 //     temporarily under the Opp Owner while the territory rep remains the assigned owner.
-function getHoldoutAE(d) {
+export function getHoldoutAE(d) {
   if (!d.ae || isDOE(d.name)) return null;
   // Case 2: territory_ae set (Opp Owner fallback) — d.ae is the holdout (Opp Owner)
   if (d.territory_ae && d.territory_ae !== d.ae) {
@@ -748,7 +714,7 @@ function getHoldoutAE(d) {
 //      Active rep WITHOUT data loaded → Opp Owner fallback (until their data is uploaded)
 //   7. Unrecognized → Opp Owner if active → existing if active → unassigned
 // Returns { ae, reason } where ae is the resolved string and reason describes the resolution path.
-function resolveOwner(csvAE, existingAE, ctx) {
+export function resolveOwner(csvAE, existingAE, ctx) {
   const csv = (csvAE || '').trim();
   const existing = (existingAE || '').trim();
   const oppOwner = (ctx && ctx.oppOwner || '').trim();
@@ -967,7 +933,7 @@ function hasActiveFilter() {
     S.currentView !== 'accounts';
 }
 
-function hideWelcomeOverlay() {
+export function hideWelcomeOverlay() {
   const overlay = document.getElementById('welcomeOverlay');
   if (overlay) {
     overlay.classList.add('hidden');
@@ -1024,7 +990,7 @@ function resetToBaselineData() {
   location.reload();
 }
 
-function updateDataSourceIndicator() {
+export function updateDataSourceIndicator() {
   const el = document.getElementById('dataSourceStatus');
   const btn = document.getElementById('resetDataBtn');
   if (!el) return;
@@ -1237,7 +1203,7 @@ function getAllRepsForTeam(team) {
   return reps;
 }
 
-function renderTeamRepSelectors() {
+export function renderTeamRepSelectors() {
   const wrap = document.getElementById('teamRepSelectors');
   if (!wrap) return;
 
@@ -1388,7 +1354,7 @@ function getScopedStratData() {
   return S.ACCOUNT_DATA;
 }
 
-function renderFilters() {
+export function renderFilters() {
   const area = document.getElementById('filtersArea');
   let html = '';
 
@@ -1673,7 +1639,7 @@ function updateFiltersActiveCount() {
 // Search state stored on S (lastSearchResults, searchExactMatch)
 
 /** Lazily bind popup to a marker on first interaction. */
-function ensurePopup(marker, d, type) {
+export function ensurePopup(marker, d, type) {
   if (!marker.getPopup()) {
     const builder = type === 'customer' ? buildCustPopup : buildStratPopup;
     marker.bindPopup(builder(d), { maxWidth: 320 });
@@ -2354,56 +2320,6 @@ document.addEventListener('click', function(e) {
 
 // parseUSDate imported from helpers.js
 
-function daysAgo(dateStr) {
-  const d = parseUSDate(dateStr);
-  if (!d) return Infinity;
-  const now = new Date();
-  now.setHours(0,0,0,0);
-  d.setHours(0,0,0,0);
-  const diff = Math.floor((now - d) / 86400000);
-  if (diff < 0) return Infinity; // Future dates treated as no activity
-  return diff;
-}
-
-function extractDatesFromText(text) {
-  if (!text) return [];
-  // Match M/D, M/D/YY, M/D/YYYY, or MM/DD patterns
-  const datePatterns = text.match(/\b(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?\b/g);
-  if (!datePatterns) return [];
-  const results = [];
-  const now = new Date();
-  const currentYear = now.getFullYear();
-  datePatterns.forEach(p => {
-    const m = p.match(/^(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?$/);
-    if (!m) return;
-    const month = parseInt(m[1]);
-    const day = parseInt(m[2]);
-    if (month < 1 || month > 12 || day < 1 || day > 31) return;
-    let year = currentYear;
-    if (m[3]) {
-      year = parseInt(m[3]);
-      if (year < 100) year += 2000;
-    }
-    results.push(new Date(year, month - 1, day));
-  });
-  return results;
-}
-
-function isThisWeek(date) {
-  const now = new Date();
-  now.setHours(0,0,0,0);
-  // Start of week (Monday)
-  const dayOfWeek = now.getDay();
-  const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-  const weekStart = new Date(now);
-  weekStart.setDate(now.getDate() + mondayOffset);
-  const weekEnd = new Date(weekStart);
-  weekEnd.setDate(weekStart.getDate() + 6);
-  weekEnd.setHours(23,59,59,999);
-  const d = new Date(date);
-  d.setHours(0,0,0,0);
-  return d >= weekStart && d <= weekEnd;
-}
 
 function renderOppNextSteps(a) {
   let html = '';

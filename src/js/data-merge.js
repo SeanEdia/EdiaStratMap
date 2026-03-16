@@ -1,5 +1,7 @@
 import S from './state.js';
-import { districtKey, normalizeDistrictName } from './helpers.js';
+import { districtKey, normalizeDistrictName, clampFutureLastActivity, isDOE } from './helpers.js';
+import { OPP_ENTRY_FIELDS, OPP_WRAPPER_FIELDS, buildOppEntry, migrateToOppsArray,
+  getTeamForRep, ACCOUNT_PRIMARY_AE, ALL_ACTIVE_REPS, resolveOwner } from './app.js';
 
 // ============ SPREADSHEET FILE READER (CSV + Excel) ============
 

@@ -1,5 +1,9 @@
 import S from './state.js';
 import { districtKey, escapeHtml, escapeAttr } from './helpers.js';
+import { STRATEGIC_ENROLLMENT_THRESHOLD, saveConflicts, buildIndices, ensurePopup } from './app.js';
+import { formatCompactNumber } from './account-list.js';
+import { downloadJsonFile } from './multi-opp.js';
+import { openAccountModalWithData } from './account-modal.js';
 
 // ============ CONFLICT MANAGEMENT ============
 S.conflictsOverlayOpen = false;
@@ -264,10 +268,10 @@ export function navigateToConflict(idx) {
   if (!c) return;
   const dKey = districtKey(c);
   // Try markerLookup first (visible pins)
-  const entry = markerLookup[c.name + '|' + (c.state || '')];
+  const entry = S.markerLookup[c.name + '|' + (c.state || '')];
   if (entry && entry.marker) {
     const latLng = entry.marker.getLatLng();
-    map.flyTo(latLng, 8, { duration: 0.6 });
+    S.map.flyTo(latLng, 8, { duration: 0.6 });
     setTimeout(() => { ensurePopup(entry.marker, entry.data, entry.type); entry.marker.openPopup(); }, 400);
   } else {
     // Account may not be visible with current filters — open modal directly

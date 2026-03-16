@@ -1,5 +1,9 @@
 import S from './state.js';
-import { districtKey, normalizeDistrictName, parseUSDate } from './helpers.js';
+import { districtKey, normalizeDistrictName, parseUSDate, normalizeOppArea } from './helpers.js';
+import { saveOppsToLocalStorage, OPP_ENTRY_FIELDS, buildOppEntry, migrateToOppsArray,
+  crossLinkCustomers, joinOppsToAccounts, buildIndices, TEAM_REP_DATA,
+  getTerritoryAE, getHoldoutAE, hideWelcomeOverlay, updateDataSourceIndicator,
+  renderTeamRepSelectors, renderFilters } from './app.js';
 
 // ============ MULTI-OPP HELPERS ============
 // OPP_ENTRY_FIELDS, normalizeOppArea, buildOppEntry, and migrateToOppsArray
@@ -964,13 +968,13 @@ export function countNewRecordsHiddenByFilter(newRecordNames) {
       const isManager = selectedTeam && TEAM_REP_DATA[selectedTeam] &&
         TEAM_REP_DATA[selectedTeam].manager === selectedRep;
       if (isManager) {
-        const teamReps = _teamRepsSet[selectedTeam];
+        const teamReps = S._teamRepsSet[selectedTeam];
         if (!teamReps || (!teamReps.has(territoryAE) && !(holdoutAE && teamReps.has(holdoutAE)))) hidden++;
       } else {
         if (territoryAE !== selectedRep && holdoutAE !== selectedRep) hidden++;
       }
     } else if (selectedTeam) {
-      const teamReps = _teamRepsSet[selectedTeam];
+      const teamReps = S._teamRepsSet[selectedTeam];
       if (!teamReps || (!teamReps.has(territoryAE) && !(holdoutAE && teamReps.has(holdoutAE)))) hidden++;
     }
   });
