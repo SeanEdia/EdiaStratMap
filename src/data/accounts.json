@@ -13712,7 +13712,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Jonathan Pacheco",
     "school_type": "High School",
     "name": "Zuni Public School District",
     "region": "South-Central",
@@ -13981,7 +13981,7 @@
   {
     "ae": "",
     "school_type": "Elementary School",
-    "name": "EspaÒola Public Schools",
+    "name": "Espa\u00d2ola Public Schools",
     "region": "South-Central",
     "state": "NM",
     "city": "Abiquiu",
@@ -14004,7 +14004,7 @@
     "lat": 36.2070977,
     "lng": -106.318628,
     "is_customer": true,
-    "customer_name": "EspaÒola Public Schools"
+    "customer_name": "Espa\u00d2ola Public Schools"
   },
   {
     "ae": "",
@@ -21560,7 +21560,7 @@
     "enrollment": 43234,
     "state": "TX",
     "region": "South-Central",
-    "ae": "Brad Halsey",
+    "ae": "Paulina Famiano",
     "sis": "Skyward",
     "math_curriculum": "TEKS-aligned local curriculum",
     "math_supplemental": "IXL",
@@ -22398,7 +22398,7 @@
     "customer_name": ""
   },
   {
-    "ae": "Victoria Macoul",
+    "ae": "Paulina Famiano",
     "name": "Norton Public Schools",
     "enrollment": 2406,
     "state": "MA",
@@ -23023,7 +23023,7 @@
     "customer_name": ""
   },
   {
-    "ae": "Brad Halsey",
+    "ae": "Paulina Famiano",
     "name": "East Central Independent School District",
     "region": "South-Central",
     "state": "TX",
@@ -30707,7 +30707,7 @@
     "customer_name": ""
   },
   {
-    "ae": "Brad Halsey",
+    "ae": "Paulina Famiano",
     "name": "Edgewood ISD",
     "region": "South-Central",
     "state": "TX",
@@ -34282,7 +34282,7 @@
     "customer_name": ""
   },
   {
-    "ae": "Brad Halsey",
+    "ae": "Paulina Famiano",
     "name": "Southwest Independent School District",
     "region": "South-Central",
     "state": "TX",
@@ -36810,7 +36810,7 @@
     "website": "texanscan.org",
     "_schools": [
       "Texans Can Academies - Dallas Ross Avenue",
-      "Texans Can Academies ¬? Carrollton/Farmers Branch Campus",
+      "Texans Can Academies \u00ac? Carrollton/Farmers Branch Campus",
       "Texans Can Academy - Dallas Oak Cliff",
       "Texans Can Academy - Dallas Pleasant Grove"
     ],
@@ -36904,7 +36904,7 @@
     "customer_name": ""
   },
   {
-    "ae": "Paulina Famiano",
+    "ae": "Andy Graham",
     "name": "Thomas County Schools",
     "region": "Southeast",
     "state": "GA",
@@ -45811,7 +45811,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Paulina Famiano",
     "school_type": "Elementary School",
     "name": "Anderson School District 4",
     "region": "Southeast",
@@ -46916,7 +46916,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Paulina Famiano",
     "school_type": "High School",
     "name": "Bertie County Schools",
     "region": "Southeast",
@@ -57577,7 +57577,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Victoria Macoul",
     "school_type": "District",
     "name": "Portland Public Schools",
     "region": "Midwest",
@@ -71515,7 +71515,7 @@
     "customer_name": "Belcourt 7"
   },
   {
-    "ae": "Sydney Smith",
+    "ae": "Caroline Uhlarik",
     "school_type": "High School",
     "name": "Big Horn County School District #1",
     "region": "West",
@@ -71664,7 +71664,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Caroline Uhlarik",
     "school_type": "High School",
     "name": "Allendale Public Schools",
     "region": "Midwest",
@@ -81476,7 +81476,7 @@
     "customer_name": ""
   },
   {
-    "ae": "Victoria Macoul",
+    "ae": "Daniel Way",
     "name": "Cohoes City School District",
     "enrollment": 1945,
     "state": "NY",
@@ -83388,7 +83388,7 @@
     "customer_name": ""
   },
   {
-    "ae": "Victoria Macoul",
+    "ae": "Daniel Way",
     "name": "Ravena-Coeymans-Selkirk Central School District",
     "enrollment": 1808,
     "state": "NY",
@@ -87432,7 +87432,7 @@
     "customer_name": ""
   },
   {
-    "ae": "Victoria Macoul",
+    "ae": "Daniel Way",
     "name": "South Colonie Central School District",
     "enrollment": 4990,
     "state": "NY",
@@ -90767,7 +90767,7 @@
     "customer_name": ""
   },
   {
-    "ae": "Victoria Macoul",
+    "ae": "Daniel Way",
     "name": "Guilderland Central School District",
     "enrollment": 4906,
     "state": "NY",
@@ -93271,7 +93271,7 @@
     "customer_name": ""
   },
   {
-    "ae": "Victoria Macoul",
+    "ae": "Daniel Way",
     "name": "Voorheesville Central School District",
     "enrollment": 1209,
     "state": "NY",
@@ -93783,7 +93783,7 @@
     "customer_name": ""
   },
   {
-    "ae": "Victoria Macoul",
+    "ae": "Daniel Way",
     "name": "Watervliet City School District",
     "enrollment": 1485,
     "state": "NY",
@@ -97781,7 +97781,7 @@
     "customer_name": "Porter Township School Corporation"
   },
   {
-    "ae": "Ally McCready",
+    "ae": "Daniel Way",
     "name": "Dunkirk City School District",
     "enrollment": 2015,
     "state": "NY",
@@ -97806,7 +97806,7 @@
     ]
   },
   {
-    "ae": "",
+    "ae": "Caroline Uhlarik",
     "school_type": "Middle School",
     "name": "Winton Woods City School District",
     "region": "Midwest",
@@ -98221,7 +98221,7 @@
   {
     "ae": "",
     "school_type": "District",
-    "name": "AcadÈmie Lafayette",
+    "name": "Acad\u00c8mie Lafayette",
     "region": "Midwest",
     "state": "MO",
     "city": "Kansas City",
@@ -98483,7 +98483,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Jonathan Pacheco",
     "school_type": "District",
     "name": "Alliance Marine - Innovation & Technology 6-12 Complex",
     "region": "West",
@@ -101479,7 +101479,7 @@
     "enrollment": 5098,
     "sis": "Skyward",
     "website": "fjturner.k12.wi.us",
-    "math_curriculum": "Eureka Math≤",
+    "math_curriculum": "Eureka Math\u2264",
     "math_supplemental": "Imagine Math; DeltaMath; Albert",
     "attendance_comms": "SchoolMessenger",
     "strategic_plan_url": "https://www.sdb.k12.wi.us/2022StrategicPlan",
@@ -103205,7 +103205,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Callie Brennan",
     "school_type": "District",
     "name": "Nettleton School District",
     "region": "Southeast",
@@ -123845,7 +123845,7 @@
   {
     "ae": "",
     "school_type": "District",
-    "name": "La CaÒada Unified School District",
+    "name": "La Ca\u00d2ada Unified School District",
     "region": "West",
     "state": "CA",
     "city": "La Canada",
@@ -125760,7 +125760,7 @@
     "customer_name": ""
   },
   {
-    "ae": "Callie Brennan",
+    "ae": "Aric Walden",
     "name": "Greenfield Union School District",
     "region": "West",
     "state": "CA",
@@ -125859,7 +125859,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Callie Brennan",
     "school_type": "Elementary School",
     "name": "Gravette School District",
     "region": "South-Central",
@@ -126254,7 +126254,7 @@
     "customer_name": ""
   },
   {
-    "ae": "",
+    "ae": "Callie Brennan",
     "school_type": "Elementary School",
     "name": "Rolla Public Schools (Rolla 31)",
     "region": "Midwest",
@@ -127301,7 +127301,7 @@
     "enrollment": 11075,
     "sis": "Infinite Campus",
     "website": "pcspolicy.com",
-    "math_curriculum": "Eureka Math≤",
+    "math_curriculum": "Eureka Math\u2264",
     "math_supplemental": "i-Ready",
     "attendance_comms": "Apptegy; Other",
     "strategic_plan_url": "https://www.pender.k12.nc.us/o/pcs/page/strategic-plan",
@@ -127518,7 +127518,7 @@
     "enrollment": 20983,
     "sis": "Infinite Campus",
     "website": "robeson.k12.nc.us",
-    "math_curriculum": "Eureka Math≤",
+    "math_curriculum": "Eureka Math\u2264",
     "attendance_comms": "Infinite Campus",
     "strategic_plan_url": "https://meeting.sparqdata.com/Public/Stored/453?docTypeId=230147&file=13efa39b-f35c-4595-b3ba-c27b17efe1d6",
     "_schools": [
@@ -129509,7 +129509,7 @@
     "customer_name": "Wilson County Schools"
   },
   {
-    "ae": "Andy Graham",
+    "ae": "Wesley Yarber",
     "name": "Fort Mill School District 4",
     "region": "Southeast",
     "state": "SC",
@@ -133990,7 +133990,7 @@
   },
   {
     "ae": "Brad Halsey",
-    "name": "San JosÈ Unified School District",
+    "name": "San Jos\u00c8 Unified School District",
     "region": "West",
     "state": "CA",
     "city": "San Jose",
@@ -136996,7 +136996,7 @@
     "enrollment": 25575,
     "sis": "PowerSchool",
     "website": "val4kids.org",
-    "math_curriculum": "Eureka Math≤",
+    "math_curriculum": "Eureka Math\u2264",
     "math_supplemental": "i-Ready",
     "attendance_comms": "ParentSquare",
     "strategic_plan_url": "https://www.wccusd.net/about-us/superintendent/strategic-plan",
@@ -138185,7 +138185,7 @@
     "_source_team": "ENT West"
   },
   {
-    "ae": "Christina Ceballos",
+    "ae": "Paulina Famiano",
     "name": "Sedalia School District 200",
     "region": "Midwest",
     "state": "MO",
@@ -144152,7 +144152,7 @@
     "enrollment": 21444,
     "sis": "PowerSchool",
     "website": "evscschools.com",
-    "math_curriculum": "Eureka Math≤; Discovery Education Math Techbook",
+    "math_curriculum": "Eureka Math\u2264; Discovery Education Math Techbook",
     "math_supplemental": "IXL",
     "attendance_comms": "SchoolMessenger; Other",
     "strategic_plan_url": "https://district.evscschools.com/about_us/e_v_s_c_continuous_improvement_process",
@@ -159374,7 +159374,7 @@
     "enrollment": 5786,
     "sis": "Other",
     "website": "omaksd.org",
-    "math_curriculum": "i-Ready; enVision; Eureka Math≤; HMH Into Algebra",
+    "math_curriculum": "i-Ready; enVision; Eureka Math\u2264; HMH Into Algebra",
     "math_supplemental": "i-Ready",
     "attendance_comms": "Apptegy",
     "strategic_plan_url": "https://www.omaksd.org/page/levy",
@@ -163341,7 +163341,7 @@
     "enrollment": 7885,
     "sis": "Infinite Campus",
     "website": "ffc8.org",
-    "math_curriculum": "Eureka Math≤",
+    "math_curriculum": "Eureka Math\u2264",
     "math_supplemental": "Carnegie Learning",
     "attendance_comms": "Infinite Campus; Remind",
     "strategic_plan_url": "https://sites.google.com/ffc8.org/d8effectiveness/home/strategic-planning",
@@ -165982,7 +165982,7 @@
     "_source_team": "ENT West"
   },
   {
-    "ae": "",
+    "ae": "Lance Baretz",
     "name": "Escondido Union School District",
     "region": "West",
     "state": "CA",
@@ -167102,7 +167102,7 @@
     "enrollment": 7954,
     "sis": "Edupoint Synergy",
     "website": "laveeneld.org",
-    "math_curriculum": "Eureka Math≤",
+    "math_curriculum": "Eureka Math\u2264",
     "math_supplemental": "ALEKS",
     "attendance_comms": "ParentSquare",
     "strategic_plan_url": "https://www.laveenschools.org/about-laveen/",
@@ -167979,7 +167979,7 @@
     "enrollment": 29282,
     "sis": "Other",
     "website": "cpsb.org",
-    "math_curriculum": "Eureka Math≤",
+    "math_curriculum": "Eureka Math\u2264",
     "math_supplemental": "Khan Academy; IXL",
     "attendance_comms": "Blackboard",
     "strategic_plan_url": "https://cpsborg.finalsite.com/fs/resource-manager/view/8df442c3-1834-4ce0-b0f1-d0838cca2281",
@@ -172468,7 +172468,7 @@
     "_source_team": "ENT East"
   },
   {
-    "ae": "Victoria Macoul",
+    "ae": "Ally McCready",
     "name": "Rochester City School District",
     "enrollment": 22164,
     "state": "NY",
@@ -174387,7 +174387,7 @@
     "_source_team": "ENT East"
   },
   {
-    "ae": "Victoria Macoul",
+    "ae": "Brittney Hall",
     "name": "Stafford County Public Schools",
     "enrollment": 31547,
     "state": "VA",
@@ -174768,7 +174768,7 @@
     "_source_team": "ENT East"
   },
   {
-    "ae": "Victoria Macoul",
+    "ae": "Paulina Famiano",
     "name": "SAU #33 Raymond",
     "state": "NH",
     "lat": 43.4849133,
@@ -174778,7 +174778,7 @@
     "_source_team": "SMB"
   },
   {
-    "ae": "Victoria Macoul",
+    "ae": "Daniel Way",
     "name": "Berne-Knox-Westerlo Central School District",
     "enrollment": 742,
     "state": "NY",
@@ -174820,7 +174820,7 @@
     "_source_team": "ENT East"
   },
   {
-    "ae": "Victoria Macoul",
+    "ae": "Daniel Way",
     "name": "Green Island Union Free School District",
     "enrollment": 261,
     "state": "NY",
@@ -174849,7 +174849,7 @@
     "_source_team": "SMB"
   },
   {
-    "ae": "Victoria Macoul",
+    "ae": "Paulina Famiano",
     "name": "Epping School District",
     "enrollment": 878,
     "state": "NH",
@@ -177474,11 +177474,11 @@
     "website": "",
     "ada_adm": "ADA",
     "superintendent": "Alberto M. Carvalho",
-    "asst_supt_ci": "Dr. Karla V. Estrada – Deputy Superintendent of Instruction",
-    "asst_supt_ss": "Pia V. Escudero – Executive Director, Student Health & Human Services",
+    "asst_supt_ci": "Dr. Karla V. Estrada \u2013 Deputy Superintendent of Instruction",
+    "asst_supt_ss": "Pia V. Escudero \u2013 Executive Director, Student Health & Human Services",
     "asst_supt_tech": "Soheil Katal - CIO",
-    "dir_ci": "Dr. Frances Baez – CAO",
-    "dir_math": "John Vladovic – Executive Director, Secondary Instruction",
+    "dir_ci": "Dr. Frances Baez \u2013 CAO",
+    "dir_math": "John Vladovic \u2013 Executive Director, Secondary Instruction",
     "dir_attendance": "Rudy Gomez - Dir of Pupil Services",
     "org_chart_url": "https://lausd-academicexcellence.edlioschool.com/apps/pages/index.jsp?uREC_ID=4404664&type=d&pREC_ID=2630772",
     "strategic_plan_url": "https://sites.google.com/lausd.net/lausdstrategicplan/home",
@@ -177500,12 +177500,12 @@
     "attendance_comms": "",
     "website": "",
     "ada_adm": "",
-    "superintendent": "Dr. Macquline King – Interim",
-    "asst_supt_ci": "Dr. Alfonso Carmona – Acting Chief Education Officer",
+    "superintendent": "Dr. Macquline King \u2013 Interim",
+    "asst_supt_ci": "Dr. Alfonso Carmona \u2013 Acting Chief Education Officer",
     "asst_supt_ss": "",
-    "asst_supt_tech": "Ed Wagner – Acting CIO",
-    "dir_ci": "Nicole Milberg – Chief of Teaching and Learning",
-    "dir_math": "Dr. Corey Morrison – Executive Director, STEM (Mathematics)",
+    "asst_supt_tech": "Ed Wagner \u2013 Acting CIO",
+    "dir_ci": "Nicole Milberg \u2013 Chief of Teaching and Learning",
+    "dir_math": "Dr. Corey Morrison \u2013 Executive Director, STEM (Mathematics)",
     "dir_attendance": "",
     "org_chart_url": "https://www.cps.edu/globalassets/cps-global-media/cps-leadership/cps-june-2025-org-chart-final.pdf",
     "strategic_plan_url": "https://www.cps.edu/sites/five-year-plan/",
@@ -177528,11 +177528,11 @@
     "website": "",
     "ada_adm": "",
     "superintendent": "Dr. Jose L. Dotres",
-    "asst_supt_ci": "Lourdes Diaz – Chief Academic Officer",
-    "asst_supt_ss": "Ana M. Gutierrez – Asst. Supt., Student & Family Support Programs",
-    "asst_supt_tech": "Jorge Fernandez – Chief Information Officer",
-    "dir_ci": "Trynegwa K. Diggs – Asst. Supt., Curriculum & Instruction (Education Transformation)",
-    "dir_math": "Cristian Carranza – Administrative Director, Division of Academics",
+    "asst_supt_ci": "Lourdes Diaz \u2013 Chief Academic Officer",
+    "asst_supt_ss": "Ana M. Gutierrez \u2013 Asst. Supt., Student & Family Support Programs",
+    "asst_supt_tech": "Jorge Fernandez \u2013 Chief Information Officer",
+    "dir_ci": "Trynegwa K. Diggs \u2013 Asst. Supt., Curriculum & Instruction (Education Transformation)",
+    "dir_math": "Cristian Carranza \u2013 Administrative Director, Division of Academics",
     "dir_attendance": "",
     "org_chart_url": "https://hrinfo.dadeschools.net/ORG_CHARTS/main.htm",
     "strategic_plan_url": "https://strategicplan.dadeschools.net/",
@@ -177555,12 +177555,12 @@
     "website": "",
     "ada_adm": "",
     "superintendent": "Jhone M. Ebert",
-    "asst_supt_ci": "Dr. Jesse Welsh – Deputy Superintendent, Teaching & Learning",
+    "asst_supt_ci": "Dr. Jesse Welsh \u2013 Deputy Superintendent, Teaching & Learning",
     "asst_supt_ss": "",
-    "asst_supt_tech": "Mugunth Vaithylingam – Chief Information Officer",
-    "dir_ci": "Alaina Criner-Wilson – Asst. Supt., Curriculum & Professional Development",
-    "dir_math": "Jennifer Lile – Director of K–12 Mathematics & Instructional Technology",
-    "dir_attendance": "Danielle Jones – Director, Chronic Absenteeism & Attendance Enforcement",
+    "asst_supt_tech": "Mugunth Vaithylingam \u2013 Chief Information Officer",
+    "dir_ci": "Alaina Criner-Wilson \u2013 Asst. Supt., Curriculum & Professional Development",
+    "dir_math": "Jennifer Lile \u2013 Director of K\u201312 Mathematics & Instructional Technology",
+    "dir_attendance": "Danielle Jones \u2013 Director, Chronic Absenteeism & Attendance Enforcement",
     "org_chart_url": "https://ccsd.net/district/directory/resources/pdf/ccsd-org-chart.pdf",
     "strategic_plan_url": "https://sites.google.com/nv.ccsd.net/focus2024/the-plan",
     "lat": 36.1699,
@@ -177581,12 +177581,12 @@
     "attendance_comms": "",
     "website": "",
     "ada_adm": "",
-    "superintendent": "Dr. V. Bernard “Howard” Hepburn",
-    "asst_supt_ci": "Dr. Fabian Cone – Chief Academic Officer",
-    "asst_supt_ss": "Saemone Luis – Chief Student Services Officer",
+    "superintendent": "Dr. V. Bernard \u201cHoward\u201d Hepburn",
+    "asst_supt_ci": "Dr. Fabian Cone \u2013 Chief Academic Officer",
+    "asst_supt_ss": "Saemone Luis \u2013 Chief Student Services Officer",
     "asst_supt_tech": "Trey Davis III (CIO)",
     "dir_ci": "",
-    "dir_math": "Guy Barmoha – Director of Mathematics (STEM Programs)",
+    "dir_math": "Guy Barmoha \u2013 Director of Mathematics (STEM Programs)",
     "dir_attendance": "",
     "org_chart_url": "https://resources.finalsite.net/images/v1752689378/browardschoolscom/vk3f6x4afvwlhvsxeo1t/2025-26OrganizationalChart_RSBM_051325__002_.pdf",
     "strategic_plan_url": "https://resources.finalsite.net/images/v1749577848/browardschoolscom/mi5rq34zghxhbhvffjhl/2022-2027StrategicPlan-Students_First_final.pdf",
@@ -177609,10 +177609,10 @@
     "website": "",
     "ada_adm": "",
     "superintendent": "Van Ayres",
-    "asst_supt_ci": "Dr. Shaylia McRae – Deputy Superintendent, Academics & Transformation",
-    "asst_supt_ss": "Tracye Brown – Chief of Student Support & Federal Programs",
+    "asst_supt_ci": "Dr. Shaylia McRae \u2013 Deputy Superintendent, Academics & Transformation",
+    "asst_supt_ss": "Tracye Brown \u2013 Chief of Student Support & Federal Programs",
     "asst_supt_tech": "Michael R. Geddes (CIO)",
-    "dir_ci": "Gary Brady – Chief Academic Officer",
+    "dir_ci": "Gary Brady \u2013 Chief Academic Officer",
     "dir_math": "",
     "dir_attendance": "",
     "org_chart_url": "https://www.hillsboroughschools.org/documents/about-hcps/superintendent/organizational-chart/791963",
@@ -177640,11 +177640,11 @@
     "ada_adm": "",
     "superintendent": "Dr. Maria F. Vazquez",
     "asst_supt_ci": "Dr. Tashanda Brown-Cannon (CAO)",
-    "asst_supt_ss": "Kathryn Shuler – Chief Schools Officer",
+    "asst_supt_ss": "Kathryn Shuler \u2013 Chief Schools Officer",
     "asst_supt_tech": "Maurice Draggon (CIO)",
-    "dir_ci": "Dr. Julie Helton – Senior Executive Director, Curriculum & Digital Learning",
-    "dir_math": "Cameron Hance – Senior Administrator, Secondary Mathematics",
-    "dir_attendance": "Dr. Y. Amana Levi – Senior Administrator, Juvenile Justice Services (Attendance)",
+    "dir_ci": "Dr. Julie Helton \u2013 Senior Executive Director, Curriculum & Digital Learning",
+    "dir_math": "Cameron Hance \u2013 Senior Administrator, Secondary Mathematics",
+    "dir_attendance": "Dr. Y. Amana Levi \u2013 Senior Administrator, Juvenile Justice Services (Attendance)",
     "org_chart_url": "https://www.ocps.net/organizational-chart",
     "strategic_plan_url": "https://www.ocps.net/strategic-plan-2030",
     "lat": 28.5383,
@@ -177694,10 +177694,10 @@
     "ada_adm": "",
     "superintendent": "Michael J. Burke",
     "asst_supt_ci": "Dr. Maria Bishop (CAO)",
-    "asst_supt_ss": "Keith Oswald – Chief of Student Health & Wellness",
-    "asst_supt_tech": "Deepak Agarwal – Chief Information Officer",
-    "dir_ci": "Mandy Butterfield – Senior Director, Secondary Curriculum & Instruction",
-    "dir_math": "Cameron Hance – Sr. Administrator, Secondary Mathematics",
+    "asst_supt_ss": "Keith Oswald \u2013 Chief of Student Health & Wellness",
+    "asst_supt_tech": "Deepak Agarwal \u2013 Chief Information Officer",
+    "dir_ci": "Mandy Butterfield \u2013 Senior Director, Secondary Curriculum & Instruction",
+    "dir_math": "Cameron Hance \u2013 Sr. Administrator, Secondary Mathematics",
     "dir_attendance": "",
     "org_chart_url": "https://resources.finalsite.net/images/v1753958356/palmbeachschoolsorg/bvj7hznkn5anb81pandl/OrgChart.pdf",
     "strategic_plan_url": "https://www.palmbeachschools.org/about-us/strategic-plan-2022-2027",
@@ -177721,11 +177721,11 @@
     "ada_adm": "",
     "superintendent": "Dr. Michelle C. Reid",
     "asst_supt_ci": "Sloan Presidio (CAO)",
-    "asst_supt_ss": "Michelle Boyd – Asst. Supt., Special Services (Student Support)",
-    "asst_supt_tech": "Gautam Sethi – CIO",
-    "dir_ci": "Dr. Ellen Reilly – Asst. Superintendent, Instructional Services",
-    "dir_math": "Amy Hunter – K-12 Mathematics Coordinator",
-    "dir_attendance": "Mary Ann Panarelli – Director, Intervention & Prevention Services (Truancy)",
+    "asst_supt_ss": "Michelle Boyd \u2013 Asst. Supt., Special Services (Student Support)",
+    "asst_supt_tech": "Gautam Sethi \u2013 CIO",
+    "dir_ci": "Dr. Ellen Reilly \u2013 Asst. Superintendent, Instructional Services",
+    "dir_math": "Amy Hunter \u2013 K-12 Mathematics Coordinator",
+    "dir_attendance": "Mary Ann Panarelli \u2013 Director, Intervention & Prevention Services (Truancy)",
     "org_chart_url": "https://www.fcps.edu/about-fcps/leadership/departments-offices",
     "strategic_plan_url": "https://www.fcps.edu/strategic-plan",
     "lat": 38.8462,
@@ -177746,11 +177746,11 @@
     "attendance_comms": "",
     "website": "",
     "ada_adm": "",
-    "superintendent": "Dr. Al Taylor – Interim",
+    "superintendent": "Dr. Al Taylor \u2013 Interim",
     "asst_supt_ci": "Ms. DeNelle West - Chief Learning Officer",
-    "asst_supt_ss": "Dr. Tinisha Parker – Executive Director, Student Services",
-    "asst_supt_tech": "Eric Spoto – Interim Chief Technology & Innovation Officer",
-    "dir_ci": "Dr. Nikki G. Mouton – Deputy Superintendent of Academic Services",
+    "asst_supt_ss": "Dr. Tinisha Parker \u2013 Executive Director, Student Services",
+    "asst_supt_tech": "Eric Spoto \u2013 Interim Chief Technology & Innovation Officer",
+    "dir_ci": "Dr. Nikki G. Mouton \u2013 Deputy Superintendent of Academic Services",
     "dir_math": "Eric Thigpen - Executive Dir of Academic Support",
     "dir_attendance": "Dr. Markita Spikes - Interim Exec Dir of School Operations & Support",
     "org_chart_url": "https://www.gcpsk12.org/about-us/divisions-and-teams",
@@ -177778,10 +177778,10 @@
     "ada_adm": "",
     "superintendent": "Keith T. Hayashi",
     "asst_supt_ci": "Heidi Armstrong",
-    "asst_supt_ss": "Kinau Gardner – Asst. Supt., Office of Student Support Services",
-    "asst_supt_tech": "Amy Peckinpaugh – Asst. Supt., Office of Info. Technology Services",
-    "dir_ci": "Teri Ushijima – Asst. Supt., Office of Curriculum & Instructional Design",
-    "dir_math": "Dewey Gottlieb – Educational Specialist for Mathematics",
+    "asst_supt_ss": "Kinau Gardner \u2013 Asst. Supt., Office of Student Support Services",
+    "asst_supt_tech": "Amy Peckinpaugh \u2013 Asst. Supt., Office of Info. Technology Services",
+    "dir_ci": "Teri Ushijima \u2013 Asst. Supt., Office of Curriculum & Instructional Design",
+    "dir_math": "Dewey Gottlieb \u2013 Educational Specialist for Mathematics",
     "dir_attendance": "",
     "org_chart_url": "https://hawaiipublicschools.org/wp-content/uploads/Plan-of-Organization.pdf",
     "strategic_plan_url": "https://hawaiipublicschools.org/about/strategic-plan/",
@@ -177859,8 +177859,8 @@
     "ada_adm": "",
     "superintendent": "Dr. Robert P. Taylor",
     "asst_supt_ci": "Dr. Mellotta Battle Hill - Chief of Academic Advancement",
-    "asst_supt_ss": "Michele Woodson – Assistant Superintendent for Student Support Services",
-    "asst_supt_tech": "Dr. Kenneth J. Thompson – Assistant Superintendent for Technology Services",
+    "asst_supt_ss": "Michele Woodson \u2013 Assistant Superintendent for Student Support Services",
+    "asst_supt_tech": "Dr. Kenneth J. Thompson \u2013 Assistant Superintendent for Technology Services",
     "dir_ci": "",
     "dir_math": "",
     "dir_attendance": "",
@@ -177885,10 +177885,10 @@
     "website": "",
     "ada_adm": "",
     "superintendent": "Dr. Crystal Hill",
-    "asst_supt_ci": "Dr. Kimberly Schroeder – Associate Superintendent, Learning & Teaching",
-    "asst_supt_ss": "Dr. Jill Payne – Associate Superintendent, Student Services",
-    "asst_supt_tech": "Dr. Candace Salmon-Hosey – Chief Technology Officer",
-    "dir_ci": "Nakesha Dawson – Director, Learning & Teaching (Academics)",
+    "asst_supt_ci": "Dr. Kimberly Schroeder \u2013 Associate Superintendent, Learning & Teaching",
+    "asst_supt_ss": "Dr. Jill Payne \u2013 Associate Superintendent, Student Services",
+    "asst_supt_tech": "Dr. Candace Salmon-Hosey \u2013 Chief Technology Officer",
+    "dir_ci": "Nakesha Dawson \u2013 Director, Learning & Teaching (Academics)",
     "dir_math": "",
     "dir_attendance": "",
     "org_chart_url": "https://resources.finalsite.net/images/v1762439659/cmsk12ncus/jwxzrr1dqrrmvdhvjsx5/2025-26OrganizationalChartsNovember2025.pdf",
@@ -177911,13 +177911,13 @@
     "attendance_comms": "",
     "website": "",
     "ada_adm": "",
-    "superintendent": "Dr. Shawn Joseph – Interim",
-    "asst_supt_ci": "Dr. David Rease, Jr. – Associate Superintendent for Teaching, Learning & Innovation",
-    "asst_supt_ss": "Dr. Elizabeth Faison (Sessoms) – Associate Superintendent of Student Services",
-    "asst_supt_tech": "Dr. Andrew Zuckerman – Chief Information & Technology Officer",
+    "superintendent": "Dr. Shawn Joseph \u2013 Interim",
+    "asst_supt_ci": "Dr. David Rease, Jr. \u2013 Associate Superintendent for Teaching, Learning & Innovation",
+    "asst_supt_ss": "Dr. Elizabeth Faison (Sessoms) \u2013 Associate Superintendent of Student Services",
+    "asst_supt_tech": "Dr. Andrew Zuckerman \u2013 Chief Information & Technology Officer",
     "dir_ci": "",
     "dir_math": "",
-    "dir_attendance": "Jacqueline R. Naves – Supervisor, Pupil Personnel Services (Attendance)",
+    "dir_attendance": "Jacqueline R. Naves \u2013 Supervisor, Pupil Personnel Services (Attendance)",
     "org_chart_url": "",
     "strategic_plan_url": "https://www.pgcps.org/about-pgcps/strategic-plan",
     "lat": 38.8816,
@@ -177942,9 +177942,9 @@
     "website": "",
     "ada_adm": "",
     "superintendent": "Dr. Christopher Bernier",
-    "asst_supt_ci": "Paula Renfro – Chief Academic Officer",
-    "asst_supt_ss": "Dr. Jennifer Stys – Assistant Superintendent, Student Services",
-    "asst_supt_tech": "Jim Culbert – Chief Information Officer",
+    "asst_supt_ci": "Paula Renfro \u2013 Chief Academic Officer",
+    "asst_supt_ss": "Dr. Jennifer Stys \u2013 Assistant Superintendent, Student Services",
+    "asst_supt_tech": "Jim Culbert \u2013 Chief Information Officer",
     "dir_ci": "",
     "dir_math": "",
     "dir_attendance": "",
@@ -177999,10 +177999,10 @@
     "website": "",
     "ada_adm": "",
     "superintendent": "Dr. Tony B. Watlington, Sr.",
-    "asst_supt_ci": "Dr. Jermaine Dawson – Deputy Superintendent of Academic Services",
-    "asst_supt_ss": "Brenda Elliott – Associate Superintendent, Student Life",
-    "asst_supt_tech": "Melanie Harris – Chief Information Technology Officer",
-    "dir_ci": "Dr. Nyshawana Francis-Thompson – Chief of Curriculum & Instruction",
+    "asst_supt_ci": "Dr. Jermaine Dawson \u2013 Deputy Superintendent of Academic Services",
+    "asst_supt_ss": "Brenda Elliott \u2013 Associate Superintendent, Student Life",
+    "asst_supt_tech": "Melanie Harris \u2013 Chief Information Technology Officer",
+    "dir_ci": "Dr. Nyshawana Francis-Thompson \u2013 Chief of Curriculum & Instruction",
     "dir_math": "",
     "dir_attendance": "",
     "org_chart_url": "https://www.philasd.org/leadership/",
@@ -178053,11 +178053,11 @@
     "website": "",
     "ada_adm": "",
     "superintendent": "Dr. Myriam Yarbrough",
-    "asst_supt_ci": "Dr. Jennifer Mullenax – CAO",
-    "asst_supt_ss": "Debra Brooks – Executive Director, Student Support Services",
-    "asst_supt_tech": "Pedro Agosto – Chief Information Officer",
+    "asst_supt_ci": "Dr. Jennifer Mullenax \u2013 CAO",
+    "asst_supt_ss": "Debra Brooks \u2013 Executive Director, Student Support Services",
+    "asst_supt_tech": "Pedro Agosto \u2013 Chief Information Officer",
     "dir_ci": "",
-    "dir_math": "Kasele Mshinda – Executive Director, STEM (Science, Tech., Eng. & Math)",
+    "dir_math": "Kasele Mshinda \u2013 Executive Director, STEM (Science, Tech., Eng. & Math)",
     "dir_attendance": "",
     "org_chart_url": "https://www.bcps.org/system/organizational_structure",
     "strategic_plan_url": "https://public.tableau.com/app/profile/bcps.team.prod/viz/NewStrategicPlan_15947580953980/Story1",
@@ -183122,5 +183122,205 @@
     "is_customer": false,
     "customer_name": "",
     "_source_team": "Strategic"
+  },
+  {
+    "ae": "Caroline Uhlarik",
+    "name": "Charlottesville City Schools",
+    "state": "VA",
+    "enrollment": 4433,
+    "lat": "",
+    "lng": "",
+    "is_customer": false,
+    "customer_name": ""
+  },
+  {
+    "ae": "Brad Halsey",
+    "name": "Beaumont Unified School District",
+    "state": "CA",
+    "enrollment": 12121,
+    "lat": "",
+    "lng": "",
+    "is_customer": false,
+    "customer_name": ""
+  },
+  {
+    "ae": "Caroline Uhlarik",
+    "name": "Niobrara County School District #1",
+    "state": "WY",
+    "enrollment": 862,
+    "lat": "",
+    "lng": "",
+    "is_customer": false,
+    "customer_name": ""
+  },
+  {
+    "ae": "Lance Baretz",
+    "name": "Palm Springs Unified School District",
+    "state": "CA",
+    "enrollment": 20416,
+    "lat": "",
+    "lng": "",
+    "is_customer": false,
+    "customer_name": ""
+  },
+  {
+    "ae": "Jonathan Pacheco",
+    "name": "Raton Public Schools",
+    "state": "NM",
+    "enrollment": 833,
+    "lat": "",
+    "lng": "",
+    "is_customer": false,
+    "customer_name": ""
+  },
+  {
+    "ae": "Lance Baretz",
+    "name": "San Jacinto Unified School District",
+    "state": "CA",
+    "enrollment": 10401,
+    "lat": "",
+    "lng": "",
+    "is_customer": false,
+    "customer_name": ""
+  },
+  {
+    "ae": "Callie Brennan",
+    "name": "Southern Valley Schools",
+    "state": "NE",
+    "enrollment": 397,
+    "lat": "",
+    "lng": "",
+    "is_customer": false,
+    "customer_name": ""
+  },
+  {
+    "ae": "Caroline Uhlarik",
+    "name": "Lincoln County School District #1",
+    "state": "WY",
+    "enrollment": 614,
+    "lat": "",
+    "lng": "",
+    "is_customer": false,
+    "customer_name": ""
+  },
+  {
+    "ae": "Jonathan Pacheco",
+    "name": "St. Norbert School",
+    "state": "IL",
+    "enrollment": 175,
+    "lat": "",
+    "lng": "",
+    "is_customer": false,
+    "customer_name": ""
+  },
+  {
+    "ae": "Callie Brennan",
+    "name": "Aleutians East Borough School District",
+    "state": "AK",
+    "enrollment": 205,
+    "lat": "",
+    "lng": "",
+    "is_customer": false,
+    "customer_name": ""
+  },
+  {
+    "ae": "Jonathan Pacheco",
+    "name": "Alliance Collins Family College-Ready High District",
+    "state": "CA",
+    "enrollment": 618,
+    "lat": "",
+    "lng": "",
+    "is_customer": false,
+    "customer_name": ""
+  },
+  {
+    "ae": "Lance Baretz",
+    "name": "Ontario-Montclair School District",
+    "state": "CA",
+    "enrollment": 17944,
+    "lat": "",
+    "lng": "",
+    "is_customer": false,
+    "customer_name": ""
+  },
+  {
+    "ae": "Caroline Uhlarik",
+    "name": "Sheridan County School District #3",
+    "state": "WY",
+    "enrollment": 81,
+    "lat": "",
+    "lng": "",
+    "is_customer": false,
+    "customer_name": ""
+  },
+  {
+    "ae": "Caroline Uhlarik",
+    "name": "Fremont County School District #14",
+    "state": "WY",
+    "enrollment": 578,
+    "lat": "",
+    "lng": "",
+    "is_customer": false,
+    "customer_name": ""
+  },
+  {
+    "ae": "Caroline Uhlarik",
+    "name": "Fremont County School District #38",
+    "state": "WY",
+    "enrollment": 445,
+    "lat": "",
+    "lng": "",
+    "is_customer": false,
+    "customer_name": ""
+  },
+  {
+    "ae": "Caroline Uhlarik",
+    "name": "Sublette County School District #9",
+    "state": "WY",
+    "enrollment": 440,
+    "lat": "",
+    "lng": "",
+    "is_customer": false,
+    "customer_name": ""
+  },
+  {
+    "ae": "Ally McCready",
+    "name": "Lamad Academy Charter School",
+    "state": "NY",
+    "enrollment": 167,
+    "lat": "",
+    "lng": "",
+    "is_customer": false,
+    "customer_name": ""
+  },
+  {
+    "ae": "Callie Brennan",
+    "name": "Academy Public Charter School",
+    "state": "ID",
+    "enrollment": 744,
+    "lat": "",
+    "lng": "",
+    "is_customer": false,
+    "customer_name": ""
+  },
+  {
+    "ae": "Jonathan Pacheco",
+    "name": "Intrinsic Schools",
+    "state": "IL",
+    "enrollment": 1700,
+    "lat": "",
+    "lng": "",
+    "is_customer": false,
+    "customer_name": ""
+  },
+  {
+    "ae": "Brittney Hall",
+    "name": "R.I.S.E. Academy",
+    "state": "VA",
+    "enrollment": 5580,
+    "lat": "",
+    "lng": "",
+    "is_customer": false,
+    "customer_name": ""
   }
 ]
