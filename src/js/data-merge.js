@@ -315,6 +315,7 @@ export function consolidateParentAccounts(csvData) {
         if (synthetic[k] !== undefined) synthetic[k] = '';
       });
       delete synthetic.parent_account;
+      delete synthetic.parent_account_id;
 
       parentRows.push(synthetic);
       console.log('[SFDC Merge] Created synthetic district row for:', parentName, '(from', children.length, 'school records)');
@@ -787,6 +788,12 @@ export function runMerge(csvData, existingData, source) {
         merged.account_id = csvAccountId;
       }
 
+      // Persist parent_account_id for ID-based parent linking in crossLinkCustomers
+      const csvParentAcctId = (csvRow.parent_account_id || '').trim();
+      if (csvParentAcctId && csvParentAcctId !== '000000000000000') {
+        merged.parent_account_id = csvParentAcctId;
+      }
+
       // ID-based parent district linking for school-level records
       const csvParentAccountId = (csvRow.parent_account_id || '').trim();
       if (csvParentAccountId && csvParentAccountId !== '000000000000000') {
@@ -985,6 +992,12 @@ export function runMerge(csvData, existingData, source) {
       newRecord.name = name;
       if (csvAccountId && csvAccountId !== '000000000000000') {
         newRecord.account_id = csvAccountId;
+      }
+
+      // Persist parent_account_id for ID-based parent linking in crossLinkCustomers
+      const csvNewParentAcctId = (csvRow.parent_account_id || '').trim();
+      if (csvNewParentAcctId && csvNewParentAcctId !== '000000000000000') {
+        newRecord.parent_account_id = csvNewParentAcctId;
       }
 
       // ID-based parent district linking for new school-level records
@@ -1310,6 +1323,20 @@ export function runOppMerge(csvData) {
       priorOpps = (acct.opps || []).map(o => ({ area: o.area || '', stage: o.stage || '', acv: o.acv || '' }));
       acct.opps = [];
 
+      // Carry over school-level opps that were pre-rolled during consolidateParentAccounts().
+      // These live on the CSV row object (csvRow.opps) and have school_name set.
+      // Without this, they'd be lost because runOppMerge only reads flat CSV fields.
+      if (csvRow.opps && csvRow.opps.length > 0) {
+        csvRow.opps.forEach(preRolledOpp => {
+          if (preRolledOpp.school_name) {
+            acct.opps.push(preRolledOpp);
+          }
+        });
+        if (acct.opps.length > 0) {
+          console.log('[Opp Merge] Carried over', acct.opps.length, 'school-level opp(s) from consolidation for:', acct.name);
+        }
+      }
+
       // Apply wrapper fields on first row
       if (oppOwner) acct.opp_owner = oppOwner;
       if (wrapperFields.opportunity_name) acct.opportunity_name = wrapperFields.opportunity_name;
@@ -1339,9 +1366,18 @@ export function runOppMerge(csvData) {
       // matched to its parent district — rawName is the school's account name
       if (csvParentId && csvParentId !== '000000000000000') {
         oppFields.school_name = rawName;
+        const oppEntry = buildOppEntry(oppFields);
+        upsertOpp(acct, oppEntry);
+      } else if (csvRow.opps && csvRow.opps.some(o => o.school_name)) {
+        // This is a synthetic/parent row whose flat CSV fields came from a child row
+        // during consolidation. The school-level opps were already carried over above.
+        // Skip the flat-field upsert to avoid creating a ghost district-level opp
+        // from the child's inherited fields.
+        console.log('[Opp Merge] Skipping flat-field upsert for synthetic parent row:', acct.name);
+      } else {
+        const oppEntry = buildOppEntry(oppFields);
+        upsertOpp(acct, oppEntry);
       }
-      const oppEntry = buildOppEntry(oppFields);
-      upsertOpp(acct, oppEntry);
     }
 
     // Parse numeric fields within opps

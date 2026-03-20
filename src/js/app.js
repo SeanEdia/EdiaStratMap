@@ -311,14 +311,15 @@ export function crossLinkCustomers() {
 
   // Build school-to-district map: normalized school name → district name.
   // Used to set parent_district on customer records for school-level customers.
+  // Build school-to-district map. Store ALL districts per school name to handle
+  // same-named schools in different states (e.g., "Westwood Middle School" in OH and VA).
   const schoolToDistrict = new Map();
   S.ACCOUNT_DATA.forEach(d => {
     if (d._schools && d._schools.length > 0) {
       d._schools.forEach(schoolName => {
         const norm = normalizeDistrictName(schoolName);
-        if (!schoolToDistrict.has(norm)) {
-          schoolToDistrict.set(norm, { districtName: d.name, state: (d.state || '').toUpperCase().trim() });
-        }
+        if (!schoolToDistrict.has(norm)) schoolToDistrict.set(norm, []);
+        schoolToDistrict.get(norm).push({ districtName: d.name, state: (d.state || '').toUpperCase().trim() });
       });
     }
   });
@@ -339,23 +340,75 @@ export function crossLinkCustomers() {
   });
 
   // Reverse link: customer → account
-  // Also set parent_district for school-level customers
+  // Also set parent_district for school-level customers.
+  // Priority order:
+  //   1. SFDC parent_account_id → match by account_id (strongest signal)
+  //   2. SFDC parent_account → match by name (authoritative SFDC relationship)
+  //   3. _schools name matching → fallback (can collide across states)
   let parentLinked = 0;
   S.CUSTOMER_DATA.forEach(c => {
     const norm = normalizeDistrictName(c.name);
     c.also_account = acctNorms.has(norm);
 
-    // If customer name matches a school within a district, set parent_district
-    const parentMatch = schoolToDistrict.get(norm);
-    if (parentMatch) {
-      const custState = (c.state || '').toUpperCase().trim();
-      const distState = parentMatch.state;
-      if (!custState || !distState || custState === distState) {
-        c.parent_district = parentMatch.districtName;
+    let linked = false;
+
+    // Priority 1: SFDC parent_account_id → match by account_id
+    const parentId = (c.parent_account_id || '').trim();
+    if (!linked && parentId && parentId !== '000000000000000') {
+      const idMatch = S.ACCOUNT_DATA.find(a => a.account_id === parentId);
+      if (idMatch) {
+        c.parent_district = idMatch.name;
         parentLinked++;
-      } else {
-        console.log('[Link] Skipped cross-state match:', c.name, '(' + custState + ') →', parentMatch.districtName, '(' + distState + ')');
+        linked = true;
       }
+    }
+
+    // Priority 2: SFDC parent_account → match by name in accounts
+    const parentName = (c.parent_account || '').trim();
+    if (!linked && parentName) {
+      const parentNorm = normalizeDistrictName(parentName);
+      const nameMatch = S.ACCOUNT_DATA.find(a => normalizeDistrictName(a.name) === parentNorm);
+      if (nameMatch) {
+        // Validate state if both are known
+        const custState = (c.state || '').toUpperCase().trim();
+        const acctState = (nameMatch.state || '').toUpperCase().trim();
+        if (!custState || !acctState || custState === acctState) {
+          c.parent_district = nameMatch.name;
+          parentLinked++;
+          linked = true;
+        } else {
+          console.log('[Link] Cross-state parent_account mismatch:', c.name, '(' + custState + ') → parent_account:', parentName, '(' + acctState + ')');
+        }
+      }
+    }
+
+    // Priority 3: _schools name matching fallback (for customers without SFDC parent data)
+    if (!linked) {
+      const candidates = schoolToDistrict.get(norm);
+      if (candidates && candidates.length > 0) {
+        const custState = (c.state || '').toUpperCase().trim();
+        // Find the candidate in the same state (if customer has a state)
+        const stateMatch = custState
+          ? candidates.find(cand => cand.state === custState)
+          : null;
+        const bestMatch = stateMatch || (candidates.length === 1 ? candidates[0] : null);
+        if (bestMatch) {
+          const distState = bestMatch.state;
+          if (!custState || !distState || custState === distState) {
+            c.parent_district = bestMatch.districtName;
+            parentLinked++;
+            linked = true;
+          }
+        }
+        if (!linked && custState) {
+          console.log('[Link] No same-state _schools match for:', c.name, '(' + custState + ') — candidates:', candidates.map(cd => cd.districtName + ' (' + cd.state + ')').join(', '));
+        }
+      }
+    }
+
+    // Clear any stale parent_district that was set incorrectly in a prior merge
+    if (!linked) {
+      c.parent_district = '';
     }
   });
 
