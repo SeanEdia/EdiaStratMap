@@ -734,7 +734,7 @@ export function postMergeRefresh() {
   // dataset can inherit coordinates from newly-added records in the other.
   let catchUpInherited = 0;
   const catchUpLocationIndex = buildLocationIndex();
-  [...ACCOUNT_DATA, ...CUSTOMER_DATA].forEach(r => {
+  [...S.ACCOUNT_DATA, ...S.CUSTOMER_DATA].forEach(r => {
     if (!r.lat || !r.lng) {
       if (inheritLocationData(r, catchUpLocationIndex)) catchUpInherited++;
     }
