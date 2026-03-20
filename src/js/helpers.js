@@ -41,20 +41,28 @@ export function precomputeSearchFields(records) {
 
 export function normalizeDistrictName(name) {
   let normalized = name.toLowerCase().trim();
+
+  // ── STEP 1: Strip leading articles ──
+  normalized = normalized.replace(/^the\s+/i, '');
+
+  // ── STEP 2: Strip PREFIX structural patterns ──
+  const prefixPatterns = [
+    /^(?:unified|metropolitan|consolidated|special|city|joint(?:\s+union)?)\s+school\s+district\s+of\s+/i,
+    /^school\s+district\s+of\s+/i,
+  ];
+  for (const pattern of prefixPatterns) {
+    const before = normalized;
+    normalized = normalized.replace(pattern, '');
+    if (normalized !== before) break;
+  }
+
+  // ── STEP 3: Strip SUFFIX structural patterns ──
+  // Do NOT use compound patterns like /county school district/ or /unified school district/.
+  // Those strip geographic qualifiers. /school district/ alone preserves them.
   const suffixPatterns = [
     /\s+sau\s*#?\d+$/i,
     /\s+independent school district$/i,
-    /\s+consolidated unified school district$/i,
-    /\s+unified high school district$/i,
-    /\s+joint union high school district$/i,
-    /\s+joint unified school district$/i,
-    /\s+unified school district$/i,
-    /\s+consolidated school district$/i,
-    /\s+central school district$/i,
-    /\s+city school district$/i,
     /\s+union free school district$/i,
-    /\s+public school district$/i,
-    /\s+county school district$/i,
     /\s+school district$/i,
     /\s+county public schools$/i,
     /\s+county schools$/i,
@@ -79,6 +87,11 @@ export function normalizeDistrictName(name) {
   suffixPatterns.forEach(pattern => {
     normalized = normalized.replace(pattern, '');
   });
+
+  // ── STEP 4: Strip trailing comma + state abbreviation ──
+  normalized = normalized.replace(/,\s*[a-z]{2}$/i, '');
+
+  // ── STEP 5: Collapse whitespace ──
   normalized = normalized.replace(/\s+/g, ' ').trim();
   return normalized;
 }

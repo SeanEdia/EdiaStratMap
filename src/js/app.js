@@ -143,6 +143,7 @@ S.CONFLICTS = loadConflicts();
 // ============ OPP HELPERS (must be above DATA INITIALIZATION for migration) ============
 // These are needed at module-load time when migrating localStorage data.
 export const OPP_ENTRY_FIELDS = new Set([
+  'opportunity_id',
   'opp_stage', 'opp_forecast', 'opp_areas', 'opp_acv', 'opp_probability',
   'opp_contact', 'opp_contact_title', 'opp_next_step', 'opp_last_activity',
   'opp_sdr', 'opp_champion', 'opp_economic_buyer', 'opp_competition'
@@ -157,6 +158,7 @@ export const OPP_WRAPPER_FIELDS = new Set([
 
 export function buildOppEntry(oppFields) {
   return {
+    opportunity_id: oppFields.opportunity_id || '',
     area: normalizeOppArea(oppFields.opp_areas || ''),
     stage: oppFields.opp_stage || '',
     forecast: oppFields.opp_forecast || '',
