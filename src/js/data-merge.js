@@ -314,6 +314,17 @@ export function consolidateParentAccounts(csvData) {
       ['students_in_district', 'enrollment', 'student_count', 'total_students', 'total_enrollment'].forEach(k => {
         if (synthetic[k] !== undefined) synthetic[k] = '';
       });
+
+      // The synthetic district must carry the PARENT's Account ID, not the child school's.
+      // parent_account_id IS the district's SFDC ID. The child's account_id is the school's ID.
+      // IDs are king — getting this wrong causes cascading data corruption.
+      const parentAccountId = (first.parent_account_id || '').trim();
+      if (parentAccountId && parentAccountId !== '000000000000000') {
+        synthetic.account_id = parentAccountId;
+      } else {
+        // No parent ID available — clear the child's ID so we don't contaminate the district record
+        delete synthetic.account_id;
+      }
       delete synthetic.parent_account;
       delete synthetic.parent_account_id;
 
@@ -589,24 +600,45 @@ export function runMerge(csvData, existingData, source) {
     const compositeKey = nameKey + '|' + csvStateKey;
     const compositeNormKey = normalizedKey + '|' + csvStateKey;
 
-    // First check if we already merged this account from an earlier CSV row (handles multiple opps per account)
-    // Use composite key first (name+state), fall back to name-only for backwards compat
-    let alreadyMerged = mergedByName.get(compositeKey) || mergedByName.get(compositeNormKey);
+    // First check if we already merged this account from an earlier CSV row (handles multiple opps per account).
+    // PRIORITY: Account ID (king) → name+state composite → name-only (only when CSV has no state).
+    const csvAccountId = (csvRow.account_id || '').trim();
+    let alreadyMerged = null;
+    if (csvAccountId && csvAccountId !== '000000000000000') {
+      alreadyMerged = mergedByName.get('id:' + csvAccountId);
+    }
+    if (!alreadyMerged) {
+      alreadyMerged = mergedByName.get(compositeKey) || mergedByName.get(compositeNormKey);
+    }
     if (!alreadyMerged && !csvStateKey) {
-      // Only fall back to name-only lookup when CSV has no state info
       alreadyMerged = mergedByName.get(nameKey) || mergedByName.get(normalizedKey);
     }
 
     // ── TIER 0: Match by SFDC Account ID (deterministic, highest priority) ──
-    const csvAccountId = (csvRow.account_id || '').trim();
+    // csvAccountId already extracted above for alreadyMerged lookup
     let existing = null;
     if (csvAccountId && csvAccountId !== '000000000000000') {
       const idMatch = existingById.get(csvAccountId);
       if (idMatch) {
-        existing = idMatch;
-        console.log('[SFDC Merge] ID match:', csvAccountId, '→', existing.item.name);
-        const existingComposite = existing.item.name.toLowerCase().trim() + '|' + (existing.item.state || '').toUpperCase().trim();
-        alreadyMerged = alreadyMerged || mergedByName.get(existingComposite) || mergedByName.get(existing.item.name.toLowerCase().trim());
+        // Verify state consistency: if both have a state and they differ, the ID was
+        // written to the wrong record in a previous corrupted merge. Skip the ID match
+        // so the name+state cascade can find or create the correct record.
+        const idMatchState = (idMatch.item.state || '').toUpperCase().trim();
+        const csvSt = (getStateFromRow(csvRow) || '').toUpperCase().trim();
+        if (csvSt && idMatchState && csvSt !== idMatchState) {
+          console.warn('[SFDC Merge] TIER 0 STATE MISMATCH — ID', csvAccountId,
+            'matched', idMatch.item.name, '(' + idMatchState + ') but CSV state is', csvSt,
+            '— removing corrupted ID from existing record');
+          delete idMatch.item.account_id;
+          existingById.delete(csvAccountId);
+          // Don't set existing — fall through to name+state matching
+        } else {
+          existing = idMatch;
+          console.log('[SFDC Merge] ID match:', csvAccountId, '→', existing.item.name);
+          // Update alreadyMerged via ID key (authoritative) then composite
+          const existingComposite = existing.item.name.toLowerCase().trim() + '|' + (existing.item.state || '').toUpperCase().trim();
+          alreadyMerged = alreadyMerged || mergedByName.get('id:' + csvAccountId) || mergedByName.get(existingComposite);
+        }
       }
     }
 
@@ -715,8 +747,27 @@ export function runMerge(csvData, existingData, source) {
         upsertOpp(alreadyMerged, oppEntry);
       }
       clampFutureLastActivity(alreadyMerged);
-      if (csvAccountId && csvAccountId !== '000000000000000' && !alreadyMerged.account_id) {
-        alreadyMerged.account_id = csvAccountId;
+      if (csvAccountId && csvAccountId !== '000000000000000') {
+        if (!alreadyMerged.account_id) {
+          // Only persist ID if states match — prevents writing a different entity's ID
+          // onto a name-matched record from a different state
+          const existSt = (alreadyMerged.state || '').toUpperCase().trim();
+          const csvSt = csvStateKey;
+          if (!existSt || !csvSt || existSt === csvSt) {
+            alreadyMerged.account_id = csvAccountId;
+            mergedByName.set('id:' + csvAccountId, alreadyMerged);
+          } else {
+            console.warn('[SFDC Merge] Blocked account_id write (state mismatch):',
+              alreadyMerged.name, existSt, '≠ CSV', csvSt, 'ID:', csvAccountId);
+          }
+        } else if (alreadyMerged.account_id !== csvAccountId) {
+          // DIFFERENT IDs = DIFFERENT ACCOUNTS. This CSV row should NOT be treated
+          // as a duplicate of alreadyMerged. Log it — the name+state composite key
+          // incorrectly matched a different entity.
+          console.warn('[SFDC Merge] ID CONFLICT on alreadyMerged:', alreadyMerged.name,
+            '- existing ID:', alreadyMerged.account_id, '≠ CSV ID:', csvAccountId,
+            '— these are different accounts with the same name');
+        }
       }
       parseNumericFields(alreadyMerged);
       (alreadyMerged.opps || []).forEach(o => {
@@ -784,8 +835,22 @@ export function runMerge(csvData, existingData, source) {
       clampFutureLastActivity(merged);
 
       // Persist SFDC Account ID for future ID-based matching
-      if (csvAccountId && csvAccountId !== '000000000000000' && !merged.account_id) {
-        merged.account_id = csvAccountId;
+      if (csvAccountId && csvAccountId !== '000000000000000') {
+        if (!merged.account_id) {
+          const mergedSt = (merged.state || '').toUpperCase().trim();
+          const csvSt = (getStateFromRow(csvRow) || '').toUpperCase().trim();
+          if (!mergedSt || !csvSt || mergedSt === csvSt) {
+            merged.account_id = csvAccountId;
+          } else {
+            console.warn('[SFDC Merge] Blocked account_id write (state mismatch):',
+              merged.name, mergedSt, '≠ CSV', csvSt, 'ID:', csvAccountId);
+          }
+        } else if (merged.account_id !== csvAccountId) {
+          // Existing record already has a DIFFERENT ID. This is a same-name collision.
+          // The CSV row is for a different entity. Don't overwrite.
+          console.warn('[SFDC Merge] ID CONFLICT on matched record:', merged.name,
+            '- existing ID:', merged.account_id, '≠ CSV ID:', csvAccountId);
+        }
       }
 
       // Persist parent_account_id for ID-based parent linking in crossLinkCustomers
@@ -878,6 +943,7 @@ export function runMerge(csvData, existingData, source) {
             name: merged.name,
             enrollment: parseInt(merged.enrollment) || 0,
             state: merged.state || '',
+            account_id: merged.account_id || csvAccountId || '',
             oldAE: priorAE,
             newAE: csvAE,
             source: source || 'accounts',
@@ -948,16 +1014,24 @@ export function runMerge(csvData, existingData, source) {
       }
 
       mergedData.push(merged);
-      // Track this merged record to handle duplicate CSV rows (multiple opps per account)
-      // Use composite keys (name+state) so same-name different-state accounts stay separate
+      // Track this merged record to handle duplicate CSV rows (multiple opps per account).
+      // KEY HIERARCHY: Account ID (deterministic) → name+state (composite) → name-only (ONLY if no state).
+      // Account ID is king — when present, it's the authoritative dedup key.
+      if (merged.account_id) {
+        mergedByName.set('id:' + merged.account_id, merged);
+      }
       const mergedState = (merged.state || '').toUpperCase().trim();
       mergedByName.set(nameKey + '|' + mergedState, merged);
       mergedByName.set(normalizedKey + '|' + mergedState, merged);
       mergedByName.set(existing.item.name.toLowerCase().trim() + '|' + mergedState, merged);
-      // Also set name-only keys for backwards compat (CSV rows without state info)
-      mergedByName.set(nameKey, merged);
-      mergedByName.set(normalizedKey, merged);
-      mergedByName.set(existing.item.name.toLowerCase().trim(), merged);
+      // Name-only keys ONLY when record has no state info (legacy data without state).
+      // When state is present, composite keys are sufficient. Name-only keys cause
+      // false collisions between same-name different-state accounts.
+      if (!mergedState) {
+        mergedByName.set(nameKey, merged);
+        mergedByName.set(normalizedKey, merged);
+        mergedByName.set(existing.item.name.toLowerCase().trim(), merged);
+      }
     } else {
       // New record - check if name might be a partial match
       const possibleMatch = findPartialMatch(name, existingByName);
@@ -1111,14 +1185,19 @@ export function runMerge(csvData, existingData, source) {
         stats.changes.push({ name, action: 'new' });
       }
       mergedData.push(newRecord);
-      // Track this new record to handle duplicate CSV rows
-      // Use composite keys (name+state) so same-name different-state accounts stay separate
+      // Track this new record to handle duplicate CSV rows.
+      // Account ID is king — deterministic dedup key when available.
+      if (newRecord.account_id) {
+        mergedByName.set('id:' + newRecord.account_id, newRecord);
+      }
       const newState = (newRecord.state || '').toUpperCase().trim();
       mergedByName.set(nameKey + '|' + newState, newRecord);
       mergedByName.set(normalizedKey + '|' + newState, newRecord);
-      // Also set name-only keys for backwards compat
-      mergedByName.set(nameKey, newRecord);
-      mergedByName.set(normalizedKey, newRecord);
+      // Name-only keys ONLY when no state info (legacy data)
+      if (!newState) {
+        mergedByName.set(nameKey, newRecord);
+        mergedByName.set(normalizedKey, newRecord);
+      }
       // Also track by address for alias detection within the same CSV upload
       const newAddr = (newRecord.address || '').toLowerCase().replace(/[^a-z0-9]/g, '');
       const newAddrState = (newRecord.state || '').toUpperCase().trim();
@@ -1231,9 +1310,19 @@ export function runOppMerge(csvData) {
     if (lookupId && lookupId !== '000000000000000') {
       const idMatch = clonedById.get(lookupId);
       if (idMatch) {
-        match = idMatch;
-        console.log('[Opp Merge] ID match:', lookupId, '→', match.item.name,
-          csvParentId && csvParentId !== '000000000000000' ? '(via parent ID)' : '');
+        // Verify state consistency
+        const idMatchState = (idMatch.item.state || '').toUpperCase().trim();
+        if (csvState && idMatchState && csvState !== idMatchState) {
+          console.warn('[Opp Merge] TIER 0 STATE MISMATCH — ID', lookupId,
+            'matched', idMatch.item.name, '(' + idMatchState + ') but CSV state is', csvState,
+            '— removing corrupted ID');
+          delete idMatch.item.account_id;
+          clonedById.delete(lookupId);
+        } else {
+          match = idMatch;
+          console.log('[Opp Merge] ID match:', lookupId, '→', match.item.name,
+            csvParentId && csvParentId !== '000000000000000' ? '(via parent ID)' : '');
+        }
       }
     }
 
@@ -1304,8 +1393,20 @@ export function runOppMerge(csvData) {
 
     // Persist SFDC Account ID on the account record (use district ID, not school)
     const persistId = (csvParentId && csvParentId !== '000000000000000') ? csvParentId : csvAccountId;
-    if (persistId && persistId !== '000000000000000' && !acct.account_id) {
-      acct.account_id = persistId;
+    if (persistId && persistId !== '000000000000000') {
+      if (!acct.account_id) {
+        // Only persist if states match
+        const acctSt = (acct.state || '').toUpperCase().trim();
+        if (!acctSt || !csvState || acctSt === csvState) {
+          acct.account_id = persistId;
+        } else {
+          console.warn('[Opp Merge] Blocked account_id write (state mismatch):',
+            acct.name, acctSt, '≠ CSV', csvState, 'ID:', persistId);
+        }
+      } else if (acct.account_id !== persistId) {
+        console.warn('[Opp Merge] ID CONFLICT:', acct.name,
+          '- existing ID:', acct.account_id, '≠ CSV ID:', persistId);
+      }
     }
 
     // Store Opportunity ID on the opp entry
@@ -1443,6 +1544,7 @@ export function runOppMerge(csvData) {
             name: acct.name,
             enrollment: parseInt(acct.enrollment) || 0,
             state: acct.state || '',
+            account_id: acct.account_id || lookupId || '',
             oldAE: priorAE,
             newAE: csvAE,
             source: 'opps',
