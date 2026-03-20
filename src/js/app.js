@@ -2461,7 +2461,7 @@ function updateActionDashboard() {
       allAccounts.push({
         name: d.name,
         key: key,
-        lastActivity: d.opp_last_activity || '',
+        lastActivity: d.last_modified || d.opp_last_activity || '',
         nextStep: d.opp_next_step || '',
         opps: d.opps && d.opps.length > 0 ? d.opps : (d.opp_stage ? [buildOppEntry(d)] : []),
         type: 'accounts',
@@ -2513,29 +2513,7 @@ function updateActionDashboard() {
     }
   });
 
-  // 3) Untouched accounts - no activity date at all
-  const untouched = allAccounts.filter(a => !a.lastActivity || !parseUSDate(a.lastActivity));
-
   let html = '';
-
-  // --- Stalest Accounts ---
-  html += `<div class="ad-section">`;
-  html += `<div class="ad-section-header">Stalest Accounts <span class="ad-count">${stalest.length}</span></div>`;
-  if (stalest.length === 0) {
-    html += `<div class="ad-empty">No activity dates on record</div>`;
-  } else {
-    stalest.forEach(a => {
-      const label = a.daysSince === 1 ? '1d ago' : a.daysSince + 'd ago';
-      html += `<div class="ad-item-wrap" onclick="openAccountModalByKey('${a.key}')">`;
-      html += `<div class="ad-item-row">`;
-      html += `<span class="ad-name">${a.name}</span>`;
-      html += `<span class="ad-meta ad-stale">${label}</span>`;
-      html += `</div>`;
-      html += renderOppNextSteps(a);
-      html += `</div>`;
-    });
-  }
-  html += `</div>`;
 
   // --- Next Steps Due This Week ---
   html += `<div class="ad-section">`;
@@ -2556,25 +2534,24 @@ function updateActionDashboard() {
   }
   html += `</div>`;
 
-  // --- Untouched Accounts ---
+  // --- Stalest Accounts ---
   html += `<div class="ad-section">`;
-  html += `<div class="ad-section-header">Untouched <span class="ad-count">${untouched.length}</span></div>`;
-  if (untouched.length === 0) {
-    html += `<div class="ad-empty">All accounts have activity dates</div>`;
+  html += `<div class="ad-section-header">Stalest Accounts <span class="ad-count">${stalest.length}</span></div>`;
+  if (stalest.length === 0) {
+    html += `<div class="ad-empty">No activity dates on record</div>`;
   } else {
-    const shown = untouched.slice(0, 8);
-    shown.forEach(a => {
+    stalest.forEach(a => {
+      const label = a.daysSince === Infinity
+        ? 'No recent activity'
+        : a.daysSince === 1 ? '1 day ago' : a.daysSince + ' days ago';
       html += `<div class="ad-item-wrap" onclick="openAccountModalByKey('${a.key}')">`;
       html += `<div class="ad-item-row">`;
       html += `<span class="ad-name">${a.name}</span>`;
-      html += `<span class="ad-meta ad-untouched">no activity</span>`;
+      html += `<span class="ad-meta ad-stale">${label}</span>`;
       html += `</div>`;
       html += renderOppNextSteps(a);
       html += `</div>`;
     });
-    if (untouched.length > 8) {
-      html += `<div class="ad-empty">+ ${untouched.length - 8} more</div>`;
-    }
   }
   html += `</div>`;
 
