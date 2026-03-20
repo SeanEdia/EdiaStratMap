@@ -959,24 +959,24 @@ export function closeUploadSummary() {
 // Includes unassigned records (no AE) which are now filtered out when a team/rep is selected.
 export function countNewRecordsHiddenByFilter(newRecordNames) {
   if (!newRecordNames || newRecordNames.size === 0) return 0;
-  if (!selectedTeam && !selectedRep) return 0; // No team/rep filter active
+  if (!S.selectedTeam && !S.selectedRep) return 0; // No team/rep filter active
   let hidden = 0;
   S.ACCOUNT_DATA.forEach(d => {
     if (!newRecordNames.has(d.name)) return; // Only check new records
     if (!d.lat || !d.lng) return; // Already counted as missing coords
     const territoryAE = getTerritoryAE(d);
     const holdoutAE = getHoldoutAE(d);
-    if (selectedRep) {
-      const isManager = selectedTeam && TEAM_REP_DATA[selectedTeam] &&
-        TEAM_REP_DATA[selectedTeam].manager === selectedRep;
+    if (S.selectedRep) {
+      const isManager = S.selectedTeam && TEAM_REP_DATA[S.selectedTeam] &&
+        TEAM_REP_DATA[S.selectedTeam].manager === S.selectedRep;
       if (isManager) {
-        const teamReps = S._teamRepsSet[selectedTeam];
+        const teamReps = S._teamRepsSet[S.selectedTeam];
         if (!teamReps || (!teamReps.has(territoryAE) && !(holdoutAE && teamReps.has(holdoutAE)))) hidden++;
       } else {
-        if (territoryAE !== selectedRep && holdoutAE !== selectedRep) hidden++;
+        if (territoryAE !== S.selectedRep && holdoutAE !== S.selectedRep) hidden++;
       }
-    } else if (selectedTeam) {
-      const teamReps = S._teamRepsSet[selectedTeam];
+    } else if (S.selectedTeam) {
+      const teamReps = S._teamRepsSet[S.selectedTeam];
       if (!teamReps || (!teamReps.has(territoryAE) && !(holdoutAE && teamReps.has(holdoutAE)))) hidden++;
     }
   });
