@@ -4,6 +4,7 @@ import { saveOppsToLocalStorage, OPP_ENTRY_FIELDS, buildOppEntry, migrateToOppsA
   crossLinkCustomers, joinOppsToAccounts, buildIndices, TEAM_REP_DATA,
   getTerritoryAE, getHoldoutAE, hideWelcomeOverlay, updateDataSourceIndicator,
   renderTeamRepSelectors, renderFilters } from './app.js';
+import { showGeocodeProgress, updateGeocodeProgress, hideGeocodeProgress } from './conference.js';
 
 // ============ MULTI-OPP HELPERS ============
 // OPP_ENTRY_FIELDS, normalizeOppArea, buildOppEntry, and migrateToOppsArray
