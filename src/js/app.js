@@ -45,6 +45,18 @@ import { exportData, updateExportButtonVisibility } from './data-export.js';
 import { toggleTheme, protectedToggleDataRefreshPanel, protectedOpenSfdcModal } from './features.js';
 
 // Re-export districtKey so extracted modules can import it
+// Format probability for display: SFDC exports as decimal (0.35 = 35%),
+// but some records may already have whole-number values (35 = 35%).
+// Returns a string like "35%" or "" if no value.
+export function formatProbability(val) {
+  if (val === undefined || val === null || val === '') return '';
+  const num = Number(val);
+  if (isNaN(num)) return '';
+  // If value is > 0 and ≤ 1, treat as decimal (SFDC format) and multiply by 100
+  const pct = (num > 0 && num <= 1) ? Math.round(num * 100) : Math.round(num);
+  return pct + '%';
+}
+
 export { districtKey, normalizeDistrictName, escapeHtml, escapeAttr, parseUSDate, haversine,
   daysAgo, extractDatesFromText, isThisWeek, formatLastActivity, clampFutureLastActivity, normalizeOppArea, isDOE };
 
@@ -172,6 +184,7 @@ export function buildOppEntry(oppFields) {
     champion: oppFields.opp_champion || '',
     economic_buyer: oppFields.opp_economic_buyer || '',
     competition: oppFields.opp_competition || '',
+    school_name: oppFields.school_name || '',
   };
 }
 
@@ -2724,16 +2737,21 @@ function buildStratPopup(d) {
 
   // Opportunity section — render one card per opp in the opps array
   const popupOpps = d.opps && d.opps.length > 0 ? d.opps : (d.opp_stage ? [buildOppEntry(d)] : []);
+  const hasSchoolOpp = popupOpps.some(o => o.school_name);
+  if (hasSchoolOpp) {
+    html += `<div style="font-size:10px;color:#e17055;margin:6px 0 2px;font-weight:600;">🏫 Includes school-level opp(s)</div>`;
+  }
   popupOpps.forEach(opp => {
     const stageColors = {'1':'#fdcb6e','2':'#74b9ff','3':'#e17055','4':'#a29bfe','5':'#55efc4','6':'#fd79a8'};
     const stageNum = (opp.stage || '').charAt(0);
     const sc = stageColors[stageNum] || '#ccc';
     const areaLabel = opp.area || 'Opportunity';
-    html += `<div class="popup-section-label" style="display:flex;align-items:center;gap:8px;">${escapeHtml(areaLabel)} <span class="popup-opp-stage-pill" style="font-size:10px;background:${sc}22;padding:1px 7px;border-radius:8px;border:1px solid ${sc}44;">${escapeHtml(opp.stage || '')}</span></div>`;
+    const schoolTag = opp.school_name ? ` <span style="font-size:10px;color:#e17055;font-weight:400;">@ ${escapeHtml(opp.school_name)}</span>` : '';
+    html += `<div class="popup-section-label" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">${escapeHtml(areaLabel)}${schoolTag} <span class="popup-opp-stage-pill" style="font-size:10px;background:${sc}22;padding:1px 7px;border-radius:8px;border:1px solid ${sc}44;">${escapeHtml(opp.stage || '')}</span></div>`;
     const oppRows = [
       ['Forecast', opp.forecast, false],
       ['Year 1 ACV', opp.acv ? '$' + Number(opp.acv).toLocaleString() : '', false],
-      ['Probability', opp.probability ? opp.probability + '%' : '', false],
+      ['Probability', formatProbability(opp.probability), false],
       ['Contact', opp.contact ? (opp.contact + (opp.contact_title ? ' (' + opp.contact_title + ')' : '')) : '', opp.contact],
       ['Next Step', opp.next_step, false],
       ['Last Activity', formatLastActivity(opp.last_activity), false],

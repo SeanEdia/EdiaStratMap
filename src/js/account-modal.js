@@ -1,6 +1,6 @@
 import S from './state.js';
 import { districtKey, escapeHtml, escapeAttr, formatLastActivity, isDOE } from './helpers.js';
-import { buildOppEntry, isManagerHeld, getTerritoryAE, getHoldoutAE } from './app.js';
+import { buildOppEntry, isManagerHeld, getTerritoryAE, getHoldoutAE, formatProbability } from './app.js';
 import { getConflictForAccount, getConflictTypeLabel } from './conflict.js';
 import { getAccountNotes, formatNoteTime } from './notes.js';
 import { closeMergeModal } from './multi-opp.js';
@@ -185,11 +185,12 @@ export function populateInfoTab(d) {
     else if (stage.includes('Procurement')) stageClass = 'procurement';
 
     const areaLabel = opp.area || 'Opportunity';
+    const schoolTag = opp.school_name ? `<span style="font-size:11px;color:#e17055;font-weight:400;margin-left:6px;">@ ${escapeHtml(opp.school_name)}</span>` : '';
     html += `<div class="modal-section opp-card">
-      <div class="modal-section-title"><span class="icon">💼</span> ${areaLabel}</div>
+      <div class="modal-section-title"><span class="icon">💼</span> ${areaLabel}${schoolTag}</div>
       <span class="opp-stage-badge ${stageClass}">${stage}</span>
       ${modalRow('Forecast', opp.forecast || '—')}
-      ${modalRow('Probability', opp.probability ? opp.probability + '%' : '—')}
+      ${modalRow('Probability', formatProbability(opp.probability) || '—')}
       ${modalRow('Year 1 ACV', opp.acv ? '$' + Number(opp.acv).toLocaleString() : '—')}
       ${modalRow('Contact', opp.contact ? opp.contact + (opp.contact_title ? ' (' + opp.contact_title + ')' : '') : '—')}
       ${modalRow('Next Step', opp.next_step || '—')}
@@ -425,7 +426,7 @@ export function populateDistrictIntelTab(d) {
     </div>`;
     html += modalRow('Forecast', diOpp.forecast || '—');
     html += modalRow('Year 1 ACV', diOpp.acv ? '$' + Number(diOpp.acv).toLocaleString() : '—');
-    html += modalRow('Probability', diOpp.probability ? diOpp.probability + '%' : '—');
+    html += modalRow('Probability', formatProbability(diOpp.probability) || '—');
     html += modalRow('Next Step', diOpp.next_step || '—');
     html += modalRow('Last Activity', formatLastActivity(diOpp.last_activity));
   } else {
@@ -465,9 +466,25 @@ export function populateSchoolsTab(d) {
   if (schools.length === 0) {
     html = '<div style="color:var(--text-muted);font-size:13px;padding:20px;">No schools associated with this district.</div>';
   } else {
+    // Build a Set of school names that have opps on this district
+    const schoolsWithOpps = new Set();
+    const opps = d.opps || [];
+    opps.forEach(opp => {
+      if (opp.school_name) schoolsWithOpps.add(opp.school_name);
+    });
+    // Sort: schools with opps first (alphabetical within each group)
+    const sorted = [...schools].sort((a, b) => {
+      const aHas = schoolsWithOpps.has(a) ? 0 : 1;
+      const bHas = schoolsWithOpps.has(b) ? 0 : 1;
+      if (aHas !== bHas) return aHas - bHas;
+      return a.localeCompare(b);
+    });
     html += '<div class="schools-list">';
-    schools.forEach(name => {
-      html += `<div class="school-list-item">${escapeHtml(name)}</div>`;
+    sorted.forEach(name => {
+      const hasOpp = schoolsWithOpps.has(name);
+      const borderColor = hasOpp ? '#e17055' : 'var(--accent-strat)';
+      const oppBadge = hasOpp ? '<span style="font-size:10px;color:#e17055;margin-left:auto;font-weight:600;">ACTIVE OPP</span>' : '';
+      html += `<div class="school-list-item" style="border-left-color:${borderColor};display:flex;align-items:center;">${escapeHtml(name)}${oppBadge}</div>`;
     });
     html += '</div>';
   }

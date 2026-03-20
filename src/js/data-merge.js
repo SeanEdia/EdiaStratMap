@@ -344,6 +344,8 @@ export function consolidateParentAccounts(csvData) {
           }
         });
         if (Object.keys(childOppFields).length > 0) {
+          // Tag with school name so the UI can distinguish school-level opps from district opps
+          childOppFields.school_name = getNameFromRow(child);
           const oppEntry = buildOppEntry(childOppFields);
           upsertOpp(row, oppEntry);
           console.log('[SFDC Merge] Rolled up opp from school', getNameFromRow(child), 'to district:', rowName);
@@ -1263,6 +1265,11 @@ export function runOppMerge(csvData) {
 
     // Upsert opp entry
     if (Object.keys(oppFields).length > 0) {
+      // Tag school-level opps: if csvParentId is set, this opp came from a school row
+      // matched to its parent district — rawName is the school's account name
+      if (csvParentId && csvParentId !== '000000000000000') {
+        oppFields.school_name = rawName;
+      }
       const oppEntry = buildOppEntry(oppFields);
       upsertOpp(acct, oppEntry);
     }
