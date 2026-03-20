@@ -2736,18 +2736,18 @@ function buildStratPopup(d) {
   }
 
   // Opportunity section — render one card per opp in the opps array
-  const popupOpps = d.opps && d.opps.length > 0 ? d.opps : (d.opp_stage ? [buildOppEntry(d)] : []);
-  const hasSchoolOpp = popupOpps.some(o => o.school_name);
+  const allOpps = d.opps && d.opps.length > 0 ? d.opps : (d.opp_stage ? [buildOppEntry(d)] : []);
+  const districtOpps = allOpps.filter(o => !o.school_name);
+  const hasSchoolOpp = allOpps.some(o => o.school_name);
   if (hasSchoolOpp) {
-    html += `<div style="font-size:10px;color:#e17055;margin:6px 0 2px;font-weight:600;">🏫 Includes school-level opp(s)</div>`;
+    html += `<div style="font-size:10px;color:#e17055;margin:6px 0 2px;font-weight:600;">🏫 School-level opp(s) — expand for details</div>`;
   }
-  popupOpps.forEach(opp => {
+  districtOpps.forEach(opp => {
     const stageColors = {'1':'#fdcb6e','2':'#74b9ff','3':'#e17055','4':'#a29bfe','5':'#55efc4','6':'#fd79a8'};
     const stageNum = (opp.stage || '').charAt(0);
     const sc = stageColors[stageNum] || '#ccc';
     const areaLabel = opp.area || 'Opportunity';
-    const schoolTag = opp.school_name ? ` <span style="font-size:10px;color:#e17055;font-weight:400;">@ ${escapeHtml(opp.school_name)}</span>` : '';
-    html += `<div class="popup-section-label" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">${escapeHtml(areaLabel)}${schoolTag} <span class="popup-opp-stage-pill" style="font-size:10px;background:${sc}22;padding:1px 7px;border-radius:8px;border:1px solid ${sc}44;">${escapeHtml(opp.stage || '')}</span></div>`;
+    html += `<div class="popup-section-label" style="display:flex;align-items:center;gap:8px;">${escapeHtml(areaLabel)} <span class="popup-opp-stage-pill" style="font-size:10px;background:${sc}22;padding:1px 7px;border-radius:8px;border:1px solid ${sc}44;">${escapeHtml(opp.stage || '')}</span></div>`;
     const oppRows = [
       ['Forecast', opp.forecast, false],
       ['Year 1 ACV', opp.acv ? '$' + Number(opp.acv).toLocaleString() : '', false],
