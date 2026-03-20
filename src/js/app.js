@@ -851,7 +851,7 @@ function buildMarkerPool() {
     const marker = L.marker([d.lat, d.lng], { icon });
     marker.on('click', function() {
       ensurePopup(marker, d, 'accounts');
-      marker.openPopup();
+      S.map.once('moveend', function() { marker.openPopup(); });
       S.map.flyTo([d.lat + 2.5, d.lng], 7, { duration: 0.6 });
     });
     S._markerPool.set('a:' + mlKey, { marker, data: d, type: 'accounts', currentClass: cls });
@@ -868,7 +868,7 @@ function buildMarkerPool() {
     const marker = L.marker([d.lat, d.lng], { icon });
     marker.on('click', function() {
       ensurePopup(marker, d, 'customer');
-      marker.openPopup();
+      S.map.once('moveend', function() { marker.openPopup(); });
       S.map.flyTo([d.lat + 2.5, d.lng], 7, { duration: 0.6 });
     });
     S._markerPool.set('c:' + mlKey, { marker, data: d, type: 'customer', currentClass: cls });
@@ -1779,7 +1779,7 @@ function applyFilters() {
         const marker = L.marker([d.lat, d.lng], { icon }).addTo(S.stratLayer);
         marker.on('click', function() {
           ensurePopup(marker, d, 'accounts');
-          marker.openPopup();
+          S.map.once('moveend', function() { marker.openPopup(); });
           S.map.flyTo([d.lat + 2.5, d.lng], 7, { duration: 0.6 });
         });
         statesSet.add(d.state);
@@ -1850,7 +1850,7 @@ function applyFilters() {
         const marker = L.marker([d.lat, d.lng], { icon }).addTo(S.custLayer);
         marker.on('click', function() {
           ensurePopup(marker, d, 'customer');
-          marker.openPopup();
+          S.map.once('moveend', function() { marker.openPopup(); });
           S.map.flyTo([d.lat + 2.5, d.lng], 7, { duration: 0.6 });
         });
         statesSet.add(d.state);
