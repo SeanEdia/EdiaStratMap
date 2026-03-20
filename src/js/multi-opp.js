@@ -822,6 +822,7 @@ export function buildMergeMessage({ dataLabel, recordCount, geocodedCount, inher
 const REASON_LABELS = {
   direct_assign: 'Account Owner (direct)',
   inactive_owner: 'Opp Owner fallback — inactive owner',
+  inactive_reassign: 'Reassigned — departing rep',
   manager_fallback: 'Opp Owner fallback — manager (not account holder)',
   no_data_loaded: 'Opp Owner fallback — rep has no data loaded yet',
   unrecognized: 'Opp Owner fallback — unrecognized name',
