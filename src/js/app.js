@@ -591,8 +591,19 @@ const INACTIVE_OWNERS = new Set([
   // Former reps
   'John Tyrrell', 'Zac Otwell', 'Brittany Garrison', 'Bill Lloyd',
   'Jacqueline Layreau', 'Marixza Acuna', 'Sydney Levenfeld', 'Jose Puyol',
+  'Wesley Yarber',
   // Still with company but no longer in sales
   'Bella Duffey', 'Scott Walters',
+]);
+
+// Specific reassignment overrides for departing reps.
+// When mergeOwner resolution encounters these inactive owners, instead of the
+// normal fallback (opp owner → existing → unassigned), assign directly to the
+// specified rep. This takes priority over the generic INACTIVE_OWNERS fallback.
+const INACTIVE_REASSIGN = new Map([
+  ['Marixza Acuna', 'Christina Ceballos'],
+  ['Zac Otwell', 'Christina Ceballos'],
+  ['Wesley Yarber', 'Christina Ceballos'],
 ]);
 
 // Ben Foley: still with company, NOT an account holder.
@@ -761,8 +772,13 @@ export function resolveOwner(csvAE, existingAE, ctx) {
     return { ae: (existing && ALL_ACTIVE_REPS.has(existing)) ? existing : csv, reason: 'conditional_no_opp' };
   }
 
-  // 4. CSV AE is a known inactive/former owner → fallback (Opp Owner → existing → unassigned)
+  // 4. CSV AE is a known inactive/former owner
   if (INACTIVE_OWNERS.has(csv)) {
+    // Check for specific reassignment override first
+    const reassignTo = INACTIVE_REASSIGN.get(csv);
+    if (reassignTo) {
+      return { ae: reassignTo, reason: 'inactive_reassign' };
+    }
     return { ae: fallback(), reason: 'inactive_owner' };
   }
 
