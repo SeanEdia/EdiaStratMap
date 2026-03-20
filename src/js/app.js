@@ -317,7 +317,7 @@ export function crossLinkCustomers() {
       d._schools.forEach(schoolName => {
         const norm = normalizeDistrictName(schoolName);
         if (!schoolToDistrict.has(norm)) {
-          schoolToDistrict.set(norm, d.name);
+          schoolToDistrict.set(norm, { districtName: d.name, state: (d.state || '').toUpperCase().trim() });
         }
       });
     }
@@ -346,10 +346,16 @@ export function crossLinkCustomers() {
     c.also_account = acctNorms.has(norm);
 
     // If customer name matches a school within a district, set parent_district
-    const parentDistrict = schoolToDistrict.get(norm);
-    if (parentDistrict) {
-      c.parent_district = parentDistrict;
-      parentLinked++;
+    const parentMatch = schoolToDistrict.get(norm);
+    if (parentMatch) {
+      const custState = (c.state || '').toUpperCase().trim();
+      const distState = parentMatch.state;
+      if (!custState || !distState || custState === distState) {
+        c.parent_district = parentMatch.districtName;
+        parentLinked++;
+      } else {
+        console.log('[Link] Skipped cross-state match:', c.name, '(' + custState + ') →', parentMatch.districtName, '(' + distState + ')');
+      }
     }
   });
 
@@ -2849,6 +2855,8 @@ function buildCustPopup(d) {
   let html = `<div class="popup-card">`;
   if (d.also_account) {
     html += `<div class="popup-type both">Active Customer + Account</div>`;
+  } else if (d.parent_district) {
+    html += `<div class="popup-type cust">School-Level Customer</div>`;
   } else {
     html += `<div class="popup-type cust">Active Customer</div>`;
   }
