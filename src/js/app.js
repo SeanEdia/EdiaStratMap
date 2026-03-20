@@ -591,7 +591,7 @@ Object.values(TEAM_REP_DATA).forEach(info => {
 // Managers — derived from team configs for display purposes (e.g. "(Manager)"
 // suffix in the rep dropdown). Managers ARE account holders and can own accounts
 // just like reps. They are already in ALL_ACTIVE_REPS.
-const MANAGERS = new Set();
+export const MANAGERS = new Set();
 Object.values(TEAM_REP_DATA).forEach(info => {
   if (info.manager) MANAGERS.add(info.manager);
 });

@@ -1,7 +1,7 @@
 import S from './state.js';
 import { districtKey, normalizeDistrictName, clampFutureLastActivity, isDOE } from './helpers.js';
 import { OPP_ENTRY_FIELDS, OPP_WRAPPER_FIELDS, buildOppEntry, migrateToOppsArray,
-  getTeamForRep, ACCOUNT_PRIMARY_AE, ALL_ACTIVE_REPS, resolveOwner } from './app.js';
+  getTeamForRep, ACCOUNT_PRIMARY_AE, ALL_ACTIVE_REPS, MANAGERS, resolveOwner } from './app.js';
 import { upsertOpp, parseNumericFields, findPartialMatch, showMergeModal } from './multi-opp.js';
 
 // ============ SPREADSHEET FILE READER (CSV + Excel) ============
@@ -865,7 +865,8 @@ export function runMerge(csvData, existingData, source) {
         // Conflict: CSV brings a different active rep than the current active rep
         if (csvAE && priorAE && csvAE !== priorAE
             && ALL_ACTIVE_REPS.has(csvAE) && ALL_ACTIVE_REPS.has(priorAE)
-            && priorAE !== ACCOUNT_PRIMARY_AE) {
+            && priorAE !== ACCOUNT_PRIMARY_AE
+            && !MANAGERS.has(priorAE) && !MANAGERS.has(csvAE)) {
           console.log('[SFDC Merge] CONFLICT:', merged.name, '- was', priorAE, ', CSV says', csvAE);
           stats.conflicts.push({
             name: merged.name,
@@ -1401,7 +1402,8 @@ export function runOppMerge(csvData) {
         // Conflict detection
         if (csvAE && priorAE && csvAE !== priorAE
             && ALL_ACTIVE_REPS.has(csvAE) && ALL_ACTIVE_REPS.has(priorAE)
-            && priorAE !== ACCOUNT_PRIMARY_AE) {
+            && priorAE !== ACCOUNT_PRIMARY_AE
+            && !MANAGERS.has(priorAE) && !MANAGERS.has(csvAE)) {
           console.log('[Opp Merge] CONFLICT:', acct.name, '- was', priorAE, ', CSV says', csvAE);
           stats.conflicts.push({
             name: acct.name,
