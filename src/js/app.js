@@ -851,8 +851,8 @@ function buildMarkerPool() {
     const marker = L.marker([d.lat, d.lng], { icon });
     marker.on('click', function() {
       ensurePopup(marker, d, 'accounts');
-      S.map.once('moveend', function() { marker.openPopup(); });
       S.map.flyTo([d.lat + 2.5, d.lng], 7, { duration: 0.6 });
+      setTimeout(() => { marker.openPopup(); }, 50);
     });
     S._markerPool.set('a:' + mlKey, { marker, data: d, type: 'accounts', currentClass: cls });
   });
@@ -868,8 +868,8 @@ function buildMarkerPool() {
     const marker = L.marker([d.lat, d.lng], { icon });
     marker.on('click', function() {
       ensurePopup(marker, d, 'customer');
-      S.map.once('moveend', function() { marker.openPopup(); });
       S.map.flyTo([d.lat + 2.5, d.lng], 7, { duration: 0.6 });
+      setTimeout(() => { marker.openPopup(); }, 50);
     });
     S._markerPool.set('c:' + mlKey, { marker, data: d, type: 'customer', currentClass: cls });
   });
@@ -2152,8 +2152,9 @@ function selectAutocomplete(index) {
     const entry = S.markerLookup[item.label + '|' + acState];
     if (entry && entry.marker) {
       const latLng = entry.marker.getLatLng();
+      ensurePopup(entry.marker, entry.data, entry.type);
       S.map.setView([latLng.lat + 2.5, latLng.lng], 7, { animate: true });
-      setTimeout(() => { ensurePopup(entry.marker, entry.data, entry.type); entry.marker.openPopup(); }, 400);
+      setTimeout(() => { entry.marker.openPopup(); }, 50);
     } else if (item.data && item.data.lat && item.data.lng) {
       S.map.setView([item.data.lat + 2.5, item.data.lng], 7, { animate: true });
     }
@@ -2180,8 +2181,9 @@ function zoomToSearchResult() {
 
   if (S.lastSearchResults.length === 1) {
     const latLng = bestMatch.marker.getLatLng();
+    ensurePopup(bestMatch.marker, bestMatch.data, bestMatch.type);
     S.map.setView([latLng.lat + 2.5, latLng.lng], 7, { animate: true });
-    setTimeout(() => { ensurePopup(bestMatch.marker, bestMatch.data, bestMatch.type); bestMatch.marker.openPopup(); }, 300);
+    setTimeout(() => { bestMatch.marker.openPopup(); }, 50);
   } else {
     // Multiple results — fit bounds
     const bounds = S.lastSearchResults.map(r => r.marker.getLatLng());
@@ -2189,7 +2191,8 @@ function zoomToSearchResult() {
       S.map.fitBounds(bounds, { padding: [40, 40], maxZoom: 8 });
     }
     // Still open best match popup
-    setTimeout(() => { ensurePopup(bestMatch.marker, bestMatch.data, bestMatch.type); bestMatch.marker.openPopup(); }, 400);
+    ensurePopup(bestMatch.marker, bestMatch.data, bestMatch.type);
+    setTimeout(() => { bestMatch.marker.openPopup(); }, 50);
   }
 }
 

@@ -129,8 +129,7 @@ export function buildAccountListRow(d, type) {
   return `<div class="account-list-item" data-name="${d.name.replace(/"/g, '&quot;')}" data-key="${dKey}"
     onmouseenter="highlightAccountMarker('${escapedName}','${escapedState}')"
     onmouseleave="unhighlightAccountMarker('${escapedName}','${escapedState}')"
-    onclick="flyToAccount('${escapedName}','${escapedState}')"
-    ondblclick="openAccountFromList('${dKey}')">
+    onclick="flyToAccount('${escapedName}','${escapedState}'); openAccountFromList('${dKey}')">
     <span class="al-stage-dot ${stage.cls}" title="${stage.label}"></span>
     <span class="al-name" title="${d.name}">${d.name}${d.expand_opp ? '<span class="al-expand-opp-badge" title="District expansion opportunity">★</span>' : ''}</span>
     <span class="al-col al-col-state">${d.state || ''}</span>
@@ -162,11 +161,9 @@ export function flyToAccount(name, state) {
   // Offset center north so the pin sits near the bottom and the popup is centered on screen
   const targetZoom = 7;
   const offsetLat = latLng.lat + 2.5;
+  S._ensurePopup(entry.marker, entry.data, entry.type);
   S.map.flyTo([offsetLat, latLng.lng], targetZoom, { duration: 0.6 });
-  setTimeout(() => {
-    S._ensurePopup(entry.marker, entry.data, entry.type);
-    entry.marker.openPopup();
-  }, 650);
+  setTimeout(() => { entry.marker.openPopup(); }, 50);
 }
 
 export function openAccountFromList(dKey) {
