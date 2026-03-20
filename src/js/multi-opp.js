@@ -35,33 +35,57 @@ export function deriveOppSummary(record) {
     record.opp_stage = '';
     record.opp_acv = 0;
     record.opp_areas = '';
+    record.has_school_opps = false;
     return;
   }
+
+  // Separate district-level and school-level opps
+  const districtOpps = opps.filter(o => !o.school_name);
+  const schoolOpps = opps.filter(o => o.school_name);
+
+  // Totals include ALL opps (district + school) — these are real pipeline numbers
   record.opp_count = opps.length;
   record.opp_areas = opps.map(o => o.area).filter(Boolean).join(', ');
-  // Sum ACV across all opps
   record.opp_acv = opps.reduce((sum, o) => sum + (Number(o.acv) || 0), 0);
-  // Most advanced stage (highest stage number) drives marker color & filter
-  let maxStageNum = 0;
-  let primaryOpp = opps[0];
-  opps.forEach(o => {
-    const num = parseInt(o.stage) || 0;
-    if (num > maxStageNum) {
-      maxStageNum = num;
-      primaryOpp = o;
-    }
-  });
-  record.opp_stage = primaryOpp.stage || '';
-  record.opp_forecast = primaryOpp.forecast || '';
-  record.opp_probability = primaryOpp.probability || '';
-  record.opp_next_step = primaryOpp.next_step || '';
-  record.opp_contact = primaryOpp.contact || '';
-  record.opp_contact_title = primaryOpp.contact_title || '';
-  record.opp_sdr = primaryOpp.sdr || '';
-  record.opp_champion = primaryOpp.champion || '';
-  record.opp_economic_buyer = primaryOpp.economic_buyer || '';
-  record.opp_competition = primaryOpp.competition || '';
-  // Most recent last_activity across all opps
+  record.has_school_opps = schoolOpps.length > 0;
+
+  // Pin color and summary fields driven by DISTRICT-LEVEL opps only
+  if (districtOpps.length > 0) {
+    let maxStageNum = 0;
+    let primaryOpp = districtOpps[0];
+    districtOpps.forEach(o => {
+      const num = parseInt(o.stage) || 0;
+      if (num > maxStageNum) {
+        maxStageNum = num;
+        primaryOpp = o;
+      }
+    });
+    record.opp_stage = primaryOpp.stage || '';
+    record.opp_forecast = primaryOpp.forecast || '';
+    record.opp_probability = primaryOpp.probability || '';
+    record.opp_next_step = primaryOpp.next_step || '';
+    record.opp_contact = primaryOpp.contact || '';
+    record.opp_contact_title = primaryOpp.contact_title || '';
+    record.opp_sdr = primaryOpp.sdr || '';
+    record.opp_champion = primaryOpp.champion || '';
+    record.opp_economic_buyer = primaryOpp.economic_buyer || '';
+    record.opp_competition = primaryOpp.competition || '';
+  } else {
+    // Only school-level opps exist — don't drive pin color from these
+    record.opp_stage = '';
+    record.opp_forecast = '';
+    record.opp_probability = '';
+    record.opp_next_step = '';
+    record.opp_contact = '';
+    record.opp_contact_title = '';
+    record.opp_sdr = '';
+    record.opp_champion = '';
+    record.opp_economic_buyer = '';
+    record.opp_competition = '';
+  }
+
+  // Most recent last_activity across ALL opps (district + school)
+  // This intentionally includes school-level opps — any activity is relevant for staleness
   let mostRecent = '';
   opps.forEach(o => {
     if (o.last_activity) {
