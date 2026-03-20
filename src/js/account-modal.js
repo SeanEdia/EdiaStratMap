@@ -173,9 +173,14 @@ export function populateInfoTab(d) {
     html += `</div>`;
   }
 
-  // Opportunity Section — render one card per opp
-  const infoOpps = d.opps && d.opps.length > 0 ? d.opps : (d.opp_stage ? [buildOppEntry(d)] : []);
-  infoOpps.forEach(opp => {
+  // Opportunity Section — render one card per opp (district-level only)
+  const allInfoOpps = d.opps && d.opps.length > 0 ? d.opps : (d.opp_stage ? [buildOppEntry(d)] : []);
+  const districtInfoOpps = allInfoOpps.filter(o => !o.school_name);
+  const hasSchoolInfoOpp = allInfoOpps.some(o => o.school_name);
+  if (hasSchoolInfoOpp) {
+    html += `<div style="font-size:11px;color:#e17055;margin:8px 0;font-weight:600;">🏫 This account has school-level opp(s) — see Schools tab for details</div>`;
+  }
+  districtInfoOpps.forEach(opp => {
     let stageClass = 'discovery';
     const stage = opp.stage || '';
     if (stage.includes('Demo')) stageClass = 'demo';
@@ -185,9 +190,8 @@ export function populateInfoTab(d) {
     else if (stage.includes('Procurement')) stageClass = 'procurement';
 
     const areaLabel = opp.area || 'Opportunity';
-    const schoolTag = opp.school_name ? `<span style="font-size:11px;color:#e17055;font-weight:400;margin-left:6px;">@ ${escapeHtml(opp.school_name)}</span>` : '';
     html += `<div class="modal-section opp-card">
-      <div class="modal-section-title"><span class="icon">💼</span> ${areaLabel}${schoolTag}</div>
+      <div class="modal-section-title"><span class="icon">💼</span> ${areaLabel}</div>
       <span class="opp-stage-badge ${stageClass}">${stage}</span>
       ${modalRow('Forecast', opp.forecast || '—')}
       ${modalRow('Probability', formatProbability(opp.probability) || '—')}
@@ -466,25 +470,59 @@ export function populateSchoolsTab(d) {
   if (schools.length === 0) {
     html = '<div style="color:var(--text-muted);font-size:13px;padding:20px;">No schools associated with this district.</div>';
   } else {
-    // Build a Set of school names that have opps on this district
-    const schoolsWithOpps = new Set();
+    // Build a map of school names → their opps
+    const schoolOppMap = new Map();
     const opps = d.opps || [];
     opps.forEach(opp => {
-      if (opp.school_name) schoolsWithOpps.add(opp.school_name);
+      if (opp.school_name) {
+        if (!schoolOppMap.has(opp.school_name)) schoolOppMap.set(opp.school_name, []);
+        schoolOppMap.get(opp.school_name).push(opp);
+      }
     });
+
     // Sort: schools with opps first (alphabetical within each group)
     const sorted = [...schools].sort((a, b) => {
-      const aHas = schoolsWithOpps.has(a) ? 0 : 1;
-      const bHas = schoolsWithOpps.has(b) ? 0 : 1;
+      const aHas = schoolOppMap.has(a) ? 0 : 1;
+      const bHas = schoolOppMap.has(b) ? 0 : 1;
       if (aHas !== bHas) return aHas - bHas;
       return a.localeCompare(b);
     });
+
     html += '<div class="schools-list">';
     sorted.forEach(name => {
-      const hasOpp = schoolsWithOpps.has(name);
+      const schoolOpps = schoolOppMap.get(name);
+      const hasOpp = !!schoolOpps;
       const borderColor = hasOpp ? '#e17055' : 'var(--accent-strat)';
-      const oppBadge = hasOpp ? '<span style="font-size:10px;color:#e17055;margin-left:auto;font-weight:600;">ACTIVE OPP</span>' : '';
-      html += `<div class="school-list-item" style="border-left-color:${borderColor};display:flex;align-items:center;">${escapeHtml(name)}${oppBadge}</div>`;
+      const clickAttr = hasOpp
+        ? `onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none';this.querySelector('[data-arrow]').textContent=this.nextElementSibling.style.display==='none'?'▾':'▴'" style="border-left-color:${borderColor};display:flex;align-items:center;cursor:pointer;"`
+        : `style="border-left-color:${borderColor};display:flex;align-items:center;"`;
+
+      html += `<div class="school-list-item" ${clickAttr}>${escapeHtml(name)}${hasOpp ? '<span style="font-size:10px;color:#e17055;margin-left:auto;font-weight:600;">ACTIVE OPP <span data-arrow>▾</span></span>' : ''}</div>`;
+
+      if (hasOpp) {
+        html += `<div style="display:none;padding:8px 12px 12px 18px;background:var(--surface);border-left:3px solid #e17055;margin-bottom:2px;border-radius:0 0 var(--radius-sm) var(--radius-sm);">`;
+        schoolOpps.forEach(opp => {
+          let stageClass = 'discovery';
+          const stage = opp.stage || '';
+          if (stage.includes('Demo')) stageClass = 'demo';
+          else if (stage.includes('Scoping')) stageClass = 'scoping';
+          else if (stage.includes('Proposal')) stageClass = 'proposal';
+          else if (stage.includes('Validation')) stageClass = 'validation';
+          else if (stage.includes('Procurement')) stageClass = 'procurement';
+
+          const areaLabel = opp.area || 'Opportunity';
+          html += `<div style="margin-bottom:8px;">`;
+          html += `<div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:4px;">${escapeHtml(areaLabel)} <span class="opp-stage-badge ${stageClass}" style="font-size:10px;padding:2px 8px;">${escapeHtml(stage)}</span></div>`;
+          html += `<div style="font-size:11px;color:var(--text-secondary);">`;
+          if (opp.forecast) html += `Forecast: ${escapeHtml(opp.forecast)} · `;
+          if (opp.probability) html += `Prob: ${formatProbability(opp.probability)} · `;
+          if (opp.acv) html += `ACV: $${Number(opp.acv).toLocaleString()} · `;
+          if (opp.next_step) html += `Next: ${escapeHtml(opp.next_step)}`;
+          html += `</div>`;
+          html += `</div>`;
+        });
+        html += `</div>`;
+      }
     });
     html += '</div>';
   }
