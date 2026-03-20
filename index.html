@@ -372,6 +372,18 @@
     <div class="account-list-body" id="accountListBody"></div>
   </div>
 
+  <div class="pipeline-overlay-backdrop" id="pipelineOverlayBackdrop" onclick="closePipelineOverlay()"></div>
+  <div class="pipeline-overlay" id="pipelineOverlay">
+    <div class="pipeline-overlay-header">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <h3>Customer Pipeline</h3>
+        <span class="pipeline-overlay-count" id="pipelineOverlayCount"></span>
+      </div>
+      <button class="pipeline-overlay-close" onclick="closePipelineOverlay()">&times;</button>
+    </div>
+    <div class="pipeline-overlay-body" id="pipelineOverlayBody"></div>
+  </div>
+
   <div class="legend" id="legend"></div>
 </div>
 

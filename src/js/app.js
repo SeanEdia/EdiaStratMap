@@ -1284,6 +1284,7 @@ function setView(view) {
     S.accountListGroupBy = null;
     S.collapsedGroups = {};
   }
+  closePipelineOverlay();
 
   invalidateCaches();
   renderTeamRepSelectors();
@@ -1702,6 +1703,7 @@ function resetMapView() {
     if (S._elAdOverlay) S._elAdOverlay.classList.remove('open');
     if (S._elAdTrigger) S._elAdTrigger.classList.remove('active');
   }
+  closePipelineOverlay();
 
   invalidateCaches();
   renderTeamRepSelectors();
@@ -1987,6 +1989,10 @@ function applyFilters() {
   const stratCard = stratEl.parentElement;
   const custCard = custEl.parentElement;
   const overlapCard = document.getElementById('stat-card-overlap');
+  overlapCard.style.cursor = 'pointer';
+  overlapCard.onclick = () => {
+    if (S.currentView === 'customers') openPipelineOverlay();
+  };
 
   if (S.currentView === 'accounts') {
     // Show: Accounts | Customers (dynamic from filtered) | Opps | States
@@ -2004,7 +2010,7 @@ function applyFilters() {
     stratCard.style.display = 'none';
     overlapEl.textContent = S._overlapCount;
     overlapEl.style.color = '#E8853D';
-    overlapLabel.textContent = 'Also Account';
+    overlapLabel.textContent = 'W/ Pipeline';
     overlapCard.style.display = '';
   } else {
     // All view: Accounts | Customers | Overlap | States
@@ -2369,6 +2375,66 @@ function updatePipeline() {
   stats.innerHTML = h;
 }
 
+function openPipelineOverlay() {
+  // Gather accounts that are also customers with open opps
+  const overlapAccounts = S.ACCOUNT_DATA.filter(d => d.is_customer);
+  const allOpps = [];
+  overlapAccounts.forEach(d => {
+    const opps = d.opps && d.opps.length > 0 ? d.opps : (d.opp_stage ? [buildOppEntry(d)] : []);
+    opps.forEach(opp => {
+      if (opp.stage && isOppOpen(opp)) allOpps.push({ account: d, opp });
+    });
+  });
+  const stages = [
+    { key: '1', label: 'Discovery', color: '#fdcb6e' },
+    { key: '2', label: 'Demo', color: '#74b9ff' },
+    { key: '3', label: 'Scoping', color: '#e17055' },
+    { key: '4', label: 'Proposal', color: '#a29bfe' },
+    { key: '5', label: 'Validation', color: '#55efc4' },
+    { key: '6', label: 'Procurement', color: '#fd79a8' },
+  ];
+  let h = '';
+  let totalACV = 0;
+  let totalCount = 0;
+  stages.forEach((s, idx) => {
+    const inStage = allOpps.filter(item => item.opp.stage && item.opp.stage.startsWith(s.key));
+    const acv = inStage.reduce((sum, item) => sum + (Number(item.opp.acv) || 0), 0);
+    totalACV += acv;
+    totalCount += inStage.length;
+    if (inStage.length > 0) {
+      const sorted = [...inStage].sort((a, b) => (Number(b.opp.acv) || 0) - (Number(a.opp.acv) || 0));
+      const stageId = `pl-overlay-stage-${idx}`;
+      h += `<div class="pipeline-stage-container">`;
+      h += `<div class="pipeline-detail-row pipeline-clickable" onclick="toggleStageDropdown('${stageId}')">`;
+      h += `<span class="label"><span class="stage-dot" style="background:${s.color}"></span>${s.label} (${inStage.length})</span>`;
+      h += `<span class="value">$${acv.toLocaleString()} <span class="dropdown-arrow">▼</span></span>`;
+      h += `</div>`;
+      h += `<div id="${stageId}" class="stage-dropdown" style="display:none;">`;
+      sorted.forEach(item => {
+        const oppAcv = Number(item.opp.acv) || 0;
+        const dKey = districtKey(item.account);
+        const areaLabel = item.opp.area ? ' — ' + item.opp.area : '';
+        h += `<div class="stage-dropdown-item" onclick="event.stopPropagation(); closePipelineOverlay(); openAccountModalByKey('${dKey}')">`;
+        h += `<span class="dropdown-name">${item.account.name}${areaLabel}</span>`;
+        h += `<span class="dropdown-acv">$${oppAcv.toLocaleString()}</span>`;
+        h += `</div>`;
+      });
+      h += `</div></div>`;
+    }
+  });
+  h += `<div class="pipeline-total"><span class="label">${totalCount} Open Opps</span><span class="value">$${totalACV.toLocaleString()}</span></div>`;
+  document.getElementById('pipelineOverlayBody').innerHTML = h;
+  document.getElementById('pipelineOverlayCount').textContent = `${totalCount} opps across ${overlapAccounts.length} customers`;
+  document.getElementById('pipelineOverlay').classList.add('open');
+  document.getElementById('pipelineOverlayBackdrop').classList.add('open');
+}
+function closePipelineOverlay() {
+  const el = document.getElementById('pipelineOverlay');
+  const bd = document.getElementById('pipelineOverlayBackdrop');
+  if (el) el.classList.remove('open');
+  if (bd) bd.classList.remove('open');
+}
+
 function toggleStageDropdown(stageId) {
   const dropdown = document.getElementById(stageId);
   const arrow = dropdown.previousElementSibling.querySelector('.dropdown-arrow');
@@ -2404,6 +2470,10 @@ document.addEventListener('click', function(e) {
     S._elAdOverlay.classList.remove('open');
     S._elAdTrigger.classList.remove('active');
   }
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closePipelineOverlay();
 });
 
 // Close account list overlay when clicking outside
@@ -2982,6 +3052,8 @@ Object.assign(window, {
   // Pipeline
   togglePipelinePanel,
   toggleStageDropdown,
+  openPipelineOverlay,
+  closePipelineOverlay,
   // Action Dashboard
   toggleActionDashboard,
   // Data export
