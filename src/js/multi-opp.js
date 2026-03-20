@@ -1,9 +1,11 @@
 import S from './state.js';
-import { districtKey, normalizeDistrictName, parseUSDate, normalizeOppArea } from './helpers.js';
+import { districtKey, normalizeDistrictName, parseUSDate, normalizeOppArea, precomputeSearchFields } from './helpers.js';
 import { saveOppsToLocalStorage, OPP_ENTRY_FIELDS, buildOppEntry, migrateToOppsArray,
   crossLinkCustomers, joinOppsToAccounts, buildIndices, TEAM_REP_DATA,
   getTerritoryAE, getHoldoutAE, hideWelcomeOverlay, updateDataSourceIndicator,
   renderTeamRepSelectors, renderFilters } from './app.js';
+import { showGeocodeProgress, updateGeocodeProgress, hideGeocodeProgress } from './conference.js';
+import { storeNewConflicts, renderConflictsOverlay, updateConflictsBadge } from './conflict.js';
 
 // ============ MULTI-OPP HELPERS ============
 // OPP_ENTRY_FIELDS, normalizeOppArea, buildOppEntry, and migrateToOppsArray
@@ -1005,7 +1007,7 @@ export async function confirmMerge() {
 
       // Persist to localStorage
       S._saveDataToLocalStorage(S.ACCOUNT_DATA, null);
-      _dataSource = 'localStorage';
+      S._dataSource = 'localStorage';
 
       // Download opps.json (extracted from merged S.ACCOUNT_DATA)
       const extractedOpps = extractOppsFromAccounts(S.ACCOUNT_DATA);
@@ -1063,7 +1065,7 @@ export async function confirmMerge() {
 
       // Persist merged data to localStorage so it survives page refreshes
       S._saveDataToLocalStorage(S.ACCOUNT_DATA, S.CUSTOMER_DATA);
-      _dataSource = 'localStorage';
+      S._dataSource = 'localStorage';
 
       // Download both files (for committing to repo so all users get the update)
       downloadJsonFile(S.pendingAccountMerge, 'accounts.json');
@@ -1135,7 +1137,7 @@ export async function confirmMerge() {
         isAccountType ? S.ACCOUNT_DATA : null,
         isAccountType ? null : S.CUSTOMER_DATA
       );
-      _dataSource = 'localStorage';
+      S._dataSource = 'localStorage';
 
       // Download the merged data as a JSON file (for committing to repo so all users get the update)
       downloadJsonFile(S.pendingMergeData, filename);
