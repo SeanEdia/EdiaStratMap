@@ -31619,7 +31619,7 @@
     },
     {
         "school_type": "Elementary School",
-        "name": "EspaÒola Public Schools",
+        "name": "Española Public Schools",
         "region": "South-Central",
         "state": "NM",
         "city": "Abiquiu",
@@ -31632,7 +31632,7 @@
         "lat": 36.2070977,
         "lng": -106.318628,
         "is_customer": true,
-        "customer_name": "EspaÒola Public Schools",
+        "customer_name": "Española Public Schools",
         "_schools": [
             "Abiquiu Elementary School",
             "Alcalde Elementary School",
@@ -54219,7 +54219,7 @@
         "_hasUploadedOpp": true,
         "_schools": [
             "Texans Can Academies - Dallas Ross Avenue",
-            "Texans Can Academies ¬? Carrollton/Farmers Branch Campus",
+            "Texans Can Academies - Carrollton/Farmers Branch Campus",
             "Texans Can Academy - Dallas Oak Cliff",
             "Texans Can Academy - Dallas Pleasant Grove"
         ],
@@ -115336,7 +115336,7 @@
     },
     {
         "school_type": "District",
-        "name": "AcadÈmie Lafayette",
+        "name": "Académie Lafayette",
         "region": "Midwest",
         "state": "MO",
         "city": "Kansas City",
@@ -140842,7 +140842,7 @@
     },
     {
         "school_type": "District",
-        "name": "La CaÒada Unified School District",
+        "name": "La Cañada Unified School District",
         "region": "West",
         "state": "CA",
         "city": "La Canada",
@@ -151559,7 +151559,7 @@
     },
     {
         "ae": "Brad Halsey",
-        "name": "San JosÈ Unified School District",
+        "name": "San José Unified School District",
         "region": "West",
         "state": "CA",
         "city": "San Jose",

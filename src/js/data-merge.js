@@ -406,10 +406,24 @@ export function runMerge(csvData, existingData, source) {
       existingById.set(item.account_id, { item, idx });
     }
   });
+  // Index by normalized address + state for alias detection
+  // (catches same entity with different names at the same physical address)
+  const existingByAddress = new Map();
+  existingData.forEach((item, idx) => {
+    const addr = (item.address || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    const state = (item.state || '').toUpperCase().trim();
+    if (addr && state && addr.length >= 5) {
+      const addrKey = addr + '|' + state;
+      // Store array — multiple different entities can share an address (co-located schools)
+      if (!existingByAddress.has(addrKey)) existingByAddress.set(addrKey, []);
+      existingByAddress.get(addrKey).push({ item, idx });
+    }
+  });
   console.log('[SFDC Merge] Accounts with SFDC IDs:', existingById.size);
   console.log('[SFDC Merge] Existing exact keys:', Array.from(existingByName.keys()).slice(0, 10), '...');
   console.log('[SFDC Merge] Existing normalized keys:', Array.from(existingByNormalized.keys()).slice(0, 10), '...');
   console.log('[SFDC Merge] States indexed:', Array.from(existingByState.keys()).join(', '));
+  console.log('[SFDC Merge] Address+state index entries:', existingByAddress.size);
 
   // Cascading match: Name → State → Enrollment → Address/City
   // If any check finds a mismatch against ALL candidates, the CSV row is a new account.
@@ -595,6 +609,34 @@ export function runMerge(csvData, existingData, source) {
       }
     }
 
+    // ── TIER 0.5: Address + State + Name-overlap match (alias detection) ──
+    // Catches same entity with different names (e.g., "SAU #65 Kearsarge" vs "Kearsarge Regional School District")
+    // Only matches if names share a significant word (3+ chars, excluding generic school terms)
+    if (!existing) {
+      const csvAddr = (csvRow.address || csvRow.billing_address || csvRow.shipping_address || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+      if (csvAddr && csvAddr.length >= 5 && csvStateKey) {
+        const addrKey = csvAddr + '|' + csvStateKey;
+        const addrMatches = existingByAddress.get(addrKey);
+        if (addrMatches && addrMatches.length > 0) {
+          // Extract significant words from CSV name (3+ chars, exclude generic terms)
+          const genericWords = new Set(['school', 'schools', 'high', 'middle', 'elementary', 'academy', 'the', 'and', 'for', 'public', 'district', 'charter', 'preparatory', 'regional', 'county', 'city', 'unified', 'independent', 'consolidated', 'free', 'union', 'area', 'community']);
+          const csvWords = new Set(name.toLowerCase().match(/[a-z]{3,}/g)?.filter(w => !genericWords.has(w)) || []);
+          for (const candidate of addrMatches) {
+            if (matchedIndices.has(candidate.idx)) continue;
+            const existingWords = new Set(candidate.item.name.toLowerCase().match(/[a-z]{3,}/g)?.filter(w => !genericWords.has(w)) || []);
+            const shared = [...csvWords].filter(w => existingWords.has(w));
+            if (shared.length > 0) {
+              existing = candidate;
+              console.log('[SFDC Merge] Address+name-overlap match:', name, '→', candidate.item.name, '(shared words:', shared.join(', '), ', address:', csvAddr, ')');
+              const existingComposite = existing.item.name.toLowerCase().trim() + '|' + (existing.item.state || '').toUpperCase().trim();
+              alreadyMerged = alreadyMerged || mergedByName.get(existingComposite) || mergedByName.get(existing.item.name.toLowerCase().trim());
+              break;
+            }
+          }
+        }
+      }
+    }
+
     // ── TIER 1: Exact name match ──
     if (!existing) {
       existing = pickBestMatch(existingByName.get(nameKey), csvRow);
@@ -743,6 +785,16 @@ export function runMerge(csvData, existingData, source) {
       // Persist SFDC Account ID for future ID-based matching
       if (csvAccountId && csvAccountId !== '000000000000000' && !merged.account_id) {
         merged.account_id = csvAccountId;
+      }
+
+      // ID-based parent district linking for school-level records
+      const csvParentAccountId = (csvRow.parent_account_id || '').trim();
+      if (csvParentAccountId && csvParentAccountId !== '000000000000000') {
+        const parentAccount = S.ACCOUNT_DATA.find(a => a.account_id === csvParentAccountId);
+        if (parentAccount) {
+          merged.parent_district = parentAccount.name;
+          console.log('[SFDC Merge] ID-linked school record:', merged.name || name, '→ district:', parentAccount.name);
+        }
       }
 
       // Parse numeric fields (account-level + opp acv/probability inside opps)
@@ -935,6 +987,16 @@ export function runMerge(csvData, existingData, source) {
         newRecord.account_id = csvAccountId;
       }
 
+      // ID-based parent district linking for new school-level records
+      const csvNewParentId = (csvRow.parent_account_id || '').trim();
+      if (csvNewParentId && csvNewParentId !== '000000000000000') {
+        const parentAccount = S.ACCOUNT_DATA.find(a => a.account_id === csvNewParentId);
+        if (parentAccount) {
+          newRecord.parent_district = parentAccount.name;
+          console.log('[SFDC Merge] ID-linked new school record:', name, '→ district:', parentAccount.name);
+        }
+      }
+
       // Cross-reference: if this new record is missing location data, try to
       // find a match in the OTHER dataset (e.g. opp introduces a new account
       // that already exists as a customer, or vice versa). This is the primary
@@ -1044,6 +1106,14 @@ export function runMerge(csvData, existingData, source) {
       // Also set name-only keys for backwards compat
       mergedByName.set(nameKey, newRecord);
       mergedByName.set(normalizedKey, newRecord);
+      // Also track by address for alias detection within the same CSV upload
+      const newAddr = (newRecord.address || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+      const newAddrState = (newRecord.state || '').toUpperCase().trim();
+      if (newAddr && newAddrState && newAddr.length >= 5) {
+        const newAddrKey = newAddr + '|' + newAddrState;
+        if (!existingByAddress.has(newAddrKey)) existingByAddress.set(newAddrKey, []);
+        existingByAddress.get(newAddrKey).push({ item: newRecord, idx: mergedData.length - 1 });
+      }
     }
   });
 
