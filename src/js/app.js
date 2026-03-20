@@ -596,6 +596,13 @@ Object.values(TEAM_REP_DATA).forEach(info => {
   if (info.manager) MANAGERS.add(info.manager);
 });
 
+// Manager → Set of their direct reports. Used by conflict detection to allow
+// manager → own-rep transitions without flagging a conflict.
+export const MANAGER_REPS = new Map();
+Object.values(TEAM_REP_DATA).forEach(info => {
+  if (info.manager) MANAGER_REPS.set(info.manager, new Set(info.reps));
+});
+
 // Returns true if the account is held by a manager (placeholder until assigned to a rep).
 // Manager-held accounts are treated as "unassigned" for filtering/display purposes.
 export function isManagerHeld(d) {
