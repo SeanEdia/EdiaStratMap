@@ -397,6 +397,14 @@ export function runMerge(csvData, existingData, source) {
       existingByState.get(state).push({ item, idx, normalizedKey });
     }
   });
+  // Index by SFDC Account ID for deterministic matching
+  const existingById = new Map();
+  existingData.forEach((item, idx) => {
+    if (item.account_id) {
+      existingById.set(item.account_id, { item, idx });
+    }
+  });
+  console.log('[SFDC Merge] Accounts with SFDC IDs:', existingById.size);
   console.log('[SFDC Merge] Existing exact keys:', Array.from(existingByName.keys()).slice(0, 10), '...');
   console.log('[SFDC Merge] Existing normalized keys:', Array.from(existingByNormalized.keys()).slice(0, 10), '...');
   console.log('[SFDC Merge] States indexed:', Array.from(existingByState.keys()).join(', '));
@@ -509,8 +517,8 @@ export function runMerge(csvData, existingData, source) {
         // least half the length of the longer to confirm they refer to the same entity.
         const shorter = Math.min(csvNormalized.length, normalizedKey.length);
         const longer = Math.max(csvNormalized.length, normalizedKey.length);
-        if (shorter < longer * 0.5) {
-          console.log('[SFDC Merge] State+Name SKIPPED (length mismatch):', csvName, '→', item.name,
+        if (shorter < longer * 0.4) {
+          console.log('[SFDC Merge] State+Name SKIPPED (length mismatch, ratio=' + (shorter/longer).toFixed(2) + '):', csvName, '→', item.name,
             '(normalized:', csvNormalized, 'vs', normalizedKey + ')');
           continue;
         }
@@ -572,19 +580,33 @@ export function runMerge(csvData, existingData, source) {
       alreadyMerged = mergedByName.get(nameKey) || mergedByName.get(normalizedKey);
     }
 
-    // Try exact match first, then normalized match, then state+name fuzzy match
-    // pickBestMatch cascades: Name → State → Enrollment → Address
-    let existing = pickBestMatch(existingByName.get(nameKey), csvRow);
-    if (!existing) {
-      existing = pickBestMatch(existingByNormalized.get(normalizedKey), csvRow);
-      if (existing) {
-        console.log('[SFDC Merge] Normalized match:', name, '→', existing.item.name);
-        // Check if we already merged this existing record
+    // ── TIER 0: Match by SFDC Account ID (deterministic, highest priority) ──
+    const csvAccountId = (csvRow.account_id || '').trim();
+    let existing = null;
+    if (csvAccountId && csvAccountId !== '000000000000000') {
+      const idMatch = existingById.get(csvAccountId);
+      if (idMatch) {
+        existing = idMatch;
+        console.log('[SFDC Merge] ID match:', csvAccountId, '→', existing.item.name);
         const existingComposite = existing.item.name.toLowerCase().trim() + '|' + (existing.item.state || '').toUpperCase().trim();
         alreadyMerged = alreadyMerged || mergedByName.get(existingComposite) || mergedByName.get(existing.item.name.toLowerCase().trim());
       }
     }
-    // Fallback: try state + name contains match
+
+    // ── TIER 1: Exact name match ──
+    if (!existing) {
+      existing = pickBestMatch(existingByName.get(nameKey), csvRow);
+    }
+    // ── TIER 2: Normalized name match ──
+    if (!existing) {
+      existing = pickBestMatch(existingByNormalized.get(normalizedKey), csvRow);
+      if (existing) {
+        console.log('[SFDC Merge] Normalized match:', name, '→', existing.item.name);
+        const existingComposite = existing.item.name.toLowerCase().trim() + '|' + (existing.item.state || '').toUpperCase().trim();
+        alreadyMerged = alreadyMerged || mergedByName.get(existingComposite) || mergedByName.get(existing.item.name.toLowerCase().trim());
+      }
+    }
+    // ── TIER 3: State + name contains match ──
     if (!existing) {
       existing = findByStateAndName(name, csvState);
       if (existing) {
@@ -648,6 +670,9 @@ export function runMerge(csvData, existingData, source) {
         upsertOpp(alreadyMerged, oppEntry);
       }
       clampFutureLastActivity(alreadyMerged);
+      if (csvAccountId && csvAccountId !== '000000000000000' && !alreadyMerged.account_id) {
+        alreadyMerged.account_id = csvAccountId;
+      }
       parseNumericFields(alreadyMerged);
       (alreadyMerged.opps || []).forEach(o => {
         if (o.acv !== undefined && o.acv !== '') {
@@ -712,6 +737,11 @@ export function runMerge(csvData, existingData, source) {
         upsertOpp(merged, oppEntry);
       }
       clampFutureLastActivity(merged);
+
+      // Persist SFDC Account ID for future ID-based matching
+      if (csvAccountId && csvAccountId !== '000000000000000' && !merged.account_id) {
+        merged.account_id = csvAccountId;
+      }
 
       // Parse numeric fields (account-level + opp acv/probability inside opps)
       parseNumericFields(merged);
@@ -899,6 +929,9 @@ export function runMerge(csvData, existingData, source) {
         }
       });
       newRecord.name = name;
+      if (csvAccountId && csvAccountId !== '000000000000000') {
+        newRecord.account_id = csvAccountId;
+      }
 
       // Cross-reference: if this new record is missing location data, try to
       // find a match in the OTHER dataset (e.g. opp introduces a new account
@@ -1074,6 +1107,24 @@ export function runOppMerge(csvData) {
     if (!clonedByKey.has(normKey)) clonedByKey.set(normKey, { item, idx });
   });
 
+  // Index by SFDC Account ID for deterministic matching
+  const clonedById = new Map();
+  mergedAccounts.forEach((item, idx) => {
+    if (item.account_id) {
+      clonedById.set(item.account_id, { item, idx });
+    }
+  });
+
+  // Build state-indexed lookup for fuzzy matching fallback
+  const clonedByState = new Map();
+  mergedAccounts.forEach((item, idx) => {
+    const state = (item.state || '').toUpperCase().trim();
+    if (state) {
+      if (!clonedByState.has(state)) clonedByState.set(state, []);
+      clonedByState.get(state).push({ item, idx, normalizedKey: normalizeDistrictName(item.name) });
+    }
+  });
+
   csvData.forEach((csvRow, rowIdx) => {
     // Extract account name from the raw CSV row (before mapFieldName, which maps it to 'name')
     const rawName = (csvRow.account_name || csvRow.name || '').trim();
@@ -1085,10 +1136,47 @@ export function runOppMerge(csvData) {
     // Look up matching account
     const exactKey = rawName.toLowerCase().trim() + '|' + csvState;
     const normKey = normalizeDistrictName(rawName) + '|' + csvState;
-    const match = clonedByKey.get(exactKey) || clonedByKey.get(normKey);
+    // ── TIER 0: Match by SFDC Account ID ──
+    // For school-level opps, prefer parent_account_id (the district) over
+    // account_id (the school), since accounts.json stores districts.
+    const csvAccountId = (csvRow.account_id || '').trim();
+    const csvParentId = (csvRow.parent_account_id || '').trim();
+    const lookupId = (csvParentId && csvParentId !== '000000000000000') ? csvParentId : csvAccountId;
+    let match = null;
+    if (lookupId && lookupId !== '000000000000000') {
+      const idMatch = clonedById.get(lookupId);
+      if (idMatch) {
+        match = idMatch;
+        console.log('[Opp Merge] ID match:', lookupId, '→', match.item.name,
+          csvParentId && csvParentId !== '000000000000000' ? '(via parent ID)' : '');
+      }
+    }
+
+    // ── TIER 1-2: Exact + normalized name match ──
+    if (!match) {
+      match = clonedByKey.get(exactKey) || clonedByKey.get(normKey);
+    }
+
+    // ── TIER 3: State + name contains match (fuzzy fallback) ──
+    if (!match && csvState) {
+      const stateRecords = clonedByState.get(csvState);
+      if (stateRecords) {
+        const csvNormalized = normalizeDistrictName(rawName);
+        for (const candidate of stateRecords) {
+          if (csvNormalized.includes(candidate.normalizedKey) || candidate.normalizedKey.includes(csvNormalized)) {
+            const shorter = Math.min(csvNormalized.length, candidate.normalizedKey.length);
+            const longer = Math.max(csvNormalized.length, candidate.normalizedKey.length);
+            if (shorter >= longer * 0.4) {
+              match = candidate;
+              console.log('[Opp Merge] State+Name match:', rawName, '→', candidate.item.name, '(state:', csvState, ')');
+              break;
+            }
+          }
+        }
+      }
+    }
 
     if (!match) {
-      // Orphaned opp — no matching account
       if (!stats.orphans.includes(rawName)) {
         stats.orphans.push(rawName);
         console.log('[Opp Merge] ORPHAN (no matching account):', rawName, csvState);
@@ -1128,6 +1216,18 @@ export function runOppMerge(csvData) {
         if (!acct[mappedKey] && trimmed) acct[mappedKey] = trimmed;
       }
     });
+
+    // Persist SFDC Account ID on the account record (use district ID, not school)
+    const persistId = (csvParentId && csvParentId !== '000000000000000') ? csvParentId : csvAccountId;
+    if (persistId && persistId !== '000000000000000' && !acct.account_id) {
+      acct.account_id = persistId;
+    }
+
+    // Store Opportunity ID on the opp entry
+    const csvOppId = (csvRow.opportunity_id || '').trim();
+    if (csvOppId) {
+      oppFields.opportunity_id = csvOppId;
+    }
 
     // FULL REPLACEMENT: On the first CSV row for this account, clear its opps array
     const isFirstTouch = !touchedAccounts.has(acctKey);
@@ -1372,9 +1472,23 @@ export function previewMerge(csvData) {
                               'opp_champion', 'champion',
                               'opp_economic_buyer', 'economic_buyer',
                               'opp_competition', 'competition', 'competitors'];
+    const oppSignals = ['opportunity_name', 'close_date', 'next_steps_digest',
+                        'next_steps_update_date', 'age_in_days', 'push_count',
+                        'loss_reason', 'loss_competitor_incumbent',
+                        'intro_meeting_date', 'intro_meeting_status',
+                        'paper_process', 'implication_of_pain',
+                        'decision_criteria', 'decision_process',
+                        'metric_kpi_to_improve', 'metric_-_improvement_goal',
+                        'metric_improvement_goal',
+                        'are_you_single_threaded', 'counterpart_meeting'];
+    const oppHits = oppSignals.filter(s => cols.has(s)).length;
     const custHits = customerSignals.filter(s => cols.has(s)).length;
     const accountHits = accountSignals.filter(s => cols.has(s)).length;
-    if (custHits > accountHits && custHits >= 2) {
+    if (oppHits >= 2) {
+      console.log('[SFDC Merge] Auto-detected OPPORTUNITY data (matched columns:', oppSignals.filter(s => cols.has(s)).join(', '), ')');
+      S.sfdcDataType = 'opps';
+      setSfdcType('opps');
+    } else if (custHits > accountHits && custHits >= 2) {
       console.log('[SFDC Merge] Auto-detected CUSTOMER data (matched columns:', customerSignals.filter(s => cols.has(s)).join(', '), ')');
       S.sfdcDataType = 'customers';
       setSfdcType('customers');
@@ -1383,8 +1497,20 @@ export function previewMerge(csvData) {
       S.sfdcDataType = 'accounts';
       setSfdcType('accounts');
     } else {
-      console.log('[SFDC Merge] Could not auto-detect type (cust signals:', custHits, ', acct signals:', accountHits, '). Using selected type:', S.sfdcDataType);
+      console.log('[SFDC Merge] Could not auto-detect type (opp signals:', oppHits, ', cust signals:', custHits, ', acct signals:', accountHits, '). Using selected type:', S.sfdcDataType);
     }
+  }
+
+  // If auto-detection resolved to opps, redirect to the opp merge path
+  if (S.sfdcDataType === 'opps') {
+    const consolidation = consolidateParentAccounts(csvData);
+    const result = runOppMerge(consolidation.rows);
+    S.pendingMergeData = result.mergedAccounts;
+    S.pendingMergeStats = result.stats;
+    S.pendingMergeStats.consolidatedRecords = consolidation.consolidatedCount;
+    result.stats.csvSkippedRows = _csvSkippedCount;
+    showMergeModal(result.stats);
+    return;
   }
 
   let consolidatedCount = 0;
@@ -1524,6 +1650,11 @@ export function mapFieldName(csvField) {
     'decision_process': 'decision_process',
     'paper_process': 'paper_process',
     'implication_of_pain': 'implication_of_pain',
+    // SFDC IDs
+    'account_id': 'account_id',
+    'parent_account_id': 'parent_account_id',
+    'opportunity_id': 'opportunity_id',
+    'opp_id': 'opportunity_id',
   };
 
   const normalized = csvField.toLowerCase().replace(/[\/()&:]+/g, '_').replace(/\s+/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
