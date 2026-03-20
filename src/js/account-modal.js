@@ -268,7 +268,7 @@ export function populateMathTab(d) {
   }
 
   // Math-related opportunity info — find Math opp from opps array
-  const mathOpp = (d.opps || []).find(o => (o.area || '').toLowerCase().includes('math'));
+  const mathOpp = (d.opps || []).find(o => !o.school_name && (o.area || '').toLowerCase().includes('math'));
   if (mathOpp) {
     html += `<div class="product-highlight math" style="border-color:#55efc4;">
       <div class="label">Active Math Opportunity</div>
@@ -347,7 +347,7 @@ export function populateAttendanceTab(d) {
   }
 
   // Attendance opportunity info — find Attendance opp from opps array
-  const attendanceOpp = (d.opps || []).find(o => (o.area || '').toLowerCase().includes('attendance'));
+  const attendanceOpp = (d.opps || []).find(o => !o.school_name && (o.area || '').toLowerCase().includes('attendance'));
   if (attendanceOpp) {
     html += `<div class="product-highlight attendance" style="border-color:#55efc4;margin-top:12px;">
       <div class="label">Active Attendance Opportunity</div>
@@ -411,7 +411,7 @@ export function populateDistrictIntelTab(d) {
   let html = `<div class="modal-grid">`;
 
   // District Intelligence opp from opps array
-  const diOpp = (d.opps || []).find(o => (o.area || '').toLowerCase().includes('district intelligence'));
+  const diOpp = (d.opps || []).find(o => !o.school_name && (o.area || '').toLowerCase().includes('district intelligence'));
 
   html += `<div class="modal-section">
     <div class="modal-section-title"><span class="icon">📊</span> District Intelligence</div>`;
@@ -475,22 +475,29 @@ export function populateSchoolsTab(d) {
     const opps = d.opps || [];
     opps.forEach(opp => {
       if (opp.school_name) {
-        if (!schoolOppMap.has(opp.school_name)) schoolOppMap.set(opp.school_name, []);
-        schoolOppMap.get(opp.school_name).push(opp);
+        const normKey = opp.school_name.toLowerCase().trim();
+        if (!schoolOppMap.has(normKey)) schoolOppMap.set(normKey, []);
+        schoolOppMap.get(normKey).push(opp);
       }
     });
 
+    if (opps.some(o => o.school_name)) {
+      console.log('[Schools Tab] opp school_names:', opps.filter(o => o.school_name).map(o => o.school_name));
+      console.log('[Schools Tab] _schools sample:', schools.slice(0, 5));
+      console.log('[Schools Tab] schoolOppMap keys:', [...schoolOppMap.keys()]);
+    }
+
     // Sort: schools with opps first (alphabetical within each group)
     const sorted = [...schools].sort((a, b) => {
-      const aHas = schoolOppMap.has(a) ? 0 : 1;
-      const bHas = schoolOppMap.has(b) ? 0 : 1;
+      const aHas = schoolOppMap.has(a.toLowerCase().trim()) ? 0 : 1;
+      const bHas = schoolOppMap.has(b.toLowerCase().trim()) ? 0 : 1;
       if (aHas !== bHas) return aHas - bHas;
       return a.localeCompare(b);
     });
 
     html += '<div class="schools-list">';
     sorted.forEach(name => {
-      const schoolOpps = schoolOppMap.get(name);
+      const schoolOpps = schoolOppMap.get(name.toLowerCase().trim());
       const hasOpp = !!schoolOpps;
       const borderColor = hasOpp ? '#e17055' : 'var(--accent-strat)';
       const clickAttr = hasOpp
