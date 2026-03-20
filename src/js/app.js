@@ -2314,6 +2314,7 @@ function toggleActionDashboard() {
   S.actionDashboardOpen = !S.actionDashboardOpen;
   if (S._elAdOverlay) S._elAdOverlay.classList.toggle('open', S.actionDashboardOpen);
   if (S._elAdTrigger) S._elAdTrigger.classList.toggle('active', S.actionDashboardOpen);
+  if (S.actionDashboardOpen) updateActionDashboard();
 }
 
 // Close overlay when clicking outside
