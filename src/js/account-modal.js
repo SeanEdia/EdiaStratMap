@@ -467,71 +467,74 @@ export function populateDistrictIntelTab(d) {
 export function populateSchoolsTab(d) {
   const schools = d._schools || [];
   let html = '';
-  if (schools.length === 0) {
+
+  // Gather all school-level opps
+  const opps = d.opps || [];
+  const schoolOpps = opps.filter(o => o.school_name);
+
+  if (schools.length === 0 && schoolOpps.length === 0) {
     html = '<div style="color:var(--text-muted);font-size:13px;padding:20px;">No schools associated with this district.</div>';
   } else {
-    // Build a map of opp school_name (from SFDC) → opps
-    const oppsBySchoolName = new Map();
-    const opps = d.opps || [];
-    opps.forEach(opp => {
-      if (opp.school_name) {
-        const normKey = opp.school_name.toLowerCase().trim();
-        if (!oppsBySchoolName.has(normKey)) oppsBySchoolName.set(normKey, []);
-        oppsBySchoolName.get(normKey).push(opp);
-      }
+    // Build a map of opp school_name (from SFDC) → opps array
+    const oppsByRawName = new Map();
+    schoolOpps.forEach(opp => {
+      const key = opp.school_name;
+      if (!oppsByRawName.has(key)) oppsByRawName.set(key, []);
+      oppsByRawName.get(key).push(opp);
     });
 
-    // Match SFDC school names to NCES _schools names using fuzzy matching.
-    // schoolOppMap keys are the NCES school names (as they appear in _schools).
+    // Match each opp school name to a _schools entry, or mark as unmatched.
+    // schoolOppMap is keyed by the DISPLAY name (either NCES name if matched, or SFDC name if not).
     const schoolOppMap = new Map();
+    const matchedRawNames = new Set();
 
-    // Helper: find opps for a given NCES school name
-    function findOppsForSchool(ncesName) {
+    // For each NCES school, check if any opp school name matches it
+    for (const ncesName of schools) {
       const ncesNorm = ncesName.toLowerCase().trim();
+      for (const [rawName, rawOpps] of oppsByRawName) {
+        if (matchedRawNames.has(rawName)) continue; // Already matched
+        const rawNorm = rawName.toLowerCase().trim();
 
-      // Pass 1: exact normalized match
-      if (oppsBySchoolName.has(ncesNorm)) return oppsBySchoolName.get(ncesNorm);
+        // Exact normalized match
+        if (rawNorm === ncesNorm) {
+          schoolOppMap.set(ncesName, rawOpps);
+          matchedRawNames.add(rawName);
+          break;
+        }
 
-      // Pass 2: substring/contains match (shorter contained in longer)
-      // Only match if the shorter string is at least 8 chars to avoid false positives
-      for (const [sfdcNorm, sfdcOpps] of oppsBySchoolName) {
-        const shorter = sfdcNorm.length <= ncesNorm.length ? sfdcNorm : ncesNorm;
-        const longer = sfdcNorm.length <= ncesNorm.length ? ncesNorm : sfdcNorm;
+        // Substring match: shorter name contained in longer (min 8 chars to avoid false positives)
+        const shorter = rawNorm.length <= ncesNorm.length ? rawNorm : ncesNorm;
+        const longer = rawNorm.length <= ncesNorm.length ? ncesNorm : rawNorm;
         if (shorter.length >= 8 && longer.includes(shorter)) {
-          return sfdcOpps;
+          schoolOppMap.set(ncesName, rawOpps);
+          matchedRawNames.add(rawName);
+          break;
         }
       }
-
-      return null;
     }
 
-    // Build the final map keyed by NCES school names
-    schools.forEach(name => {
-      const matched = findOppsForSchool(name);
-      if (matched) schoolOppMap.set(name, matched);
-    });
+    // Build the full display list: start with NCES schools, then append unmatched opp schools
+    const displaySchools = [...schools];
+    for (const [rawName] of oppsByRawName) {
+      if (!matchedRawNames.has(rawName)) {
+        // This opp school isn't in the NCES list — add it so it still shows up
+        displaySchools.push(rawName);
+        schoolOppMap.set(rawName, oppsByRawName.get(rawName));
+      }
+    }
 
     // Sort: schools with opps first (alphabetical within each group)
-    const sorted = [...schools].sort((a, b) => {
+    const sorted = [...displaySchools].sort((a, b) => {
       const aHas = schoolOppMap.has(a) ? 0 : 1;
       const bHas = schoolOppMap.has(b) ? 0 : 1;
       if (aHas !== bHas) return aHas - bHas;
       return a.localeCompare(b);
     });
 
-    // Diagnostic log — remove after verifying the fix works
-    if (oppsBySchoolName.size > 0) {
-      console.log('[Schools Tab] SFDC opp school_names:', [...oppsBySchoolName.keys()]);
-      console.log('[Schools Tab] Matched to NCES _schools:', [...schoolOppMap.keys()]);
-      console.log('[Schools Tab] Unmatched SFDC names:', [...oppsBySchoolName.keys()].filter(k => {
-        return ![...schoolOppMap.values()].some(opps => opps === oppsBySchoolName.get(k));
-      }));
-    }
-
     html += '<div class="schools-list">';
     sorted.forEach(name => {
-      const schoolOpps = schoolOppMap.get(name);
-      const hasOpp = !!schoolOpps;
+      const schoolOppsForName = schoolOppMap.get(name);
+      const hasOpp = !!schoolOppsForName;
       const borderColor = hasOpp ? '#e17055' : 'var(--accent-strat)';
       const clickAttr = hasOpp
         ? `onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none';this.querySelector('[data-arrow]').textContent=this.nextElementSibling.style.display==='none'?'▾':'▴'" style="border-left-color:${borderColor};display:flex;align-items:center;cursor:pointer;"`
@@ -541,7 +544,7 @@ export function populateSchoolsTab(d) {
 
       if (hasOpp) {
         html += `<div style="display:none;padding:8px 12px 12px 18px;background:var(--surface);border-left:3px solid #e17055;margin-bottom:2px;border-radius:0 0 var(--radius-sm) var(--radius-sm);">`;
-        schoolOpps.forEach(opp => {
+        schoolOppsForName.forEach(opp => {
           let stageClass = 'discovery';
           const stage = opp.stage || '';
           if (stage.includes('Demo')) stageClass = 'demo';
