@@ -470,34 +470,67 @@ export function populateSchoolsTab(d) {
   if (schools.length === 0) {
     html = '<div style="color:var(--text-muted);font-size:13px;padding:20px;">No schools associated with this district.</div>';
   } else {
-    // Build a map of school names → their opps
-    const schoolOppMap = new Map();
+    // Build a map of opp school_name (from SFDC) → opps
+    const oppsBySchoolName = new Map();
     const opps = d.opps || [];
     opps.forEach(opp => {
       if (opp.school_name) {
         const normKey = opp.school_name.toLowerCase().trim();
-        if (!schoolOppMap.has(normKey)) schoolOppMap.set(normKey, []);
-        schoolOppMap.get(normKey).push(opp);
+        if (!oppsBySchoolName.has(normKey)) oppsBySchoolName.set(normKey, []);
+        oppsBySchoolName.get(normKey).push(opp);
       }
     });
 
-    if (opps.some(o => o.school_name)) {
-      console.log('[Schools Tab] opp school_names:', opps.filter(o => o.school_name).map(o => o.school_name));
-      console.log('[Schools Tab] _schools sample:', schools.slice(0, 5));
-      console.log('[Schools Tab] schoolOppMap keys:', [...schoolOppMap.keys()]);
+    // Match SFDC school names to NCES _schools names using fuzzy matching.
+    // schoolOppMap keys are the NCES school names (as they appear in _schools).
+    const schoolOppMap = new Map();
+
+    // Helper: find opps for a given NCES school name
+    function findOppsForSchool(ncesName) {
+      const ncesNorm = ncesName.toLowerCase().trim();
+
+      // Pass 1: exact normalized match
+      if (oppsBySchoolName.has(ncesNorm)) return oppsBySchoolName.get(ncesNorm);
+
+      // Pass 2: substring/contains match (shorter contained in longer)
+      // Only match if the shorter string is at least 8 chars to avoid false positives
+      for (const [sfdcNorm, sfdcOpps] of oppsBySchoolName) {
+        const shorter = sfdcNorm.length <= ncesNorm.length ? sfdcNorm : ncesNorm;
+        const longer = sfdcNorm.length <= ncesNorm.length ? ncesNorm : sfdcNorm;
+        if (shorter.length >= 8 && longer.includes(shorter)) {
+          return sfdcOpps;
+        }
+      }
+
+      return null;
     }
+
+    // Build the final map keyed by NCES school names
+    schools.forEach(name => {
+      const matched = findOppsForSchool(name);
+      if (matched) schoolOppMap.set(name, matched);
+    });
 
     // Sort: schools with opps first (alphabetical within each group)
     const sorted = [...schools].sort((a, b) => {
-      const aHas = schoolOppMap.has(a.toLowerCase().trim()) ? 0 : 1;
-      const bHas = schoolOppMap.has(b.toLowerCase().trim()) ? 0 : 1;
+      const aHas = schoolOppMap.has(a) ? 0 : 1;
+      const bHas = schoolOppMap.has(b) ? 0 : 1;
       if (aHas !== bHas) return aHas - bHas;
       return a.localeCompare(b);
     });
 
+    // Diagnostic log — remove after verifying the fix works
+    if (oppsBySchoolName.size > 0) {
+      console.log('[Schools Tab] SFDC opp school_names:', [...oppsBySchoolName.keys()]);
+      console.log('[Schools Tab] Matched to NCES _schools:', [...schoolOppMap.keys()]);
+      console.log('[Schools Tab] Unmatched SFDC names:', [...oppsBySchoolName.keys()].filter(k => {
+        return ![...schoolOppMap.values()].some(opps => opps === oppsBySchoolName.get(k));
+      }));
+    }
+
     html += '<div class="schools-list">';
     sorted.forEach(name => {
-      const schoolOpps = schoolOppMap.get(name.toLowerCase().trim());
+      const schoolOpps = schoolOppMap.get(name);
       const hasOpp = !!schoolOpps;
       const borderColor = hasOpp ? '#e17055' : 'var(--accent-strat)';
       const clickAttr = hasOpp
