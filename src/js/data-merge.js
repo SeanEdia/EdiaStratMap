@@ -132,6 +132,7 @@ export function processUploadFile(file) {
       alert('No data found in file');
       return;
     }
+    closeSfdcModal();
     previewMerge(parsed);
   }).catch(err => {
     alert('Error reading file: ' + err.message);

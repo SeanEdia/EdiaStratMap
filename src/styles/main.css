@@ -2707,7 +2707,7 @@ input[type="range"]::-webkit-slider-thumb {
 .popup-expand-btn:hover {
   background: var(--accent-strat);
   border-color: var(--accent-strat);
-  color: #fff;
+  color: #000;
 }
 .popup-expand-btn svg {
   width: 14px;
