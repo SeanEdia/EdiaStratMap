@@ -331,5 +331,7 @@ export function showExportToast(sheetCount, scopeLabel) {
 export function updateExportButtonVisibility() {
   const exportBtn = document.getElementById('exportTrigger');
   if (exportBtn) exportBtn.style.display = S.selectedTeam ? '' : 'none';
+  const outreachBtn = document.getElementById('outreachTrigger');
+  if (outreachBtn) outreachBtn.style.display = S.selectedTeam ? '' : 'none';
 }
 
