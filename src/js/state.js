@@ -20,6 +20,7 @@ const S = {
   selectedStages: new Set(),
   filters: {},
   proximityOn: false,
+  proxShowAll: false,
   PROXIMITY_MILES: 50,
   adaFilterOn: false,
   welcomeActive: true,
