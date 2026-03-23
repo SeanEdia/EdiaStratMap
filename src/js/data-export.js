@@ -26,23 +26,19 @@ export function exportData() {
   if (accounts.length > 0) {
     const headers = [
       'District Name', 'State', 'Region', 'Enrollment', 'Account Executive',
-      'SIS Platform', 'Opp Stage', 'Total ACV', 'Forecast',
-      'Next Step', 'Last Activity', 'Superintendent', 'Asst. Superintendent(s)',
-      'CAO', 'CFO', 'CTO/Dir. of Technology', 'Dir. of Student Services',
-      'Primary Contact Name', 'Primary Contact Title', 'Primary Contact Email',
-      'Primary Contact Phone', 'Contact Source', 'SDR',
-      '# Opps', 'Product Areas', 'Is Customer', 'Has Notes'
+      'SIS Platform', 'Opp Stage', '# Opps', 'Product Areas',
+      'Next Step', 'Last Activity', 'Is Customer',
+      'Superintendent', 'Asst. Supt. of C&I', 'Asst. Supt. of Student Services',
+      'CTO/Dir. of Technology', 'Dir. of C&I / CAO', 'Dir. of Attendance', 'Dir. of Math',
+      'Opp Contact Name', 'Opp Contact Title',
+      'Website', 'Strategic Plan URL', 'Org Chart URL', 'Has Notes'
     ];
     const rows = [headers];
     accounts.forEach(d => {
       const opps = d.opps && d.opps.length > 0 ? d.opps : (d.opp_stage ? [buildOppEntry(d)] : []);
-      const totalAcv = opps.reduce((sum, o) => sum + (Number(o.acv) || 0), 0);
       const noteKey = 'edia_notes_' + d.name.replace(/[^a-zA-Z0-9]/g, '_');
       const hasNotes = S._accountsWithNotes.has(noteKey);
       const nextStep = (d.opp_next_step || '').substring(0, 500);
-      const contactName = d.opp_contact || '';
-      const contactTitle = d.opp_contact_title || '';
-      const contactSource = d.opp_contact ? 'Opportunity' : '';
       rows.push([
         d.name || '',
         d.state || '',
@@ -51,25 +47,23 @@ export function exportData() {
         getTerritoryAE(d) || '',
         d.sis || '',
         d.opp_stage || '',
-        totalAcv || '',
-        d.opp_forecast || '',
-        nextStep,
-        d.opp_last_activity || '',
-        d.superintendent || '',
-        d.asst_supt_ci || '',
-        d.dir_ci || '',
-        d.cfo || '',
-        d.asst_supt_tech || '',
-        d.asst_supt_ss || '',
-        contactName,
-        contactTitle,
-        d.primary_contact_email || '',
-        d.primary_contact_phone || '',
-        contactSource,
-        d.opp_sdr || '',
         opps.length,
         d.opp_areas || '',
+        nextStep,
+        d.opp_last_activity || '',
         d.is_customer ? 'Yes' : 'No',
+        d.superintendent || '',
+        d.asst_supt_ci || '',
+        d.asst_supt_ss || '',
+        d.asst_supt_tech || '',
+        d.dir_ci || '',
+        d.dir_attendance || '',
+        d.dir_math || '',
+        d.opp_contact || '',
+        d.opp_contact_title || '',
+        d.website || '',
+        d.strategic_plan_url || '',
+        d.org_chart_url || '',
         hasNotes ? 'Yes' : 'No'
       ]);
     });
@@ -83,25 +77,23 @@ export function exportData() {
       { wch: 18 }, // Account Executive
       { wch: 18 }, // SIS Platform
       { wch: 18 }, // Opp Stage
-      { wch: 12 }, // Total ACV
-      { wch: 12 }, // Forecast
-      { wch: 40 }, // Next Step
-      { wch: 12 }, // Last Activity
-      { wch: 25 }, // Superintendent
-      { wch: 28 }, // Asst. Superintendent(s)
-      { wch: 28 }, // CAO
-      { wch: 20 }, // CFO
-      { wch: 28 }, // CTO/Dir. of Technology
-      { wch: 28 }, // Dir. of Student Services
-      { wch: 22 }, // Primary Contact Name
-      { wch: 30 }, // Primary Contact Title
-      { wch: 28 }, // Primary Contact Email
-      { wch: 16 }, // Primary Contact Phone
-      { wch: 18 }, // Contact Source
-      { wch: 18 }, // SDR
       { wch: 7 },  // # Opps
       { wch: 30 }, // Product Areas
+      { wch: 40 }, // Next Step
+      { wch: 12 }, // Last Activity
       { wch: 12 }, // Is Customer
+      { wch: 25 }, // Superintendent
+      { wch: 28 }, // Asst. Supt. of C&I
+      { wch: 30 }, // Asst. Supt. of Student Services
+      { wch: 28 }, // CTO/Dir. of Technology
+      { wch: 28 }, // Dir. of C&I / CAO
+      { wch: 22 }, // Dir. of Attendance
+      { wch: 22 }, // Dir. of Math
+      { wch: 22 }, // Opp Contact Name
+      { wch: 30 }, // Opp Contact Title
+      { wch: 30 }, // Website
+      { wch: 40 }, // Strategic Plan URL
+      { wch: 40 }, // Org Chart URL
       { wch: 10 }  // Has Notes
     ];
     XLSX.utils.book_append_sheet(wb, ws, 'Accounts');
