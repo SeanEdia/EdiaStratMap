@@ -1300,12 +1300,42 @@ export function runMerge(csvData, existingData, source) {
     }
   });
 
-  // Keep existing records that were NOT matched by any CSV row
+  // Keep existing records that were NOT matched by any CSV row,
+  // but skip stale duplicates whose name+state already exists in mergedData.
+  // These are base-data records with corrupted IDs from prior merge sessions
+  // that weren't matched by any CSV row because the ID filter rejected them.
+  // The CSV already brought in the correct version of these records.
+  const mergedNameState = new Set();
+  mergedData.forEach(item => {
+    const key = (item.name || '').toLowerCase().trim() + '|' + (item.state || '').toUpperCase().trim();
+    mergedNameState.add(key);
+  });
+
+  let staleSkipped = 0;
   existingData.forEach((item, idx) => {
     if (!matchedIndices.has(idx)) {
-      mergedData.push(item);
+      const key = (item.name || '').toLowerCase().trim() + '|' + (item.state || '').toUpperCase().trim();
+      if (mergedNameState.has(key)) {
+        // A record with this name+state was already added from CSV processing.
+        // This unmatched record is a stale duplicate — skip it.
+        staleSkipped++;
+        console.log('[SFDC Merge] Skipping stale duplicate:', item.name,
+          '(' + (item.state || '') + ')',
+          item.account_id ? 'stale ID: ' + item.account_id : 'no ID',
+          'enrollment:', item.enrollment || '?');
+      } else {
+        mergedData.push(item);
+        // Track this key so subsequent unmatched records with the same
+        // name+state are also skipped (handles base-data-only duplicates)
+        mergedNameState.add(key);
+      }
     }
   });
+
+  if (staleSkipped > 0) {
+    console.log('[SFDC Merge] Skipped', staleSkipped, 'stale duplicate records');
+    stats.staleRecordsRemoved = staleSkipped;
+  }
 
   return { mergedData, stats };
 }
