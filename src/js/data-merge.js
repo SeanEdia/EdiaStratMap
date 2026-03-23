@@ -440,9 +440,24 @@ export function runMerge(csvData, existingData, source) {
   // Cascading match: Name → State → Enrollment → Address/City
   // If any check finds a mismatch against ALL candidates, the CSV row is a new account.
   // Returns the best matching entry, or null if no match (→ new pin).
-  function pickBestMatch(entries, csvRow) {
+  function pickBestMatch(entries, csvRow, csvId) {
     if (!entries || entries.length === 0) return null;
     let candidates = entries;
+
+    // ── ID FILTER (highest priority) ──
+    // If the CSV row has an Account ID, only consider candidates with the same ID
+    // or candidates with no ID (legacy data). Never match a candidate with a DIFFERENT ID.
+    if (csvId && csvId !== '000000000000000') {
+      const idFiltered = candidates.filter(e => !e.item.account_id || e.item.account_id === csvId);
+      if (idFiltered.length > 0) {
+        candidates = idFiltered;
+      } else {
+        // ALL candidates have different IDs — no match possible
+        console.log('[SFDC Merge] pickBestMatch: all candidates have different IDs for:', candidates[0]?.item.name,
+          '- CSV ID:', csvId, 'vs existing IDs:', candidates.map(e => e.item.account_id || '(none)').join(', '));
+        return null;
+      }
+    }
 
     // --- Check 1: State ---
     const csvSt = getStateFromRow(csvRow).toUpperCase().trim();
@@ -528,7 +543,7 @@ export function runMerge(csvData, existingData, source) {
   }
 
   // Fuzzy match by state + core name contains
-  function findByStateAndName(csvName, csvState) {
+  function findByStateAndName(csvName, csvState, csvId) {
     if (!csvState) return null;
     const stateKey = csvState.toUpperCase().trim();
     const stateRecords = existingByState.get(stateKey);
@@ -548,6 +563,12 @@ export function runMerge(csvData, existingData, source) {
         if (shorter < longer * 0.4) {
           console.log('[SFDC Merge] State+Name SKIPPED (length mismatch, ratio=' + (shorter/longer).toFixed(2) + '):', csvName, '→', item.name,
             '(normalized:', csvNormalized, 'vs', normalizedKey + ')');
+          continue;
+        }
+        // ID validation: if both have Account IDs and they differ, skip this candidate
+        if (csvId && csvId !== '000000000000000' && item.account_id && item.account_id !== csvId) {
+          console.log('[SFDC Merge] State+Name SKIPPED (ID mismatch):', csvName, '→', item.name,
+            '— CSV ID:', csvId, '≠ existing ID:', item.account_id);
           continue;
         }
         console.log('[SFDC Merge] State+Name match:', csvName, '→', item.name, '(state:', stateKey, ')');
@@ -672,25 +693,41 @@ export function runMerge(csvData, existingData, source) {
 
     // ── TIER 1: Exact name match ──
     if (!existing) {
-      existing = pickBestMatch(existingByName.get(nameKey), csvRow);
+      existing = pickBestMatch(existingByName.get(nameKey), csvRow, csvAccountId);
     }
     // ── TIER 2: Normalized name match ──
     if (!existing) {
-      existing = pickBestMatch(existingByNormalized.get(normalizedKey), csvRow);
+      existing = pickBestMatch(existingByNormalized.get(normalizedKey), csvRow, csvAccountId);
       if (existing) {
         console.log('[SFDC Merge] Normalized match:', name, '→', existing.item.name);
+        // Use ID key first (authoritative), then composite key. Never use name-only key.
         const existingComposite = existing.item.name.toLowerCase().trim() + '|' + (existing.item.state || '').toUpperCase().trim();
-        alreadyMerged = alreadyMerged || mergedByName.get(existingComposite) || mergedByName.get(existing.item.name.toLowerCase().trim());
+        alreadyMerged = alreadyMerged || mergedByName.get('id:' + (existing.item.account_id || '')) || mergedByName.get(existingComposite);
       }
     }
     // ── TIER 3: State + name contains match ──
     if (!existing) {
-      existing = findByStateAndName(name, csvState);
+      existing = findByStateAndName(name, csvState, csvAccountId);
       if (existing) {
         const existingComposite = existing.item.name.toLowerCase().trim() + '|' + (existing.item.state || '').toUpperCase().trim();
-        alreadyMerged = alreadyMerged || mergedByName.get(existingComposite) || mergedByName.get(existing.item.name.toLowerCase().trim());
+        alreadyMerged = alreadyMerged || mergedByName.get('id:' + (existing.item.account_id || '')) || mergedByName.get(existingComposite);
       }
     }
+    // ── ID VALIDATION GATE ──
+    // IDs are king. If a name-based tier (1, 2, or 3) found a candidate but both the
+    // CSV row and the candidate have Account IDs that DIFFER, reject the match.
+    // They are different entities that happen to share a name.
+    // (TIER 0 already matched by ID, so this only applies to name-based fallback matches.)
+    if (existing && csvAccountId && csvAccountId !== '000000000000000') {
+      const existingId = existing.item.account_id || '';
+      if (existingId && existingId !== csvAccountId) {
+        console.warn('[SFDC Merge] ID VALIDATION REJECTED name match:', name,
+          '→', existing.item.name, '— CSV ID:', csvAccountId, '≠ existing ID:', existingId,
+          '— these are different entities, treating CSV row as new record');
+        existing = null;
+      }
+    }
+
     if (!existing && !alreadyMerged && idx < 10) {
       console.log('[SFDC Merge] No match for:', name, '(exact:', nameKey, ', normalized:', normalizedKey, ', state:', csvStateKey || 'none', ')');
     }
@@ -1347,6 +1384,18 @@ export function runOppMerge(csvData) {
             }
           }
         }
+      }
+    }
+
+    // ── ID VALIDATION GATE ──
+    // If a name-based tier found a match but both sides have different Account IDs, reject it.
+    if (match && lookupId && lookupId !== '000000000000000') {
+      const matchId = match.item.account_id || '';
+      if (matchId && matchId !== lookupId) {
+        console.warn('[Opp Merge] ID VALIDATION REJECTED name match:', rawName,
+          '→', match.item.name, '— CSV ID:', lookupId, '≠ existing ID:', matchId,
+          '— different entities, treating as orphan');
+        match = null;
       }
     }
 
