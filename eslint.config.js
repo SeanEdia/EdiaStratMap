@@ -12,8 +12,10 @@ export default [
         // Browser globals
         window: 'readonly',
         document: 'readonly',
+        confirm: 'readonly',
         console: 'readonly',
         localStorage: 'readonly',
+        location: 'readonly',
         setTimeout: 'readonly',
         setInterval: 'readonly',
         clearTimeout: 'readonly',
@@ -25,6 +27,7 @@ export default [
         ClipboardItem: 'readonly',
         Blob: 'readonly',
         URL: 'readonly',
+        URLSearchParams: 'readonly',
         HTMLElement: 'readonly',
         Event: 'readonly',
         prompt: 'readonly',

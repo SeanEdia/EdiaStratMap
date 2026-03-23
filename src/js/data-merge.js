@@ -25,7 +25,7 @@ export function readSpreadsheetFile(file) {
           const rows = rawRows.map(row => {
             const mapped = {};
             Object.keys(row).forEach(key => {
-              const normKey = key.trim().toLowerCase().replace(/[\/()&:]+/g, '_').replace(/\s+/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
+              const normKey = key.trim().toLowerCase().replace(/[/()&:]+/g, '_').replace(/\s+/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
               const val = row[key];
               // Handle Date objects from Excel (cellDates: true)
               if (val instanceof Date && !isNaN(val.getTime())) {
@@ -191,7 +191,7 @@ export function parseCSV(text) {
       const row = {};
       headers.forEach((h, idx) => {
         // Normalize header names to match mapFieldName format
-        const key = h.trim().toLowerCase().replace(/[\/()&:]+/g, '_').replace(/\s+/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
+        const key = h.trim().toLowerCase().replace(/[/()&:]+/g, '_').replace(/\s+/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
         row[key] = values[idx].trim();
       });
       data.push(row);
@@ -201,7 +201,7 @@ export function parseCSV(text) {
       reconciled.push(values.slice(headers.length - 1).join(', '));
       const row = {};
       headers.forEach((h, idx) => {
-        const key = h.trim().toLowerCase().replace(/[\/()&:]+/g, '_').replace(/\s+/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
+        const key = h.trim().toLowerCase().replace(/[/()&:]+/g, '_').replace(/\s+/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
         row[key] = reconciled[idx].trim();
       });
       data.push(row);
@@ -1660,7 +1660,7 @@ export function previewMerge(csvData) {
 
   // Check if CSV has a 'type' column for per-row customer/account splitting.
   // Type values: "Customer" → customer dataset, "Inactive Customer"/blank/"Prospect" → account dataset.
-  const hasTypeColumn = csvData.length > 0 && csvData[0].hasOwnProperty('type');
+  const hasTypeColumn = csvData.length > 0 && Object.hasOwn(csvData[0], 'type');
 
   if (hasTypeColumn) {
     // Split rows by type
@@ -1921,7 +1921,7 @@ export function mapFieldName(csvField) {
     'opp_id': 'opportunity_id',
   };
 
-  const normalized = csvField.toLowerCase().replace(/[\/()&:]+/g, '_').replace(/\s+/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
+  const normalized = csvField.toLowerCase().replace(/[/()&:]+/g, '_').replace(/\s+/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
   return mappings[normalized] || normalized;
 }
 

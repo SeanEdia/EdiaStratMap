@@ -1008,7 +1008,7 @@ function rebuildNoteIndex() {
     const key = localStorage.key(i);
     if (key && key.startsWith('edia_notes_')) {
       try { if (JSON.parse(localStorage.getItem(key)).length > 0) S._accountsWithNotes.add(key); }
-      catch(e) {}
+      catch(e) { /* ignore corrupt notes entries */ }
     }
   }
 }
@@ -1511,14 +1511,14 @@ function buildFilterGroup(label, key, options, type, isCust) {
     options.forEach(o => {
       const active = selected.has(o) ? (isCust ? ' cust-active' : ' active') : '';
       const escaped = o.replace(/'/g, "\\'");
-      html += `<div class="filter-chip${active}" onclick="toggleMultiFilter('${key}','${escaped}')">${o}</div>`;
+      html += `<div class="filter-chip${active}" onclick="toggleMultiFilter('${key}','${escaped}', event)">${o}</div>`;
     });
     html += `</div>`;
   } else if (type === 'chips') {
     html += `<div class="filter-chips">`;
     options.forEach(o => {
       const active = (S.filters[key] === o) ? (isCust ? 'cust-active' : 'active') : '';
-      html += `<div class="filter-chip ${active}" onclick="toggleChip('${key}','${o}')">${o}</div>`;
+      html += `<div class="filter-chip ${active}" onclick="toggleChip('${key}','${o}', event)">${o}</div>`;
     });
     html += `</div>`;
   }
@@ -1569,7 +1569,7 @@ function setFilter(key, val) {
   applyFilters();
 }
 
-function toggleChip(key, val) {
+function toggleChip(key, val, event) {
   const wasActive = S.filters[key] === val;
   if (wasActive) delete S.filters[key];
   else S.filters[key] = val;
@@ -1588,7 +1588,7 @@ function toggleChip(key, val) {
   applyFilters();
 }
 
-function toggleMultiFilter(key, val) {
+function toggleMultiFilter(key, val, event) {
   if (!S.filters[key]) S.filters[key] = new Set();
   const wasActive = S.filters[key].has(val);
   if (wasActive) {
