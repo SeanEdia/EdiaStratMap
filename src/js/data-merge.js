@@ -1422,20 +1422,28 @@ export function runOppMerge(csvData) {
       match = clonedByKey.get(exactKey) || clonedByKey.get(normKey);
     }
 
-    // ── TIER 3: State + name contains match (fuzzy fallback) ──
+    // ── TIER 3: State + name prefix match (fuzzy fallback) ──
     if (!match && csvState) {
       const stateRecords = clonedByState.get(csvState);
       if (stateRecords) {
         const csvNormalized = normalizeDistrictName(rawName);
         for (const candidate of stateRecords) {
-          if (csvNormalized.includes(candidate.normalizedKey) || candidate.normalizedKey.includes(csvNormalized)) {
-            const shorter = Math.min(csvNormalized.length, candidate.normalizedKey.length);
-            const longer = Math.max(csvNormalized.length, candidate.normalizedKey.length);
-            if (shorter >= longer * 0.4) {
-              match = candidate;
-              console.log('[Opp Merge] State+Name match:', rawName, '→', candidate.item.name, '(state:', csvState, ')');
-              break;
+          // Prefix match with word boundary (not substring containment)
+          const isPrefix = candidate.normalizedKey.startsWith(csvNormalized) || csvNormalized.startsWith(candidate.normalizedKey);
+          if (isPrefix) {
+            const shorterStr = csvNormalized.length <= candidate.normalizedKey.length ? csvNormalized : candidate.normalizedKey;
+            const longerStr = csvNormalized.length > candidate.normalizedKey.length ? csvNormalized : candidate.normalizedKey;
+            // Word boundary check
+            if (shorterStr.length < longerStr.length && longerStr[shorterStr.length] !== ' ') {
+              continue;
             }
+            // Length ratio guard
+            if (shorterStr.length < longerStr.length * 0.4) {
+              continue;
+            }
+            match = candidate;
+            console.log('[Opp Merge] State+Name match:', rawName, '→', candidate.item.name, '(state:', csvState, ')');
+            break;
           }
         }
       }
