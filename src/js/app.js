@@ -1675,6 +1675,9 @@ function resetMapView() {
 
   // Reset proximity toggles
   S.proximityOn = false;
+  S.proxShowAll = false;
+  const proxShowAllCheck = document.getElementById('proxShowAllCheck');
+  if (proxShowAllCheck) proxShowAllCheck.checked = false;
   const proxCheck = document.getElementById('proxCheck');
   if (proxCheck) proxCheck.checked = false;
   const proxWrap = document.getElementById('proxRadiusWrap');
@@ -2649,6 +2652,11 @@ function toggleProximity(on) {
   drawProximity();
 }
 
+function toggleProxShowAll(on) {
+  S.proxShowAll = on;
+  if (S.proximityOn) drawProximity();
+}
+
 function toggleAdaFilter(on) {
   S.adaFilterOn = on;
   applyFilters();
@@ -2715,8 +2723,37 @@ function drawProximity() {
   const milesToMeters = S.PROXIMITY_MILES * 1609.34;
   S._custGrid = null; // Invalidate grid when radius changes
 
+  // Determine which accounts to scope proximity to
+  const scopeAccounts = S.proxShowAll
+    ? S.ACCOUNT_DATA
+    : (S.filteredAccountData && S.filteredAccountData.length > 0
+        ? S.filteredAccountData
+        : S.ACCOUNT_DATA);
+
+  // Build a set of accounts with valid coords for fast lookup
+  const accountCoords = [];
+  scopeAccounts.forEach(a => {
+    if (a.lat && a.lng) accountCoords.push(a);
+  });
+
+  // If filters produced zero accounts (and not in "show all" mode), show nothing
+  if (!S.proxShowAll && S.filteredAccountData && S.filteredAccountData.length === 0) {
+    const nearbyEl = document.getElementById('proxNearbyCount');
+    if (nearbyEl) nearbyEl.textContent = '0 nearby';
+    return;
+  }
+
+  // Only draw circles for customers near at least one scoped account
   S.CUSTOMER_DATA.forEach(c => {
     if (!c.lat || !c.lng) return;
+    let nearScoped = false;
+    for (let i = 0; i < accountCoords.length; i++) {
+      if (haversine(c.lat, c.lng, accountCoords[i].lat, accountCoords[i].lng) <= S.PROXIMITY_MILES) {
+        nearScoped = true;
+        break;
+      }
+    }
+    if (!nearScoped) return;
     L.circle([c.lat, c.lng], {
       radius: milesToMeters,
       color: '#00b894',
@@ -2728,10 +2765,9 @@ function drawProximity() {
     }).addTo(S.proxLayer);
   });
 
-  // Count accounts inside any customer radius — uses spatial grid
+  // Count how many scoped accounts are inside any customer radius
   let nearby = 0;
-  S.ACCOUNT_DATA.forEach(s => {
-    if (!s.lat || !s.lng) return;
+  accountCoords.forEach(s => {
     if (isNearAnyCustomer(s.lat, s.lng, S.PROXIMITY_MILES)) nearby++;
   });
 
@@ -3046,6 +3082,7 @@ Object.assign(window, {
   resetFilters,
   // Proximity & ADA
   toggleProximity,
+  toggleProxShowAll,
   updateProxRadius,
   setProxRadiusFromInput,
   toggleAdaFilter,

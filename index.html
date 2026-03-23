@@ -93,6 +93,11 @@
       <input type="number" id="proxMilesInput" class="prox-miles-input" value="50" min="10" max="150" onchange="setProxRadiusFromInput(this.value)">
       <span class="prox-miles-unit">mi</span>
       <span class="prox-nearby-count" id="proxNearbyCount"></span>
+      <label class="prox-toggle prox-show-all-toggle" style="margin-left:auto;">
+        <input type="checkbox" id="proxShowAllCheck" onchange="toggleProxShowAll(this.checked)">
+        <span class="prox-slider"></span>
+        <span class="prox-label">Show all customers</span>
+      </label>
     </div>
   </div>
 

@@ -1,5 +1,5 @@
 import S from './state.js';
-import { districtKey, parseUSDate, daysAgo, extractDatesFromText, isThisWeek } from './helpers.js';
+import { districtKey, parseUSDate, daysAgo, extractDatesFromText, isThisWeek, haversine } from './helpers.js';
 import { buildOppEntry, getTerritoryAE } from './app.js';
 import { formatCompactNumber } from './account-list.js';
 
@@ -33,13 +33,17 @@ export function exportData() {
       'Opp Contact Name', 'Opp Contact Title',
       'Website', 'Strategic Plan URL', 'Org Chart URL', 'Has Notes'
     ];
+    const proxActive = S.proximityOn;
+    if (proxActive) {
+      headers.push('Customer(s) within ' + S.PROXIMITY_MILES + ' mi');
+    }
     const rows = [headers];
     accounts.forEach(d => {
       const opps = d.opps && d.opps.length > 0 ? d.opps : (d.opp_stage ? [buildOppEntry(d)] : []);
       const noteKey = 'edia_notes_' + d.name.replace(/[^a-zA-Z0-9]/g, '_');
       const hasNotes = S._accountsWithNotes.has(noteKey);
       const nextStep = (d.opp_next_step || '').substring(0, 500);
-      rows.push([
+      const row = [
         d.name || '',
         d.state || '',
         d.region || '',
@@ -65,7 +69,18 @@ export function exportData() {
         d.strategic_plan_url || '',
         d.org_chart_url || '',
         hasNotes ? 'Yes' : 'No'
-      ]);
+      ];
+      if (proxActive) {
+        if (d.lat && d.lng) {
+          const nearby = S.CUSTOMER_DATA.filter(c =>
+            c.lat && c.lng && haversine(d.lat, d.lng, c.lat, c.lng) <= S.PROXIMITY_MILES
+          ).map(c => c.name);
+          row.push(nearby.length > 0 ? nearby.join('; ') : 'None');
+        } else {
+          row.push('N/A');
+        }
+      }
+      rows.push(row);
     });
     const ws = XLSX.utils.aoa_to_sheet(rows);
     // Set column widths for readability
@@ -96,6 +111,9 @@ export function exportData() {
       { wch: 40 }, // Org Chart URL
       { wch: 10 }  // Has Notes
     ];
+    if (proxActive) {
+      ws['!cols'].push({ wch: 40 });
+    }
     XLSX.utils.book_append_sheet(wb, ws, 'Accounts');
     sheetCount++;
   }
