@@ -1,6 +1,6 @@
 import S from './state.js';
 import { districtKey, parseUSDate, daysAgo, extractDatesFromText, isThisWeek } from './helpers.js';
-import { buildOppEntry, getTerritoryAE, getHoldoutAE } from './app.js';
+import { buildOppEntry, getTerritoryAE } from './app.js';
 import { formatCompactNumber } from './account-list.js';
 
 // ============ DATA EXPORT ============
@@ -26,15 +26,16 @@ export function exportData() {
   if (accounts.length > 0) {
     const headers = [
       'District Name', 'State', 'Region', 'Enrollment', 'Account Executive',
-      'Holdout AE', 'SIS Platform', 'Opp Stage', 'Total ACV', 'Forecast',
-      'Next Step', 'Last Activity', 'Contact', 'Contact Title', 'SDR',
-      '# Opps', 'Product Areas', 'Superintendent', 'Is Customer', 'Has Notes',
-      'Latitude', 'Longitude'
+      'SIS Platform', 'Opp Stage', '# Opps', 'Product Areas',
+      'Next Step', 'Last Activity', 'Is Customer',
+      'Superintendent', 'Asst. Supt. of C&I', 'Asst. Supt. of Student Services',
+      'CTO/Dir. of Technology', 'Dir. of C&I / CAO', 'Dir. of Attendance', 'Dir. of Math',
+      'Opp Contact Name', 'Opp Contact Title',
+      'Website', 'Strategic Plan URL', 'Org Chart URL', 'Has Notes'
     ];
     const rows = [headers];
     accounts.forEach(d => {
       const opps = d.opps && d.opps.length > 0 ? d.opps : (d.opp_stage ? [buildOppEntry(d)] : []);
-      const totalAcv = opps.reduce((sum, o) => sum + (Number(o.acv) || 0), 0);
       const noteKey = 'edia_notes_' + d.name.replace(/[^a-zA-Z0-9]/g, '_');
       const hasNotes = S._accountsWithNotes.has(noteKey);
       const nextStep = (d.opp_next_step || '').substring(0, 500);
@@ -44,33 +45,56 @@ export function exportData() {
         d.region || '',
         parseInt(d.enrollment) || '',
         getTerritoryAE(d) || '',
-        getHoldoutAE(d) || '',
         d.sis || '',
         d.opp_stage || '',
-        totalAcv || '',
-        d.opp_forecast || '',
-        nextStep,
-        d.opp_last_activity || '',
-        d.opp_contact || '',
-        d.opp_contact_title || '',
-        d.opp_sdr || '',
         opps.length,
         d.opp_areas || '',
-        d.superintendent || '',
+        nextStep,
+        d.opp_last_activity || '',
         d.is_customer ? 'Yes' : 'No',
-        hasNotes ? 'Yes' : 'No',
-        d.lat || '',
-        d.lng || ''
+        d.superintendent || '',
+        d.asst_supt_ci || '',
+        d.asst_supt_ss || '',
+        d.asst_supt_tech || '',
+        d.dir_ci || '',
+        d.dir_attendance || '',
+        d.dir_math || '',
+        d.opp_contact || '',
+        d.opp_contact_title || '',
+        d.website || '',
+        d.strategic_plan_url || '',
+        d.org_chart_url || '',
+        hasNotes ? 'Yes' : 'No'
       ]);
     });
     const ws = XLSX.utils.aoa_to_sheet(rows);
     // Set column widths for readability
     ws['!cols'] = [
-      { wch: 35 }, { wch: 6 }, { wch: 14 }, { wch: 12 }, { wch: 18 },
-      { wch: 18 }, { wch: 18 }, { wch: 18 }, { wch: 12 }, { wch: 12 },
-      { wch: 40 }, { wch: 12 }, { wch: 20 }, { wch: 25 }, { wch: 18 },
-      { wch: 7 }, { wch: 30 }, { wch: 25 }, { wch: 12 }, { wch: 10 },
-      { wch: 10 }, { wch: 10 }
+      { wch: 35 }, // District Name
+      { wch: 6 },  // State
+      { wch: 14 }, // Region
+      { wch: 12 }, // Enrollment
+      { wch: 18 }, // Account Executive
+      { wch: 18 }, // SIS Platform
+      { wch: 18 }, // Opp Stage
+      { wch: 7 },  // # Opps
+      { wch: 30 }, // Product Areas
+      { wch: 40 }, // Next Step
+      { wch: 12 }, // Last Activity
+      { wch: 12 }, // Is Customer
+      { wch: 25 }, // Superintendent
+      { wch: 28 }, // Asst. Supt. of C&I
+      { wch: 30 }, // Asst. Supt. of Student Services
+      { wch: 28 }, // CTO/Dir. of Technology
+      { wch: 28 }, // Dir. of C&I / CAO
+      { wch: 22 }, // Dir. of Attendance
+      { wch: 22 }, // Dir. of Math
+      { wch: 22 }, // Opp Contact Name
+      { wch: 30 }, // Opp Contact Title
+      { wch: 30 }, // Website
+      { wch: 40 }, // Strategic Plan URL
+      { wch: 40 }, // Org Chart URL
+      { wch: 10 }  // Has Notes
     ];
     XLSX.utils.book_append_sheet(wb, ws, 'Accounts');
     sheetCount++;
