@@ -135,7 +135,7 @@ export function renderConflictsOverlay() {
 
     // New rep detail card
     const newTeamStr = c.newTeam ? ' (' + escapeHtml(c.newTeam) + ')' : '';
-    let newOppHtml = '';
+    let newOppHtml;
     if (c.hasOpp) {
       newOppHtml = '<div class="conflict-opp-list">CSV row includes opp:';
       const areaStr = c.oppAreas || 'Unknown';
