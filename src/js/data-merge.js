@@ -438,6 +438,29 @@ export function runMerge(csvData, existingData, source) {
   console.log('[SFDC Merge] States indexed:', Array.from(existingByState.keys()).join(', '));
   console.log('[SFDC Merge] Address+state index entries:', existingByAddress.size);
 
+  // Helper: check if two district names plausibly refer to the same entity.
+  // Used by TIER 0 to detect corrupted Account IDs. Returns true if names are
+  // exact matches, prefix-related, or share significant words with a prefix relationship.
+  // Returns false for clearly different entities ("Bedford" vs "New Bedford",
+  // "Hampton" vs "Southampton", "Clarke Elementary" vs "Swampscott Public Schools").
+  const _genericWords = new Set(['school', 'schools', 'high', 'middle', 'elementary',
+    'academy', 'the', 'and', 'for', 'public', 'district', 'charter', 'preparatory',
+    'regional', 'county', 'city', 'unified', 'independent', 'consolidated', 'free',
+    'union', 'area', 'community', 'central', 'joint', 'vocational', 'technical',
+    'career', 'education', 'learning', 'international', 'national', 'state', 'local']);
+  function namesArePlausiblyRelated(name1, name2) {
+    const a = normalizeDistrictName(name1);
+    const b = normalizeDistrictName(name2);
+    // Exact normalized match → same entity
+    if (a === b) return true;
+    // Prefix at word boundary → legitimate variation (e.g. "kearsarge" → "kearsarge regional")
+    if (b.startsWith(a) && (a.length === b.length || b[a.length] === ' ')) return true;
+    if (a.startsWith(b) && (b.length === a.length || a[b.length] === ' ')) return true;
+    // No prefix relationship → different entities even if they share a word
+    // ("bedford" is NOT a prefix of "new bedford", so Bedford ≠ New Bedford)
+    return false;
+  }
+
   // Cascading match: Name → State → Enrollment → Address/City
   // If any check finds a mismatch against ALL candidates, the CSV row is a new account.
   // Returns the best matching entry, or null if no match (→ new pin).
@@ -657,6 +680,9 @@ export function runMerge(csvData, existingData, source) {
         // so the name+state cascade can find or create the correct record.
         const idMatchState = (idMatch.item.state || '').toUpperCase().trim();
         const csvSt = (getStateFromRow(csvRow) || '').toUpperCase().trim();
+        const csvName = getNameFromRow(csvRow);
+
+        // CHECK 1: State consistency
         if (csvSt && idMatchState && csvSt !== idMatchState) {
           console.warn('[SFDC Merge] TIER 0 STATE MISMATCH — ID', csvAccountId,
             'matched', idMatch.item.name, '(' + idMatchState + ') but CSV state is', csvSt,
@@ -664,6 +690,18 @@ export function runMerge(csvData, existingData, source) {
           delete idMatch.item.account_id;
           existingById.delete(csvAccountId);
           // Don't set existing — fall through to name+state matching
+
+        // CHECK 2: Name consistency — if normalized names are not prefix-related
+        // and share no significant words, the ID was written from a different entity
+        // (e.g. a school's ID contaminating a district record via substring matching).
+        } else if (!namesArePlausiblyRelated(csvName, idMatch.item.name)) {
+          console.warn('[SFDC Merge] TIER 0 NAME MISMATCH — ID', csvAccountId,
+            'matched', idMatch.item.name, 'but CSV name is', csvName,
+            '— removing corrupted ID from existing record');
+          delete idMatch.item.account_id;
+          existingById.delete(csvAccountId);
+          // Don't set existing — fall through to name+state matching
+
         } else {
           existing = idMatch;
           console.log('[SFDC Merge] ID match:', csvAccountId, '→', existing.item.name);
@@ -887,8 +925,13 @@ export function runMerge(csvData, existingData, source) {
         if (!merged.account_id) {
           const mergedSt = (merged.state || '').toUpperCase().trim();
           const csvSt = (getStateFromRow(csvRow) || '').toUpperCase().trim();
-          if (!mergedSt || !csvSt || mergedSt === csvSt) {
+          if ((!mergedSt || !csvSt || mergedSt === csvSt) &&
+              namesArePlausiblyRelated(name, merged.name)) {
             merged.account_id = csvAccountId;
+          } else if (!mergedSt || !csvSt || mergedSt === csvSt) {
+            // State matches but names are unrelated — don't write the ID
+            console.warn('[SFDC Merge] Blocked account_id write (name mismatch):',
+              merged.name, '≠ CSV name', name, 'ID:', csvAccountId);
           } else {
             console.warn('[SFDC Merge] Blocked account_id write (state mismatch):',
               merged.name, mergedSt, '≠ CSV', csvSt, 'ID:', csvAccountId);
