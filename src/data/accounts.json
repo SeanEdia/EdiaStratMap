@@ -139201,7 +139201,7 @@
     "customer_name": ""
   },
   {
-    "name": "Dallas ISD",
+    "name": "Lake Dallas Independent School District",
     "enrollment": 3811,
     "state": "TX",
     "region": "South-Central",
@@ -139232,7 +139232,7 @@
     "gdr": 0,
     "ndr": 0,
     "has_school_opps": false,
-    "_nameLc": "dallas isd",
+    "_nameLc": "lake dallas independent school district",
     "_stateLc": "tx",
     "_regionLc": "south-central",
     "parent_account_id": "000000000000000",
@@ -225221,7 +225221,7 @@
     "_source_team": "Strategic",
     "lat": 32.7767,
     "lng": -96.797,
-    "city": "Lake Dallas",
+    "city": "Dallas",
     "is_customer": false,
     "customer_name": "",
     "_nameLc": "dallas independent school district",

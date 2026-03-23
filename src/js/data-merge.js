@@ -543,7 +543,7 @@ export function runMerge(csvData, existingData, source) {
     return candidates[0];
   }
 
-  // Fuzzy match by state + core name contains
+  // Fuzzy match by state + core name prefix
   function findByStateAndName(csvName, csvState, csvId) {
     if (!csvState) return null;
     const stateKey = csvState.toUpperCase().trim();
@@ -553,16 +553,26 @@ export function runMerge(csvData, existingData, source) {
     const csvNormalized = normalizeDistrictName(csvName);
 
     for (const { item, idx, normalizedKey } of stateRecords) {
-      // Check if either name contains the other (handles "Dallas" matching "Dallas ISD")
-      if (csvNormalized.includes(normalizedKey) || normalizedKey.includes(csvNormalized)) {
-        // Guard against false positives where a short normalized parent name is embedded
-        // in a much longer sub-entity name (e.g. "new york city" inside
-        // "new york city geographic district #16"). Require the shorter name to be at
-        // least half the length of the longer to confirm they refer to the same entity.
-        const shorter = Math.min(csvNormalized.length, normalizedKey.length);
-        const longer = Math.max(csvNormalized.length, normalizedKey.length);
-        if (shorter < longer * 0.4) {
-          console.log('[SFDC Merge] State+Name SKIPPED (length mismatch, ratio=' + (shorter/longer).toFixed(2) + '):', csvName, '→', item.name,
+      // Check if one normalized name is a PREFIX of the other (with word boundary).
+      // Previously used arbitrary substring containment (csvNormalized.includes(normalizedKey))
+      // which caused false positives: "lake dallas".includes("dallas") matched Lake Dallas ISD
+      // to Dallas ISD. Also matched "north little rock" to "little rock", "central union elementary"
+      // to "union elementary", etc. Prefix-only matching prevents this class of error while still
+      // catching legitimate variations like "kearsarge" → "kearsarge regional".
+      const isPrefix = normalizedKey.startsWith(csvNormalized) || csvNormalized.startsWith(normalizedKey);
+      if (isPrefix) {
+        // Verify word boundary: the prefix must end at a space or end-of-string in the longer name
+        const shorterStr = csvNormalized.length <= normalizedKey.length ? csvNormalized : normalizedKey;
+        const longerStr = csvNormalized.length > normalizedKey.length ? csvNormalized : normalizedKey;
+        if (shorterStr.length < longerStr.length && longerStr[shorterStr.length] !== ' ') {
+          // Prefix ends mid-word (e.g. "spring" matching "springfield") — skip
+          console.log('[SFDC Merge] State+Name SKIPPED (mid-word prefix):', csvName, '→', item.name,
+            '(normalized:', csvNormalized, 'vs', normalizedKey + ')');
+          continue;
+        }
+        // Guard against very short prefixes matching much longer names
+        if (shorterStr.length < longerStr.length * 0.4) {
+          console.log('[SFDC Merge] State+Name SKIPPED (length mismatch, ratio=' + (shorterStr.length/longerStr.length).toFixed(2) + '):', csvName, '→', item.name,
             '(normalized:', csvNormalized, 'vs', normalizedKey + ')');
           continue;
         }
