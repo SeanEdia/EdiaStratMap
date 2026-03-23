@@ -1,6 +1,6 @@
 import S from './state.js';
 import { districtKey, parseUSDate, daysAgo, extractDatesFromText, isThisWeek } from './helpers.js';
-import { buildOppEntry, getTerritoryAE, getHoldoutAE } from './app.js';
+import { buildOppEntry, getTerritoryAE } from './app.js';
 import { formatCompactNumber } from './account-list.js';
 
 // ============ DATA EXPORT ============
@@ -26,10 +26,12 @@ export function exportData() {
   if (accounts.length > 0) {
     const headers = [
       'District Name', 'State', 'Region', 'Enrollment', 'Account Executive',
-      'Holdout AE', 'SIS Platform', 'Opp Stage', 'Total ACV', 'Forecast',
-      'Next Step', 'Last Activity', 'Contact', 'Contact Title', 'SDR',
-      '# Opps', 'Product Areas', 'Superintendent', 'Is Customer', 'Has Notes',
-      'Latitude', 'Longitude'
+      'SIS Platform', 'Opp Stage', 'Total ACV', 'Forecast',
+      'Next Step', 'Last Activity', 'Superintendent', 'Asst. Superintendent(s)',
+      'CAO', 'CFO', 'CTO/Dir. of Technology', 'Dir. of Student Services',
+      'Primary Contact Name', 'Primary Contact Title', 'Primary Contact Email',
+      'Primary Contact Phone', 'Contact Source', 'SDR',
+      '# Opps', 'Product Areas', 'Is Customer', 'Has Notes'
     ];
     const rows = [headers];
     accounts.forEach(d => {
@@ -38,39 +40,69 @@ export function exportData() {
       const noteKey = 'edia_notes_' + d.name.replace(/[^a-zA-Z0-9]/g, '_');
       const hasNotes = S._accountsWithNotes.has(noteKey);
       const nextStep = (d.opp_next_step || '').substring(0, 500);
+      const contactName = d.opp_contact || '';
+      const contactTitle = d.opp_contact_title || '';
+      const contactSource = d.opp_contact ? 'Opportunity' : '';
       rows.push([
         d.name || '',
         d.state || '',
         d.region || '',
         parseInt(d.enrollment) || '',
         getTerritoryAE(d) || '',
-        getHoldoutAE(d) || '',
         d.sis || '',
         d.opp_stage || '',
         totalAcv || '',
         d.opp_forecast || '',
         nextStep,
         d.opp_last_activity || '',
-        d.opp_contact || '',
-        d.opp_contact_title || '',
+        d.superintendent || '',
+        d.asst_supt_ci || '',
+        d.dir_ci || '',
+        d.cfo || '',
+        d.asst_supt_tech || '',
+        d.asst_supt_ss || '',
+        contactName,
+        contactTitle,
+        d.primary_contact_email || '',
+        d.primary_contact_phone || '',
+        contactSource,
         d.opp_sdr || '',
         opps.length,
         d.opp_areas || '',
-        d.superintendent || '',
         d.is_customer ? 'Yes' : 'No',
-        hasNotes ? 'Yes' : 'No',
-        d.lat || '',
-        d.lng || ''
+        hasNotes ? 'Yes' : 'No'
       ]);
     });
     const ws = XLSX.utils.aoa_to_sheet(rows);
     // Set column widths for readability
     ws['!cols'] = [
-      { wch: 35 }, { wch: 6 }, { wch: 14 }, { wch: 12 }, { wch: 18 },
-      { wch: 18 }, { wch: 18 }, { wch: 18 }, { wch: 12 }, { wch: 12 },
-      { wch: 40 }, { wch: 12 }, { wch: 20 }, { wch: 25 }, { wch: 18 },
-      { wch: 7 }, { wch: 30 }, { wch: 25 }, { wch: 12 }, { wch: 10 },
-      { wch: 10 }, { wch: 10 }
+      { wch: 35 }, // District Name
+      { wch: 6 },  // State
+      { wch: 14 }, // Region
+      { wch: 12 }, // Enrollment
+      { wch: 18 }, // Account Executive
+      { wch: 18 }, // SIS Platform
+      { wch: 18 }, // Opp Stage
+      { wch: 12 }, // Total ACV
+      { wch: 12 }, // Forecast
+      { wch: 40 }, // Next Step
+      { wch: 12 }, // Last Activity
+      { wch: 25 }, // Superintendent
+      { wch: 28 }, // Asst. Superintendent(s)
+      { wch: 28 }, // CAO
+      { wch: 20 }, // CFO
+      { wch: 28 }, // CTO/Dir. of Technology
+      { wch: 28 }, // Dir. of Student Services
+      { wch: 22 }, // Primary Contact Name
+      { wch: 30 }, // Primary Contact Title
+      { wch: 28 }, // Primary Contact Email
+      { wch: 16 }, // Primary Contact Phone
+      { wch: 18 }, // Contact Source
+      { wch: 18 }, // SDR
+      { wch: 7 },  // # Opps
+      { wch: 30 }, // Product Areas
+      { wch: 12 }, // Is Customer
+      { wch: 10 }  // Has Notes
     ];
     XLSX.utils.book_append_sheet(wb, ws, 'Accounts');
     sheetCount++;
