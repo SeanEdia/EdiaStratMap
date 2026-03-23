@@ -84,18 +84,6 @@
     "_hasUploadedOpp": true
   },
   {
-    "account_name": "Abington School District",
-    "state": "PA",
-    "opp_owner": "",
-    "opportunity_name": "",
-    "intro_meeting_date": "",
-    "created_date": "",
-    "last_modified": "",
-    "age": "",
-    "opps": [],
-    "_hasUploadedOpp": true
-  },
-  {
     "account_name": "Accomack County Public Schools",
     "state": "VA",
     "opp_owner": "",
@@ -2973,18 +2961,6 @@
     "_hasUploadedOpp": true
   },
   {
-    "account_name": "McMinn County Schools",
-    "state": "TN",
-    "opp_owner": "",
-    "opportunity_name": "",
-    "intro_meeting_date": "",
-    "created_date": "",
-    "last_modified": "",
-    "age": "",
-    "opps": [],
-    "_hasUploadedOpp": true
-  },
-  {
     "account_name": "Athens City School District",
     "state": "OH",
     "opp_owner": "",
@@ -4587,38 +4563,16 @@
     "_hasUploadedOpp": true
   },
   {
-    "account_name": "New Bedford Public Schools",
+    "account_name": "Bedford Public Schools",
     "state": "MA",
-    "opp_owner": "Andy Graham",
-    "opportunity_name": "New Bedford - Math - Normandin MS pilot",
-    "intro_meeting_date": "6/26/2025",
-    "created_date": "6/18/2025",
-    "last_modified": "3/19/2026",
-    "age": "274",
-    "opps": [
-      {
-        "opportunity_id": "006RN00000KkeQM",
-        "area": "Math",
-        "stage": "3 - Scoping",
-        "forecast": "Best Case",
-        "acv": 30000,
-        "probability": 0.35,
-        "contact": "Bill Manchester",
-        "contact_title": "Mathematics Curriculum Data and Assessment Manager",
-        "next_step": "3/19 Discussion with Bill.  Did he speak with ASupe??",
-        "last_activity": "3/19/2026",
-        "sdr": "Sydney Levenfeld",
-        "champion": "Bill Manchester",
-        "economic_buyer": "Justin Santos, Principal, Normandin MS\nInfluencers: Bill, Daniel, Assistant Principal",
-        "competition": "Ready Math K-8.\nIXL purchased school-by-school\nCarnegie in HS?\n\nDo they have iReady (K-8), or MathIA (9-12)?",
-        "school_name": ""
-      }
-    ],
-    "_hasUploadedOpp": true,
-    "metric_improvement_goal": "Improve growth metric (SGP)\nImprove MCAS scores",
-    "decision_criteria": "Replace IXL, reduce growth gaps and increase MCAP scores\nBudget",
-    "decision_process": "For Overall win: 2025 - 2026 with one Middle School.  Compare growth changes to other schools with IXL\nFor Pilot win.  Meet Principal and team.  Agree on scope and price.  Close.\nSubsequently need to use the data to sell at District and across the other",
-    "implication_of_pain": "SGP growth metric is barely over 50% in two other Middle Schools.  Those middle schools have double block of Math/Science with one teacher.  Only test on Math, so Math gets more attention.  Normandin Growth scores are 39% for Math, well below the minimum."
+    "opp_owner": "",
+    "opportunity_name": "",
+    "intro_meeting_date": "",
+    "created_date": "",
+    "last_modified": "",
+    "age": "",
+    "opps": [],
+    "_hasUploadedOpp": true
   },
   {
     "account_name": "Bedford Central School District",
@@ -5267,7 +5221,7 @@
     "_hasUploadedOpp": true
   },
   {
-    "account_name": "School District of Beloit",
+    "account_name": "School District of Beloit Turner",
     "state": "WI",
     "opp_owner": "",
     "opportunity_name": "",
@@ -7813,13 +7767,13 @@
     "_hasUploadedOpp": true
   },
   {
-    "account_name": "Fairfield School District",
+    "account_name": "New Fairfield Public Schools",
     "state": "CT",
     "opp_owner": "",
     "opportunity_name": "",
     "intro_meeting_date": "",
     "created_date": "",
-    "last_modified": "2/4/2026",
+    "last_modified": "",
     "age": "",
     "opps": [],
     "_hasUploadedOpp": true
@@ -7921,7 +7875,7 @@
     "_hasUploadedOpp": true
   },
   {
-    "account_name": "Milford Public Schools",
+    "account_name": "New Milford School District",
     "state": "CT",
     "opp_owner": "",
     "opportunity_name": "",
@@ -8755,7 +8709,7 @@
     "_hasUploadedOpp": true
   },
   {
-    "account_name": "Andover Public Schools",
+    "account_name": "North Andover Public Schools",
     "state": "MA",
     "opp_owner": "",
     "opportunity_name": "",
@@ -8779,7 +8733,7 @@
     "_hasUploadedOpp": true
   },
   {
-    "account_name": "Attleboro Public Schools",
+    "account_name": "North Attleborough Public Schools",
     "state": "MA",
     "opp_owner": "",
     "opportunity_name": "",
@@ -8827,7 +8781,7 @@
     "_hasUploadedOpp": true
   },
   {
-    "account_name": "Community Unit School District 200",
+    "account_name": "North Boone Community Unit School District 200",
     "state": "IL",
     "opp_owner": "",
     "opportunity_name": "",
@@ -8877,18 +8831,6 @@
   {
     "account_name": "North College Hill City School District",
     "state": "OH",
-    "opp_owner": "",
-    "opportunity_name": "",
-    "intro_meeting_date": "",
-    "created_date": "",
-    "last_modified": "",
-    "age": "",
-    "opps": [],
-    "_hasUploadedOpp": true
-  },
-  {
-    "account_name": "Fond du Lac School District",
-    "state": "WI",
     "opp_owner": "",
     "opportunity_name": "",
     "intro_meeting_date": "",
@@ -9392,7 +9334,7 @@
     "_hasUploadedOpp": true
   },
   {
-    "account_name": "Allen ISD",
+    "account_name": "Calallen Independent School District",
     "state": "TX",
     "opp_owner": "",
     "opportunity_name": "",
@@ -11716,7 +11658,7 @@
     "_hasUploadedOpp": true
   },
   {
-    "account_name": "East Central Independent School District",
+    "account_name": "Central Independent School District",
     "state": "TX",
     "opp_owner": "",
     "opportunity_name": "",
@@ -13621,18 +13563,6 @@
   {
     "account_name": "Clarence Central School District",
     "state": "NY",
-    "opp_owner": "",
-    "opportunity_name": "",
-    "intro_meeting_date": "",
-    "created_date": "",
-    "last_modified": "",
-    "age": "",
-    "opps": [],
-    "_hasUploadedOpp": true
-  },
-  {
-    "account_name": "Clark-Shawnee Local School District",
-    "state": "OH",
     "opp_owner": "",
     "opportunity_name": "",
     "intro_meeting_date": "",
@@ -16737,7 +16667,7 @@
     "_hasUploadedOpp": true
   },
   {
-    "account_name": "Cullman County Schools",
+    "account_name": "Cullman City Schools",
     "state": "AL",
     "opp_owner": "",
     "opportunity_name": "",
@@ -18494,7 +18424,7 @@
     "_hasUploadedOpp": true
   },
   {
-    "account_name": "Richmond Public Schools",
+    "account_name": "Richmond County Public Schools",
     "state": "VA",
     "opp_owner": "Caroline Uhlarik",
     "opportunity_name": "Richmond County Public Schools - Math - NB",
@@ -19778,7 +19708,7 @@
     "_hasUploadedOpp": true
   },
   {
-    "account_name": "Grand Rapids Public Schools",
+    "account_name": "East Grand Rapids Public Schools",
     "state": "MI",
     "opp_owner": "",
     "opportunity_name": "",
@@ -22531,18 +22461,6 @@
     "_hasUploadedOpp": true
   },
   {
-    "account_name": "Evergreen School District",
-    "state": "CA",
-    "opp_owner": "",
-    "opportunity_name": "",
-    "intro_meeting_date": "",
-    "created_date": "",
-    "last_modified": "",
-    "age": "",
-    "opps": [],
-    "_hasUploadedOpp": true
-  },
-  {
     "account_name": "Evesham Township School District",
     "state": "NJ",
     "opp_owner": "",
@@ -23116,6 +23034,18 @@
   {
     "account_name": "Shawnee Heights Unified School District 450",
     "state": "KS",
+    "opp_owner": "",
+    "opportunity_name": "",
+    "intro_meeting_date": "",
+    "created_date": "",
+    "last_modified": "",
+    "age": "",
+    "opps": [],
+    "_hasUploadedOpp": true
+  },
+  {
+    "account_name": "Shawnee Local School District",
+    "state": "OH",
     "opp_owner": "",
     "opportunity_name": "",
     "intro_meeting_date": "",
@@ -25188,7 +25118,7 @@
     "_hasUploadedOpp": true
   },
   {
-    "account_name": "Franklin County Public Schools",
+    "account_name": "Franklin City Public Schools",
     "state": "VA",
     "opp_owner": "Daniel Way",
     "opportunity_name": "Franklin City Public Schools - Attendance - NB",
@@ -25712,7 +25642,7 @@
     "_hasUploadedOpp": true
   },
   {
-    "account_name": "Pasadena Unified School District",
+    "account_name": "South Pasadena Unified School District",
     "state": "CA",
     "opp_owner": "",
     "opportunity_name": "",
@@ -25892,7 +25822,7 @@
     "_hasUploadedOpp": true
   },
   {
-    "account_name": "Hampton City Schools",
+    "account_name": "Southampton County Public Schools",
     "state": "VA",
     "opp_owner": "",
     "opportunity_name": "",
@@ -26050,18 +25980,6 @@
   {
     "account_name": "Southwest Local School District",
     "state": "OH",
-    "opp_owner": "",
-    "opportunity_name": "",
-    "intro_meeting_date": "",
-    "created_date": "",
-    "last_modified": "",
-    "age": "",
-    "opps": [],
-    "_hasUploadedOpp": true
-  },
-  {
-    "account_name": "Southwest Independent School District",
-    "state": "TX",
     "opp_owner": "",
     "opportunity_name": "",
     "intro_meeting_date": "",
@@ -26312,7 +26230,7 @@
     "_hasUploadedOpp": true
   },
   {
-    "account_name": "Spring ISD",
+    "account_name": "Springtown Independent School District",
     "state": "TX",
     "opp_owner": "",
     "opportunity_name": "",
@@ -27696,7 +27614,7 @@
     "_hasUploadedOpp": true
   },
   {
-    "account_name": "East Stroudsburg Area School District",
+    "account_name": "Stroudsburg Area School District",
     "state": "PA",
     "opp_owner": "",
     "opportunity_name": "",
@@ -29334,7 +29252,7 @@
     "_hasUploadedOpp": true
   },
   {
-    "account_name": "Greene County Schools",
+    "account_name": "Greeneville City Schools",
     "state": "TN",
     "opp_owner": "",
     "opportunity_name": "",
@@ -29820,56 +29738,16 @@
     "_hasUploadedOpp": true
   },
   {
-    "account_name": "Thomas County Schools",
+    "account_name": "Thomasville City Schools",
     "state": "GA",
-    "opp_owner": "Andy Graham",
-    "opportunity_name": "Thomas County Schools - Math - Renewal Upsell",
-    "intro_meeting_date": "1/6/2026",
-    "created_date": "3/12/2026",
-    "last_modified": "3/19/2026",
-    "age": "7",
-    "opps": [
-      {
-        "opportunity_id": "006RN00000WeuDy",
-        "area": "Math",
-        "stage": "3 - Scoping",
-        "forecast": "Most Likely",
-        "acv": 10466.17,
-        "probability": 0.35,
-        "contact": "",
-        "contact_title": "",
-        "next_step": "3/27 Onsite",
-        "last_activity": "",
-        "sdr": "",
-        "champion": "",
-        "economic_buyer": "",
-        "competition": "",
-        "school_name": ""
-      },
-      {
-        "opportunity_id": "006RN00000WFeSY",
-        "area": "District Intelligence",
-        "stage": "2 - Demo",
-        "forecast": "Best Case",
-        "acv": "",
-        "probability": 0.2,
-        "contact": "Lindsay Thompson",
-        "contact_title": "Director of Secondary Curriculum",
-        "next_step": "3/27 Onsite",
-        "last_activity": "",
-        "sdr": "",
-        "champion": "Lindsay Thompson (absent but most positioned to advocate)\nJustin is engaged and positive but defers to Lindsay\nAmy showed genuine enthusiasm, especially around speed of data access",
-        "economic_buyer": "Finance Superintendent (name not mentioned) — never on calls, Lindsay routes requests to him\nLindsay Thompson is the functional decision-maker/champion who signs off before finance",
-        "competition": "Mobimax (supplemental, but on its way out — stated clearly)\nInfinite Campus (handles MTSS plans; the incumbent to displace or complement)\nNo other vendors mentioned explicitly",
-        "school_name": ""
-      }
-    ],
-    "_hasUploadedOpp": true,
-    "metric_improvement_goal": "Reduce chronic absenteeism (currently above state average, declining too slowly)\nImprove math proficiency, especially elementary EOC/Algebra 1\nFaster data-to-decision cycle for instructional and MTSS planning",
-    "decision_criteria": "Consolidation of data sources into fewer platforms\nSpeed and ease of actionable insights\nData privacy and student PII security\nWhether it genuinely replaces or supplements existing tools (cost justification)\nTeacher usability (especially math product)",
-    "decision_process": "Team evaluates collectively (Justin, Amy, Lacey, Aaron, Lindsay)\nLindsay signs off and brings to finance superintendent\nSuperintendent/finance makes final approval\nNo timeline stated explicitly",
-    "paper_process": "??",
-    "implication_of_pain": "Hours wasted manually pulling and reconciling data across platforms\nSlow identification of at-risk students for attendance and academics\nMath interventions (Mobimax) that teachers and students dislike\nInability to be prescriptive at Tier 1 instruction"
+    "opp_owner": "",
+    "opportunity_name": "",
+    "intro_meeting_date": "",
+    "created_date": "",
+    "last_modified": "",
+    "age": "",
+    "opps": [],
+    "_hasUploadedOpp": true
   },
   {
     "account_name": "Thomasville City Schools",
@@ -30249,20 +30127,8 @@
     "_hasUploadedOpp": true
   },
   {
-    "account_name": "Hamilton City Schools",
+    "account_name": "Hamilton Local School District",
     "state": "OH",
-    "opp_owner": "",
-    "opportunity_name": "",
-    "intro_meeting_date": "",
-    "created_date": "",
-    "last_modified": "",
-    "age": "",
-    "opps": [],
-    "_hasUploadedOpp": true
-  },
-  {
-    "account_name": "Hamilton Township Public School District",
-    "state": "NJ",
     "opp_owner": "",
     "opportunity_name": "",
     "intro_meeting_date": "",
@@ -31886,18 +31752,6 @@
     "_hasUploadedOpp": true
   },
   {
-    "account_name": "Union County Public Schools",
-    "state": "TN",
-    "opp_owner": "",
-    "opportunity_name": "",
-    "intro_meeting_date": "",
-    "created_date": "",
-    "last_modified": "",
-    "age": "",
-    "opps": [],
-    "_hasUploadedOpp": true
-  },
-  {
     "account_name": "Union County School District",
     "state": "MS",
     "opp_owner": "",
@@ -33181,18 +33035,6 @@
     "_hasUploadedOpp": true
   },
   {
-    "account_name": "Hudsonville Public Schools",
-    "state": "MI",
-    "opp_owner": "",
-    "opportunity_name": "",
-    "intro_meeting_date": "",
-    "created_date": "",
-    "last_modified": "",
-    "age": "",
-    "opps": [],
-    "_hasUploadedOpp": true
-  },
-  {
     "account_name": "Hudson City School District",
     "state": "OH",
     "opp_owner": "",
@@ -33409,7 +33251,7 @@
     "_hasUploadedOpp": true
   },
   {
-    "account_name": "South Huntington Union Free School District",
+    "account_name": "Huntington Union Free School District",
     "state": "NY",
     "opp_owner": "",
     "opportunity_name": "",
@@ -33681,18 +33523,6 @@
   {
     "account_name": "Waldwick School District",
     "state": "NJ",
-    "opp_owner": "",
-    "opportunity_name": "",
-    "intro_meeting_date": "",
-    "created_date": "",
-    "last_modified": "",
-    "age": "",
-    "opps": [],
-    "_hasUploadedOpp": true
-  },
-  {
-    "account_name": "Rockwall Independent School District",
-    "state": "TX",
     "opp_owner": "",
     "opportunity_name": "",
     "intro_meeting_date": "",
@@ -35661,18 +35491,6 @@
     "_hasUploadedOpp": true
   },
   {
-    "account_name": "Hempstead Union Free School District",
-    "state": "NY",
-    "opp_owner": "",
-    "opportunity_name": "",
-    "intro_meeting_date": "",
-    "created_date": "",
-    "last_modified": "",
-    "age": "",
-    "opps": [],
-    "_hasUploadedOpp": true
-  },
-  {
     "account_name": "West Holmes Local (West Holmes Local Schools / West Holmes Local School District)",
     "state": "OH",
     "opp_owner": "",
@@ -36248,37 +36066,16 @@
     "_hasUploadedOpp": true
   },
   {
-    "account_name": "Springfield Public Schools",
+    "account_name": "West Springfield Public Schools",
     "state": "MA",
-    "opp_owner": "Ally McCready",
-    "opportunity_name": "Springfield - Attendance - EXP",
-    "intro_meeting_date": "2/7/2025",
-    "created_date": "8/27/2025",
-    "last_modified": "3/18/2026",
-    "age": "204",
-    "opps": [
-      {
-        "opportunity_id": "",
-        "area": "Attendance",
-        "stage": "3 - Scoping",
-        "forecast": "Best Case",
-        "acv": 20000,
-        "probability": 0.35,
-        "contact": "Jose Escribano",
-        "contact_title": "Assistant Superintendent",
-        "next_step": "3/20 - Business case review with Jose",
-        "last_activity": "3/6/2026",
-        "sdr": "",
-        "champion": "Jose Escribano",
-        "economic_buyer": "Jose, Escribano, Assistant Superintendent",
-        "competition": "",
-        "school_name": ""
-      }
-    ],
-    "_hasUploadedOpp": true,
-    "metric_improvement_goal": "Reduce Chronic Absenteeism to <10%\nImprove Daily Attendance by 2%\nReduce class skipping",
-    "decision_criteria": "Family Engagement rate\nSchool adoption\nImprove attendance 2%",
-    "implication_of_pain": "Absenteeism is too high. Affecting academic achievement and graduation rates.\nState Commissioner, Pedro Martinez, is prioritizing Attendance.\nAlso need to improve Family Engagement\nLooking for an MTSS, intervention platform"
+    "opp_owner": "",
+    "opportunity_name": "",
+    "intro_meeting_date": "",
+    "created_date": "",
+    "last_modified": "",
+    "age": "",
+    "opps": [],
+    "_hasUploadedOpp": true
   },
   {
     "account_name": "West Valley School District #363",
@@ -36293,13 +36090,13 @@
     "_hasUploadedOpp": true
   },
   {
-    "account_name": "Warwick Public Schools",
+    "account_name": "West Warwick Public Schools",
     "state": "RI",
     "opp_owner": "",
     "opportunity_name": "",
     "intro_meeting_date": "",
     "created_date": "",
-    "last_modified": "1/26/2026",
+    "last_modified": "",
     "age": "",
     "opps": [],
     "_hasUploadedOpp": true
@@ -36355,18 +36152,6 @@
   {
     "account_name": "Western Brown Local",
     "state": "OH",
-    "opp_owner": "",
-    "opportunity_name": "",
-    "intro_meeting_date": "",
-    "created_date": "",
-    "last_modified": "",
-    "age": "",
-    "opps": [],
-    "_hasUploadedOpp": true
-  },
-  {
-    "account_name": "Dubuque Community School District",
-    "state": "IA",
     "opp_owner": "",
     "opportunity_name": "",
     "intro_meeting_date": "",
@@ -36935,7 +36720,7 @@
     "_hasUploadedOpp": true
   },
   {
-    "account_name": "Kentwood Public Schools",
+    "account_name": "Kent ISD",
     "state": "MI",
     "opp_owner": "",
     "opportunity_name": "",
@@ -37577,13 +37362,13 @@
     "_hasUploadedOpp": true
   },
   {
-    "account_name": "Wilson School District",
+    "account_name": "Wilson Area School District",
     "state": "PA",
     "opp_owner": "",
     "opportunity_name": "",
     "intro_meeting_date": "",
     "created_date": "",
-    "last_modified": "1/26/2026",
+    "last_modified": "",
     "age": "",
     "opps": [],
     "_hasUploadedOpp": true
@@ -38013,13 +37798,13 @@
     "_hasUploadedOpp": true
   },
   {
-    "account_name": "South Windsor Public Schools",
+    "account_name": "Windsor Public Schools",
     "state": "CT",
     "opp_owner": "",
     "opportunity_name": "",
     "intro_meeting_date": "",
     "created_date": "",
-    "last_modified": "1/26/2026",
+    "last_modified": "",
     "age": "",
     "opps": [],
     "_hasUploadedOpp": true
@@ -38631,39 +38416,16 @@
     "_hasUploadedOpp": true
   },
   {
-    "account_name": "Dallas ISD",
+    "account_name": "Lake Dallas Independent School District",
     "state": "TX",
-    "opp_owner": "Sean Johnson",
-    "opportunity_name": "Dallas Independent School District - Attendance - NB",
-    "intro_meeting_date": "1/23/2026",
-    "created_date": "1/13/2026",
-    "last_modified": "3/5/2026",
-    "age": "65",
-    "opps": [
-      {
-        "opportunity_id": "006RN00000U3oNB",
-        "area": "Attendance; District Intelligence",
-        "stage": "3 - Scoping",
-        "forecast": "Pipeline",
-        "acv": 40000,
-        "probability": 0.35,
-        "contact": "Erlene Williams",
-        "contact_title": "Director Attendance for Credit/Truancy",
-        "next_step": "Their Commitments: Erlene to connect Sean with contracts person in school leadership; set up stakeholder meetings post-spring break (end of March). Our Action Items: Send TIPS co-op docs, sole-source letter, general SOW, and demo to Erlene.",
-        "last_activity": "3/11/2026",
-        "sdr": "Megan O'Hare",
-        "champion": "TLDR: Erlene is actively selling internally — engaged procurement, student data services, communications, and orchestrating multi-department alignment — but she lacks procurement expertise and has not yet secured EB engagement or introduced Edia to leader",
-        "economic_buyer": "TLDR: Approval chain mapped (Erlene → contracts → legal/procurement → ED → Chief) but no EB identified by name or engaged; board approval now explicitly required for cooperative agreement path.\n\nNot mentioned/unclear. Participants were attendance operat",
-        "competition": "TLDR: Apptegy robocalls + PowerSchool + LMT + AFC Enterprise + SSIS is the incumbent stack; unnamed middle school vendor active; Communications dept parent app expansion is a new internal competitive dynamic; RFP path (if pursued) would open competitive b",
-        "school_name": ""
-      }
-    ],
-    "_hasUploadedOpp": true,
-    "metric_improvement_goal": "TLDR: ADA at 91.9% (goal 93.9%), ~24% chronic absenteeism, ~70% absences unexplained, ~$45M in lost funding\n\nCurrent: ~92.3% ADA; ~24% chronic absenteeism; ~70% of absences unexplained. Goal: >95% ADA. Compliance: Texas 90% attendance-for-credit law; ch",
-    "decision_criteria": "TLDR: Must integrate bi-directionally with PowerSchool, coexist with LMT + AFC Enterprise, handle complex scheduling, support excuse-note workflows, and include no-obligation language for procurement.\n\nMust integrate tightly with PowerSchool (read/write",
-    "decision_process": "TLDR: Two procurement paths identified (scope-of-work/RFP vs. cooperative agreement); Erlene pursuing cooperative agreement to protect Edia's eligibility; board approval required; stakeholder meetings targeted for end-of-March post-spring-break.\n\nIntern",
-    "paper_process": "TLDR: Free pilot path is dead per procurement. Cooperative agreement with sole-source justification + board approval is the preferred path; TIPS co-op introduced as a potential vehicle; Erlene also requested cost projections for a paid Fall 2026 start.",
-    "implication_of_pain": "TLDR: Staff can't scale the noon-call mandate across 200+ schools, ~70% of absences go unexplained, chronic absenteeism tracking is manual, SB 991 adds compliance burden, paper-based excuse processes persist, and cross-departmental silos prevent coordinat"
+    "opp_owner": "",
+    "opportunity_name": "",
+    "intro_meeting_date": "",
+    "created_date": "",
+    "last_modified": "",
+    "age": "",
+    "opps": [],
+    "_hasUploadedOpp": true
   },
   {
     "account_name": "Lake County Education Service District",
@@ -39816,13 +39578,13 @@
     "_hasUploadedOpp": true
   },
   {
-    "account_name": "Mt. Lebanon School District",
+    "account_name": "Lebanon School District",
     "state": "PA",
     "opp_owner": "",
     "opportunity_name": "",
     "intro_meeting_date": "",
     "created_date": "",
-    "last_modified": "1/26/2026",
+    "last_modified": "",
     "age": "",
     "opps": [],
     "_hasUploadedOpp": true
@@ -39874,33 +39636,15 @@
     "implication_of_pain": "Need for student customization, additional feedback, teachers requested features from paid version."
   },
   {
-    "account_name": "Lee County Schools",
+    "account_name": "Leeds City Schools",
     "state": "AL",
-    "opp_owner": "David Thomas",
-    "opportunity_name": "Lee County Schools - Attendance;DIP",
-    "intro_meeting_date": "3/18/2026",
-    "created_date": "3/10/2026",
-    "last_modified": "3/10/2026",
-    "age": "9",
-    "opps": [
-      {
-        "opportunity_id": "006RN00000WXg9J",
-        "area": "Attendance; District Intelligence",
-        "stage": "1 - Discovery",
-        "forecast": "Pipeline",
-        "acv": 25000,
-        "probability": 0.05,
-        "contact": "Nick Collier",
-        "contact_title": "Student Support Services Coordinator",
-        "next_step": "3/10 DT: intro and disco set for next Wednesday",
-        "last_activity": "3/18/2026",
-        "sdr": "",
-        "champion": "",
-        "economic_buyer": "",
-        "competition": "",
-        "school_name": ""
-      }
-    ],
+    "opp_owner": "",
+    "opportunity_name": "",
+    "intro_meeting_date": "",
+    "created_date": "",
+    "last_modified": "",
+    "age": "",
+    "opps": [],
     "_hasUploadedOpp": true
   },
   {
@@ -40158,18 +39902,6 @@
   {
     "account_name": "Liberty Elementary School District (No. 25)",
     "state": "AZ",
-    "opp_owner": "",
-    "opportunity_name": "",
-    "intro_meeting_date": "",
-    "created_date": "",
-    "last_modified": "",
-    "age": "",
-    "opps": [],
-    "_hasUploadedOpp": true
-  },
-  {
-    "account_name": "Liberty Hill Independent School District",
-    "state": "TX",
     "opp_owner": "",
     "opportunity_name": "",
     "intro_meeting_date": "",
@@ -40557,7 +40289,7 @@
     "_hasUploadedOpp": true
   },
   {
-    "account_name": "Egg Harbor Township School District",
+    "account_name": "Little Egg Harbor Township School District",
     "state": "NJ",
     "opp_owner": "",
     "opportunity_name": "",
@@ -41226,36 +40958,6 @@
     "last_modified": "",
     "age": "",
     "opps": [],
-    "_hasUploadedOpp": true
-  },
-  {
-    "account_name": "Greenfield Union School District",
-    "state": "CA",
-    "opp_owner": "Aric Walden",
-    "opportunity_name": "Greenfield Union - Attendance - NB",
-    "intro_meeting_date": "3/16/2026",
-    "created_date": "10/27/2025",
-    "last_modified": "3/12/2026",
-    "age": "143",
-    "opps": [
-      {
-        "opportunity_id": "006RN00000PypFl",
-        "area": "Attendance",
-        "stage": "1 - Discovery",
-        "forecast": "Closed-Lost",
-        "acv": "",
-        "probability": 0.05,
-        "contact": "Myra Villagomez",
-        "contact_title": "Director of FACE and Student Services",
-        "next_step": "Meeting with Director Student Services 3/16",
-        "last_activity": "3/16/2026",
-        "sdr": "Callie Brennan",
-        "champion": "",
-        "economic_buyer": "",
-        "competition": "",
-        "school_name": ""
-      }
-    ],
     "_hasUploadedOpp": true
   },
   {
@@ -44423,7 +44125,7 @@
     "opportunity_name": "",
     "intro_meeting_date": "",
     "created_date": "",
-    "last_modified": "1/26/2026",
+    "last_modified": "",
     "age": "",
     "opps": [],
     "_hasUploadedOpp": true
@@ -47784,18 +47486,6 @@
   {
     "account_name": "Northwest Allen County Schools",
     "state": "IN",
-    "opp_owner": "",
-    "opportunity_name": "",
-    "intro_meeting_date": "",
-    "created_date": "",
-    "last_modified": "",
-    "age": "",
-    "opps": [],
-    "_hasUploadedOpp": true
-  },
-  {
-    "account_name": "Northwest Local School District",
-    "state": "OH",
     "opp_owner": "",
     "opportunity_name": "",
     "intro_meeting_date": "",
@@ -51401,29 +51091,13 @@
   {
     "account_name": "Portland Public Schools",
     "state": "ME",
-    "opp_owner": "Victoria Macoul",
-    "opportunity_name": "Portland Public Schools (ME) - Math, Attendance, MTSS - NB",
-    "intro_meeting_date": "1/22/2026",
-    "created_date": "1/13/2026",
-    "last_modified": "3/5/2026",
-    "age": "60",
-    "opps": [
-      {
-        "area": "Math; Attendance; District Intelligence",
-        "stage": "1 - Discovery",
-        "forecast": "Pipeline",
-        "acv": "",
-        "probability": 5,
-        "contact": "Abdullahi Ahmed",
-        "contact_title": "Assistant Superintendent of Secondary Schools",
-        "next_step": "No show. working to reschedule",
-        "last_activity": "3/10/2026",
-        "sdr": "Skylar Dixon",
-        "champion": "",
-        "economic_buyer": "",
-        "competition": ""
-      }
-    ],
+    "opp_owner": "",
+    "opportunity_name": "",
+    "intro_meeting_date": "",
+    "created_date": "",
+    "last_modified": "",
+    "age": "",
+    "opps": [],
     "_hasUploadedOpp": true
   },
   {
@@ -54158,18 +53832,6 @@
     "_hasUploadedOpp": true
   },
   {
-    "account_name": "Edgewood ISD",
-    "state": "TX",
-    "opp_owner": "",
-    "opportunity_name": "",
-    "intro_meeting_date": "",
-    "created_date": "",
-    "last_modified": "",
-    "age": "",
-    "opps": [],
-    "_hasUploadedOpp": true
-  },
-  {
     "account_name": "Edina Public Schools",
     "state": "MN",
     "opp_owner": "",
@@ -56739,39 +56401,16 @@
     "_hasUploadedOpp": true
   },
   {
-    "account_name": "San Antonio ISD",
+    "account_name": "South San Antonio Independent School District",
     "state": "TX",
-    "opp_owner": "Sean Johnson",
-    "opportunity_name": "San Antonio Independent School District - Attendance - NB",
-    "intro_meeting_date": "1/23/2026",
-    "created_date": "1/20/2026",
-    "last_modified": "3/19/2026",
-    "age": "58",
-    "opps": [
-      {
-        "opportunity_id": "006RN00000UNLth",
-        "area": "Attendance",
-        "stage": "2 - Demo",
-        "forecast": "Pipeline",
-        "acv": 40000,
-        "probability": 0.2,
-        "contact": "Jennifer Herrera",
-        "contact_title": "Director of Attendance and Graduation Protection Programs",
-        "next_step": "1/30 Update: Demo held; send recording/deck; hold Fri Feb 6 (1–2pm CT) to scope pilot.",
-        "last_activity": "3/2/2026",
-        "sdr": "Megan O'Hare",
-        "champion": "Dr. Herrera is a clear coach: wants a platform, arranged the team demo, and will take materials to her Executive Director.\nRetention specialists (7) are operational champions and day-to-day intervention owners.\nCampus attendance committees across ~80 ca",
-        "economic_buyer": "Engaged lead: Dr. Herrera (Access & Enrollment / attendance; oversees 7 retention specialists).\nEconomic Buyer: Unclear/Not confirmed. Prior attendance platform purchase was blocked because “the budget wasn’t there,” implying district upper leadership/fi",
-        "competition": "Everyday Labs (prior): nudge letters; helpful but less proactive/two-way.\nAptegy (current): teacher-parent comms; not fully rolled out; requires staff to sustain dialogue.\nAvela (current): one-way texts/emails/call-outs.\nSchoolStatus (demo heard) and a",
-        "school_name": ""
-      }
-    ],
-    "_hasUploadedOpp": true,
-    "metric_improvement_goal": "Chronic absenteeism: 34% districtwide last year; currently ~27% YTD (not end of year yet).\nScale: ~42,200 students; ~11,000 currently below 90% attendance.\nEvidence of impact potential: Some campuses moved select CIS-supported students from <60% attenda",
-    "decision_criteria": "Two-way family communication (text) vs. primarily one-way outreach.\nFrontline SIS integration and faster outreach than end-of-day calls.\n“One-stop shop” for campuses: attendance + notifications + student grouping + conference scheduling.\nIntervention t",
-    "decision_process": "Previously partnered with Everyday Labs (nudge letters) near the end of ESSER.\nEvaluated multiple attendance platforms; narrowed options, but purchase paused due to budget.\nNext evaluation milestone: Live demo on Jan 30, 2026 @ 9:30am CT with retention",
-    "paper_process": "Not mentioned (no procurement/approvals/legal steps or timeline discussed).",
-    "implication_of_pain": "Tool sprawl: “going to different places for everything” for attendance.\nProactivity gap: robo-calls improved to twice daily, but still “isn’t enough.”\nIntervention tracking is hard: some campuses still paper-pencil; Individual Attendance Plans live in B"
+    "opp_owner": "",
+    "opportunity_name": "",
+    "intro_meeting_date": "",
+    "created_date": "",
+    "last_modified": "",
+    "age": "",
+    "opps": [],
+    "_hasUploadedOpp": true
   },
   {
     "account_name": "South San Francisco Unified School District",
@@ -61568,18 +61207,6 @@
     "_hasUploadedOpp": true
   },
   {
-    "account_name": "Washington Unified School District",
-    "state": "CA",
-    "opp_owner": "",
-    "opportunity_name": "",
-    "intro_meeting_date": "",
-    "created_date": "",
-    "last_modified": "",
-    "age": "",
-    "opps": [],
-    "_hasUploadedOpp": true
-  },
-  {
     "account_name": "Waterbury Public Schools",
     "state": "CT",
     "opp_owner": "Victoria Macoul",
@@ -61846,13 +61473,31 @@
   {
     "account_name": "Jackson County School District",
     "state": "MS",
-    "opp_owner": "",
-    "opportunity_name": "",
-    "intro_meeting_date": "",
-    "created_date": "",
-    "last_modified": "",
-    "age": "",
-    "opps": [],
+    "opp_owner": "David Thomas",
+    "opportunity_name": "Jackson Public Schools - Attendance - NB",
+    "intro_meeting_date": "3/26/2026",
+    "created_date": "3/17/2026",
+    "last_modified": "3/17/2026",
+    "age": "5",
+    "opps": [
+      {
+        "opportunity_id": "006RN00000Wqm9N",
+        "area": "Attendance",
+        "stage": "1 - Discovery",
+        "forecast": "Pipeline",
+        "acv": "",
+        "probability": 0.05,
+        "contact": "Stephen Johnson",
+        "contact_title": "Attendance Coordinator",
+        "next_step": "3/26 reconnect meeting with Attendance Coordinator",
+        "last_activity": "3/26/2026",
+        "sdr": "Megan O'Hare",
+        "champion": "",
+        "economic_buyer": "",
+        "competition": "",
+        "school_name": ""
+      }
+    ],
     "_hasUploadedOpp": true
   },
   {
@@ -65707,14 +65352,37 @@
   {
     "account_name": "New York City Public Schools",
     "state": "NY",
-    "opp_owner": "",
-    "opportunity_name": "",
-    "intro_meeting_date": "",
-    "created_date": "",
-    "last_modified": "",
-    "age": "",
-    "opps": [],
-    "_hasUploadedOpp": true
+    "opp_owner": "Ally McCready",
+    "opportunity_name": "New York City Public Schools - Math - NB",
+    "intro_meeting_date": "3/18/2026",
+    "created_date": "3/16/2026",
+    "last_modified": "3/19/2026",
+    "age": "6",
+    "opps": [
+      {
+        "opportunity_id": "006RN00000Wlzs7",
+        "area": "Math",
+        "stage": "2 - Demo",
+        "forecast": "Pipeline",
+        "acv": 10000,
+        "probability": 0.2,
+        "contact": "Mary Minucci",
+        "contact_title": "Director of Secondary Math & Engineering",
+        "next_step": "4/9 - Demo with Office of MLL: Director of Secondary Math, Senior Director of Content, and Director of Science and Technology",
+        "last_activity": "3/19/2026",
+        "sdr": "",
+        "champion": "Mary Minucci",
+        "economic_buyer": "Unclear from this conversation — Mary sits in the Office of Multilingual Learners and influences supplemental program recommendations, but purchasing likely lives elsewhere. Needs to be uncovered.",
+        "competition": "IXL, Delta Math, iReady, Desmos, Khan Academy, etc.",
+        "school_name": ""
+      }
+    ],
+    "_hasUploadedOpp": true,
+    "metric_improvement_goal": "Increased math achievement for multilingual learners across K-12\nMore students accessing grade-level content without removing cognitive demand\nGrowth in bilingual/biliterate program enrollment citywide",
+    "decision_criteria": "Must align to Illustrative Math and NYC math shifts — no alternative curricula\nMust preserve high cognitive demand for ELLs, not just provide easier work\nMultilingual language support is essential (not just translation)\nMust support teacher autonomy, n",
+    "decision_process": "Mary wants to include the Director of STEM & Technology from her office, who oversees AI guidance to teachers citywide, before moving forward\nShe referenced a recommended supplemental programs list maintained by the math office that she'd want Edia to be",
+    "paper_process": "She referenced a recommended intervention programs list — getting on it seems to be a key step for broader city-level visibility\nVetting for that list seems informal — comparing programs to math shifts internally",
+    "implication_of_pain": "Teachers are already pulled out of buildings 7-8 times a year for PL — adding more sessions isn't realistic\nLimited training and support for teachers to learn how to support MLL students, sounds like Mary is one of the only ones training district leaders"
   },
   {
     "account_name": "State Charter School Institute",
@@ -65729,7 +65397,7 @@
     "_hasUploadedOpp": true
   },
   {
-    "account_name": "University Preparatory Art & Design",
+    "account_name": "University Prep Schools",
     "state": "MI",
     "opp_owner": "Brandon Cohan",
     "opportunity_name": "University Prep Schools - Math - Renewal Upsell 7/26",
@@ -65816,6 +65484,36 @@
     "last_modified": "",
     "age": "",
     "opps": [],
+    "_hasUploadedOpp": true
+  },
+  {
+    "account_name": "New York City Geographic District #1",
+    "state": "NY",
+    "opp_owner": "Brandon Cohan",
+    "opportunity_name": "Lower East Side Preparatory High School - Math - Renewal Expansion",
+    "intro_meeting_date": "",
+    "created_date": "3/12/2026",
+    "last_modified": "3/12/2026",
+    "age": "10",
+    "opps": [
+      {
+        "opportunity_id": "006RN00000Weqgb",
+        "area": "Math",
+        "stage": "3 - Scoping",
+        "forecast": "Best Case",
+        "acv": 677.67,
+        "probability": 0.35,
+        "contact": "",
+        "contact_title": "",
+        "next_step": "",
+        "last_activity": "",
+        "sdr": "",
+        "champion": "",
+        "economic_buyer": "",
+        "competition": "",
+        "school_name": "Lower East Side Preparatory High School"
+      }
+    ],
     "_hasUploadedOpp": true
   },
   {
@@ -66915,7 +66613,7 @@
     "implication_of_pain": "Attendance root cause not captured: ?we don?t get down to the granular?\n\nSocial workers overloaded\n\nSchool autonomy ? inconsistent tools/practices\n\nTraining doesn?t reach implementers"
   },
   {
-    "account_name": "Aurora Joint District No. 28 Of The Counties Of Adams And A",
+    "account_name": "Aurora Joint District No. 28 of the Counties of Adams and Arapahoe",
     "state": "CO",
     "opp_owner": "",
     "opportunity_name": "",
@@ -67093,7 +66791,7 @@
     "implication_of_pain": "No unified MTSS; inefficient, manual tracking; low response to robo‑calls/emails; integration delays have burned budget in the past.\n\nA) Chronic Absenteeism (All Students, prior‑year data shown on 2022–23 RC)\n\nSystem\tChronic Absenteeism\nBerkeley Coun"
   },
   {
-    "account_name": "Montgomery County",
+    "account_name": "Clarksville-Montgomery County School System",
     "state": "TN",
     "opp_owner": "",
     "opportunity_name": "",
@@ -67457,7 +67155,7 @@
     "_hasUploadedOpp": true
   },
   {
-    "account_name": "Cherry Creek School District No. 5 In The County Of Arapah",
+    "account_name": "Cherry Creek School District No. 5 in the County of Arapahoe",
     "state": "CO",
     "opp_owner": "",
     "opportunity_name": "",
@@ -69853,7 +69551,7 @@
     "_hasUploadedOpp": true
   },
   {
-    "account_name": "NHA",
+    "account_name": "National Heritage Academies",
     "state": "MI",
     "opp_owner": "",
     "opportunity_name": "",
@@ -70079,7 +69777,7 @@
     "_hasUploadedOpp": true
   },
   {
-    "account_name": "New York City Geographic District #28",
+    "account_name": "New York City Geographic District #2",
     "state": "NY",
     "opp_owner": "Ally McCready",
     "opportunity_name": "Eleanor Roosevelt High School - Math - NB",
@@ -70597,8 +70295,8 @@
     "implication_of_pain": "Limited teacher engagement with district curriculum; inconsistent math proficiency improvements; ineffective tutoring programs. Challenges:\nInconsistent implementation due to teacher autonomy (CBA allows opting out of district curriculum).\nLarge class s"
   },
   {
-    "account_name": "Groveport Madison Local",
-    "state": "OH",
+    "account_name": "Allen ISD",
+    "state": "TX",
     "opp_owner": "",
     "opportunity_name": "",
     "intro_meeting_date": "",
@@ -70609,8 +70307,8 @@
     "_hasUploadedOpp": true
   },
   {
-    "account_name": "Mountain View Elementary",
-    "state": "CA",
+    "account_name": "Spring ISD",
+    "state": "TX",
     "opp_owner": "",
     "opportunity_name": "",
     "intro_meeting_date": "",
@@ -70621,8 +70319,73 @@
     "_hasUploadedOpp": true
   },
   {
-    "account_name": "Lexington Local",
-    "state": "OH",
+    "account_name": "San Antonio ISD",
+    "state": "TX",
+    "opp_owner": "Sean Johnson",
+    "opportunity_name": "San Antonio Independent School District - Attendance - NB",
+    "intro_meeting_date": "1/23/2026",
+    "created_date": "1/20/2026",
+    "last_modified": "3/19/2026",
+    "age": "58",
+    "opps": [
+      {
+        "opportunity_id": "006RN00000UNLth",
+        "area": "Attendance",
+        "stage": "2 - Demo",
+        "forecast": "Pipeline",
+        "acv": 40000,
+        "probability": 0.2,
+        "contact": "Jennifer Herrera",
+        "contact_title": "Director of Attendance and Graduation Protection Programs",
+        "next_step": "1/30 Update: Demo held; send recording/deck; hold Fri Feb 6 (1–2pm CT) to scope pilot.",
+        "last_activity": "3/2/2026",
+        "sdr": "Megan O'Hare",
+        "champion": "Dr. Herrera is a clear coach: wants a platform, arranged the team demo, and will take materials to her Executive Director.\nRetention specialists (7) are operational champions and day-to-day intervention owners.\nCampus attendance committees across ~80 ca",
+        "economic_buyer": "Engaged lead: Dr. Herrera (Access & Enrollment / attendance; oversees 7 retention specialists).\nEconomic Buyer: Unclear/Not confirmed. Prior attendance platform purchase was blocked because “the budget wasn’t there,” implying district upper leadership/fi",
+        "competition": "Everyday Labs (prior): nudge letters; helpful but less proactive/two-way.\nAptegy (current): teacher-parent comms; not fully rolled out; requires staff to sustain dialogue.\nAvela (current): one-way texts/emails/call-outs.\nSchoolStatus (demo heard) and a",
+        "school_name": ""
+      }
+    ],
+    "_hasUploadedOpp": true,
+    "metric_improvement_goal": "Chronic absenteeism: 34% districtwide last year; currently ~27% YTD (not end of year yet).\nScale: ~42,200 students; ~11,000 currently below 90% attendance.\nEvidence of impact potential: Some campuses moved select CIS-supported students from <60% attenda",
+    "decision_criteria": "Two-way family communication (text) vs. primarily one-way outreach.\nFrontline SIS integration and faster outreach than end-of-day calls.\n“One-stop shop” for campuses: attendance + notifications + student grouping + conference scheduling.\nIntervention t",
+    "decision_process": "Previously partnered with Everyday Labs (nudge letters) near the end of ESSER.\nEvaluated multiple attendance platforms; narrowed options, but purchase paused due to budget.\nNext evaluation milestone: Live demo on Jan 30, 2026 @ 9:30am CT with retention",
+    "paper_process": "Not mentioned (no procurement/approvals/legal steps or timeline discussed).",
+    "implication_of_pain": "Tool sprawl: “going to different places for everything” for attendance.\nProactivity gap: robo-calls improved to twice daily, but still “isn’t enough.”\nIntervention tracking is hard: some campuses still paper-pencil; Individual Attendance Plans live in B"
+  },
+  {
+    "account_name": "University Preparatory Art & Design",
+    "state": "MI",
+    "opp_owner": "Brandon Cohan",
+    "opportunity_name": "University Prep Schools - Math - Renewal Upsell 7/26",
+    "intro_meeting_date": "",
+    "created_date": "3/12/2026",
+    "last_modified": "3/12/2026",
+    "age": "10",
+    "opps": [
+      {
+        "opportunity_id": "006RN00000WewKf",
+        "area": "Math",
+        "stage": "3 - Scoping",
+        "forecast": "Best Case",
+        "acv": 4450.5,
+        "probability": 0.35,
+        "contact": "",
+        "contact_title": "",
+        "next_step": "",
+        "last_activity": "",
+        "sdr": "",
+        "champion": "",
+        "economic_buyer": "",
+        "competition": "",
+        "school_name": ""
+      }
+    ],
+    "_hasUploadedOpp": true
+  },
+  {
+    "account_name": "Aurora Joint District No. 28 Of The Counties Of Adams And A",
+    "state": "CO",
     "opp_owner": "",
     "opportunity_name": "",
     "intro_meeting_date": "",
@@ -70633,19 +70396,7 @@
     "_hasUploadedOpp": true
   },
   {
-    "account_name": "Northwest Local School District",
-    "state": "OH",
-    "opp_owner": "",
-    "opportunity_name": "",
-    "intro_meeting_date": "",
-    "created_date": "",
-    "last_modified": "",
-    "age": "",
-    "opps": [],
-    "_hasUploadedOpp": true
-  },
-  {
-    "account_name": "Henry County Schools",
+    "account_name": "Montgomery County",
     "state": "TN",
     "opp_owner": "",
     "opportunity_name": "",
@@ -70657,8 +70408,8 @@
     "_hasUploadedOpp": true
   },
   {
-    "account_name": "Clark-Shawnee Local School District",
-    "state": "OH",
+    "account_name": "Cherry Creek School District No. 5 In The County Of Arapah",
+    "state": "CO",
     "opp_owner": "",
     "opportunity_name": "",
     "intro_meeting_date": "",
@@ -70669,8 +70420,8 @@
     "_hasUploadedOpp": true
   },
   {
-    "account_name": "Southeast Local Schools",
-    "state": "OH",
+    "account_name": "NHA",
+    "state": "MI",
     "opp_owner": "",
     "opportunity_name": "",
     "intro_meeting_date": "",
@@ -70681,28 +70432,37 @@
     "_hasUploadedOpp": true
   },
   {
-    "account_name": "Geneva City School District",
-    "state": "AL",
-    "opp_owner": "",
-    "opportunity_name": "",
-    "intro_meeting_date": "",
-    "created_date": "",
-    "last_modified": "",
-    "age": "",
-    "opps": [],
-    "_hasUploadedOpp": true
-  },
-  {
-    "account_name": "Green Local Schools",
-    "state": "OH",
-    "opp_owner": "",
-    "opportunity_name": "",
-    "intro_meeting_date": "",
-    "created_date": "",
-    "last_modified": "",
-    "age": "",
-    "opps": [],
-    "_hasUploadedOpp": true
+    "account_name": "New York City Geographic District #28",
+    "state": "NY",
+    "opp_owner": "Ally McCready",
+    "opportunity_name": "Eleanor Roosevelt High School - Math - NB",
+    "intro_meeting_date": "2/6/2026",
+    "created_date": "1/30/2026",
+    "last_modified": "3/19/2026",
+    "age": "51",
+    "opps": [
+      {
+        "opportunity_id": "006RN00000WerRN",
+        "area": "Math",
+        "stage": "3 - Scoping",
+        "forecast": "Best Case",
+        "acv": 208.33,
+        "probability": 0.35,
+        "contact": "",
+        "contact_title": "",
+        "next_step": "",
+        "last_activity": "",
+        "sdr": "",
+        "champion": "",
+        "economic_buyer": "",
+        "competition": "",
+        "school_name": "Harvey Milk High School"
+      }
+    ],
+    "_hasUploadedOpp": true,
+    "metric_improvement_goal": "Improve students retention of topics\nIncrease students accessing AP courses",
+    "decision_criteria": "teacher buy in and openness to transition away from delta math",
+    "implication_of_pain": "- students are not retaining skills, which leads to teachers having to reteach \n- gaps are growing wider\n- teachers have to build screeners and assessments for students, and grade them"
   },
   {
     "account_name": "Highland Local",
@@ -70717,793 +70477,8 @@
     "_hasUploadedOpp": true
   },
   {
-    "account_name": "Indian Lake Local Schools",
-    "state": "OH",
-    "opp_owner": "",
-    "opportunity_name": "",
-    "intro_meeting_date": "",
-    "created_date": "",
-    "last_modified": "",
-    "age": "",
-    "opps": [],
-    "_hasUploadedOpp": true
-  },
-  {
-    "account_name": "Jefferson City Schools",
-    "state": "GA",
-    "opp_owner": "",
-    "opportunity_name": "",
-    "intro_meeting_date": "",
-    "created_date": "",
-    "last_modified": "",
-    "age": "",
-    "opps": [],
-    "_hasUploadedOpp": true
-  },
-  {
     "account_name": "Jefferson Elementary",
     "state": "CA",
-    "opp_owner": "",
-    "opportunity_name": "",
-    "intro_meeting_date": "",
-    "created_date": "",
-    "last_modified": "",
-    "age": "",
-    "opps": [],
-    "_hasUploadedOpp": true
-  },
-  {
-    "account_name": "Live Oak School District",
-    "state": "CA",
-    "opp_owner": "",
-    "opportunity_name": "",
-    "intro_meeting_date": "",
-    "created_date": "",
-    "last_modified": "",
-    "age": "",
-    "opps": [],
-    "_hasUploadedOpp": true
-  },
-  {
-    "account_name": "Southeastern Regional Vocational Technical",
-    "state": "MA",
-    "opp_owner": "",
-    "opportunity_name": "",
-    "intro_meeting_date": "",
-    "created_date": "",
-    "last_modified": "",
-    "age": "",
-    "opps": [],
-    "_hasUploadedOpp": true
-  },
-  {
-    "account_name": "Brookhaven-Comsewogue Union Free School District",
-    "state": "NY",
-    "opp_owner": "Daniel Way",
-    "opportunity_name": "BROOKHAVEN-COMSEWOGUE UNION FREE SCHOOL DISTRICT - Math - NB",
-    "intro_meeting_date": "1/23/2026",
-    "created_date": "1/15/2026",
-    "last_modified": "3/19/2026",
-    "age": "63",
-    "opps": [
-      {
-        "opportunity_id": "006RN00000U9Y4P",
-        "area": "Math",
-        "stage": "6.5 - Submitted For Closing",
-        "forecast": "Closed-Won",
-        "acv": 20466.1,
-        "probability": 0.95,
-        "contact": "Jennifer Polychronakos",
-        "contact_title": "Asst. Super. Instruction and Curriculum",
-        "next_step": "2/13: selected BOCES pricing (27k) - need to continue with paperwork here",
-        "last_activity": "2/13/2026",
-        "sdr": "",
-        "champion": "Dr. Jenn Polychronakos – Assistant Superintendent for Instruction\n\nFormer elementary teacher, AP, and principal; very instructionally focused and student-centered.\n\nUses language that strongly aligns with EDIA’s mission (equity, fear of math, producti",
-        "economic_buyer": "Primary EB\n\nDr. Jennifer (Jenn) Polychronakos, Ed.D. – Assistant Superintendent for Instruction, Comsewogue School District.\n\nK–12 instructional leader and “teacher of the whole district.”\n\nDirectly engages on:\n\nDistrict-wide math goals and pain p",
-        "competition": "I-Ready, IXL.",
-        "school_name": ""
-      }
-    ],
-    "_hasUploadedOpp": true,
-    "metric_improvement_goal": "Geometry Regents is clearly the weakest area:\n\nJenn: “Our geometry Regents… our high school scores stink and it can be traced back to they never really get to geometry.”\n\nStudents are “not even showing proficiency,” not just missing mastery.\n\nElemen",
-    "decision_criteria": "Reducing fear and anxiety around math: Goal is to “take away the perceived fear children have about math” and normalize productive struggle. Wants students to “play and try and get it wrong” without fear.\n\nSupport for productive struggle and explanation",
-    "decision_process": "Sydney sends follow-up email summarizing EDIA’s alignment to their needs and proposing next-step demo.\n\nJenn emails back with a date for the next meeting:\n\n“I could e-mail you back with the date. I don’t have it off the top of my head yet.”\n\nHigh sc",
-    "paper_process": "Only explicit element is BOCES-based purchasing:\n\nYou mention EDIA can be purchased “through BOCES,” and Jenn was already about to ask that—this aligns with how Comsewogue acquires many services.",
-    "implication_of_pain": "Math anxiety & fear of failure:\n\nStudents come in “already afraid” of math before they even start.\n\nThey “just want the answer and they don’t want to be wrong.”\n\nThis fear blocks productive struggle and conceptual understanding.\n\nLack of productiv"
-  },
-  {
-    "account_name": "Pinkerton Academy School District",
-    "state": "NH",
-    "opp_owner": "",
-    "opportunity_name": "",
-    "intro_meeting_date": "",
-    "created_date": "",
-    "last_modified": "",
-    "age": "",
-    "opps": [],
-    "_hasUploadedOpp": true
-  },
-  {
-    "account_name": "Bloomfield School District (Bloomfield Schools)",
-    "state": "NM",
-    "opp_owner": "Jonathan Pacheco",
-    "opportunity_name": "Bloomfield School District (Bloomfield Schools) - Math - EXP",
-    "intro_meeting_date": "2/20/2026",
-    "created_date": "3/3/2026",
-    "last_modified": "3/11/2026",
-    "age": "16",
-    "opps": [
-      {
-        "opportunity_id": "006RN00000WGY3M",
-        "area": "Math",
-        "stage": "3 - Scoping",
-        "forecast": "Pipeline",
-        "acv": 5000,
-        "probability": 0.35,
-        "contact": "Julie Pierce",
-        "contact_title": "Director of Federal Programs",
-        "next_step": "3/11: 3/23 meeting to discuss DIP feedback/next steps for scoping/quote",
-        "last_activity": "3/23/2026",
-        "sdr": "",
-        "champion": "",
-        "economic_buyer": "",
-        "competition": "",
-        "school_name": ""
-      }
-    ],
-    "_hasUploadedOpp": true
-  },
-  {
-    "account_name": "O Fallon Twp HSD 203",
-    "state": "IL",
-    "opp_owner": "",
-    "opportunity_name": "",
-    "intro_meeting_date": "",
-    "created_date": "",
-    "last_modified": "",
-    "age": "",
-    "opps": [],
-    "_hasUploadedOpp": true
-  },
-  {
-    "account_name": "Zuni Public School District",
-    "state": "NM",
-    "opp_owner": "",
-    "opportunity_name": "",
-    "intro_meeting_date": "",
-    "created_date": "",
-    "last_modified": "",
-    "age": "",
-    "opps": [],
-    "_hasUploadedOpp": true
-  },
-  {
-    "account_name": "Grants Cibola County Schools",
-    "state": "NM",
-    "opp_owner": "Jonathan Pacheco",
-    "opportunity_name": "Grants Cibola County Schools - Attendance;MTSS - Renewal Upsell 7/26",
-    "intro_meeting_date": "",
-    "created_date": "3/12/2026",
-    "last_modified": "3/12/2026",
-    "age": "7",
-    "opps": [
-      {
-        "opportunity_id": "006RN00000Weu99",
-        "area": "Attendance; District Intelligence",
-        "stage": "1 - Discovery",
-        "forecast": "Pipeline",
-        "acv": 9725,
-        "probability": 0.05,
-        "contact": "",
-        "contact_title": "",
-        "next_step": "",
-        "last_activity": "",
-        "sdr": "",
-        "champion": "",
-        "economic_buyer": "",
-        "competition": "",
-        "school_name": ""
-      }
-    ],
-    "_hasUploadedOpp": true
-  },
-  {
-    "account_name": "Gravette School District",
-    "state": "AR",
-    "opp_owner": "",
-    "opportunity_name": "",
-    "intro_meeting_date": "",
-    "created_date": "",
-    "last_modified": "",
-    "age": "",
-    "opps": [],
-    "_hasUploadedOpp": true
-  },
-  {
-    "account_name": "Pelham City Schools",
-    "state": "AL",
-    "opp_owner": "",
-    "opportunity_name": "",
-    "intro_meeting_date": "",
-    "created_date": "",
-    "last_modified": "",
-    "age": "",
-    "opps": [],
-    "_hasUploadedOpp": true
-  },
-  {
-    "account_name": "Greater New Bedford Regional Vocational Technical",
-    "state": "MA",
-    "opp_owner": "",
-    "opportunity_name": "",
-    "intro_meeting_date": "",
-    "created_date": "",
-    "last_modified": "",
-    "age": "",
-    "opps": [],
-    "_hasUploadedOpp": true
-  },
-  {
-    "account_name": "Manassas Park City Public Schools",
-    "state": "VA",
-    "opp_owner": "Caroline Uhlarik",
-    "opportunity_name": "Manassas Park City Public Schools - Math - EXP",
-    "intro_meeting_date": "3/4/2026",
-    "created_date": "3/3/2026",
-    "last_modified": "3/13/2026",
-    "age": "16",
-    "opps": [
-      {
-        "opportunity_id": "006RN00000WGMDR",
-        "area": "Math",
-        "stage": "3 - Scoping",
-        "forecast": "Pipeline",
-        "acv": 8700,
-        "probability": 0.35,
-        "contact": "Pam Kalso",
-        "contact_title": "Executive Director of Teaching and Learning",
-        "next_step": "Voting on 3/24 --> going to board on 4/16 --> checking in with team on 3/30 after committee votes",
-        "last_activity": "",
-        "sdr": "",
-        "champion": "Pam Kelso (invited us to be a part of committee review)",
-        "economic_buyer": "",
-        "competition": "",
-        "school_name": ""
-      }
-    ],
-    "_hasUploadedOpp": true,
-    "decision_process": "committee votes --> secure contract + budget"
-  },
-  {
-    "account_name": "Achievement First Crown Heights Charter School",
-    "state": "NY",
-    "opp_owner": "",
-    "opportunity_name": "",
-    "intro_meeting_date": "",
-    "created_date": "",
-    "last_modified": "",
-    "age": "",
-    "opps": [],
-    "_hasUploadedOpp": true
-  },
-  {
-    "account_name": "Rancocas Valley Regional High School District",
-    "state": "NJ",
-    "opp_owner": "",
-    "opportunity_name": "",
-    "intro_meeting_date": "",
-    "created_date": "",
-    "last_modified": "",
-    "age": "",
-    "opps": [],
-    "_hasUploadedOpp": true
-  },
-  {
-    "account_name": "Dunkirk City School District",
-    "state": "NY",
-    "opp_owner": "Ally McCready",
-    "opportunity_name": "Dunkirk City School District - District Bundle - EXP",
-    "intro_meeting_date": "3/4/2026",
-    "created_date": "3/4/2026",
-    "last_modified": "3/11/2026",
-    "age": "8.0000000000",
-    "opps": [
-      {
-        "area": "District Bundle (all 3)",
-        "stage": "4 - Proposal",
-        "forecast": "Best Case",
-        "acv": 12640,
-        "probability": 40,
-        "contact": "Brian Swatland",
-        "contact_title": "Superintendent",
-        "next_step": "3/12 - Brian presents proposal to cabinet, Ally and Brian check in on Friday to finalize.",
-        "last_activity": "3/12/2026",
-        "sdr": "",
-        "champion": "Brian Swatland & Rebecca (Director of Academics",
-        "economic_buyer": "Brian Swatland",
-        "competition": "Frontline Data Solutions, eSchoolData interventions, status quo"
-      }
-    ],
-    "_hasUploadedOpp": true,
-    "decision_criteria": "Must consolidate data from all current systems (E School, Renaissance, School Pace, Frontline, Savis, Eureka Math Squared) into one platform\nAI-powered search and reporting that is more user-friendly than Frontline's customizable dashboards\nStreamlined MTSS/intervention workflow to replace Google Forms/Sheets process\nStandards-based grading support for elementary buildings\nReduced double documentation between E School and Edia\nPrinting/export capabilities for CPS reporting and family communication\nMust be contractible through Erie 1 BOCES",
-    "decision_process": "Cabinet approval on Thursday, March 12th \nAlly & Brian finalize on Friday, March 13th - possible signature on that date",
-    "paper_process": "Edia + Dunkirk contract, purchase order",
-    "implication_of_pain": "Data lives in 5+ disconnected systems with no single source of truth\nFrontline is clunky, slow to update dashboards, and cannot handle customizable/standards-based data well\nMTSS interventions tracked in Google Forms/Sheets ? no progress monitoring, no teacher guidance, no accountability loop\nAttendance numbers reported by principals are inconsistent and inaccurate vs. Edia and Frontline\nAPPR growth score calculation is entirely manual and extremely time-consuming\nPrimary school early warning system dashboard has been waiting for updates since November ? still not live\n750 learning walk observations sitting in a Google Sheet with no actionable analysis\nTeachers don't know what interventions to use or how to execute them"
-  },
-  {
-    "account_name": "TRECA Digital Academy",
-    "state": "OH",
-    "opp_owner": "",
-    "opportunity_name": "",
-    "intro_meeting_date": "",
-    "created_date": "",
-    "last_modified": "",
-    "age": "",
-    "opps": [],
-    "_hasUploadedOpp": true
-  },
-  {
-    "account_name": "Big Horn County School District #1",
-    "state": "WY",
-    "opp_owner": "Caroline Uhlarik",
-    "opportunity_name": "Big Horn County School District #1 - Math;MTSS - Renewal Upsell",
-    "intro_meeting_date": "",
-    "created_date": "3/12/2026",
-    "last_modified": "3/16/2026",
-    "age": "7",
-    "opps": [
-      {
-        "opportunity_id": "006RN00000WeXKj",
-        "area": "Math; District Intelligence",
-        "stage": "1 - Discovery",
-        "forecast": "Pipeline",
-        "acv": 3550,
-        "probability": 0.05,
-        "contact": "",
-        "contact_title": "",
-        "next_step": "",
-        "last_activity": "",
-        "sdr": "",
-        "champion": "",
-        "economic_buyer": "",
-        "competition": "",
-        "school_name": ""
-      }
-    ],
-    "_hasUploadedOpp": true
-  },
-  {
-    "account_name": "Pekin CSD 303",
-    "state": "IL",
-    "opp_owner": "",
-    "opportunity_name": "",
-    "intro_meeting_date": "",
-    "created_date": "",
-    "last_modified": "",
-    "age": "",
-    "opps": [],
-    "_hasUploadedOpp": true
-  },
-  {
-    "account_name": "Reavis Twp HSD 220",
-    "state": "IL",
-    "opp_owner": "",
-    "opportunity_name": "",
-    "intro_meeting_date": "",
-    "created_date": "",
-    "last_modified": "",
-    "age": "",
-    "opps": [],
-    "_hasUploadedOpp": true
-  },
-  {
-    "account_name": "United Twp HSD 30",
-    "state": "IL",
-    "opp_owner": "",
-    "opportunity_name": "",
-    "intro_meeting_date": "",
-    "created_date": "",
-    "last_modified": "",
-    "age": "",
-    "opps": [],
-    "_hasUploadedOpp": true
-  },
-  {
-    "account_name": "Foxborough Regional Charter",
-    "state": "MA",
-    "opp_owner": "",
-    "opportunity_name": "",
-    "intro_meeting_date": "",
-    "created_date": "",
-    "last_modified": "",
-    "age": "",
-    "opps": [],
-    "_hasUploadedOpp": true
-  },
-  {
-    "account_name": "KIPP Academy Lynn Charter",
-    "state": "MA",
-    "opp_owner": "",
-    "opportunity_name": "",
-    "intro_meeting_date": "",
-    "created_date": "",
-    "last_modified": "",
-    "age": "",
-    "opps": [],
-    "_hasUploadedOpp": true
-  },
-  {
-    "account_name": "Essex North Shore Agricultural and Technical School District",
-    "state": "MA",
-    "opp_owner": "",
-    "opportunity_name": "",
-    "intro_meeting_date": "",
-    "created_date": "",
-    "last_modified": "",
-    "age": "",
-    "opps": [],
-    "_hasUploadedOpp": true
-  },
-  {
-    "account_name": "Aztec Municipal Schools",
-    "state": "NM",
-    "opp_owner": "Jonathan Pacheco",
-    "opportunity_name": "Aztec Municipal Schools - Attendance;MTSS - Renewal Upsell - 8/1",
-    "intro_meeting_date": "",
-    "created_date": "3/12/2026",
-    "last_modified": "3/18/2026",
-    "age": "7",
-    "opps": [
-      {
-        "opportunity_id": "006RN00000WeYLa",
-        "area": "Attendance; District Intelligence",
-        "stage": "3 - Scoping",
-        "forecast": "Best Case",
-        "acv": 14252.2,
-        "probability": 0.35,
-        "contact": "",
-        "contact_title": "",
-        "next_step": "",
-        "last_activity": "",
-        "sdr": "",
-        "champion": "",
-        "economic_buyer": "",
-        "competition": "",
-        "school_name": ""
-      }
-    ],
-    "_hasUploadedOpp": true
-  },
-  {
-    "account_name": "Belen Consolidated Schools",
-    "state": "NM",
-    "opp_owner": "",
-    "opportunity_name": "",
-    "intro_meeting_date": "",
-    "created_date": "",
-    "last_modified": "",
-    "age": "",
-    "opps": [],
-    "_hasUploadedOpp": true
-  },
-  {
-    "account_name": "Lincoln Charter School",
-    "state": "NC",
-    "opp_owner": "",
-    "opportunity_name": "",
-    "intro_meeting_date": "",
-    "created_date": "",
-    "last_modified": "",
-    "age": "",
-    "opps": [],
-    "_hasUploadedOpp": true
-  },
-  {
-    "account_name": "Piedmont Community Charter",
-    "state": "NC",
-    "opp_owner": "",
-    "opportunity_name": "",
-    "intro_meeting_date": "",
-    "created_date": "",
-    "last_modified": "",
-    "age": "",
-    "opps": [],
-    "_hasUploadedOpp": true
-  },
-  {
-    "account_name": "Greater Lawrence Regional Vocational Technical",
-    "state": "MA",
-    "opp_owner": "",
-    "opportunity_name": "",
-    "intro_meeting_date": "",
-    "created_date": "",
-    "last_modified": "",
-    "age": "",
-    "opps": [],
-    "_hasUploadedOpp": true
-  },
-  {
-    "account_name": "Allendale Public Schools",
-    "state": "MI",
-    "opp_owner": "",
-    "opportunity_name": "",
-    "intro_meeting_date": "",
-    "created_date": "",
-    "last_modified": "",
-    "age": "",
-    "opps": [],
-    "_hasUploadedOpp": true
-  },
-  {
-    "account_name": "Hillside Public Schools",
-    "state": "NJ",
-    "opp_owner": "",
-    "opportunity_name": "",
-    "intro_meeting_date": "",
-    "created_date": "",
-    "last_modified": "",
-    "age": "",
-    "opps": [],
-    "_hasUploadedOpp": true
-  },
-  {
-    "account_name": "South Fayette Township School District",
-    "state": "PA",
-    "opp_owner": "Callie Brennan",
-    "opportunity_name": "South Fayette Township School District - Math - Renewal Upsell 7/26",
-    "intro_meeting_date": "",
-    "created_date": "3/12/2026",
-    "last_modified": "3/16/2026",
-    "age": "7",
-    "opps": [
-      {
-        "opportunity_id": "006RN00000WMsNV",
-        "area": "Math",
-        "stage": "1 - Discovery",
-        "forecast": "Pipeline",
-        "acv": "",
-        "probability": 0.05,
-        "contact": "Kristin Deichler",
-        "contact_title": "Assistant Superintendent",
-        "next_step": "4/8 check in to discuss NY deployment",
-        "last_activity": "",
-        "sdr": "",
-        "champion": "",
-        "economic_buyer": "",
-        "competition": "",
-        "school_name": ""
-      }
-    ],
-    "_hasUploadedOpp": true
-  },
-  {
-    "account_name": "Charter School For Applied Technologies",
-    "state": "NY",
-    "opp_owner": "",
-    "opportunity_name": "",
-    "intro_meeting_date": "",
-    "created_date": "",
-    "last_modified": "",
-    "age": "",
-    "opps": [],
-    "_hasUploadedOpp": true
-  },
-  {
-    "account_name": "Taylor Independent School District",
-    "state": "TX",
-    "opp_owner": "Paulina Famiano",
-    "opportunity_name": "Taylor Independent School District - Math;MTSS - Renewal Upsell 7/26",
-    "intro_meeting_date": "5/7/2026",
-    "created_date": "3/12/2026",
-    "last_modified": "3/18/2026",
-    "age": "7",
-    "opps": [
-      {
-        "opportunity_id": "006RN00000Wehn3",
-        "area": "Math; District Intelligence",
-        "stage": "3 - Scoping",
-        "forecast": "Best Case",
-        "acv": 1779.17,
-        "probability": 0.35,
-        "contact": "",
-        "contact_title": "",
-        "next_step": "3/18: meeting to discuss next school year on 5/7",
-        "last_activity": "5/7/2026",
-        "sdr": "",
-        "champion": "",
-        "economic_buyer": "",
-        "competition": "",
-        "school_name": ""
-      }
-    ],
-    "_hasUploadedOpp": true
-  },
-  {
-    "account_name": "Juab School District",
-    "state": "UT",
-    "opp_owner": "",
-    "opportunity_name": "",
-    "intro_meeting_date": "",
-    "created_date": "",
-    "last_modified": "",
-    "age": "",
-    "opps": [],
-    "_hasUploadedOpp": true
-  },
-  {
-    "account_name": "Boone County Schools",
-    "state": "WV",
-    "opp_owner": "Daniel Way",
-    "opportunity_name": "Boone County Schools - Math - Renewal Upsell",
-    "intro_meeting_date": "",
-    "created_date": "3/12/2026",
-    "last_modified": "3/12/2026",
-    "age": "7",
-    "opps": [
-      {
-        "opportunity_id": "006RN00000Wer4p",
-        "area": "Math",
-        "stage": "1 - Discovery",
-        "forecast": "Pipeline",
-        "acv": 3889,
-        "probability": 0.05,
-        "contact": "",
-        "contact_title": "",
-        "next_step": "",
-        "last_activity": "",
-        "sdr": "",
-        "champion": "",
-        "economic_buyer": "",
-        "competition": "",
-        "school_name": ""
-      }
-    ],
-    "_hasUploadedOpp": true
-  },
-  {
-    "account_name": "Monroe Township Public School District",
-    "state": "NJ",
-    "opp_owner": "",
-    "opportunity_name": "",
-    "intro_meeting_date": "",
-    "created_date": "",
-    "last_modified": "",
-    "age": "",
-    "opps": [],
-    "_hasUploadedOpp": true
-  },
-  {
-    "account_name": "Jackson County School District",
-    "state": "MS",
-    "opp_owner": "David Thomas",
-    "opportunity_name": "Jackson Public Schools - Attendance - NB",
-    "intro_meeting_date": "3/26/2026",
-    "created_date": "3/17/2026",
-    "last_modified": "3/17/2026",
-    "age": "5",
-    "opps": [
-      {
-        "opportunity_id": "006RN00000Wqm9N",
-        "area": "Attendance",
-        "stage": "1 - Discovery",
-        "forecast": "Pipeline",
-        "acv": "",
-        "probability": 0.05,
-        "contact": "Stephen Johnson",
-        "contact_title": "Attendance Coordinator",
-        "next_step": "3/26 reconnect meeting with Attendance Coordinator",
-        "last_activity": "3/26/2026",
-        "sdr": "Megan O'Hare",
-        "champion": "",
-        "economic_buyer": "",
-        "competition": "",
-        "school_name": ""
-      }
-    ],
-    "_hasUploadedOpp": true
-  },
-  {
-    "account_name": "Wylie Independent School District",
-    "state": "TX",
-    "opp_owner": "",
-    "opportunity_name": "",
-    "intro_meeting_date": "",
-    "created_date": "",
-    "last_modified": "",
-    "age": "",
-    "opps": [],
-    "_hasUploadedOpp": true
-  },
-  {
-    "account_name": "Alameda Unified School District",
-    "state": "CA",
-    "opp_owner": "Ben Skillman",
-    "opportunity_name": "Alameda Unified School District - Math - EXP",
-    "intro_meeting_date": "2/26/2026",
-    "created_date": "2/26/2026",
-    "last_modified": "3/12/2026",
-    "age": "21",
-    "opps": [
-      {
-        "opportunity_id": "006RN00000W4iCz",
-        "area": "Math",
-        "stage": "3 - Scoping",
-        "forecast": "Pipeline",
-        "acv": 36000,
-        "probability": 0.35,
-        "contact": "Lise Nunn-Needham",
-        "contact_title": "Math Coordinator",
-        "next_step": "3/11 presentation to Dr. Zazo & dr. Walton went very well - confirmed they are looking to expand Edia to all middle school (potentially 4th-8th) and will make a decision in mid April. Also booked meeting with attendance team to look at that as well",
-        "last_activity": "3/18/2026",
-        "sdr": "",
-        "champion": "Lise",
-        "economic_buyer": "Dr. Walton & Dr. Zazo (asst Sup)",
-        "competition": "Dr. Zazo spoke with Magma math at a recent conference. They are viewing a presentation of theirs on March 5.",
-        "school_name": ""
-      },
-      {
-        "opportunity_id": "006RN00000WdmX1",
-        "area": "Attendance",
-        "stage": "1 - Discovery",
-        "forecast": "Pipeline",
-        "acv": "",
-        "probability": 0.05,
-        "contact": "Kirsten Zazo",
-        "contact_title": "Assistant Superintendent, Educational Services",
-        "next_step": "3/12 meeting w/ dr. zazo and attendance team 3/26",
-        "last_activity": "3/18/2026",
-        "sdr": "",
-        "champion": "",
-        "economic_buyer": "",
-        "competition": "",
-        "school_name": ""
-      }
-    ],
-    "_hasUploadedOpp": true,
-    "metric_improvement_goal": "Looking to see growth in 400 student 7th/8th grade deployment, which they are",
-    "decision_criteria": "Need to prove that students using Edia are growing faster than students who are not (data is showing this)",
-    "decision_process": "Lise (champion) is copresenting with us to cabinet --> funding allocation --> board approval",
-    "paper_process": "n/a",
-    "implication_of_pain": "Math growth is a district priority that theyve fallen short of year over year"
-  },
-  {
-    "account_name": "New York City Public Schools",
-    "state": "NY",
-    "opp_owner": "Brandon Cohan",
-    "opportunity_name": "Lower East Side Preparatory High School - Math - Renewal Expansion",
-    "intro_meeting_date": "3/18/2026",
-    "created_date": "3/12/2026",
-    "last_modified": "3/12/2026",
-    "age": "10",
-    "opps": [
-      {
-        "opportunity_id": "006RN00000Weqgb",
-        "area": "Math",
-        "stage": "3 - Scoping",
-        "forecast": "Best Case",
-        "acv": 677.67,
-        "probability": 0.35,
-        "contact": "",
-        "contact_title": "",
-        "next_step": "",
-        "last_activity": "",
-        "sdr": "",
-        "champion": "",
-        "economic_buyer": "",
-        "competition": "",
-        "school_name": "Lower East Side Preparatory High School"
-      }
-    ],
-    "_hasUploadedOpp": true,
-    "metric_improvement_goal": "Increased math achievement for multilingual learners across K-12\nMore students accessing grade-level content without removing cognitive demand\nGrowth in bilingual/biliterate program enrollment citywide",
-    "decision_criteria": "Must align to Illustrative Math and NYC math shifts — no alternative curricula\nMust preserve high cognitive demand for ELLs, not just provide easier work\nMultilingual language support is essential (not just translation)\nMust support teacher autonomy, n",
-    "decision_process": "Mary wants to include the Director of STEM & Technology from her office, who oversees AI guidance to teachers citywide, before moving forward\nShe referenced a recommended supplemental programs list maintained by the math office that she'd want Edia to be",
-    "paper_process": "She referenced a recommended intervention programs list — getting on it seems to be a key step for broader city-level visibility\nVetting for that list seems informal — comparing programs to math shifts internally",
-    "implication_of_pain": "Teachers are already pulled out of buildings 7-8 times a year for PL — adding more sessions isn't realistic\nLimited training and support for teachers to learn how to support MLL students, sounds like Mary is one of the only ones training district leaders"
-  },
-  {
-    "account_name": "State Charter School Institute",
-    "state": "CO",
     "opp_owner": "",
     "opportunity_name": "",
     "intro_meeting_date": "",
@@ -71544,878 +70519,6 @@
     "_hasUploadedOpp": true
   },
   {
-    "account_name": "New York City Geographic District #31",
-    "state": "NY",
-    "opp_owner": "",
-    "opportunity_name": "",
-    "intro_meeting_date": "",
-    "created_date": "",
-    "last_modified": "",
-    "age": "",
-    "opps": [],
-    "_hasUploadedOpp": true
-  },
-  {
-    "account_name": "New York City Geographic District #18",
-    "state": "NY",
-    "opp_owner": "Brandon Cohan",
-    "opportunity_name": "Lower East Side Preparatory High School - Math - Renewal Expansion",
-    "intro_meeting_date": "",
-    "created_date": "3/12/2026",
-    "last_modified": "3/12/2026",
-    "age": "7",
-    "opps": [
-      {
-        "opportunity_id": "006RN00000Weqgb",
-        "area": "Math",
-        "stage": "3 - Scoping",
-        "forecast": "Best Case",
-        "acv": 677.67,
-        "probability": 0.35,
-        "contact": "",
-        "contact_title": "",
-        "next_step": "",
-        "last_activity": "",
-        "sdr": "",
-        "champion": "",
-        "economic_buyer": "",
-        "competition": "",
-        "school_name": "Lower East Side Preparatory High School"
-      }
-    ],
-    "_hasUploadedOpp": true
-  },
-  {
-    "account_name": "New York City Geographic District #32",
-    "state": "NY",
-    "opp_owner": "",
-    "opportunity_name": "",
-    "intro_meeting_date": "",
-    "created_date": "",
-    "last_modified": "",
-    "age": "",
-    "opps": [],
-    "_hasUploadedOpp": true
-  },
-  {
-    "account_name": "New York City Geographic District #2",
-    "state": "NY",
-    "opp_owner": "Ally McCready",
-    "opportunity_name": "Eleanor Roosevelt High School - Math - NB",
-    "intro_meeting_date": "2/6/2026",
-    "created_date": "1/30/2026",
-    "last_modified": "3/19/2026",
-    "age": "48",
-    "opps": [
-      {
-        "opportunity_id": "006RN00000WerRN",
-        "area": "Math",
-        "stage": "3 - Scoping",
-        "forecast": "Best Case",
-        "acv": 208.33,
-        "probability": 0.35,
-        "contact": "",
-        "contact_title": "",
-        "next_step": "",
-        "last_activity": "",
-        "sdr": "",
-        "champion": "",
-        "economic_buyer": "",
-        "competition": "",
-        "school_name": "Harvey Milk High School"
-      }
-    ],
-    "_hasUploadedOpp": true,
-    "metric_improvement_goal": "Improve students retention of topics\nIncrease students accessing AP courses",
-    "decision_criteria": "teacher buy in and openness to transition away from delta math",
-    "implication_of_pain": "- students are not retaining skills, which leads to teachers having to reteach \n- gaps are growing wider\n- teachers have to build screeners and assessments for students, and grade them"
-  },
-  {
-    "account_name": "New York City Geographic District #13",
-    "state": "NY",
-    "opp_owner": "",
-    "opportunity_name": "",
-    "intro_meeting_date": "",
-    "created_date": "",
-    "last_modified": "",
-    "age": "",
-    "opps": [],
-    "_hasUploadedOpp": true
-  },
-  {
-    "account_name": "New York City Geographic District #19",
-    "state": "NY",
-    "opp_owner": "",
-    "opportunity_name": "",
-    "intro_meeting_date": "",
-    "created_date": "",
-    "last_modified": "",
-    "age": "",
-    "opps": [],
-    "_hasUploadedOpp": true
-  },
-  {
-    "account_name": "New York City Geographic District #10",
-    "state": "NY",
-    "opp_owner": "Brandon Cohan",
-    "opportunity_name": "Lower East Side Preparatory High School - Math - Renewal Expansion",
-    "intro_meeting_date": "",
-    "created_date": "3/12/2026",
-    "last_modified": "3/12/2026",
-    "age": "7",
-    "opps": [
-      {
-        "opportunity_id": "",
-        "area": "Math",
-        "stage": "",
-        "forecast": "",
-        "acv": 677.67,
-        "probability": "",
-        "contact": "",
-        "contact_title": "",
-        "next_step": "",
-        "last_activity": "",
-        "sdr": "",
-        "champion": "",
-        "economic_buyer": "",
-        "competition": "",
-        "school_name": ""
-      }
-    ],
-    "_hasUploadedOpp": true
-  },
-  {
-    "account_name": "New York City Geographic District #4",
-    "state": "NY",
-    "opp_owner": "",
-    "opportunity_name": "",
-    "intro_meeting_date": "",
-    "created_date": "",
-    "last_modified": "",
-    "age": "",
-    "opps": [],
-    "_hasUploadedOpp": true
-  },
-  {
-    "account_name": "New York City Geographic District #14",
-    "state": "NY",
-    "opp_owner": "",
-    "opportunity_name": "",
-    "intro_meeting_date": "",
-    "created_date": "",
-    "last_modified": "",
-    "age": "",
-    "opps": [],
-    "_hasUploadedOpp": true
-  },
-  {
-    "account_name": "New York City Geographic District #7",
-    "state": "NY",
-    "opp_owner": "",
-    "opportunity_name": "",
-    "intro_meeting_date": "",
-    "created_date": "",
-    "last_modified": "",
-    "age": "",
-    "opps": [],
-    "_hasUploadedOpp": true
-  },
-  {
-    "account_name": "New York City Geographic District #9",
-    "state": "NY",
-    "opp_owner": "Brandon Cohan",
-    "opportunity_name": "Frederick Douglass Academy III Secondary School - Math - EXP",
-    "intro_meeting_date": "",
-    "created_date": "3/12/2026",
-    "last_modified": "3/12/2026",
-    "age": "7",
-    "opps": [
-      {
-        "opportunity_id": "006RN00000WemjS",
-        "area": "Math",
-        "stage": "3 - Scoping",
-        "forecast": "Pipeline",
-        "acv": 116.67,
-        "probability": 0.35,
-        "contact": "",
-        "contact_title": "",
-        "next_step": "",
-        "last_activity": "",
-        "sdr": "",
-        "champion": "",
-        "economic_buyer": "",
-        "competition": "",
-        "school_name": "Frederick Douglass Academy III Secondary School"
-      }
-    ],
-    "_hasUploadedOpp": true
-  },
-  {
-    "account_name": "New York City Geographic District #12",
-    "state": "NY",
-    "opp_owner": "",
-    "opportunity_name": "",
-    "intro_meeting_date": "",
-    "created_date": "",
-    "last_modified": "",
-    "age": "",
-    "opps": [],
-    "_hasUploadedOpp": true
-  },
-  {
-    "account_name": "New York City Geographic District #5",
-    "state": "NY",
-    "opp_owner": "",
-    "opportunity_name": "",
-    "intro_meeting_date": "",
-    "created_date": "",
-    "last_modified": "",
-    "age": "",
-    "opps": [],
-    "_hasUploadedOpp": true
-  },
-  {
-    "account_name": "New York City Geographic District #17",
-    "state": "NY",
-    "opp_owner": "",
-    "opportunity_name": "",
-    "intro_meeting_date": "",
-    "created_date": "",
-    "last_modified": "",
-    "age": "",
-    "opps": [],
-    "_hasUploadedOpp": true
-  },
-  {
-    "account_name": "New York City Geographic District #6",
-    "state": "NY",
-    "opp_owner": "",
-    "opportunity_name": "",
-    "intro_meeting_date": "",
-    "created_date": "",
-    "last_modified": "",
-    "age": "",
-    "opps": [],
-    "_hasUploadedOpp": true
-  },
-  {
-    "account_name": "New York City Geographic District #15",
-    "state": "NY",
-    "opp_owner": "",
-    "opportunity_name": "",
-    "intro_meeting_date": "",
-    "created_date": "",
-    "last_modified": "",
-    "age": "",
-    "opps": [],
-    "_hasUploadedOpp": true
-  },
-  {
-    "account_name": "New York City Geographic District #8",
-    "state": "NY",
-    "opp_owner": "",
-    "opportunity_name": "",
-    "intro_meeting_date": "",
-    "created_date": "",
-    "last_modified": "",
-    "age": "",
-    "opps": [],
-    "_hasUploadedOpp": true
-  },
-  {
-    "account_name": "Rogers Public Schools",
-    "state": "AR",
-    "opp_owner": "Ben Skillman",
-    "opportunity_name": "Rogers Public Schools - Attendance - Renewal Upsell 7/26",
-    "intro_meeting_date": "",
-    "created_date": "3/12/2026",
-    "last_modified": "3/12/2026",
-    "age": "7",
-    "opps": [
-      {
-        "opportunity_id": "006RN00000WenNm",
-        "area": "Attendance",
-        "stage": "3 - Scoping",
-        "forecast": "Best Case",
-        "acv": 14500,
-        "probability": 0.35,
-        "contact": "",
-        "contact_title": "",
-        "next_step": "",
-        "last_activity": "",
-        "sdr": "",
-        "champion": "",
-        "economic_buyer": "",
-        "competition": "",
-        "school_name": ""
-      }
-    ],
-    "_hasUploadedOpp": true
-  },
-  {
-    "account_name": "Stamford Public Schools",
-    "state": "CT",
-    "opp_owner": "Victoria Macoul",
-    "opportunity_name": "Stamford School District - Attendance - EXP",
-    "intro_meeting_date": "",
-    "created_date": "11/11/2025",
-    "last_modified": "3/19/2026",
-    "age": "128",
-    "opps": [
-      {
-        "opportunity_id": "006RN00000QwoWy",
-        "area": "Attendance",
-        "stage": "3 - Scoping",
-        "forecast": "Pipeline",
-        "acv": 20000,
-        "probability": 0.35,
-        "contact": "Matthew Laskowski",
-        "contact_title": "Associate Superintendent, Middle Schools",
-        "next_step": "4/1 On Site with Deanna with Leadership and MS/HS teams",
-        "last_activity": "4/1/2026",
-        "sdr": "",
-        "champion": "Matt Laskowski",
-        "economic_buyer": "",
-        "competition": "",
-        "school_name": ""
-      }
-    ],
-    "_hasUploadedOpp": true,
-    "metric_improvement_goal": "Reduce Chronic Absenteeism 30%\nImprove visibility and data on absences",
-    "decision_criteria": "School adoption\nParent engagement\nMeaningful reduction in Absenteeism",
-    "implication_of_pain": "Attendance teams with monthly data reporting process has plateaued.  Absenteeism isn't improving."
-  },
-  {
-    "account_name": "Haverhill Public Schools",
-    "state": "MA",
-    "opp_owner": "Andy Graham",
-    "opportunity_name": "Haverhill - Math - NB",
-    "intro_meeting_date": "5/1/2025",
-    "created_date": "4/17/2025",
-    "last_modified": "3/19/2026",
-    "age": "336",
-    "opps": [
-      {
-        "opportunity_id": "006RN00000IX9AF",
-        "area": "Math",
-        "stage": "6.5 - Submitted For Closing",
-        "forecast": "Closed-Won",
-        "acv": 22066.1,
-        "probability": 0.95,
-        "contact": "Catherine Lally",
-        "contact_title": "Supervisor of Mathematics Grades K-12",
-        "next_step": "3/23 Did Cate schedule PD 1 - check email",
-        "last_activity": "2/13/2026",
-        "sdr": "Victoria Macoul",
-        "champion": "Kate Lally — self-described urban educator; highly engaged and transparent; wants to test Edia herself before wider rollout.",
-        "economic_buyer": "Kate Lally (Math Curriculum Supervisor, K–12) — strong decision influence, leads math implementation across district.",
-        "competition": "i-Ready for K–8 assessments; Eureka Math² core; ST Math was cut; no current HS solution beyond pre-AP CollegeBoard content.",
-        "school_name": ""
-      }
-    ],
-    "_hasUploadedOpp": true,
-    "metric_improvement_goal": "Looking to address math proficiency gaps in high school, especially in Algebra I and II; struggling math department; strong interest in AI tutor for MLs.",
-    "decision_criteria": "Product must align to Eureka Math² K–8; support high school math (especially pre-AP & AP PreCalc); intervention impact; cost-efficiency due to budget cuts.",
-    "decision_process": "Kate takes Agreement to be signed.",
-    "paper_process": "Ours",
-    "implication_of_pain": "No intervention block at HS; lacking data visibility and differentiated supports; desire for multilingual scaffolds; recent tool cuts (e.g., ST Math)."
-  },
-  {
-    "account_name": "New York City Geographic District #16",
-    "state": "NY",
-    "opp_owner": "",
-    "opportunity_name": "",
-    "intro_meeting_date": "",
-    "created_date": "",
-    "last_modified": "",
-    "age": "",
-    "opps": [],
-    "_hasUploadedOpp": true
-  },
-  {
-    "account_name": "Federal Way Public Schools",
-    "state": "WA",
-    "opp_owner": "Ben Skillman",
-    "opportunity_name": "Federal Way Public Schools - Attendance - EXP",
-    "intro_meeting_date": "2/23/2026",
-    "created_date": "1/20/2026",
-    "last_modified": "3/12/2026",
-    "age": "58",
-    "opps": [
-      {
-        "opportunity_id": "006RN00000UMb1J",
-        "area": "Attendance",
-        "stage": "2 - Demo",
-        "forecast": "Pipeline",
-        "acv": 71500,
-        "probability": 0.2,
-        "contact": "Dennis Purcell",
-        "contact_title": "Director of Remote and Blended Learning",
-        "next_step": "3/5 Onsite EIR scheduled for 3/19 where Casey will go over current math progress and I will present Attendance & DIP",
-        "last_activity": "3/19/2026",
-        "sdr": "",
-        "champion": "Dennis — proactively offering to present to directors, share materials, and debrief Kimberly Tarnowicki (math facilitator/primary Edia contact).",
-        "economic_buyer": "Chief Academic Officer mentioned as attending the directors meeting where this would be presented; not yet confirmed as final decision-maker.",
-        "competition": "Current workflow is Synergy robocalls + ParentSquare + manual phone call-downs by building attendance teams; no competing AI attendance solution mentioned.",
-        "school_name": ""
-      }
-    ],
-    "_hasUploadedOpp": true,
-    "metric_improvement_goal": "Goal is 90%+ of students at school 80-90% of the time; dashboards show students below 80% attendance are also failing more classes.",
-    "decision_criteria": "Bandwidth/capacity to train staff and avoid initiative fatigue is the top concern, even over funding; needs Synergy integration, multilingual support (Dari, Pashto, Ukrainian, Russian, Spanish), and proof from similar districts.",
-    "decision_process": "Dennis will share materials at next directors meeting (assessment, equity, CAO); if there's interest, they'd book a group demo with Ben.",
-    "implication_of_pain": "Persistent chronic absenteeism at the secondary level; one-way robocalls aren't driving family engagement; struggling to connect with specific subgroups and uncover root causes behind absences."
-  },
-  {
-    "account_name": "Rankin County School District",
-    "state": "MS",
-    "opp_owner": "Hannah O'Brien",
-    "opportunity_name": "Brandon HS - Math - NB",
-    "intro_meeting_date": "2/6/2026",
-    "created_date": "2/2/2026",
-    "last_modified": "3/11/2026",
-    "age": "40",
-    "opps": [
-      {
-        "area": "Math",
-        "stage": "4 - Proposal",
-        "forecast": "Most Likely",
-        "acv": 18600,
-        "probability": 40,
-        "contact": "Dr. Cody Killen",
-        "contact_title": "Principal, High School",
-        "next_step": "02/06 meeting with Algebra 1 PLC team + principal regarding quote",
-        "last_activity": "",
-        "sdr": "Boback Kalantarian",
-        "champion": "Algebra I PLC team (Jordan Sable, Katie Winningham, Lana Price, Marissa Rivas)\n\nActively using free version\n\nStrong advocates for adaptive pathways + anti-cheating\n\nSpecifically requested paid features\n\nDr. Cody Killen\n\nEngaged throughout demo\n\nAsked pricing, implementation, SIS questions\n\nClear alignment to accountability goals",
-        "economic_buyer": "Dr. Cody Killen ? Principal, Brandon High School\n\nNew to role (first year)\n\nHas budget autonomy at the school level\n\nControls funding decisions if aligned to building needs\n\nRequested pricing directly and drove next steps",
-        "competition": "Existing tools (supplemental, teacher-choice):\n\nFormative\n\nGet More Math\n\nKey competitive advantage for Edia:\n\nUnified intervention + classroom workflow\n\nAdaptive pathways + diagnostics\n\nReal-time, actionable data in one system\n\nEdia positioned as supplemental, not rip-and-replace"
-      }
-    ],
-    "_hasUploadedOpp": true,
-    "metric_improvement_goal": "School size: ~1,550 students (9?12)\n\nAlgebra I population: ~300 students\n\nPrimary accountability metric: Growth of lower-quartile students (critical for MS accountability model)\n\nTargeted subgroups:\n\nStudents with disabilities (largest gap)\n\nEconomically disadvantaged students\n\nSuccess indicators discussed:\n\nImproved growth for lowest-performing students\n\nReduced ?chasing zeros? in tier/intervention programs\n\nBetter real-time alignment between classroom instruction and intervention work\n\nScalable pilot ? potential expansion within district",
-    "decision_criteria": "Must support school-level adoption (not district-wide only)\n\nStrong intervention + tiering capabilities\n\nAdaptive pathways that go below grade level and back up to Algebra I\n\nReal-time data teachers can actually act on\n\nAbility to:\n\nReduce teacher workload\n\nAlign classroom + intervention instruction\n\nPrevent cheating (unique problems, lockdown)\n\nCompatibility with:\n\nPowerSchool (SIS)\n\nClassLink (rostering)\n\nPer-pupil pricing preferred\n\nWorks for both struggling and advanced students (intervention + enrichment)",
-    "decision_process": "Pricing Review\n\nEdia to provide per-pupil pricing for:\n\n~300 Algebra I students\n\nOptional full high school (~1,550 students)\n\nPricing must fit within school-level budget (not district-wide funding)\n\nInternal Evaluation\n\nDr. Cody Killen (Principal) reviews pricing and feasibility\n\nDiscussion with Algebra I PLC teachers to confirm instructional value and buy-in\n\nTechnical Fit Confirmation\n\nVerify:\n\nPowerSchool SIS integration\n\nClassLink rostering compatibility\n\nConfirm no district-level approval required for pilot\n\nFollow-Up Decision Meeting\n\nScheduled Wednesday @ 12:00 PM CT\n\nReview:\n\nPricing\n\nImplementation approach\n\nPilot scope (Algebra I vs. broader adoption)\n\nPilot Approval\n\nIf pricing aligns and teacher buy-in is confirmed:\n\nPrincipal approves school-level pilot\n\nDetermine pilot start timing (likely near-term due to urgency around testing prep)\n\nOptional Expansion Path\n\nSuccessful pilot ? broader math department demo",
-    "paper_process": "P ? Paper Process\n\nPricing review first (requested ASAP)\n\nPrincipal will:\n\nReview pricing internally\n\nDiscuss with Algebra I PLC teachers\n\nConfirm budget feasibility\n\nFollow-up meeting scheduled:\n\nWednesday @ 12:00 PM CT\n\nPotential next steps after pricing:\n\nBroader math department demo / PD\n\nPilot kickoff (timing TBD, but urgency expressed)",
-    "implication_of_pain": "Tier program currently:\n\nFocused on catching up missing work, not reteaching concepts\n\nHeavy manual lift on teachers and interventionists\n\nStudents pulled for intervention often:\n\nUse different tools/materials than classroom\n\nReturn confused and misaligned\n\nTeachers are:\n\nData-rich but resource-poor\n\nTracking needs well but lack a single system to execute\n\nAccountability pressure:\n\nGrowth of lowest-performing students directly tied to admin outcomes\n\nLoss of adaptive pathway features in free version created a gap teachers actively miss"
-  },
-  {
-    "account_name": "Hanover County Public Schools",
-    "state": "VA",
-    "opp_owner": "Andy Graham",
-    "opportunity_name": "Hanover County Public Schools - Math - EXP",
-    "intro_meeting_date": "3/11/2026",
-    "created_date": "3/2/2026",
-    "last_modified": "3/18/2026",
-    "age": "17",
-    "opps": [
-      {
-        "opportunity_id": "006RN00000WD6us",
-        "area": "Math",
-        "stage": "3 - Scoping",
-        "forecast": "Most Likely",
-        "acv": 10000,
-        "probability": 0.35,
-        "contact": "Ian Shenk",
-        "contact_title": "Mathematics Specialist",
-        "next_step": "3/25 Did Iain get Final Approval from ASupe.  Budget is mosyt likely approved and they will know in May for sure.  We sent new Agreement.",
-        "last_activity": "3/12/2026",
-        "sdr": "Boback Kalantarian",
-        "champion": "Iain",
-        "economic_buyer": "Supe",
-        "competition": "Quizzes & Delta Math",
-        "school_name": ""
-      }
-    ],
-    "_hasUploadedOpp": true,
-    "metric_improvement_goal": "Increase EOC and EOG scores",
-    "decision_criteria": "Can we replace the budget",
-    "decision_process": "Iain takes it one notch up.  We meet next Wednesday",
-    "paper_process": "??",
-    "implication_of_pain": "People using Edia, Quizzes and Delta Math"
-  },
-  {
-    "account_name": "Ascension Public Schools",
-    "state": "LA",
-    "opp_owner": "",
-    "opportunity_name": "",
-    "intro_meeting_date": "",
-    "created_date": "",
-    "last_modified": "",
-    "age": "",
-    "opps": [],
-    "_hasUploadedOpp": true
-  },
-  {
-    "account_name": "Rockdale County Public Schools",
-    "state": "GA",
-    "opp_owner": "Andy Graham",
-    "opportunity_name": "Rockdale County Public Schools - Math - EXP",
-    "intro_meeting_date": "",
-    "created_date": "3/12/2026",
-    "last_modified": "3/12/2026",
-    "age": "7",
-    "opps": [
-      {
-        "opportunity_id": "006RN00000WehAK",
-        "area": "Math",
-        "stage": "3 - Scoping",
-        "forecast": "Pipeline",
-        "acv": 2313,
-        "probability": 0.35,
-        "contact": "",
-        "contact_title": "",
-        "next_step": "",
-        "last_activity": "",
-        "sdr": "",
-        "champion": "",
-        "economic_buyer": "",
-        "competition": "",
-        "school_name": ""
-      },
-      {
-        "opportunity_id": "006RN00000UNEaU",
-        "area": "Attendance",
-        "stage": "3 - Scoping",
-        "forecast": "Best Case",
-        "acv": 120000,
-        "probability": 0.35,
-        "contact": "April Fallon",
-        "contact_title": "Director of Community & Student Support",
-        "next_step": "3/23 Did CBall reply?  Are we live?",
-        "last_activity": "3/19/2026",
-        "sdr": "",
-        "champion": "CCO & Supe",
-        "economic_buyer": "Cindy Ball.  Chief Community Relations Officer (formerly Chief Strategy & Innovation). Oversees nutrition, community relations, student registration, and Community & Student Support along with Superintendent Shirley who I met at New GSSA Event.",
-        "competition": "None",
-        "school_name": ""
-      }
-    ],
-    "_hasUploadedOpp": true,
-    "metric_improvement_goal": "Reduce chronic absenteeism from 31.5% → ≤19.5%; secondary impacts on state test scores and funding via improved ADA.",
-    "decision_criteria": "Pilot proof of Concept work\nImmediate two-way parent engagement (SMS).\n\nCapture & route the why, multilingual, policy-aware scripting.\n\nEvidence of impact (case studies), Infinite Campus integration, MTSS documentation",
-    "decision_process": "Cindy takes to Supe",
-    "paper_process": "Ours and theirs",
-    "implication_of_pain": "Need to capture reasons for absence (transportation, bullying, housing, health, vacations) and act immediately.v\n\nnterested in AI (has a child launching an AI company). Pragmatic about automation but values two-way, human-like engagement over one-way no"
-  },
-  {
-    "account_name": "Hawkins County Schools",
-    "state": "TN",
-    "opp_owner": "David Thomas",
-    "opportunity_name": "Hawkins County Schools - Attendance - EXP",
-    "intro_meeting_date": "2/19/2025",
-    "created_date": "2/17/2026",
-    "last_modified": "3/19/2026",
-    "age": "30",
-    "opps": [
-      {
-        "opportunity_id": "006RN00000VeLWv",
-        "area": "Attendance; District Intelligence",
-        "stage": "2 - Demo",
-        "forecast": "Pipeline",
-        "acv": 20000,
-        "probability": 0.2,
-        "contact": "Lori Allen",
-        "contact_title": "Supervisor Academic Services",
-        "next_step": "3/12 DT: working with Lori to get infront of the attendance team",
-        "last_activity": "3/16/2026",
-        "sdr": "",
-        "champion": "-Lori Keller",
-        "economic_buyer": "",
-        "competition": "-apptegy",
-        "school_name": ""
-      }
-    ],
-    "_hasUploadedOpp": true,
-    "implication_of_pain": "-Robocalls\n-ton of students showing up to class late, theory is bus routes\n-attendance in specific groups are affecting TISA funding\n-TBD once I speak to the attendance coordinator"
-  },
-  {
-    "account_name": "Valdosta City Schools",
-    "state": "GA",
-    "opp_owner": "Andy Graham",
-    "opportunity_name": "Valdosta City - Math, Attendance, MTSS - EXP",
-    "intro_meeting_date": "1/8/2026",
-    "created_date": "12/22/2025",
-    "last_modified": "3/19/2026",
-    "age": "87",
-    "opps": [
-      {
-        "opportunity_id": "006RN00000T6pSB",
-        "area": "Math; Attendance; District Intelligence",
-        "stage": "3 - Scoping",
-        "forecast": "Best Case",
-        "acv": 100000,
-        "probability": 0.35,
-        "contact": "Dr. Craig Lockhart",
-        "contact_title": "Superintendent",
-        "next_step": "3/19 Did Lockhart Reply",
-        "last_activity": "3/19/2026",
-        "sdr": "",
-        "champion": "Dr. Lockhart the superintendent",
-        "economic_buyer": "The superintendent, Dr. Lockhart",
-        "competition": "Status quo",
-        "school_name": ""
-      }
-    ],
-    "_hasUploadedOpp": true,
-    "metric_improvement_goal": "ADA increase of 1–2%. 95 - 97?? The district is looking for measurable improvement in math proficiency, reductions in chronic absenteeism, faster and better MTSS tracking, and the ability to pull actionable data in real time..",
-    "decision_criteria": "Did the pilot work?\nEvidence of results, fast implementation, simplicity for teachers, data security. They are focused on strong return on investment, evidence of guaranteed academic growth, seamless integration with Infinite Campus, and the ability to r",
-    "decision_process": "Present to the team on site.  Get buy from other principals.  Dr. Lockhart is sold.",
-    "paper_process": "Hours and their",
-    "implication_of_pain": "Chronic absenteeism worsened by high mobility, low math proficiency, slow intervention processes, and siloed data.  Math proficiency gaps in grades 3–5.\n\nChronic absenteeism.\n\nMTSS tracking inefficiencies.\n\nFragmented data tools across SIS, LMS, etc"
-  },
-  {
-    "account_name": "School District of Pickens County",
-    "state": "SC",
-    "opp_owner": "Andy Graham",
-    "opportunity_name": "Pickens 01 - Math - 25/26",
-    "intro_meeting_date": "11/17/2025",
-    "created_date": "10/30/2025",
-    "last_modified": "3/19/2026",
-    "age": "140",
-    "opps": [
-      {
-        "opportunity_id": "006RN00000QBtqD",
-        "area": "Math",
-        "stage": "6.5 - Submitted For Closing",
-        "forecast": "Closed-Won",
-        "acv": 35480,
-        "probability": 0.95,
-        "contact": "Frances Young",
-        "contact_title": "Secondary Math Coach",
-        "next_step": "4/16 Check - two teachers are using it well",
-        "last_activity": "3/3/2026",
-        "sdr": "Skylar Dixon",
-        "champion": "Jessica Preig along with Frances",
-        "economic_buyer": "Not present in this meeting.\n\nLikely candidates (not confirmed):\n\nDirector of Secondary Instruction / Curriculum.\n\nAssistant Superintendent / CAO.\n\nPerhaps the Superintendent for contract sign-off.",
-        "competition": "Existing tools / alternatives:\n\niReady (diagnostic + pathway).\n\nIXL.\n\nDeltaMath.\n\nQuizizz / “Waygovan/WayGreyhound” (quizzing/game tools).\n\nSavvas enVision resources.\n\nShadow competitors:\n\nChatGPT / Photomath / similar AI tools students alre",
-        "school_name": ""
-      }
-    ],
-    "_hasUploadedOpp": true,
-    "metric_improvement_goal": "Increased math proficiency in:\n\nGrades 6, 7, 8.\n\nAlgebra 1 EOC.\n\nMore specifically, they want to hit strategic plan and state targets, but exact numbers were not recalled.\n\nEdia’s metrics to emphasize:\n\n% gains in SC Ready / EOC proficiency (cas",
-    "decision_criteria": "Student impact on 6–8 & Algebra I scores (SC Ready and EOC).\n\nFit with existing systems:\n\nDeep Schoology integration.\n\nClassLink/Clever rostering.\n\nPowerSchool alignment and grade passback.\n\nTeacher workflow:\n\nEase of building assignments alig",
-    "decision_process": "Current step:\n\nJessica and Frances will debrief internally.\n\nAndy will email Jessica on Thursday to follow up.\n\nFuture likely steps (inferred):\n\nInternal discussion between Frances & Jessica.\n\nBring in Economic Buyer (Director/Assistant Superint",
-    "paper_process": "??",
-    "implication_of_pain": "Key pains Edia directly addresses:\n\nLow performance in 6–8 and Algebra 1\n\nExplicitly named as pain by Frances.\n\nFragmented tool landscape\n\nMiddle school: iReady + some IXL + Quizizz/etc.\n\nHigh school: nothing district-paid, lots of teacher-level"
-  },
-  {
-    "account_name": "St. Cloud Public School District",
-    "state": "MN",
-    "opp_owner": "Ben Skillman",
-    "opportunity_name": "St. Cloud Public School District - Attendance - Renewal Upsell 2/27",
-    "intro_meeting_date": "",
-    "created_date": "3/13/2026",
-    "last_modified": "3/13/2026",
-    "age": "6",
-    "opps": [
-      {
-        "opportunity_id": "006RN00000WgzUT",
-        "area": "Attendance",
-        "stage": "1 - Discovery",
-        "forecast": "Pipeline",
-        "acv": 20698,
-        "probability": 0.05,
-        "contact": "",
-        "contact_title": "",
-        "next_step": "",
-        "last_activity": "",
-        "sdr": "",
-        "champion": "",
-        "economic_buyer": "",
-        "competition": "",
-        "school_name": ""
-      }
-    ],
-    "_hasUploadedOpp": true
-  },
-  {
-    "account_name": "Washington Local Schools",
-    "state": "OH",
-    "opp_owner": "Hannah O'Brien",
-    "opportunity_name": "Washington Local Schools - Math - EXP",
-    "intro_meeting_date": "2/6/2026",
-    "created_date": "2/6/2026",
-    "last_modified": "3/19/2026",
-    "age": "41",
-    "opps": [
-      {
-        "opportunity_id": "006RN00000VCC0L",
-        "area": "Math",
-        "stage": "3 - Scoping",
-        "forecast": "Most Likely",
-        "acv": 40100,
-        "probability": 0.35,
-        "contact": "Dana Edmonds",
-        "contact_title": "Math Dept Chair",
-        "next_step": "3/18- meeting with department head",
-        "last_activity": "3/10/2027",
-        "sdr": "",
-        "champion": "Primary champion (mid-school): Brandon Bosch, Math Facilitator at Jefferson; likely one of two facilitators at the new middle school. He expressed clear enthusiasm (“that was something awesome” re: interventions/data) and intent to use diagnostic + pathwa",
-        "economic_buyer": "Primary EB (likely): Katie Spinoff/Spinola (?) (Curriculum lead / “in charge of everybody… when it comes to curriculum” per Brandon; for anything “going widespread”).\n\nInfluencers tied to budget/implementation: Dana (HS champion), district curriculum le",
-        "competition": "Incumbents/supplements: ALEKS, Delta Math, (formerly IXL), plus textbook platforms (Big Ideas, McGraw Hill/Glencoe).\n\nIn-flight textbook adoption competitors: Amplify Desmos, Savvas, HMH, McGraw Hill/Glencoe.\n\nBrandon is anti–McGraw Hill/Glencoe; sees",
-        "school_name": ""
-      }
-    ],
-    "_hasUploadedOpp": true,
-    "metric_improvement_goal": "Early outcomes (HS pilot): Casey shared that classes using Edia showed improved results on first semester exams vs. classes not using Edia (early indicator of impact).\n\nUsage-to-results benchmark: Casey referenced districts seeing exam improvement when",
-    "decision_criteria": "Consolidation / standardization: Reduce fragmentation (IXL/ALEKS/Delta Math + multiple textbooks across levels).\n\nAlignment to state testing tools: Desmos calculator availability was a key positive (consistency with state assessments).\n\nDifferentiatio",
-    "decision_process": "Path implied by Brandon:\n\nContinue HS momentum → expand interest to middle school\n\nSocialize with curriculum leadership (Katie)\n\nHandle tech prerequisite: Clever sharing rules / roster provisioning\n\nLikely “try it / pilot feeler” approach due to c",
-    "paper_process": "Rostering/Access: Requires Clever sharing rules updated to share Brandon’s math class rosters with Edia (owned by Bob Gulick; Brandon expects a help desk ticket process).\n\nUnknown: Contracting vehicle, DPA/security review, PO steps, legal redlines, purc",
-    "implication_of_pain": "Tool sprawl + inconsistency: Different products by level/teacher (Big Ideas, McGraw Hill/Glencoe, ALEKS, Delta Math; previously IXL).\n\nInclusion attempt failed: Full inclusion rollout caused extreme range in readiness (including students who couldn’t re"
-  },
-  {
-    "account_name": "Texas College Preparatory Academies",
-    "state": "TX",
-    "opp_owner": "",
-    "opportunity_name": "",
-    "intro_meeting_date": "",
-    "created_date": "",
-    "last_modified": "",
-    "age": "",
-    "opps": [],
-    "_hasUploadedOpp": true
-  },
-  {
-    "account_name": "Fall River Public Schools",
-    "state": "MA",
-    "opp_owner": "Samantha Santucci",
-    "opportunity_name": "Fall River - Attendance - 6/30/2025",
-    "intro_meeting_date": "5/30/2025",
-    "created_date": "5/13/2025",
-    "last_modified": "3/10/2026",
-    "age": "310",
-    "opps": [
-      {
-        "opportunity_id": "006RN00000JTMn0",
-        "area": "Attendance",
-        "stage": "5 - Validation & Negotiation",
-        "forecast": "Commit",
-        "acv": 80000,
-        "probability": 0.5,
-        "contact": "Aimee Bronhard",
-        "contact_title": "Assistant Superintendent of Student Services and Strategic Integration",
-        "next_step": "[12/23 JT] new paperwork submitted for review.  DocuSign sent.",
-        "last_activity": "3/15/2026",
-        "sdr": "Victoria Macoul",
-        "champion": "Aimee Bronhard is highly engaged and has the authority to drive this project forward, though she will need tech and principal buy-in.",
-        "economic_buyer": "CIO? Supt? -- we aren't 100% sure who's signing on this",
-        "competition": "Hall pass software (currently exploring). The district is considering integrating software to improve attendance monitoring.\nOther incumbents include Aspen SIS and ParentSquare.  ParentSquare is not integrated with Aspen Attendance.",
-        "school_name": ""
-      }
-    ],
-    "_hasUploadedOpp": true,
-    "metric_improvement_goal": "- Current district chronic absenteeism rate: ~24%, previously 30-40%.\n- 50% of schools have already improved attendance significantly.\n- Aimee aims to reduce chronic absenteeism to <20% by the end of the year.",
-    "decision_criteria": "- Cost-effective, scalable solution.\n- Ability to integrate with existing systems (Aspen SIS, ParentSquare).\n- Accurate, real-time attendance data.\n- Improve timeliness and accuracy of communications with parents.\n- Save Attendance Monitors time and i",
-    "decision_process": "First meet with the tech team to explore integration feasibility. Afterward, she will bring principals into the conversation and make a decision post-July 4.",
-    "paper_process": "Filing for grant.  The grant will include multiple other program requests.",
-    "implication_of_pain": "- Attendance data accuracy issues.\n- Lack of time for manual tracking and follow-ups.\n- Barriers in communication with parents (language diversity, data errors).\n- 50% of schools are not executing the process that has been proven to work"
-  },
-  {
-    "account_name": "Vineland Public Schools",
-    "state": "NJ",
-    "opp_owner": "",
-    "opportunity_name": "",
-    "intro_meeting_date": "",
-    "created_date": "",
-    "last_modified": "",
-    "age": "",
-    "opps": [],
-    "_hasUploadedOpp": true
-  },
-  {
-    "account_name": "Central Consolidated School District",
-    "state": "NM",
-    "opp_owner": "Sydney Smith",
-    "opportunity_name": "Central Consolidated School District - Attendance - Renewal Upsell",
-    "intro_meeting_date": "",
-    "created_date": "3/12/2026",
-    "last_modified": "3/12/2026",
-    "age": "7",
-    "opps": [
-      {
-        "opportunity_id": "006RN00000WerEX",
-        "area": "Attendance",
-        "stage": "1 - Discovery",
-        "forecast": "Pipeline",
-        "acv": 30813.75,
-        "probability": 0.05,
-        "contact": "",
-        "contact_title": "",
-        "next_step": "",
-        "last_activity": "",
-        "sdr": "",
-        "champion": "",
-        "economic_buyer": "",
-        "competition": "",
-        "school_name": ""
-      }
-    ],
-    "_hasUploadedOpp": true
-  },
-  {
-    "account_name": "Greene County Schools",
-    "state": "TN",
-    "opp_owner": "David Thomas",
-    "opportunity_name": "Greene County Schools - Attendance - EXP",
-    "intro_meeting_date": "2/27/2026",
-    "created_date": "2/24/2026",
-    "last_modified": "3/19/2026",
-    "age": "23",
-    "opps": [
-      {
-        "opportunity_id": "006RN00000VyHP7",
-        "area": "Attendance; District Intelligence",
-        "stage": "2 - Demo",
-        "forecast": "Pipeline",
-        "acv": 50000,
-        "probability": 0.2,
-        "contact": "Leann Myers",
-        "contact_title": "Curriculum, Secondary",
-        "next_step": "3/12 DT: speaking with student services team along with AP's on 3/26",
-        "last_activity": "3/26/2026",
-        "sdr": "",
-        "champion": "LeAnn Myers",
-        "economic_buyer": "Dr Chris Malone - Director of Schools",
-        "competition": "Panorama - not seeing the value in it. Adoption is very low. Need to dig deeper into this\nRobo calls - dont start until absence 3, very manual",
-        "school_name": ""
-      },
-      {
-        "opportunity_id": "006RN00000WeZG1",
-        "area": "Math",
-        "stage": "3 - Scoping",
-        "forecast": "Best Case",
-        "acv": 1260.83,
-        "probability": 0.35,
-        "contact": "",
-        "contact_title": "",
-        "next_step": "",
-        "last_activity": "",
-        "sdr": "",
-        "champion": "",
-        "economic_buyer": "",
-        "competition": "",
-        "school_name": ""
-      }
-    ],
-    "_hasUploadedOpp": true,
-    "metric_improvement_goal": "District chronic absenteeism is 16.4% overall (TN Report Card). LeAnn shared it ranges 14-24% by school. Economically disadvantaged students are at 26.4%. District has been trying to reduce chronic absenteeism since pre-COVID but rates spiked and haven't",
-    "decision_criteria": "Ease of adoption (Panorama failed because staff didn't see value and were comfortable with existing tools)\nMust integrate with Skyward (their SIS) since that's where staff already pull data\nAbility to address excused absence/chronic absenteeism gap (the",
-    "implication_of_pain": "Doctor's note loophole: Students use government health insurance to get excused absences, hit chronic absenteeism thresholds, but are never flagged as truant. The juvenile system won't act because the absences are excused. LeAnn called this out unprompted"
-  },
-  {
-    "account_name": "Rowland Unified School District",
-    "state": "CA",
-    "opp_owner": "",
-    "opportunity_name": "",
-    "intro_meeting_date": "",
-    "created_date": "",
-    "last_modified": "",
-    "age": "",
-    "opps": [],
-    "_hasUploadedOpp": true
-  },
-  {
     "account_name": "Kern High",
     "state": "CA",
     "opp_owner": "Sean Johnson",
@@ -72449,278 +70552,6 @@
     "decision_process": "Current state: ParentSquare launched this year (replacing Blackboard); testing 2-way ParentSquare messaging at two schools.\nEvaluation mindset: open to A/B style comparison while ParentSquare is being tested; suggested starting with 1–2 schools (as done",
     "paper_process": "Not discussed in detail. No procurement steps, legal/security review, or timeline shared.\nSean offered a no-cost pilot/test (30–60 days) before pricing negotiations, leveraging existing Edia relationship with Kern.\n\n➕ Update (Mar 4): Prior math PO sign",
     "implication_of_pain": "High volume of unverified absences: “60–70% of our absences…parents aren’t calling in.”\nLow confidence that outreach channels change behavior: belief that only the “same parents” respond; skepticism on achievable response rates (~40% “in a perfect world”"
-  },
-  {
-    "account_name": "New York City Geographic District #24",
-    "state": "NY",
-    "opp_owner": "Ally McCready",
-    "opportunity_name": "High School for Arts and Business - Math - NB",
-    "intro_meeting_date": "3/19/2026",
-    "created_date": "3/17/2026",
-    "last_modified": "3/19/2026",
-    "age": "2",
-    "opps": [
-      {
-        "opportunity_id": "006RN00000WpJnn",
-        "area": "Math",
-        "stage": "2 - Demo",
-        "forecast": "Best Case",
-        "acv": 5000,
-        "probability": 0.2,
-        "contact": "Nick Rimpici",
-        "contact_title": "Assistant Principal Math, Science, Special Education",
-        "next_step": "3/23 - tentative hold for demo 12:30 - 1pm",
-        "last_activity": "3/19/2026",
-        "sdr": "",
-        "champion": "Unsure",
-        "economic_buyer": "Could be Nick the AP, most likely the principal Ana",
-        "competition": "unknown - need to find out",
-        "school_name": "High School for Arts and Business"
-      }
-    ],
-    "_hasUploadedOpp": true,
-    "metric_improvement_goal": "Improve regents outcomes, more specifically for Geometry but \"always seeking improvement on even 2-3 questions for all subjects\"",
-    "decision_criteria": "Teacher feedback",
-    "decision_process": "teacher demo / feedback\napproval from principal (assuming)",
-    "paper_process": "sole source letter",
-    "implication_of_pain": "Current first time pass rate for Algebra 1 is 70-75% ish\nGeometry has the lowest passing rates\nTeachers are creating a lot of their own materials, they don't love IM so they adapt a lot of it and the exams to include regents content, need to dig into wh"
-  },
-  {
-    "account_name": "New York City Geographic District #27",
-    "state": "NY",
-    "opp_owner": "",
-    "opportunity_name": "",
-    "intro_meeting_date": "",
-    "created_date": "",
-    "last_modified": "",
-    "age": "",
-    "opps": [],
-    "_hasUploadedOpp": true
-  },
-  {
-    "account_name": "New York City Geographic District #28",
-    "state": "New York",
-    "opp_owner": "",
-    "opportunity_name": "",
-    "intro_meeting_date": "",
-    "created_date": "",
-    "last_modified": "",
-    "age": "",
-    "opps": [],
-    "_hasUploadedOpp": true
-  },
-  {
-    "account_name": "New York City Geographic District #25",
-    "state": "NY",
-    "opp_owner": "Ally McCready",
-    "opportunity_name": "Robert F. Kennedy Community High School - Math - Renewal Upsell 7/26",
-    "intro_meeting_date": "",
-    "created_date": "3/12/2026",
-    "last_modified": "3/12/2026",
-    "age": "7",
-    "opps": [
-      {
-        "opportunity_id": "006RN00000WezK6",
-        "area": "Math",
-        "stage": "1 - Discovery",
-        "forecast": "Pipeline",
-        "acv": 1450,
-        "probability": 0.05,
-        "contact": "",
-        "contact_title": "",
-        "next_step": "",
-        "last_activity": "",
-        "sdr": "",
-        "champion": "",
-        "economic_buyer": "",
-        "competition": "",
-        "school_name": "Robert F. Kennedy Community High School"
-      }
-    ],
-    "_hasUploadedOpp": true
-  },
-  {
-    "account_name": "Fulton County Schools",
-    "state": "GA",
-    "opp_owner": "Andy Graham",
-    "opportunity_name": "Fulton County Schools - Math - EXP",
-    "intro_meeting_date": "2/3/2026",
-    "created_date": "2/3/2026",
-    "last_modified": "3/19/2026",
-    "age": "44",
-    "opps": [
-      {
-        "opportunity_id": "006RN00000SngNs",
-        "area": "Math",
-        "stage": "3 - Scoping",
-        "forecast": "Pipeline",
-        "acv": 23180,
-        "probability": 0.35,
-        "contact": "Annette Muhammad",
-        "contact_title": "School Improvement Coach",
-        "next_step": "2/18 Did Annette reply to email from Monday??",
-        "last_activity": "3/19/2026",
-        "sdr": "Boback Kalantarian",
-        "champion": "",
-        "economic_buyer": "",
-        "competition": "",
-        "school_name": "Langston Hughes High School"
-      }
-    ],
-    "_hasUploadedOpp": true,
-    "metric_improvement_goal": "Improve outcomes on Milestones and The EOC",
-    "decision_criteria": "All teachers will now have one uniform place to provide homework, classwork, quizzes, tests, exit tickets, warm-ups, benchmarks, diagnostics and pathways for their students.",
-    "decision_process": "Looking at funds.  Can it replace iReady at 6-8.",
-    "paper_process": "Ours and theirs",
-    "implication_of_pain": "iReady fatigue in grades 6 - 8 with NO AI COACHING to provide immediate feedback and support.\n\n\nMany teachers in the district teach multiple subjects and only some of their students get to use Edia.\n\n\nSome Schools have added Edia out of their own bu"
-  },
-  {
-    "account_name": "New York City Geographic District #30",
-    "state": "NY",
-    "opp_owner": "",
-    "opportunity_name": "",
-    "intro_meeting_date": "",
-    "created_date": "",
-    "last_modified": "",
-    "age": "",
-    "opps": [],
-    "_hasUploadedOpp": true
-  },
-  {
-    "account_name": "New York City Geographic District #20",
-    "state": "NY",
-    "opp_owner": "",
-    "opportunity_name": "",
-    "intro_meeting_date": "",
-    "created_date": "",
-    "last_modified": "",
-    "age": "",
-    "opps": [],
-    "_hasUploadedOpp": true
-  },
-  {
-    "account_name": "New York City Geographic District #22",
-    "state": "NY",
-    "opp_owner": "Ally McCready",
-    "opportunity_name": "Shell Bank Junior High School - Math - Renewal Upsell 7/26",
-    "intro_meeting_date": "",
-    "created_date": "3/12/2026",
-    "last_modified": "3/12/2026",
-    "age": "7",
-    "opps": [
-      {
-        "opportunity_id": "006RN00000Wexbg",
-        "area": "Math",
-        "stage": "1 - Discovery",
-        "forecast": "Pipeline",
-        "acv": 1425,
-        "probability": 0.05,
-        "contact": "",
-        "contact_title": "",
-        "next_step": "",
-        "last_activity": "",
-        "sdr": "",
-        "champion": "",
-        "economic_buyer": "",
-        "competition": "",
-        "school_name": "Shell Bank Junior High School"
-      }
-    ],
-    "_hasUploadedOpp": true
-  },
-  {
-    "account_name": "New York City Geographic District #11",
-    "state": "NY",
-    "opp_owner": "",
-    "opportunity_name": "",
-    "intro_meeting_date": "",
-    "created_date": "",
-    "last_modified": "",
-    "age": "",
-    "opps": [],
-    "_hasUploadedOpp": true
-  },
-  {
-    "account_name": "School District No. 1 in the City and County of Denver and State of CO",
-    "state": "CO",
-    "opp_owner": "Aric Walden",
-    "opportunity_name": "Denver Public Schools - Math (K-8 RFP)",
-    "intro_meeting_date": "",
-    "created_date": "9/16/2025",
-    "last_modified": "3/17/2026",
-    "age": "184",
-    "opps": [
-      {
-        "opportunity_id": "006RN00000UlIY5",
-        "area": "Math",
-        "stage": "3 - Scoping",
-        "forecast": "Pipeline",
-        "acv": 60000,
-        "probability": 0.35,
-        "contact": "Jessica Piwko",
-        "contact_title": "Chief Academic Officer",
-        "next_step": "1/28/26 ADW - Discussion with Jessica went well, need high school numbers for sy 26-27. Will get those in April.",
-        "last_activity": "",
-        "sdr": "",
-        "champion": "Shaun Stuchly",
-        "economic_buyer": "Jessica Piwko",
-        "competition": "Delta math, IXL, etc. Mostly spotty building purchased items.",
-        "school_name": ""
-      }
-    ],
-    "_hasUploadedOpp": true,
-    "metric_improvement_goal": "8% growth is the target. Improvement is focused on target programs in high schools.",
-    "decision_criteria": "High usage, and strong testing gains.\n- SAT PSAT is important for prep.\n- Benchmarks are a large interested. (District creates their own benchmarks.",
-    "decision_process": "N/A",
-    "paper_process": ".",
-    "implication_of_pain": "- No strong benchmarks\n- spotty program usage. Not really a good program for High Schools"
-  },
-  {
-    "account_name": "The School District of Palm Beach County",
-    "state": "FL",
-    "opp_owner": "",
-    "opportunity_name": "",
-    "intro_meeting_date": "",
-    "created_date": "",
-    "last_modified": "",
-    "age": "",
-    "opps": [],
-    "_hasUploadedOpp": true
-  },
-  {
-    "account_name": "The School District of Lee County",
-    "state": "FL",
-    "opp_owner": "Andy Graham",
-    "opportunity_name": "The School District of Lee County - Math - EXP",
-    "intro_meeting_date": "1/6/2026",
-    "created_date": "12/5/2025",
-    "last_modified": "3/19/2026",
-    "age": "104",
-    "opps": [
-      {
-        "opportunity_id": "006RN00000SJ6WF",
-        "area": "Math",
-        "stage": "4 - Proposal",
-        "forecast": "Most Likely",
-        "acv": 175000,
-        "probability": 0.4,
-        "contact": "Nathan Shaker",
-        "contact_title": "Chief Academic Officer",
-        "next_step": "3/23 Did Megan Schedule Check In?",
-        "last_activity": "3/6/2026",
-        "sdr": "",
-        "champion": "Dr. Shaker",
-        "economic_buyer": "Nathan Shaker, the CAO",
-        "competition": "IXL, ALEKS, Delta",
-        "school_name": ""
-      }
-    ],
-    "_hasUploadedOpp": true,
-    "metric_improvement_goal": "Improvement in Algebra I on the EOC. Catch and pass the state.\nBecome #1 out of the Big Ten (Currently 9th)",
-    "decision_criteria": "Must align to district strategic initiatives — every budget line requires specific initiative coverage\nMegan plans to position Edia as the progress monitoring tool for benchmark assessments, replacing in-house assessments (reduces her team's build burden",
-    "decision_process": "Megan submits budget → Shaker reviews/adjusts → Chiefs + Superintendent Cabinet prioritize → Board approval (streamlined, since Edia is already an approved vendor and gets lumped into a continuation contract)",
-    "paper_process": "ours and theirs",
-    "implication_of_pain": "9th out of 10 economically disadvantaged graduation rates\nTeachers stuck in old habits, inconsistent platform usage across classes\nManual in-house assessment building is a burden on Megan's team\nBudget process is earlier than usual this year, catching"
   },
   {
     "account_name": "Leon",
@@ -72789,53 +70620,6 @@
     "decision_process": "."
   },
   {
-    "account_name": "Stafford County Public Schools",
-    "state": "VA",
-    "opp_owner": "Brittney Hall",
-    "opportunity_name": "Stafford Co Public Schools - Math - EXP",
-    "intro_meeting_date": "12/1/2025",
-    "created_date": "11/18/2025",
-    "last_modified": "3/19/2026",
-    "age": "121",
-    "opps": [
-      {
-        "opportunity_id": "006RN00000ROwbE",
-        "area": "Math",
-        "stage": "1 - Discovery",
-        "forecast": "Pipeline",
-        "acv": "",
-        "probability": 0.05,
-        "contact": "Jim Slane",
-        "contact_title": "Coordinator of secondary mathematics",
-        "next_step": "3/18 - Meeting with Superintendent about Attendance EXP - emailed math coord to scheduled intros in the meantime.",
-        "last_activity": "2/4/2026",
-        "sdr": "",
-        "champion": "",
-        "economic_buyer": "",
-        "competition": "",
-        "school_name": ""
-      },
-      {
-        "opportunity_id": "006RN00000SnJj0",
-        "area": "Math; Attendance; District Intelligence",
-        "stage": "1 - Discovery",
-        "forecast": "Pipeline",
-        "acv": "",
-        "probability": 0.05,
-        "contact": "Daniel Smith",
-        "contact_title": "Superintendent",
-        "next_step": "3/18 - Meeting with Superintendent Smith",
-        "last_activity": "3/19/2026",
-        "sdr": "Boback Kalantarian",
-        "champion": "",
-        "economic_buyer": "",
-        "competition": "",
-        "school_name": ""
-      }
-    ],
-    "_hasUploadedOpp": true
-  },
-  {
     "account_name": "Boston",
     "state": "MA",
     "opp_owner": "Sean Johnson",
@@ -72866,142 +70650,8 @@
     "_hasUploadedOpp": true
   },
   {
-    "account_name": "Pinellas County Schools",
-    "state": "FL",
-    "opp_owner": "Andy Graham",
-    "opportunity_name": "Pinellas County Schools - Math - EXP",
-    "intro_meeting_date": "1/17/2025",
-    "created_date": "1/5/2026",
-    "last_modified": "3/18/2026",
-    "age": "73",
-    "opps": [
-      {
-        "opportunity_id": "006RN00000TdYyn",
-        "area": "Math",
-        "stage": "3 - Scoping",
-        "forecast": "Most Likely",
-        "acv": 175000,
-        "probability": 0.35,
-        "contact": "Donnika Jones",
-        "contact_title": "CAO",
-        "next_step": "3/24 On-site Proposal Review",
-        "last_activity": "3/13/2026",
-        "sdr": "",
-        "champion": "Chief Jones",
-        "economic_buyer": "Chief Jones",
-        "competition": "IXL",
-        "school_name": ""
-      }
-    ],
-    "_hasUploadedOpp": true,
-    "metric_improvement_goal": "Increase scores on the FAST and also the EOC",
-    "decision_criteria": "Did the scores from the Algebra one EOC increase?  \nTeacher engagement\nStudent engagement\nCorrelation on scores throughout the year",
-    "decision_process": "16,000 Middle School and get HS #s.  Buy in from Matt and Tara.  Chief Jones approves",
-    "paper_process": "Hours and their",
-    "implication_of_pain": "Struggling minority students and subsequent graduation rates often comparing themselves to other school district they want to be in the top 10 but at the top of the top 10 in the state of Florida"
-  },
-  {
-    "account_name": "Gaston County Schools",
-    "state": "NC",
-    "opp_owner": "Sean Johnson",
-    "opportunity_name": "Gaston County Schools - DIP - EXP",
-    "intro_meeting_date": "2/27/2026",
-    "created_date": "2/17/2026",
-    "last_modified": "3/19/2026",
-    "age": "30",
-    "opps": [
-      {
-        "opportunity_id": "006RN00000Vfw6G",
-        "area": "District Intelligence",
-        "stage": "2 - Demo",
-        "forecast": "Pipeline",
-        "acv": 40000,
-        "probability": 0.2,
-        "contact": "Emily Hargrove",
-        "contact_title": "MTSS Coordinator",
-        "next_step": "Their Commitments: Emily attending same-day Abre meeting; will compare platforms and present options to leadership; may reach back out with specific requests from leadership. Our Action Items: Send Dunkirk case study video; send NC reference district list",
-        "last_activity": "3/9/2026",
-        "sdr": "",
-        "champion": "Emily Hargrove shows the strongest engagement — she has a clear vision for MTSS transformation, articulated the pain thoroughly, and agreed to a follow-up demo. She has prior experience with a consolidated platform in a former district and clearly misses",
-        "economic_buyer": "No Economic Buyer was identified or referenced by name. Emily alluded to \"our boss\" briefly appearing near their office and referenced budget decisions being made at a level above them. Neither Emily nor Shanice appears to hold budget authority. The super",
-        "competition": "No specific competitors were named, but Emily confirmed they are actively meeting with multiple platform vendors in parallel. The current \"competitor\" is the status quo: siloed Google dashboards, manual spreadsheets, and chart paper. Emily's former distri",
-        "school_name": ""
-      }
-    ],
-    "_hasUploadedOpp": true,
-    "metric_improvement_goal": "No specific quantified outcomes, targets, or budget figures were shared. The district has ~30,000 students and 56 schools. Emily referenced over-identification for EC referrals and students \"in stagnation\" on plans, but no baseline numbers or improvement",
-    "decision_criteria": "The district needs a platform that consolidates siloed data sources (academics, behavior, attendance, wellness) into a single view. Integration with existing systems is critical — they use Infinite Campus as their SIS and various assessment platforms (mCL",
-    "decision_process": "The district is in an early exploratory phase, meeting with multiple vendors to understand available platforms. Emily noted this was one of many vendor meetings. No formal evaluation committee, RFP, scoring rubric, or timeline for a decision was mentioned",
-    "paper_process": "No procurement mechanics discussed — no mention of RFPs, purchasing thresholds, board approval requirements, contract vehicles, or budget cycle timing.\n\n➕ Update (Mar 9): No new information. Emily referenced applying for grants to replace IXL for readin",
-    "implication_of_pain": "The district's pain is clear and multi-layered. Data is completely siloed across 56 schools with no consolidated view — academics sits with the accountability department, wellness data with Shanice, behavior/discipline data with Emily, and none of it conn"
-  },
-  {
-    "account_name": "Cincinnati Public Schools",
-    "state": "OH",
-    "opp_owner": "Andy Graham",
-    "opportunity_name": "Cincinnati Public Schools - Oyler - Math - Renewal Upsell",
-    "intro_meeting_date": "",
-    "created_date": "3/12/2026",
-    "last_modified": "3/12/2026",
-    "age": "7",
-    "opps": [
-      {
-        "opportunity_id": "006RN00000SH6Id",
-        "area": "Math",
-        "stage": "3 - Scoping",
-        "forecast": "Best Case",
-        "acv": 20000,
-        "probability": 0.35,
-        "contact": "Amy Randolph",
-        "contact_title": "Assistant Superintendent",
-        "next_step": "3/23 Did they schedule? If not, Call Brandi.  3/18 Casey trying to get Data still.",
-        "last_activity": "3/18/2026",
-        "sdr": "",
-        "champion": "Amy, the assistant superintendent",
-        "economic_buyer": "Superintendent",
-        "competition": "Zearn Savias, I ready",
-        "school_name": ""
-      },
-      {
-        "opportunity_id": "006RN00000W77iI",
-        "area": "",
-        "stage": "1 - Discovery",
-        "forecast": "Pipeline",
-        "acv": 4240,
-        "probability": 0.05,
-        "contact": "Samantha Charters",
-        "contact_title": "Department Head",
-        "next_step": "",
-        "last_activity": "",
-        "sdr": "",
-        "champion": "",
-        "economic_buyer": "",
-        "competition": "",
-        "school_name": ""
-      }
-    ],
-    "_hasUploadedOpp": true,
-    "metric_improvement_goal": "Improve Algebra 1 proficiency and competency to meet Ohio graduation requirements.\nFocus on 8th grade math as a critical area of weakness (only 18% proficiency in some metrics).\nExplore AI-driven personalized feedback for tutoring and MTSS applications.",
-    "decision_criteria": "Did the pilot work?\nDid the teachers like it?\nWere the student engaged",
-    "decision_process": "We made the first round for the budget. The next round is in March work with Casey internally.",
-    "paper_process": "Ours and theirs",
-    "implication_of_pain": "Limited teacher engagement with district curriculum; inconsistent math proficiency improvements; ineffective tutoring programs. Challenges:\nInconsistent implementation due to teacher autonomy (CBA allows opting out of district curriculum).\nLarge class s"
-  },
-  {
     "account_name": "Washington District",
     "state": "UT",
-    "opp_owner": "",
-    "opportunity_name": "",
-    "intro_meeting_date": "",
-    "created_date": "",
-    "last_modified": "",
-    "age": "",
-    "opps": [],
-    "_hasUploadedOpp": true
-  },
-  {
-    "account_name": "New York City Geographic District #21",
-    "state": "NY",
     "opp_owner": "",
     "opportunity_name": "",
     "intro_meeting_date": "",
@@ -73896,18 +71546,6 @@
         "competition": ""
       }
     ]
-  },
-  {
-    "account_name": "Jefferson County",
-    "state": "AL",
-    "opp_owner": "",
-    "opportunity_name": "",
-    "intro_meeting_date": "",
-    "created_date": "",
-    "last_modified": "",
-    "age": "",
-    "opps": [],
-    "_hasUploadedOpp": true
   },
   {
     "account_name": "Deer Valley Unified District (4246)",
