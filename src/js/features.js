@@ -1,5 +1,5 @@
 import S from './state.js';
-import { toggleDataRefreshPanel } from './account-modal.js';
+import { toggleDataRefreshPanel, closeAccountModal } from './account-modal.js';
 import { openSfdcModal } from './data-merge.js';
 
 // ============ THEME TOGGLE ============
@@ -83,12 +83,19 @@ export function protectedToggleDataRefreshPanel() {
 }
 
 export function protectedOpenSfdcModal() {
-  if (S.dataRefreshAuthed) {
+  function openWithCleanup() {
+    // Close any open popup card or account modal
+    if (S.map) S.map.closePopup();
+    closeAccountModal();
     openSfdcModal();
+  }
+
+  if (S.dataRefreshAuthed) {
+    openWithCleanup();
     return;
   }
   promptDataRefreshPassword().then(ok => {
-    if (ok) openSfdcModal();
+    if (ok) openWithCleanup();
   });
 }
 
