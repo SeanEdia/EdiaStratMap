@@ -1214,6 +1214,11 @@ input[type="range"]::-webkit-slider-thumb {
 .export-trigger:hover { border-color: #00b894 !important; color: var(--text) !important; }
 .export-trigger.active { border-color: #00b894 !important; background: var(--surface) !important; }
 
+/* Outreach Assistant trigger button */
+.outreach-trigger { border-color: #6c5ce744 !important; }
+.outreach-trigger:hover { border-color: #6c5ce7 !important; color: var(--text) !important; }
+.outreach-trigger.active { border-color: #6c5ce7 !important; background: var(--surface) !important; }
+
 /* Conflict list items */
 .conflict-item {
   background: var(--surface);
