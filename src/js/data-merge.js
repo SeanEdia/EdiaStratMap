@@ -1,8 +1,7 @@
 import S from './state.js';
 import { districtKey, normalizeDistrictName, clampFutureLastActivity, isDOE } from './helpers.js';
 import { OPP_ENTRY_FIELDS, OPP_WRAPPER_FIELDS, buildOppEntry, migrateToOppsArray,
-  getTeamForRep, ACCOUNT_PRIMARY_AE, ALL_ACTIVE_REPS, MANAGER_REPS, resolveOwner,
-  BASELINE_ACCOUNT_DATA } from './app.js';
+  getTeamForRep, ACCOUNT_PRIMARY_AE, ALL_ACTIVE_REPS, MANAGER_REPS, resolveOwner } from './app.js';
 import { upsertOpp, deriveOppSummary, parseNumericFields, findPartialMatch, showMergeModal } from './multi-opp.js';
 
 // ============ SPREADSHEET FILE READER (CSV + Excel) ============
@@ -1724,20 +1723,10 @@ export function runOppMerge(csvData) {
     }
   });
 
-  // ── STALE OPP CLEANUP: RESET UNTOUCHED ACCOUNTS TO BASELINE ───────────
-  // The CSV represents the complete set of active opps. Accounts NOT in the
-  // CSV no longer have active opportunities. Reset them to their bundled
-  // baseline state so closed opps don't linger as phantom active pipeline.
-  //
-  // Build a lookup of baseline accounts by name+state for restoration.
-  const baselineByKey = new Map();
-  BASELINE_ACCOUNT_DATA.forEach(d => {
-    const exactKey = (d.name || '').toLowerCase().trim() + '|' + (d.state || '').toUpperCase().trim();
-    baselineByKey.set(exactKey, d);
-    const normKey = normalizeDistrictName(d.name) + '|' + (d.state || '').toUpperCase().trim();
-    if (!baselineByKey.has(normKey)) baselineByKey.set(normKey, d);
-  });
-
+  // ── STALE OPP CLEANUP: CLEAR UNTOUCHED ACCOUNTS ──────────────────────
+  // The CSV represents the COMPLETE set of active opps. Accounts NOT in the
+  // CSV no longer have active opportunities — clear their opp data so closed
+  // opps don't linger as phantom active pipeline.
   let resetCount = 0;
   mergedAccounts.forEach(acct => {
     const acctKey = acct.name + '|' + (acct.state || '');
@@ -1746,61 +1735,35 @@ export function runOppMerge(csvData) {
       if (!acct._hasUploadedOpp) return;                 // No opps and never had uploaded opps — skip
     }
 
-    // Look up the baseline version of this account
-    const exactKey = (acct.name || '').toLowerCase().trim() + '|' + (acct.state || '').toUpperCase().trim();
-    const normKey = normalizeDistrictName(acct.name) + '|' + (acct.state || '').toUpperCase().trim();
-    const baseline = baselineByKey.get(exactKey) || baselineByKey.get(normKey);
+    console.log('[Opp Merge] Clearing stale opps:', acct.name,
+      '(had', (acct.opps || []).length, 'opp(s), stage:', acct.opp_stage || 'none', ')');
 
-    if (baseline) {
-      // Restore opp-related fields from baseline
-      console.log('[Opp Merge] Resetting to baseline:', acct.name,
-        '(had', (acct.opps || []).length, 'uploaded opp(s), baseline has',
-        (baseline.opps || []).length, ')');
+    // Clear opps array
+    acct.opps = [];
+    acct._hasUploadedOpp = false;
 
-      acct.opps = JSON.parse(JSON.stringify(baseline.opps || []));
-      acct._hasUploadedOpp = baseline._hasUploadedOpp || false;
+    // Clear wrapper fields
+    acct.opp_owner = '';
+    acct.opportunity_name = '';
+    acct.intro_meeting_date = '';
+    acct.created_date = '';
+    acct.last_modified = '';
+    acct.age = '';
 
-      // Wrapper fields
-      acct.opp_owner = baseline.opp_owner || '';
-      acct.opportunity_name = baseline.opportunity_name || '';
-      acct.intro_meeting_date = baseline.intro_meeting_date || '';
-      acct.created_date = baseline.created_date || '';
-      acct.last_modified = baseline.last_modified || '';
-      acct.age = baseline.age || '';
+    // Clear MEDDPICC fields
+    acct.metric_improvement_goal = '';
+    acct.decision_criteria = '';
+    acct.decision_process = '';
+    acct.paper_process = '';
+    acct.implication_of_pain = '';
 
-      // MEDDPICC fields
-      acct.metric_improvement_goal = baseline.metric_improvement_goal || '';
-      acct.decision_criteria = baseline.decision_criteria || '';
-      acct.decision_process = baseline.decision_process || '';
-      acct.paper_process = baseline.paper_process || '';
-      acct.implication_of_pain = baseline.implication_of_pain || '';
-    } else {
-      // No baseline found (account was added by a merge, not in bundled data) — clear everything
-      console.log('[Opp Merge] Clearing opps (no baseline):', acct.name,
-        '(had', (acct.opps || []).length, 'uploaded opp(s))');
-
-      acct.opps = [];
-      acct._hasUploadedOpp = false;
-      acct.opp_owner = '';
-      acct.opportunity_name = '';
-      acct.intro_meeting_date = '';
-      acct.created_date = '';
-      acct.last_modified = '';
-      acct.age = '';
-      acct.metric_improvement_goal = '';
-      acct.decision_criteria = '';
-      acct.decision_process = '';
-      acct.paper_process = '';
-      acct.implication_of_pain = '';
-    }
-
-    // Re-derive summary fields (opp_stage, opp_acv, opp_count, etc.)
+    // Re-derive summary fields (zeros out opp_stage, opp_acv, opp_count, etc.)
     deriveOppSummary(acct);
     resetCount++;
   });
 
   if (resetCount > 0) {
-    console.log(`[Opp Merge] Reset ${resetCount} account(s) not in CSV to baseline state`);
+    console.log(`[Opp Merge] Cleared stale opps from ${resetCount} account(s) not in CSV`);
     stats.resetToBaselineCount = resetCount;
   }
 
