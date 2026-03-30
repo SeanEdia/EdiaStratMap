@@ -167,6 +167,19 @@ export function showMergeModal(stats) {
     }
   }
 
+  // Show reset-to-baseline count
+  const resetEl = document.getElementById('mergeResetRecords');
+  const resetRow = document.getElementById('mergeResetRow');
+  if (resetEl && resetRow) {
+    const resetCount = stats.resetToBaselineCount || 0;
+    if (resetCount > 0) {
+      resetEl.textContent = resetCount;
+      resetRow.style.display = '';
+    } else {
+      resetRow.style.display = 'none';
+    }
+  }
+
   // Count records needing geocoding
   const allPendingRecords = S.mergeHasTypeSplit
     ? [...(S.pendingAccountMerge || []), ...(S.pendingCustomerMerge || [])]

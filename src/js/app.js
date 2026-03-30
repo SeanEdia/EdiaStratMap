@@ -3164,4 +3164,4 @@ Object.assign(window, {
 });
 
 // Export initMap for main.js
-export { initMap };
+export { initMap, accountData as BASELINE_ACCOUNT_DATA };
