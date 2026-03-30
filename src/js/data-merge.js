@@ -2,7 +2,7 @@ import S from './state.js';
 import { districtKey, normalizeDistrictName, clampFutureLastActivity, isDOE } from './helpers.js';
 import { OPP_ENTRY_FIELDS, OPP_WRAPPER_FIELDS, buildOppEntry, migrateToOppsArray,
   getTeamForRep, ACCOUNT_PRIMARY_AE, ALL_ACTIVE_REPS, MANAGER_REPS, resolveOwner } from './app.js';
-import { upsertOpp, parseNumericFields, findPartialMatch, showMergeModal } from './multi-opp.js';
+import { upsertOpp, deriveOppSummary, parseNumericFields, findPartialMatch, showMergeModal } from './multi-opp.js';
 
 // ============ SPREADSHEET FILE READER (CSV + Excel) ============
 
@@ -1722,6 +1722,50 @@ export function runOppMerge(csvData) {
       stats.changes.push({ name: acct.name, action: 'updated' });
     }
   });
+
+  // ── STALE OPP CLEANUP: CLEAR UNTOUCHED ACCOUNTS ──────────────────────
+  // The CSV represents the COMPLETE set of active opps. Accounts NOT in the
+  // CSV no longer have active opportunities — clear their opp data so closed
+  // opps don't linger as phantom active pipeline.
+  let resetCount = 0;
+  mergedAccounts.forEach(acct => {
+    const acctKey = acct.name + '|' + (acct.state || '');
+    if (touchedAccounts.has(acctKey)) return;            // Was in the CSV — already handled
+    if (!acct.opps || acct.opps.length === 0) {
+      if (!acct._hasUploadedOpp) return;                 // No opps and never had uploaded opps — skip
+    }
+
+    console.log('[Opp Merge] Clearing stale opps:', acct.name,
+      '(had', (acct.opps || []).length, 'opp(s), stage:', acct.opp_stage || 'none', ')');
+
+    // Clear opps array
+    acct.opps = [];
+    acct._hasUploadedOpp = false;
+
+    // Clear wrapper fields
+    acct.opp_owner = '';
+    acct.opportunity_name = '';
+    acct.intro_meeting_date = '';
+    acct.created_date = '';
+    acct.last_modified = '';
+    acct.age = '';
+
+    // Clear MEDDPICC fields
+    acct.metric_improvement_goal = '';
+    acct.decision_criteria = '';
+    acct.decision_process = '';
+    acct.paper_process = '';
+    acct.implication_of_pain = '';
+
+    // Re-derive summary fields (zeros out opp_stage, opp_acv, opp_count, etc.)
+    deriveOppSummary(acct);
+    resetCount++;
+  });
+
+  if (resetCount > 0) {
+    console.log(`[Opp Merge] Cleared stale opps from ${resetCount} account(s) not in CSV`);
+    stats.resetToBaselineCount = resetCount;
+  }
 
   // Add orphan count to stats
   if (stats.orphans.length > 0) {
