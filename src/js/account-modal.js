@@ -27,6 +27,7 @@ export function openAccountModal(encodedData) {
 }
 
 export function openAccountModalWithData(d) {
+  if (window.innerWidth <= 1024 && typeof window.closeMobileSidebar === 'function') window.closeMobileSidebar();
   S.currentModalData = d;
 
   // Set header info
