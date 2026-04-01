@@ -120,6 +120,7 @@ export function closeAccountModal() {
   document.getElementById('accountModal').classList.remove('show');
   document.body.style.overflow = '';
   S.currentModalData = null;
+  S.map.setView([39.5, -98.5], 5, { animate: true });
 }
 
 export function switchTab(tabId, btnEl) {

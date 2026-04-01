@@ -1372,6 +1372,28 @@ function getDefaultRepForTeam(team) {
   return t.manager || allReps[0] || '';
 }
 
+/**
+ * Zoom the map to fit the currently filtered accounts/customers.
+ * Excludes Alaska (lat > 50) and Hawaii (lng < -130) to keep focus on the lower 48.
+ * Falls back to the standard home view if no valid bounds exist.
+ */
+function zoomToFilteredBounds() {
+  const bounds = [];
+  const allFiltered = [...(S.filteredAccountData || []), ...(S.filteredCustData || [])];
+  allFiltered.forEach(d => {
+    if (d.lat && d.lng && d.lat <= 50 && d.lng >= -130) {
+      bounds.push([d.lat, d.lng]);
+    }
+  });
+  if (bounds.length > 1) {
+    S.map.fitBounds(bounds, { padding: [40, 40], maxZoom: 8, animate: true });
+  } else if (bounds.length === 1) {
+    S.map.setView([bounds[0][0], bounds[0][1]], 7, { animate: true });
+  } else {
+    S.map.setView([39.5, -98.5], 5, { animate: true });
+  }
+}
+
 function onTeamChange(team) {
   S.selectedTeam = team;
   S.selectedRep = getDefaultRepForTeam(team); // Default to manager (team-level view)
@@ -1384,6 +1406,7 @@ function onTeamChange(team) {
   renderTeamRepSelectors();
   renderFilters();
   applyFilters();
+  S.map.setView([39.5, -98.5], 5, { animate: true });
 }
 
 function onRepChange(rep) {
@@ -1399,6 +1422,11 @@ function onRepChange(rep) {
   if (smbBanner) smbBanner.style.display = isSmbTeamLevelView() ? '' : 'none';
   renderFilters();
   applyFilters();
+  if (S.selectedTeam === 'SMB') {
+    S.map.setView([39.5, -98.5], 5, { animate: true });
+  } else {
+    zoomToFilteredBounds();
+  }
 }
 
 // ============ STAGE FILTER ============
