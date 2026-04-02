@@ -8,6 +8,7 @@ export function toggleAccountListOverlay() {
   const overlay = document.getElementById('alOverlay');
   if (overlay) overlay.classList.toggle('open', S.accountListOpen);
   if (S._elCountBadge) S._elCountBadge.classList.toggle('active', S.accountListOpen);
+  if (S.accountListOpen && window.innerWidth <= 1024) window.history.pushState({ overlay: true }, '');
   // Close action dashboard if open
   if (S.accountListOpen && S.actionDashboardOpen) {
     S.actionDashboardOpen = false;

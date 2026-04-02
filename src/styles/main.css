@@ -3376,10 +3376,27 @@ input[type="range"]::-webkit-slider-thumb {
   }
   .sidebar.mobile-open {
     transform: translateX(0);
+    box-shadow: 6px 0 24px rgba(0,0,0,0.4);
+  }
+
+  .sidebar {
+    max-height: 100dvh;
+    max-height: -webkit-fill-available;
   }
 
   .leaflet-left {
     left: 10px !important;
+  }
+
+  .marker-strat::after,
+  .marker-cust::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 40px;
+    height: 40px;
+    transform: translate(-50%, -50%);
   }
 }
 
@@ -3396,21 +3413,29 @@ input[type="range"]::-webkit-slider-thumb {
     gap: 6px;
   }
   .ad-trigger {
-    padding: 8px 10px;
-    font-size: 0;       /* hide text labels */
+    padding: 8px;
+    font-size: 0;
+    gap: 0;
+    justify-content: center;
+    min-width: 34px;
+    min-height: 34px;
   }
   .ad-trigger svg {
-    font-size: initial;  /* keep SVG visible */
     opacity: 0.8;
+    flex-shrink: 0;
   }
   .ad-trigger .ad-alert {
-    font-size: 8px;
+    font-size: 9px;
     min-width: 14px;
     height: 14px;
   }
   .count-badge {
-    padding: 8px 10px;
-    font-size: 11px;
+    padding: 6px 8px;
+    font-size: 10px;
+    max-width: 130px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   /* Overlays — full-width bottom sheets */
@@ -3545,6 +3570,75 @@ input[type="range"]::-webkit-slider-thumb {
   /* Stats bar — allow wrapping more aggressively */
   .stat-card .num {
     font-size: 16px;
+  }
+
+  /* Sidebar header — compact on phone */
+  .sidebar-header {
+    padding: 14px 16px 12px;
+  }
+  .brand {
+    margin-bottom: 10px;
+  }
+  .view-toggle {
+    padding: 2px;
+    gap: 2px;
+    flex-wrap: wrap;
+  }
+  .view-btn {
+    padding: 6px 8px;
+    font-size: 11px;
+  }
+  .reset-filters-btn {
+    padding: 4px 8px;
+    font-size: 9px;
+    flex-basis: 100%;
+    text-align: center;
+    border-radius: 5px;
+  }
+  .team-rep-selectors {
+    padding: 6px 10px 4px;
+  }
+  .stats-bar {
+    padding: 10px 16px;
+    gap: 6px;
+  }
+  .search-box {
+    padding: 10px 16px;
+  }
+
+  /* Prevent sidebar text overflow */
+  .sidebar {
+    overflow-x: hidden;
+  }
+  .smb-opp-banner {
+    font-size: 10px;
+    white-space: normal;
+  }
+  .prox-label {
+    font-size: 11px;
+  }
+  .notes-mgmt {
+    padding: 8px 16px;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .notes-btn {
+    font-size: 9px;
+    padding: 3px 6px;
+  }
+
+  /* Larger tap targets for map pins */
+  .marker-strat {
+    width: 16px;
+    height: 16px;
+  }
+  .marker-strat.large {
+    width: 20px;
+    height: 20px;
+  }
+  .marker-cust {
+    width: 14px;
+    height: 14px;
   }
 }
 
