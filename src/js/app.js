@@ -947,6 +947,7 @@ function buildMarkerPool() {
     });
     const marker = L.marker([d.lat, d.lng], { icon });
     marker.on('click', function() {
+      if (window.innerWidth <= 1024) closeMobileSidebar();
       ensurePopup(marker, d, 'accounts');
       S.map.flyTo([d.lat + 2.5, d.lng], 7, { duration: 0.6 });
       setTimeout(() => { marker.openPopup(); }, 50);
@@ -964,6 +965,7 @@ function buildMarkerPool() {
     });
     const marker = L.marker([d.lat, d.lng], { icon });
     marker.on('click', function() {
+      if (window.innerWidth <= 1024) closeMobileSidebar();
       ensurePopup(marker, d, 'customer');
       S.map.flyTo([d.lat + 2.5, d.lng], 7, { duration: 0.6 });
       setTimeout(() => { marker.openPopup(); }, 50);
@@ -1908,6 +1910,7 @@ function applyFilters() {
         });
         const marker = L.marker([d.lat, d.lng], { icon }).addTo(S.stratLayer);
         marker.on('click', function() {
+          if (window.innerWidth <= 1024) closeMobileSidebar();
           ensurePopup(marker, d, 'accounts');
           S.map.once('moveend', function() { marker.openPopup(); });
           S.map.flyTo([d.lat + 2.5, d.lng], 7, { duration: 0.6 });
@@ -1979,6 +1982,7 @@ function applyFilters() {
         });
         const marker = L.marker([d.lat, d.lng], { icon }).addTo(S.custLayer);
         marker.on('click', function() {
+          if (window.innerWidth <= 1024) closeMobileSidebar();
           ensurePopup(marker, d, 'customer');
           S.map.once('moveend', function() { marker.openPopup(); });
           S.map.flyTo([d.lat + 2.5, d.lng], 7, { duration: 0.6 });
@@ -2504,6 +2508,7 @@ document.addEventListener('click', function(e) {
 });
 
 document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && window.innerWidth <= 1024) closeMobileSidebar();
   if (e.key === 'Escape') closePipelineOverlay();
 });
 
@@ -3082,6 +3087,27 @@ function buildCustPopup(d) {
   return html;
 }
 
+/* ── Mobile sidebar toggle ── */
+function toggleMobileSidebar() {
+  const sidebar = document.querySelector('.sidebar');
+  const backdrop = document.getElementById('sidebarBackdrop');
+  const isOpen = sidebar.classList.contains('mobile-open');
+  if (isOpen) {
+    sidebar.classList.remove('mobile-open');
+    backdrop.classList.remove('open');
+  } else {
+    sidebar.classList.add('mobile-open');
+    backdrop.classList.add('open');
+  }
+}
+
+function closeMobileSidebar() {
+  const sidebar = document.querySelector('.sidebar');
+  const backdrop = document.getElementById('sidebarBackdrop');
+  sidebar.classList.remove('mobile-open');
+  backdrop.classList.remove('open');
+}
+
 // ============ EXPOSE TO WINDOW (for HTML inline handlers) ============
 Object.assign(window, {
   dismissWelcome,
@@ -3187,6 +3213,9 @@ Object.assign(window, {
   focusOnAccount,
   // Data persistence
   resetToBaselineData,
+  // Mobile
+  toggleMobileSidebar,
+  closeMobileSidebar,
   // Init
   initMap,
 });

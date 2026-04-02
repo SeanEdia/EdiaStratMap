@@ -3329,3 +3329,237 @@ input[type="range"]::-webkit-slider-thumb {
   display: none;
 }
 
+/* ============ MOBILE MENU BUTTON ============ */
+.mobile-menu-btn {
+  display: none;
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 1001;
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius);
+  padding: 10px;
+  color: var(--text-dim);
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  transition: all 0.2s;
+}
+.mobile-menu-btn:hover {
+  color: var(--text);
+  border-color: var(--accent-strat);
+}
+.sidebar-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 999;
+}
+.sidebar-backdrop.open {
+  display: block;
+}
+
+/* ============ RESPONSIVE ============ */
+
+/* --- Shared: Tablet + Phone (≤1024px) --- */
+@media (max-width: 1024px) {
+  .mobile-menu-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .sidebar {
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+  }
+  .sidebar.mobile-open {
+    transform: translateX(0);
+  }
+
+  .leaflet-left {
+    left: 10px !important;
+  }
+}
+
+/* --- Phone (≤767px) --- */
+@media (max-width: 767px) {
+  .sidebar {
+    width: 300px;
+  }
+
+  /* Map triggers — icon-only, stacked tighter */
+  .ad-trigger-wrap {
+    top: 12px;
+    right: 12px;
+    gap: 6px;
+  }
+  .ad-trigger {
+    padding: 8px 10px;
+    font-size: 0;       /* hide text labels */
+  }
+  .ad-trigger svg {
+    font-size: initial;  /* keep SVG visible */
+    opacity: 0.8;
+  }
+  .ad-trigger .ad-alert {
+    font-size: 8px;
+    min-width: 14px;
+    height: 14px;
+  }
+  .count-badge {
+    padding: 8px 10px;
+    font-size: 11px;
+  }
+
+  /* Overlays — full-width bottom sheets */
+  .ad-overlay,
+  .conflicts-overlay {
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    max-height: 60vh;
+    border-radius: var(--radius) var(--radius) 0 0;
+    animation: mobileSlideUp 0.25s ease-out;
+  }
+  .al-overlay {
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    max-height: 70vh;
+    border-radius: var(--radius) var(--radius) 0 0;
+    animation: mobileSlideUp 0.25s ease-out;
+  }
+
+  @keyframes mobileSlideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Account modal — full screen */
+  .account-modal {
+    padding: 0;
+  }
+  .account-modal-content {
+    max-width: 100%;
+    max-height: 100%;
+    height: 100%;
+    border-radius: 0;
+  }
+  .account-modal-header {
+    padding: 14px 16px;
+  }
+  .account-modal-title h2 {
+    font-size: 16px;
+  }
+  .account-tabs {
+    padding: 0 12px;
+    gap: 2px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .account-tabs::-webkit-scrollbar { display: none; }
+  .account-tab {
+    padding: 10px 12px;
+    font-size: 12px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .tab-content {
+    padding: 16px;
+  }
+  .modal-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  /* Pipeline overlay */
+  .pipeline-overlay {
+    width: 95%;
+    max-width: none;
+  }
+  @keyframes plSlideIn {
+    from { opacity: 0; transform: translate(-50%, -50%) scale(0.96); }
+    to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  }
+
+  /* SFDC modal */
+  .sfdc-modal-content {
+    width: 92%;
+    max-width: 380px;
+  }
+
+  /* Data refresh FAB — icon only */
+  .data-refresh-fab {
+    bottom: 16px;
+    right: 16px;
+    padding: 10px;
+    font-size: 0;
+  }
+  .data-refresh-fab svg {
+    font-size: initial;
+  }
+  .data-refresh-panel {
+    bottom: 64px;
+    right: 16px;
+    left: 16px;
+    width: auto;
+  }
+
+  /* Legend */
+  .legend {
+    bottom: 14px;
+    left: 16px;
+    right: auto;
+    gap: 8px;
+    padding: 6px 10px;
+    max-width: calc(100vw - 80px);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .legend::-webkit-scrollbar { display: none; }
+  .legend-item {
+    font-size: 8px;
+  }
+
+  /* Welcome overlay */
+  .welcome-card {
+    width: 92%;
+    max-width: 450px;
+  }
+  .welcome-teams {
+    flex-wrap: wrap;
+  }
+
+  /* Leaflet popup */
+  .leaflet-popup-content {
+    width: 260px !important;
+  }
+
+  /* Stats bar — allow wrapping more aggressively */
+  .stat-card .num {
+    font-size: 16px;
+  }
+}
+
+/* --- Tablet specific (768–1024px) --- */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .sidebar {
+    width: 340px;
+  }
+
+  .ad-overlay,
+  .conflicts-overlay {
+    width: 340px;
+  }
+  .al-overlay {
+    width: 440px;
+  }
+}
+
