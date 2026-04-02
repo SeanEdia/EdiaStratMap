@@ -1050,6 +1050,7 @@ function dismissWelcome() {
 }
 
 function quickFilterTeam(team) {
+  if (window.innerWidth <= 1024) closeMobileSidebar();
   S.welcomeActive = false;
   hideWelcomeOverlay();
   // Ensure we're in accounts view so team filtering works
@@ -1067,6 +1068,7 @@ function quickFilterTeam(team) {
 }
 
 function quickFilterOpps() {
+  if (window.innerWidth <= 1024) closeMobileSidebar();
   S.welcomeActive = false;
   hideWelcomeOverlay();
   // Ensure we're in accounts view so opp filtering works
@@ -1207,6 +1209,23 @@ function initMap() {
       });
     }
   }
+
+  // Mobile: use History API so back gesture closes overlays instead of navigating away
+  window.addEventListener('popstate', function() {
+    if (document.getElementById('accountModal')?.classList.contains('show')) {
+      closeAccountModal();
+    } else if (document.getElementById('pipelineOverlay')?.classList.contains('open')) {
+      closePipelineOverlay();
+    } else if (document.getElementById('alOverlay')?.classList.contains('open')) {
+      toggleAccountListOverlay();
+    } else if (document.getElementById('adOverlay')?.classList.contains('open')) {
+      toggleActionDashboard();
+    } else if (document.querySelector('.sidebar')?.classList.contains('mobile-open')) {
+      closeMobileSidebar();
+    } else {
+      window.history.back();
+    }
+  });
 }
 
 // ============ VIEWS ============
@@ -1687,6 +1706,7 @@ function resetFilters() {
 }
 
 function resetMapView() {
+  if (window.innerWidth <= 1024) closeMobileSidebar();
   // Reset view to Accounts (keeps team/rep selection)
   S.currentView = 'accounts';
   document.querySelectorAll('.view-btn').forEach(btn => {
@@ -2494,7 +2514,10 @@ function toggleActionDashboard() {
   S.actionDashboardOpen = !S.actionDashboardOpen;
   if (S._elAdOverlay) S._elAdOverlay.classList.toggle('open', S.actionDashboardOpen);
   if (S._elAdTrigger) S._elAdTrigger.classList.toggle('active', S.actionDashboardOpen);
-  if (S.actionDashboardOpen) updateActionDashboard();
+  if (S.actionDashboardOpen) {
+    updateActionDashboard();
+    if (window.innerWidth <= 1024) window.history.pushState({ overlay: true }, '');
+  }
 }
 
 // Close overlay when clicking outside
@@ -3098,14 +3121,26 @@ function toggleMobileSidebar() {
   } else {
     sidebar.classList.add('mobile-open');
     backdrop.classList.add('open');
+    if (window.innerWidth <= 1024) window.history.pushState({ overlay: true }, '');
   }
+  // Tell Leaflet the viewport context may have changed
+  sidebar.addEventListener('transitionend', function handler() {
+    sidebar.removeEventListener('transitionend', handler);
+    if (S.map) S.map.invalidateSize();
+  });
 }
 
 function closeMobileSidebar() {
   const sidebar = document.querySelector('.sidebar');
   const backdrop = document.getElementById('sidebarBackdrop');
-  sidebar.classList.remove('mobile-open');
-  backdrop.classList.remove('open');
+  if (sidebar.classList.contains('mobile-open')) {
+    sidebar.classList.remove('mobile-open');
+    backdrop.classList.remove('open');
+    sidebar.addEventListener('transitionend', function handler() {
+      sidebar.removeEventListener('transitionend', handler);
+      if (S.map) S.map.invalidateSize();
+    });
+  }
 }
 
 // ============ EXPOSE TO WINDOW (for HTML inline handlers) ============
