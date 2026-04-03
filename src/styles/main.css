@@ -3803,3 +3803,45 @@ input:checked + .nearme-slider {
   }
 }
 
+/* ============ PIN CONTEXT MENU ============ */
+.pin-context-menu {
+  display: none;
+  position: fixed;
+  z-index: 1500;
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  min-width: 160px;
+  padding: 6px 0;
+  animation: ctxFadeIn 0.15s ease-out;
+}
+.pin-context-menu.open { display: block; }
+@keyframes ctxFadeIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+.pin-ctx-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  font-size: 12px;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: background 0.1s;
+  border: none;
+  background: none;
+  width: 100%;
+  font-family: inherit;
+  text-align: left;
+}
+.pin-ctx-item:hover,
+.pin-ctx-item:active { background: var(--surface); color: var(--text); }
+.pin-ctx-icon { font-size: 14px; flex-shrink: 0; }
+
+/* Pull-down dismiss animation */
+.account-modal-content.dragging {
+  transition: none !important;
+}
+
