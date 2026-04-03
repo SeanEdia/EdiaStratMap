@@ -949,6 +949,7 @@ function buildMarkerPool() {
     marker.on('click', function() {
       if (window.innerWidth <= 1024) closeMobileSidebar();
       if (window.innerWidth <= 1024) {
+        if (_longPressTriggered) { _longPressTriggered = false; return; }
         closeMobileBottomSheet();
         flyToForBottomSheet(d.lat, d.lng);
         setTimeout(() => { openMobileBottomSheet(d, 'accounts'); }, 350);
@@ -973,6 +974,7 @@ function buildMarkerPool() {
     marker.on('click', function() {
       if (window.innerWidth <= 1024) closeMobileSidebar();
       if (window.innerWidth <= 1024) {
+        if (_longPressTriggered) { _longPressTriggered = false; return; }
         closeMobileBottomSheet();
         flyToForBottomSheet(d.lat, d.lng);
         setTimeout(() => { openMobileBottomSheet(d, 'customer'); }, 350);
@@ -2014,6 +2016,7 @@ function applyFilters() {
         marker.on('click', function() {
           if (window.innerWidth <= 1024) closeMobileSidebar();
           if (window.innerWidth <= 1024) {
+            if (_longPressTriggered) { _longPressTriggered = false; return; }
             closeMobileBottomSheet();
             flyToForBottomSheet(d.lat, d.lng);
             setTimeout(() => { openMobileBottomSheet(d, 'accounts'); }, 350);
@@ -2093,6 +2096,7 @@ function applyFilters() {
         marker.on('click', function() {
           if (window.innerWidth <= 1024) closeMobileSidebar();
           if (window.innerWidth <= 1024) {
+            if (_longPressTriggered) { _longPressTriggered = false; return; }
             closeMobileBottomSheet();
             flyToForBottomSheet(d.lat, d.lng);
             setTimeout(() => { openMobileBottomSheet(d, 'customer'); }, 350);
@@ -3530,24 +3534,26 @@ function setNearMeRadiusFromInput(val) {
 /* ── Pin context menu (long-press) ── */
 let _longPressTimer = null;
 let _longPressMoved = false;
+let _longPressTriggered = false;
 
 function setupLongPress(marker, d, type) {
   if (!('ontouchstart' in window)) return;
-  // Marker DOM element isn't available until it's rendered on the map.
-  // Use a short delay to ensure the icon element exists.
   setTimeout(() => {
     const el = marker.getElement ? marker.getElement() : marker._icon;
     if (!el) return;
 
     el.addEventListener('touchstart', function(e) {
       _longPressMoved = false;
+      _longPressTriggered = false;
+      const startX = e.touches[0].clientX;
+      const startY = e.touches[0].clientY;
       _longPressTimer = setTimeout(() => {
         if (!_longPressMoved) {
-          e.preventDefault();
-          showPinContextMenu(e.touches[0].clientX, e.touches[0].clientY, d, type);
+          _longPressTriggered = true;
+          showPinContextMenu(startX, startY, d, type);
         }
       }, 500);
-    }, { passive: false });
+    }, { passive: true });
 
     el.addEventListener('touchmove', function() {
       _longPressMoved = true;
