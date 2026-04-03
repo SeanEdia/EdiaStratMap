@@ -948,9 +948,15 @@ function buildMarkerPool() {
     const marker = L.marker([d.lat, d.lng], { icon });
     marker.on('click', function() {
       if (window.innerWidth <= 1024) closeMobileSidebar();
-      ensurePopup(marker, d, 'accounts');
-      S.map.flyTo([d.lat + 2.5, d.lng], 7, { duration: 0.6 });
-      setTimeout(() => { marker.openPopup(); }, 50);
+      if (window.innerWidth <= 1024) {
+        closeMobileBottomSheet();
+        S.map.flyTo([d.lat + 0.8, d.lng], 9, { duration: 0.6 });
+        setTimeout(() => { openMobileBottomSheet(d, 'accounts'); }, 350);
+      } else {
+        ensurePopup(marker, d, 'accounts');
+        S.map.flyTo([d.lat + 2.5, d.lng], 7, { duration: 0.6 });
+        setTimeout(() => { marker.openPopup(); }, 50);
+      }
     });
     S._markerPool.set('a:' + mlKey, { marker, data: d, type: 'accounts', currentClass: cls });
   });
@@ -966,9 +972,15 @@ function buildMarkerPool() {
     const marker = L.marker([d.lat, d.lng], { icon });
     marker.on('click', function() {
       if (window.innerWidth <= 1024) closeMobileSidebar();
-      ensurePopup(marker, d, 'customer');
-      S.map.flyTo([d.lat + 2.5, d.lng], 7, { duration: 0.6 });
-      setTimeout(() => { marker.openPopup(); }, 50);
+      if (window.innerWidth <= 1024) {
+        closeMobileBottomSheet();
+        S.map.flyTo([d.lat + 0.8, d.lng], 9, { duration: 0.6 });
+        setTimeout(() => { openMobileBottomSheet(d, 'customer'); }, 350);
+      } else {
+        ensurePopup(marker, d, 'customer');
+        S.map.flyTo([d.lat + 2.5, d.lng], 7, { duration: 0.6 });
+        setTimeout(() => { marker.openPopup(); }, 50);
+      }
     });
     S._markerPool.set('c:' + mlKey, { marker, data: d, type: 'customer', currentClass: cls });
   });
@@ -1162,6 +1174,10 @@ function initMap() {
   S.confLayer = L.layerGroup().addTo(S.map);
   S.confProxLayer = L.layerGroup().addTo(S.map);
 
+  S.map.on('click', function() {
+    if (window.innerWidth <= 1024) closeMobileBottomSheet();
+  });
+
   // Cache frequently accessed DOM elements
   S._elSearchInput = document.getElementById('searchInput');
   S._elPipelinePanel = document.getElementById('pipelinePanel');
@@ -1184,6 +1200,57 @@ function initMap() {
 
   // Build persistent marker pool for all accounts and customers
   buildMarkerPool();
+
+  // Mobile search focus/blur
+  const mobileSearchInput = document.getElementById('mobileSearchInput');
+  if (mobileSearchInput) {
+    mobileSearchInput.addEventListener('focus', () => {
+      document.getElementById('mobileSearchWrap').classList.add('focused');
+    });
+    mobileSearchInput.addEventListener('blur', () => {
+      setTimeout(() => {
+        document.getElementById('mobileSearchWrap').classList.remove('focused');
+        closeMobileSearchResults();
+      }, 200);
+    });
+  }
+
+  // Swipe-to-close sidebar
+  if ('ontouchstart' in window) {
+    const sidebar = document.querySelector('.sidebar');
+    let _swipeStartX = 0;
+    let _swipeDeltaX = 0;
+    let _swiping = false;
+
+    sidebar.addEventListener('touchstart', function(e) {
+      if (!sidebar.classList.contains('mobile-open')) return;
+      _swipeStartX = e.touches[0].clientX;
+      _swipeDeltaX = 0;
+      _swiping = false;
+    }, { passive: true });
+
+    sidebar.addEventListener('touchmove', function(e) {
+      if (!sidebar.classList.contains('mobile-open')) return;
+      const dx = e.touches[0].clientX - _swipeStartX;
+      if (dx < -10) _swiping = true;
+      if (_swiping && dx < 0) {
+        _swipeDeltaX = dx;
+        sidebar.style.transition = 'none';
+        sidebar.style.transform = `translateX(${dx}px)`;
+      }
+    }, { passive: true });
+
+    sidebar.addEventListener('touchend', function() {
+      if (!_swiping) return;
+      sidebar.style.transition = '';
+      if (_swipeDeltaX < -80) {
+        closeMobileSidebar();
+      } else {
+        sidebar.style.transform = 'translateX(0)';
+      }
+      _swiping = false;
+    }, { passive: true });
+  }
 
   renderTeamRepSelectors();
   renderFilters();
@@ -1212,7 +1279,9 @@ function initMap() {
 
   // Mobile: use History API so back gesture closes overlays instead of navigating away
   window.addEventListener('popstate', function() {
-    if (document.getElementById('accountModal')?.classList.contains('show')) {
+    if (document.getElementById('mobileBottomSheet')?.classList.contains('open')) {
+      closeMobileBottomSheet();
+    } else if (document.getElementById('accountModal')?.classList.contains('show')) {
       closeAccountModal();
     } else if (document.getElementById('pipelineOverlay')?.classList.contains('open')) {
       closePipelineOverlay();
@@ -1733,6 +1802,11 @@ function resetMapView() {
   const proxWrap = document.getElementById('proxRadiusWrap');
   if (proxWrap) proxWrap.style.display = 'none';
   S.proxLayer.clearLayers();
+  clearNearMe();
+  const nearMeCheck = document.getElementById('nearMeCheck');
+  if (nearMeCheck) nearMeCheck.checked = false;
+  const nearMeWrap = document.getElementById('nearMeRadiusWrap');
+  if (nearMeWrap) nearMeWrap.style.display = 'none';
   S.adaFilterOn = false;
   const adaCheck = document.getElementById('adaCheck');
   if (adaCheck) adaCheck.checked = false;
@@ -1931,9 +2005,15 @@ function applyFilters() {
         const marker = L.marker([d.lat, d.lng], { icon }).addTo(S.stratLayer);
         marker.on('click', function() {
           if (window.innerWidth <= 1024) closeMobileSidebar();
-          ensurePopup(marker, d, 'accounts');
-          S.map.once('moveend', function() { marker.openPopup(); });
-          S.map.flyTo([d.lat + 2.5, d.lng], 7, { duration: 0.6 });
+          if (window.innerWidth <= 1024) {
+            closeMobileBottomSheet();
+            S.map.flyTo([d.lat + 0.8, d.lng], 9, { duration: 0.6 });
+            setTimeout(() => { openMobileBottomSheet(d, 'accounts'); }, 350);
+          } else {
+            ensurePopup(marker, d, 'accounts');
+            S.map.once('moveend', function() { marker.openPopup(); });
+            S.map.flyTo([d.lat + 2.5, d.lng], 7, { duration: 0.6 });
+          }
         });
         statesSet.add(d.state);
         S.markerLookup[mlKey] = { marker, data: d, type: 'accounts' };
@@ -2003,9 +2083,15 @@ function applyFilters() {
         const marker = L.marker([d.lat, d.lng], { icon }).addTo(S.custLayer);
         marker.on('click', function() {
           if (window.innerWidth <= 1024) closeMobileSidebar();
-          ensurePopup(marker, d, 'customer');
-          S.map.once('moveend', function() { marker.openPopup(); });
-          S.map.flyTo([d.lat + 2.5, d.lng], 7, { duration: 0.6 });
+          if (window.innerWidth <= 1024) {
+            closeMobileBottomSheet();
+            S.map.flyTo([d.lat + 0.8, d.lng], 9, { duration: 0.6 });
+            setTimeout(() => { openMobileBottomSheet(d, 'customer'); }, 350);
+          } else {
+            ensurePopup(marker, d, 'customer');
+            S.map.once('moveend', function() { marker.openPopup(); });
+            S.map.flyTo([d.lat + 2.5, d.lng], 7, { duration: 0.6 });
+          }
         });
         statesSet.add(d.state);
         if (!S.markerLookup[mlKeyC]) {
@@ -2308,7 +2394,16 @@ function selectAutocomplete(index) {
     applyFilters();
     const acState = item.data ? (item.data.state || '') : '';
     const entry = S.markerLookup[item.label + '|' + acState];
-    if (entry && entry.marker) {
+    if (window.innerWidth <= 1024) {
+      // Mobile: open bottom sheet instead of popup
+      const d = entry ? entry.data : item.data;
+      const t = entry ? entry.type : (item.type || 'accounts');
+      if (d && d.lat && d.lng) {
+        closeMobileBottomSheet();
+        S.map.flyTo([d.lat + 0.8, d.lng], 9, { duration: 0.6 });
+        setTimeout(() => { openMobileBottomSheet(d, t); }, 350);
+      }
+    } else if (entry && entry.marker) {
       const latLng = entry.marker.getLatLng();
       ensurePopup(entry.marker, entry.data, entry.type);
       S.map.setView([latLng.lat + 2.5, latLng.lng], 7, { animate: true });
@@ -2337,7 +2432,22 @@ function zoomToSearchResult() {
   if (!bestMatch) bestMatch = S.lastSearchResults.find(r => r.data.name.toLowerCase().startsWith(search));
   if (!bestMatch) bestMatch = S.lastSearchResults[0];
 
-  if (S.lastSearchResults.length === 1) {
+  if (window.innerWidth <= 1024) {
+    // Mobile: open bottom sheet for best match
+    const d = bestMatch.data;
+    if (d && d.lat && d.lng) {
+      if (S.lastSearchResults.length === 1) {
+        closeMobileBottomSheet();
+        S.map.flyTo([d.lat + 0.8, d.lng], 9, { duration: 0.6 });
+        setTimeout(() => { openMobileBottomSheet(d, bestMatch.type); }, 350);
+      } else {
+        const bounds = S.lastSearchResults.map(r => r.marker.getLatLng());
+        if (bounds.length > 0) S.map.fitBounds(bounds, { padding: [40, 40], maxZoom: 8 });
+        closeMobileBottomSheet();
+        setTimeout(() => { openMobileBottomSheet(d, bestMatch.type); }, 350);
+      }
+    }
+  } else if (S.lastSearchResults.length === 1) {
     const latLng = bestMatch.marker.getLatLng();
     ensurePopup(bestMatch.marker, bestMatch.data, bestMatch.type);
     S.map.setView([latLng.lat + 2.5, latLng.lng], 7, { animate: true });
@@ -3110,6 +3220,290 @@ function buildCustPopup(d) {
   return html;
 }
 
+/* ── Mobile bottom sheet ── */
+let _mbsDragStartY = 0;
+let _mbsDragCurrentY = 0;
+
+function openMobileBottomSheet(d, type) {
+  const sheet = document.getElementById('mobileBottomSheet');
+  const content = document.getElementById('mbsContent');
+  const builder = type === 'customer' ? buildCustPopup : buildStratPopup;
+  content.innerHTML = builder(d);
+  // Force reflow before adding class for transition
+  sheet.style.display = 'block';
+  void sheet.offsetHeight;
+  sheet.classList.add('open');
+  if (window.innerWidth <= 1024) window.history.pushState({ overlay: true }, '');
+  // Set up pull-down-to-dismiss on the handle
+  setupBottomSheetDrag();
+}
+
+function closeMobileBottomSheet() {
+  const sheet = document.getElementById('mobileBottomSheet');
+  if (!sheet || !sheet.classList.contains('open')) return;
+  sheet.classList.remove('open');
+  sheet.addEventListener('transitionend', function handler() {
+    sheet.removeEventListener('transitionend', handler);
+    sheet.style.display = 'none';
+    sheet.style.transform = '';
+  });
+}
+
+function setupBottomSheetDrag() {
+  const handle = document.getElementById('mbsHandle');
+  const sheet = document.getElementById('mobileBottomSheet');
+
+  handle.addEventListener('touchstart', function(e) {
+    _mbsDragStartY = e.touches[0].clientY;
+    _mbsDragCurrentY = 0;
+    sheet.classList.add('dragging');
+  }, { passive: true });
+
+  handle.addEventListener('touchmove', function(e) {
+    const dy = e.touches[0].clientY - _mbsDragStartY;
+    if (dy > 0) { // Only allow dragging down
+      _mbsDragCurrentY = dy;
+      sheet.style.transform = `translateY(${dy}px)`;
+    }
+  }, { passive: true });
+
+  handle.addEventListener('touchend', function() {
+    sheet.classList.remove('dragging');
+    if (_mbsDragCurrentY > 80) {
+      closeMobileBottomSheet();
+    } else {
+      sheet.style.transform = '';
+    }
+  }, { passive: true });
+}
+
+/* ── Mobile map search ── */
+function onMobileSearchInput() {
+  const input = document.getElementById('mobileSearchInput');
+  const query = input.value.trim();
+  const clearBtn = document.getElementById('mobileSearchClear');
+  clearBtn.style.display = query ? '' : 'none';
+
+  const items = buildAutocompleteList(query);
+  renderMobileSearchResults(items);
+}
+
+function onMobileSearchKeydown(e) {
+  const results = document.getElementById('mobileSearchResults');
+  if (e.key === 'Escape') {
+    clearMobileSearch();
+    document.getElementById('mobileSearchInput').blur();
+    return;
+  }
+  if (!results.classList.contains('open')) {
+    if (e.key === 'Enter') {
+      const firstItem = S._mobileAcItems && S._mobileAcItems[0];
+      if (firstItem) selectMobileAutocomplete(0);
+    }
+    return;
+  }
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    S._mobileAcIndex = Math.min((S._mobileAcIndex || -1) + 1, (S._mobileAcItems || []).length - 1);
+    updateMobileAcSelection();
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    S._mobileAcIndex = Math.max((S._mobileAcIndex || 0) - 1, -1);
+    updateMobileAcSelection();
+  } else if (e.key === 'Enter') {
+    e.preventDefault();
+    const idx = S._mobileAcIndex >= 0 ? S._mobileAcIndex : 0;
+    if (S._mobileAcItems && S._mobileAcItems[idx]) selectMobileAutocomplete(idx);
+  }
+}
+
+function updateMobileAcSelection() {
+  const results = document.getElementById('mobileSearchResults');
+  results.querySelectorAll('.search-ac-item').forEach((el, i) => {
+    el.classList.toggle('selected', i === S._mobileAcIndex);
+  });
+}
+
+function renderMobileSearchResults(items) {
+  const results = document.getElementById('mobileSearchResults');
+  S._mobileAcItems = items;
+  S._mobileAcIndex = -1;
+  if (!items.length) {
+    results.classList.remove('open');
+    results.innerHTML = '';
+    return;
+  }
+  const typeLabels = { state: 'State', region: 'Region', account: 'Account', customer: 'Customer' };
+  results.innerHTML = items.slice(0, 8).map((item, i) => {
+    const labelHtml = escapeHtml(item.label);
+    return `<div class="search-ac-item" data-index="${i}" onmousedown="selectMobileAutocomplete(${i})" ontouchend="selectMobileAutocomplete(${i})">
+      <span class="search-ac-type ${item.type}">${typeLabels[item.type]}</span>
+      <span class="search-ac-name">${labelHtml}</span>
+      <span class="search-ac-meta">${item.meta}</span>
+    </div>`;
+  }).join('');
+  results.classList.add('open');
+}
+
+function selectMobileAutocomplete(index) {
+  const item = S._mobileAcItems[index];
+  if (!item) return;
+  closeMobileSearchResults();
+  const input = document.getElementById('mobileSearchInput');
+  input.value = item.label || item.abbr || '';
+  input.blur();
+  document.getElementById('mobileSearchWrap').classList.remove('focused');
+
+  if (item.type === 'state') {
+    S._elSearchInput.value = item.abbr.toUpperCase();
+    S.searchExactMatch = true;
+    applyFilters();
+    const bounds = [];
+    [...S.ACCOUNT_DATA, ...S.CUSTOMER_DATA].forEach(d => {
+      const st = (d.state || '').toLowerCase();
+      if ((st === item.abbr || st === item.name.toLowerCase()) && d.lat && d.lng) bounds.push([d.lat, d.lng]);
+    });
+    if (bounds.length > 0) S.map.fitBounds(bounds, { padding: [40, 40], maxZoom: 8 });
+  } else if (item.type === 'region') {
+    S._elSearchInput.value = item.region;
+    S.searchExactMatch = true;
+    applyFilters();
+    const bounds = [];
+    [...S.ACCOUNT_DATA, ...S.CUSTOMER_DATA].forEach(d => {
+      if (d.region === item.region && d.lat && d.lng) bounds.push([d.lat, d.lng]);
+    });
+    if (bounds.length > 0) S.map.fitBounds(bounds, { padding: [40, 40], maxZoom: 8 });
+  } else {
+    // Individual account — zoom and open bottom sheet
+    S._elSearchInput.value = item.label;
+    S.searchExactMatch = true;
+    applyFilters();
+    if (item.data && item.data.lat && item.data.lng) {
+      const d = item.data;
+      closeMobileBottomSheet();
+      S.map.flyTo([d.lat + 0.8, d.lng], 9, { duration: 0.6 });
+      setTimeout(() => {
+        openMobileBottomSheet(d, item.type === 'customer' ? 'customer' : 'accounts');
+      }, 350);
+    }
+  }
+}
+
+function clearMobileSearch() {
+  const input = document.getElementById('mobileSearchInput');
+  input.value = '';
+  document.getElementById('mobileSearchClear').style.display = 'none';
+  closeMobileSearchResults();
+  S._elSearchInput.value = '';
+  S.searchExactMatch = false;
+  applyFilters();
+}
+
+function closeMobileSearchResults() {
+  const results = document.getElementById('mobileSearchResults');
+  results.classList.remove('open');
+  results.innerHTML = '';
+  S._mobileAcItems = [];
+  S._mobileAcIndex = -1;
+}
+
+/* ── Near Me mode ── */
+let _nearMeMarker = null;
+let _nearMeCircle = null;
+let _nearMeWatchId = null;
+let _nearMeMiles = 50;
+
+function toggleNearMe(on) {
+  document.getElementById('nearMeRadiusWrap').style.display = on ? 'flex' : 'none';
+  const status = document.getElementById('nearMeStatus');
+  if (!on) {
+    clearNearMe();
+    status.style.display = 'none';
+    return;
+  }
+  if (!navigator.geolocation) {
+    status.style.display = '';
+    status.textContent = 'Geolocation not supported';
+    document.getElementById('nearMeCheck').checked = false;
+    return;
+  }
+  status.style.display = '';
+  status.textContent = 'Locating…';
+  navigator.geolocation.getCurrentPosition(
+    function(pos) {
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+      showNearMe(lat, lng);
+      status.textContent = '';
+      status.style.display = 'none';
+      _nearMeWatchId = navigator.geolocation.watchPosition(function(p) {
+        showNearMe(p.coords.latitude, p.coords.longitude);
+      }, null, { enableHighAccuracy: true, maximumAge: 30000 });
+    },
+    function(err) {
+      status.textContent = err.code === 1 ? 'Location permission denied' : 'Could not get location';
+      document.getElementById('nearMeCheck').checked = false;
+      document.getElementById('nearMeRadiusWrap').style.display = 'none';
+    },
+    { enableHighAccuracy: true, timeout: 10000 }
+  );
+}
+
+function showNearMe(lat, lng) {
+  clearNearMe();
+  const icon = L.divIcon({ className: 'nearme-pulse', iconSize: [16, 16], iconAnchor: [8, 8] });
+  _nearMeMarker = L.marker([lat, lng], { icon, interactive: false, zIndexOffset: 9000 }).addTo(S.map);
+  const meters = _nearMeMiles * 1609.34;
+  _nearMeCircle = L.circle([lat, lng], {
+    radius: meters,
+    color: '#0984e3',
+    weight: 2,
+    opacity: 0.3,
+    fillColor: '#0984e3',
+    fillOpacity: 0.08,
+    interactive: false,
+  }).addTo(S.map);
+  let nearby = 0;
+  const accounts = S.filteredAccountData && S.filteredAccountData.length > 0 ? S.filteredAccountData : S.ACCOUNT_DATA;
+  accounts.forEach(d => {
+    if (d.lat && d.lng && haversine(lat, lng, d.lat, d.lng) <= _nearMeMiles) nearby++;
+  });
+  const el = document.getElementById('nearMeNearbyCount');
+  if (el) el.textContent = nearby + ' nearby';
+  S.map.flyTo([lat, lng], Math.max(S.map.getZoom(), 7), { duration: 0.6 });
+}
+
+function clearNearMe() {
+  if (_nearMeMarker) { S.map.removeLayer(_nearMeMarker); _nearMeMarker = null; }
+  if (_nearMeCircle) { S.map.removeLayer(_nearMeCircle); _nearMeCircle = null; }
+  if (_nearMeWatchId) { navigator.geolocation.clearWatch(_nearMeWatchId); _nearMeWatchId = null; }
+  const el = document.getElementById('nearMeNearbyCount');
+  if (el) el.textContent = '';
+}
+
+function updateNearMeRadius(val) {
+  _nearMeMiles = parseInt(val);
+  const miInput = document.getElementById('nearMeMilesInput');
+  if (miInput) miInput.value = _nearMeMiles;
+  if (_nearMeMarker) {
+    const pos = _nearMeMarker.getLatLng();
+    showNearMe(pos.lat, pos.lng);
+  }
+}
+
+function setNearMeRadiusFromInput(val) {
+  let n = parseInt(val);
+  if (isNaN(n) || n < 10) n = 10;
+  if (n > 150) n = 150;
+  _nearMeMiles = n;
+  const slider = document.getElementById('nearMeRadius');
+  if (slider) slider.value = n;
+  if (_nearMeMarker) {
+    const pos = _nearMeMarker.getLatLng();
+    showNearMe(pos.lat, pos.lng);
+  }
+}
+
 /* ── Mobile sidebar toggle ── */
 function toggleMobileSidebar() {
   const sidebar = document.querySelector('.sidebar');
@@ -3251,6 +3645,15 @@ Object.assign(window, {
   // Mobile
   toggleMobileSidebar,
   closeMobileSidebar,
+  openMobileBottomSheet,
+  closeMobileBottomSheet,
+  onMobileSearchInput,
+  onMobileSearchKeydown,
+  selectMobileAutocomplete,
+  clearMobileSearch,
+  toggleNearMe,
+  updateNearMeRadius,
+  setNearMeRadiusFromInput,
   // Init
   initMap,
 });

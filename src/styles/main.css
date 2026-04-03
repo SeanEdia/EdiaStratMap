@@ -3360,6 +3360,141 @@ input[type="range"]::-webkit-slider-thumb {
   display: block;
 }
 
+/* ============ MOBILE BOTTOM SHEET ============ */
+.mobile-bottom-sheet {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 1200;
+  background: var(--panel);
+  border-top: 1px solid var(--panel-border);
+  border-radius: 16px 16px 0 0;
+  box-shadow: 0 -8px 32px rgba(0,0,0,0.4);
+  max-height: 50vh;
+  transform: translateY(100%);
+  transition: transform 0.3s ease-out;
+  overflow: hidden;
+}
+.mobile-bottom-sheet.open {
+  display: block;
+  transform: translateY(0);
+}
+.mobile-bottom-sheet.dragging {
+  transition: none;
+}
+.mbs-handle {
+  display: flex;
+  justify-content: center;
+  padding: 10px 0 4px;
+  cursor: grab;
+  touch-action: none;
+}
+.mbs-handle-bar {
+  width: 36px;
+  height: 4px;
+  background: var(--text-muted);
+  border-radius: 2px;
+  opacity: 0.5;
+}
+.mbs-content {
+  overflow-y: auto;
+  max-height: calc(50vh - 30px);
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: var(--panel-border) transparent;
+}
+.mbs-content::-webkit-scrollbar { width: 4px; }
+.mbs-content::-webkit-scrollbar-track { background: transparent; }
+.mbs-content::-webkit-scrollbar-thumb { background: var(--panel-border); border-radius: 2px; }
+
+/* ============ MOBILE MAP SEARCH ============ */
+.mobile-search-wrap {
+  display: none;
+  position: absolute;
+  top: 68px;
+  left: 16px;
+  z-index: 1001;
+  width: 220px;
+  transition: width 0.2s ease;
+}
+.mobile-search-wrap.focused {
+  width: calc(100vw - 32px);
+}
+.mobile-search-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius);
+  padding: 8px 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+.mobile-search-icon {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+.mobile-search-input {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13px;
+  min-width: 0;
+}
+.mobile-search-input::placeholder { color: var(--text-muted); }
+.mobile-search-clear {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 18px;
+  cursor: pointer;
+  padding: 0 2px;
+  line-height: 1;
+}
+.mobile-search-results {
+  display: none;
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius);
+  margin-top: 4px;
+  max-height: 260px;
+  overflow-y: auto;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+.mobile-search-results.open { display: block; }
+
+/* ============ NEAR ME ============ */
+.nearme-slider {
+  background: rgba(9, 132, 227, 0.15) !important;
+}
+input:checked + .nearme-slider {
+  background: rgba(9, 132, 227, 0.5) !important;
+}
+.nearme-status {
+  font-size: 10px;
+  color: var(--text-muted);
+  padding: 4px 0 0 50px;
+}
+.nearme-pulse {
+  width: 16px;
+  height: 16px;
+  background: #0984e3;
+  border: 3px solid rgba(255,255,255,0.9);
+  border-radius: 50%;
+  box-shadow: 0 0 0 0 rgba(9,132,227,0.5);
+  animation: nearMePulse 2s infinite;
+}
+@keyframes nearMePulse {
+  0% { box-shadow: 0 0 0 0 rgba(9,132,227,0.5); }
+  70% { box-shadow: 0 0 0 16px rgba(9,132,227,0); }
+  100% { box-shadow: 0 0 0 0 rgba(9,132,227,0); }
+}
+
 /* ============ RESPONSIVE ============ */
 
 /* --- Shared: Tablet + Phone (≤1024px) --- */
@@ -3398,6 +3533,8 @@ input[type="range"]::-webkit-slider-thumb {
     height: 40px;
     transform: translate(-50%, -50%);
   }
+
+  .mobile-search-wrap { display: block; }
 }
 
 /* --- Phone (≤767px) --- */
@@ -3405,6 +3542,9 @@ input[type="range"]::-webkit-slider-thumb {
   .sidebar {
     width: 300px;
   }
+
+  /* Hide Leaflet popups on phone — bottom sheet replaces them */
+  .leaflet-popup { display: none !important; }
 
   /* Map triggers — icon-only, stacked tighter */
   .ad-trigger-wrap {
@@ -3647,6 +3787,9 @@ input[type="range"]::-webkit-slider-thumb {
   .sidebar {
     width: 340px;
   }
+
+  /* Hide Leaflet popups on tablet — bottom sheet replaces them */
+  .leaflet-popup { display: none !important; }
 
   .ad-overlay,
   .conflicts-overlay {

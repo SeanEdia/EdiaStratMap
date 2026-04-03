@@ -102,6 +102,21 @@
     </div>
   </div>
 
+  <div class="prox-control" id="nearMeControl">
+    <label class="prox-toggle">
+      <input type="checkbox" id="nearMeCheck" onchange="toggleNearMe(this.checked)">
+      <span class="prox-slider nearme-slider"></span>
+      <span class="prox-label">Near Me</span>
+    </label>
+    <div class="prox-radius-wrap" id="nearMeRadiusWrap" style="display:none;">
+      <input type="range" id="nearMeRadius" min="10" max="150" value="50" step="1" class="prox-range" oninput="updateNearMeRadius(this.value)">
+      <input type="number" id="nearMeMilesInput" class="prox-miles-input" value="50" min="10" max="150" onchange="setNearMeRadiusFromInput(this.value)">
+      <span class="prox-miles-unit">mi</span>
+      <span class="prox-nearby-count" id="nearMeNearbyCount"></span>
+    </div>
+    <div class="nearme-status" id="nearMeStatus" style="display:none;"></div>
+  </div>
+
   <div class="prox-control" id="adaControl">
     <label class="prox-toggle">
       <input type="checkbox" id="adaCheck" onchange="toggleAdaFilter(this.checked)">
@@ -320,6 +335,19 @@
     </svg>
   </button>
   <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="toggleMobileSidebar()"></div>
+  <div class="mobile-search-wrap" id="mobileSearchWrap">
+    <div class="mobile-search-bar">
+      <svg class="mobile-search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" class="mobile-search-input" id="mobileSearchInput" placeholder="Search districts..." autocomplete="off"
+        oninput="onMobileSearchInput()" onkeydown="onMobileSearchKeydown(event)">
+      <button class="mobile-search-clear" id="mobileSearchClear" onclick="clearMobileSearch()" style="display:none;">&times;</button>
+    </div>
+    <div class="mobile-search-results" id="mobileSearchResults"></div>
+  </div>
+  <div class="mobile-bottom-sheet" id="mobileBottomSheet">
+    <div class="mbs-handle" id="mbsHandle"><div class="mbs-handle-bar"></div></div>
+    <div class="mbs-content" id="mbsContent"></div>
+  </div>
   <div id="map"></div>
 
   <!-- Welcome Overlay (shown until user selects a filter) -->
