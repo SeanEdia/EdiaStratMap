@@ -3522,6 +3522,9 @@ input:checked + .nearme-slider {
   .leaflet-left {
     left: 10px !important;
   }
+  .leaflet-control-zoom {
+    display: none !important;
+  }
 
   .marker-strat::after,
   .marker-cust::after {
