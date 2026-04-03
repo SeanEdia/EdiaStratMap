@@ -116,6 +116,10 @@ export function openAccountModalWithData(d) {
   // Show modal
   document.getElementById('accountModal').classList.add('show');
   document.body.style.overflow = 'hidden';
+
+  // Mobile tab swiping
+  if (window.innerWidth <= 1024) setupModalTabSwipe();
+  if (window.innerWidth <= 1024) setupModalPullDown();
 }
 
 export function closeAccountModal() {
@@ -963,5 +967,81 @@ export function handleDataRefreshFile(event) {
   processUploadFile(file);
   event.target.value = '';
   toggleDataRefreshPanel();
+}
+
+function setupModalTabSwipe() {
+  const body = document.querySelector('.account-modal-body');
+  if (!body || !('ontouchstart' in window)) return;
+
+  let startX = 0;
+  let startY = 0;
+  let moved = false;
+
+  body.addEventListener('touchstart', function(e) {
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    moved = false;
+  }, { passive: true });
+
+  body.addEventListener('touchend', function(e) {
+    if (moved) return;
+    const dx = e.changedTouches[0].clientX - startX;
+    const dy = e.changedTouches[0].clientY - startY;
+    // Only trigger if horizontal swipe is dominant and > 60px
+    if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+      const tabs = Array.from(document.querySelectorAll('.account-tab'))
+        .filter(t => t.style.display !== 'none' && t.offsetParent !== null);
+      const activeIdx = tabs.findIndex(t => t.classList.contains('active') || t.classList.contains('active-cust'));
+      let nextIdx;
+      if (dx < 0 && activeIdx < tabs.length - 1) {
+        nextIdx = activeIdx + 1; // swipe left → next tab
+      } else if (dx > 0 && activeIdx > 0) {
+        nextIdx = activeIdx - 1; // swipe right → prev tab
+      }
+      if (nextIdx !== undefined && tabs[nextIdx]) {
+        tabs[nextIdx].click(); // triggers the existing onclick handler
+        tabs[nextIdx].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+      }
+    }
+  }, { passive: true });
+
+  body.addEventListener('touchmove', function(e) {
+    const dy = Math.abs(e.touches[0].clientY - startY);
+    if (dy > 15) moved = true; // User is scrolling vertically, not swiping
+  }, { passive: true });
+}
+
+function setupModalPullDown() {
+  const header = document.querySelector('.account-modal-header');
+  const content = document.querySelector('.account-modal-content');
+  if (!header || !content || !('ontouchstart' in window)) return;
+
+  let startY = 0;
+  let deltaY = 0;
+
+  header.addEventListener('touchstart', function(e) {
+    startY = e.touches[0].clientY;
+    deltaY = 0;
+    content.classList.add('dragging');
+  }, { passive: true });
+
+  header.addEventListener('touchmove', function(e) {
+    const dy = e.touches[0].clientY - startY;
+    if (dy > 0) {
+      deltaY = dy;
+      content.style.transform = `scale(1) translateY(${dy}px)`;
+      content.style.opacity = Math.max(0.5, 1 - dy / 400);
+    }
+  }, { passive: true });
+
+  header.addEventListener('touchend', function() {
+    content.classList.remove('dragging');
+    if (deltaY > 120) {
+      closeAccountModal();
+    } else {
+      content.style.transform = '';
+      content.style.opacity = '';
+    }
+  }, { passive: true });
 }
 

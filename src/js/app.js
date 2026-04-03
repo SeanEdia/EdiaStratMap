@@ -1252,6 +1252,14 @@ function initMap() {
     }, { passive: true });
   }
 
+  // Dismiss pin context menu on outside tap
+  document.addEventListener('touchstart', function(e) {
+    const menu = document.getElementById('pinContextMenu');
+    if (menu && menu.classList.contains('open') && !menu.contains(e.target)) {
+      closePinContextMenu();
+    }
+  }, { passive: true });
+
   renderTeamRepSelectors();
   renderFilters();
 
@@ -2015,6 +2023,7 @@ function applyFilters() {
             S.map.flyTo([d.lat + 2.5, d.lng], 7, { duration: 0.6 });
           }
         });
+        if (window.innerWidth <= 1024) setupLongPress(marker, d, 'accounts');
         statesSet.add(d.state);
         S.markerLookup[mlKey] = { marker, data: d, type: 'accounts' };
         if (search) {
@@ -2093,6 +2102,7 @@ function applyFilters() {
             S.map.flyTo([d.lat + 2.5, d.lng], 7, { duration: 0.6 });
           }
         });
+        if (window.innerWidth <= 1024) setupLongPress(marker, d, 'customer');
         statesSet.add(d.state);
         if (!S.markerLookup[mlKeyC]) {
           S.markerLookup[mlKeyC] = { marker, data: d, type: 'customer' };
@@ -3517,6 +3527,78 @@ function setNearMeRadiusFromInput(val) {
   }
 }
 
+/* ── Pin context menu (long-press) ── */
+let _longPressTimer = null;
+let _longPressMoved = false;
+
+function setupLongPress(marker, d, type) {
+  if (!('ontouchstart' in window)) return;
+  // Marker DOM element isn't available until it's rendered on the map.
+  // Use a short delay to ensure the icon element exists.
+  setTimeout(() => {
+    const el = marker.getElement ? marker.getElement() : marker._icon;
+    if (!el) return;
+
+    el.addEventListener('touchstart', function(e) {
+      _longPressMoved = false;
+      _longPressTimer = setTimeout(() => {
+        if (!_longPressMoved) {
+          e.preventDefault();
+          showPinContextMenu(e.touches[0].clientX, e.touches[0].clientY, d, type);
+        }
+      }, 500);
+    }, { passive: false });
+
+    el.addEventListener('touchmove', function() {
+      _longPressMoved = true;
+      clearTimeout(_longPressTimer);
+    }, { passive: true });
+
+    el.addEventListener('touchend', function() {
+      clearTimeout(_longPressTimer);
+    }, { passive: true });
+  }, 100);
+}
+
+function showPinContextMenu(x, y, d, _type) {
+  const menu = document.getElementById('pinContextMenu');
+  const menuW = 180;
+  const menuH = 200;
+  const posX = Math.min(x, window.innerWidth - menuW - 8);
+  let posY = Math.min(y - 20, window.innerHeight - menuH - 8);
+  if (posY < 8) posY = 8;
+  menu.style.left = posX + 'px';
+  menu.style.top = posY + 'px';
+  menu.classList.add('open');
+
+  const dKey = districtKey(d);
+  window.districtDataCache = window.districtDataCache || {};
+  window.districtDataCache[dKey] = d;
+
+  document.getElementById('ctxViewDetails').onclick = () => {
+    closePinContextMenu();
+    openAccountModalByKey(dKey);
+  };
+  document.getElementById('ctxAddNote').onclick = () => {
+    closePinContextMenu();
+    openAccountModalByKey(dKey);
+    setTimeout(() => switchTab('info', document.querySelector('.account-tab')), 100);
+  };
+  document.getElementById('ctxMeetingPrep').onclick = () => {
+    closePinContextMenu();
+    generateMeetingPrepByKey(dKey);
+  };
+  document.getElementById('ctxCopyAddress').onclick = () => {
+    closePinContextMenu();
+    const addr = [d.name, d.state].filter(Boolean).join(', ');
+    navigator.clipboard.writeText(addr).catch(() => {});
+  };
+}
+
+function closePinContextMenu() {
+  document.getElementById('pinContextMenu').classList.remove('open');
+}
+
 /* ── Mobile sidebar toggle ── */
 function toggleMobileSidebar() {
   const sidebar = document.querySelector('.sidebar');
@@ -3667,6 +3749,7 @@ Object.assign(window, {
   toggleNearMe,
   updateNearMeRadius,
   setNearMeRadiusFromInput,
+  closePinContextMenu,
   // Init
   initMap,
 });
