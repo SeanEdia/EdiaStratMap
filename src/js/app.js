@@ -950,7 +950,7 @@ function buildMarkerPool() {
       if (window.innerWidth <= 1024) closeMobileSidebar();
       if (window.innerWidth <= 1024) {
         closeMobileBottomSheet();
-        S.map.flyTo([d.lat + 0.8, d.lng], 9, { duration: 0.6 });
+        flyToForBottomSheet(d.lat, d.lng);
         setTimeout(() => { openMobileBottomSheet(d, 'accounts'); }, 350);
       } else {
         ensurePopup(marker, d, 'accounts');
@@ -974,7 +974,7 @@ function buildMarkerPool() {
       if (window.innerWidth <= 1024) closeMobileSidebar();
       if (window.innerWidth <= 1024) {
         closeMobileBottomSheet();
-        S.map.flyTo([d.lat + 0.8, d.lng], 9, { duration: 0.6 });
+        flyToForBottomSheet(d.lat, d.lng);
         setTimeout(() => { openMobileBottomSheet(d, 'customer'); }, 350);
       } else {
         ensurePopup(marker, d, 'customer');
@@ -1157,7 +1157,7 @@ function initMap() {
 
   S.map = L.map('map', {
     center: [39.5, -98.5],
-    zoom: 5,
+    zoom: getHomeZoom(),
     zoomControl: true,
     attributionControl: false,
     minZoom: 3,
@@ -1480,7 +1480,7 @@ function zoomToFilteredBounds() {
   } else if (bounds.length === 1) {
     S.map.setView([bounds[0][0], bounds[0][1]], 7, { animate: true });
   } else {
-    S.map.setView([39.5, -98.5], 5, { animate: true });
+    S.map.setView([39.5, -98.5], getHomeZoom(), { animate: true });
   }
 }
 
@@ -1496,7 +1496,7 @@ function onTeamChange(team) {
   renderTeamRepSelectors();
   renderFilters();
   applyFilters();
-  S.map.setView([39.5, -98.5], 5, { animate: true });
+  S.map.setView([39.5, -98.5], getHomeZoom(), { animate: true });
 }
 
 function onRepChange(rep) {
@@ -1513,7 +1513,7 @@ function onRepChange(rep) {
   renderFilters();
   applyFilters();
   if (S.selectedTeam === 'SMB') {
-    S.map.setView([39.5, -98.5], 5, { animate: true });
+    S.map.setView([39.5, -98.5], getHomeZoom(), { animate: true });
   } else {
     zoomToFilteredBounds();
   }
@@ -1838,7 +1838,7 @@ function resetMapView() {
   applyFilters();
 
   // Reset S.map to lower 48 US view
-  S.map.setView([39.5, -98.5], 5, { animate: true });
+  S.map.setView([39.5, -98.5], getHomeZoom(), { animate: true });
 }
 
 function toggleFiltersPanel() {
@@ -2007,7 +2007,7 @@ function applyFilters() {
           if (window.innerWidth <= 1024) closeMobileSidebar();
           if (window.innerWidth <= 1024) {
             closeMobileBottomSheet();
-            S.map.flyTo([d.lat + 0.8, d.lng], 9, { duration: 0.6 });
+            flyToForBottomSheet(d.lat, d.lng);
             setTimeout(() => { openMobileBottomSheet(d, 'accounts'); }, 350);
           } else {
             ensurePopup(marker, d, 'accounts');
@@ -2085,7 +2085,7 @@ function applyFilters() {
           if (window.innerWidth <= 1024) closeMobileSidebar();
           if (window.innerWidth <= 1024) {
             closeMobileBottomSheet();
-            S.map.flyTo([d.lat + 0.8, d.lng], 9, { duration: 0.6 });
+            flyToForBottomSheet(d.lat, d.lng);
             setTimeout(() => { openMobileBottomSheet(d, 'customer'); }, 350);
           } else {
             ensurePopup(marker, d, 'customer');
@@ -2311,7 +2311,7 @@ function onSearchInput() {
     applyFilters();
     // When search is cleared, fly out to lower 48 US view (same as reset view button)
     if (!query && S.map) {
-      S.map.setView([39.5, -98.5], 5, { animate: true });
+      S.map.setView([39.5, -98.5], getHomeZoom(), { animate: true });
     }
   }, 150);
 }
@@ -2400,7 +2400,7 @@ function selectAutocomplete(index) {
       const t = entry ? entry.type : (item.type || 'accounts');
       if (d && d.lat && d.lng) {
         closeMobileBottomSheet();
-        S.map.flyTo([d.lat + 0.8, d.lng], 9, { duration: 0.6 });
+        flyToForBottomSheet(d.lat, d.lng);
         setTimeout(() => { openMobileBottomSheet(d, t); }, 350);
       }
     } else if (entry && entry.marker) {
@@ -2438,7 +2438,7 @@ function zoomToSearchResult() {
     if (d && d.lat && d.lng) {
       if (S.lastSearchResults.length === 1) {
         closeMobileBottomSheet();
-        S.map.flyTo([d.lat + 0.8, d.lng], 9, { duration: 0.6 });
+        flyToForBottomSheet(d.lat, d.lng);
         setTimeout(() => { openMobileBottomSheet(d, bestMatch.type); }, 350);
       } else {
         const bounds = S.lastSearchResults.map(r => r.marker.getLatLng());
@@ -3220,6 +3220,19 @@ function buildCustPopup(d) {
   return html;
 }
 
+/* ── Mobile-aware map helpers ── */
+function getHomeZoom() {
+  return window.innerWidth <= 767 ? 4 : 5;
+}
+
+function flyToForBottomSheet(lat, lng) {
+  const zoom = window.innerWidth <= 767 ? 9 : 8;
+  const targetPoint = S.map.project([lat, lng], zoom);
+  targetPoint.y -= window.innerHeight * 0.2;
+  const adjusted = S.map.unproject(targetPoint, zoom);
+  S.map.flyTo(adjusted, zoom, { duration: 0.6 });
+}
+
 /* ── Mobile bottom sheet ── */
 let _mbsDragStartY = 0;
 let _mbsDragCurrentY = 0;
@@ -3381,7 +3394,7 @@ function selectMobileAutocomplete(index) {
     if (item.data && item.data.lat && item.data.lng) {
       const d = item.data;
       closeMobileBottomSheet();
-      S.map.flyTo([d.lat + 0.8, d.lng], 9, { duration: 0.6 });
+      flyToForBottomSheet(d.lat, d.lng);
       setTimeout(() => {
         openMobileBottomSheet(d, item.type === 'customer' ? 'customer' : 'accounts');
       }, 350);
