@@ -22,8 +22,24 @@ const OPPS_PATH = resolve(__dirname, '../src/data/opps.json');
 const OUTPUT_PATH = resolve(__dirname, '../src/data/accounts-with-opps.json');
 const SCHOOL_MAP_PATH = resolve(__dirname, '../src/data/school-map.json');
 
-const accounts = JSON.parse(readFileSync(ACCOUNTS_PATH, 'utf-8'));
+const accountsRaw = JSON.parse(readFileSync(ACCOUNTS_PATH, 'utf-8'));
 const opps = JSON.parse(readFileSync(OPPS_PATH, 'utf-8'));
+
+// Deduplicate: remove records with identical name+state (keep the first occurrence)
+const seen = new Set();
+const beforeCount = accountsRaw.length;
+const accounts = accountsRaw.filter(d => {
+  const key = (d.name || '') + '|' + (d.state || '');
+  if (seen.has(key)) {
+    console.warn('[Prebuild] Removing duplicate:', d.name, '(' + (d.state || '') + ')');
+    return false;
+  }
+  seen.add(key);
+  return true;
+});
+if (accounts.length < beforeCount) {
+  console.log(`[Prebuild] Removed ${beforeCount - accounts.length} duplicate record(s)`);
+}
 
 // Full normalizeDistrictName — synced from src/js/helpers.js
 function normalizeDistrictName(name) {

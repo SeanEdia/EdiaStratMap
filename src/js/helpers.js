@@ -1,7 +1,11 @@
 // Pure utility functions — no state dependencies
 
 export function districtKey(d) {
-  return (d.name + '_' + (d.state || '')).replace(/[^a-zA-Z0-9]/g, '_');
+  // Normalize Unicode dashes to ASCII hyphen before stripping, so variant
+  // characters (en-dash, non-breaking hyphen, etc.) produce consistent keys
+  const normalized = (d.name + '_' + (d.state || ''))
+    .replace(/[\u2010-\u2015\u2212\u00AD]/g, '-');
+  return normalized.replace(/[^a-zA-Z0-9]/g, '_');
 }
 
 export function haversine(lat1, lng1, lat2, lng2) {
