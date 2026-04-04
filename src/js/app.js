@@ -341,6 +341,13 @@ export function crossLinkCustomers() {
     }
   });
 
+  // Pre-build normalized account name → account record map for O(1) lookups
+  const acctByNorm = new Map();
+  S.ACCOUNT_DATA.forEach(a => {
+    const norm = normalizeDistrictName(a.name);
+    if (!acctByNorm.has(norm)) acctByNorm.set(norm, a);
+  });
+
   // Reverse link: customer → account
   // Also set parent_district for school-level customers.
   // Priority order:
@@ -369,7 +376,7 @@ export function crossLinkCustomers() {
     const parentName = (c.parent_account || '').trim();
     if (!linked && parentName) {
       const parentNorm = normalizeDistrictName(parentName);
-      const nameMatch = S.ACCOUNT_DATA.find(a => normalizeDistrictName(a.name) === parentNorm);
+      const nameMatch = acctByNorm.get(parentNorm);
       if (nameMatch) {
         // Validate state if both are known
         const custState = (c.state || '').toUpperCase().trim();
@@ -1673,7 +1680,8 @@ function getUnique(data, field) {
   // Use cached result if available (cache keyed by dataset identity + field)
   const isAccountType = data === S.ACCOUNT_DATA;
   const isCustomer = data === S.CUSTOMER_DATA;
-  const scopeKey = isAccountType ? 'strat' : isCustomer ? 'cust' : (S.selectedRep || S.selectedTeam || 'all');
+  const scopeKey = isAccountType ? 'strat' : isCustomer ? 'cust'
+    : (S.selectedRep || '') + '|' + (S.selectedTeam || '') + '|' + data.length;
   const cacheKey = scopeKey + ':' + field;
   if (S._uniqueCache[cacheKey]) return S._uniqueCache[cacheKey];
 

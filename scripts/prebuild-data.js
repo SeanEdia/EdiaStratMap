@@ -25,33 +25,85 @@ const SCHOOL_MAP_PATH = resolve(__dirname, '../src/data/school-map.json');
 const accounts = JSON.parse(readFileSync(ACCOUNTS_PATH, 'utf-8'));
 const opps = JSON.parse(readFileSync(OPPS_PATH, 'utf-8'));
 
-// Replicate normalizeDistrictName from app.js (simplified for build)
+// Full normalizeDistrictName — synced from src/js/helpers.js
 function normalizeDistrictName(name) {
   let normalized = name.toLowerCase().trim();
+
+  // ── STEP 0: Normalize encoding artifacts ──
+  // CSV imports sometimes corrupt Unicode dashes/quotes to '?'
+  normalized = normalized.replace(/\?/g, '');  // Strip stray ?
+  // Normalize Unicode dashes (en-dash, em-dash, etc.) to ASCII hyphen
+  normalized = normalized.replace(/[\u2010-\u2015\u2212\u00AD]/g, '-');
+  // Normalize smart quotes to ASCII
+  normalized = normalized.replace(/[\u2018\u2019\u201C\u201D]/g, "'");
+
+  // ── STEP 1: Strip leading articles ──
+  normalized = normalized.replace(/^the\s+/i, '');
+
+  // ── STEP 2: Strip PREFIX structural patterns ──
+  const prefixPatterns = [
+    /^(?:unified|metropolitan|consolidated|special|city|joint(?:\s+union)?)\s+school\s+district\s+of\s+/i,
+    /^school\s+district\s+of\s+/i,
+  ];
+  for (const pattern of prefixPatterns) {
+    const before = normalized;
+    normalized = normalized.replace(pattern, '');
+    if (normalized !== before) break;
+  }
+
+  // ── STEP 3: Strip SUFFIX structural patterns ──
   const suffixPatterns = [
     /\s+sau\s*#?\d+$/i,
     /\s+independent school district$/i,
-    /\s+consolidated unified school district$/i,
-    /\s+unified high school district$/i,
-    /\s+joint union high school district$/i,
-    /\s+joint unified school district$/i,
     /\s+union free school district$/i,
-    /\s+central school district$/i,
-    /\s+unified school district$/i,
+    /\s+public school system$/i,
+    /\s+public school district$/i,
     /\s+school district$/i,
-    /\s+public schools$/i,
+    /\s+county public schools$/i,
     /\s+county schools$/i,
+    /\s+public schools$/i,
     /\s+city schools$/i,
-    /\s+parish schools$/i,
+    /\s+area schools$/i,
     /\s+schools$/i,
-    /\s+district$/i,
-    /\s+cusd$/i, /\s+uhsd$/i, /\s+juhsd$/i, /\s+jusd$/i, /\s+ufsd$/i,
-    /\s+isd$/i, /\s+usd$/i, /\s+csd$/i,
+    /\s+parish school system$/i,
+    /\s+parish school board$/i,
+    /\s+school system$/i,
+    /\s+cusd$/i,
+    /\s+uhsd$/i,
+    /\s+juhsd$/i,
+    /\s+jusd$/i,
+    /\s+ufsd$/i,
+    /\s+isd$/i,
+    /\s+usd$/i,
+    /\s+csd$/i,
+    /\s+sd$/i,
+    /\s+ps$/i,
   ];
-  for (const pattern of suffixPatterns) {
+  suffixPatterns.forEach(pattern => {
     normalized = normalized.replace(pattern, '');
-  }
-  return normalized.trim();
+  });
+
+  // ── STEP 4: Strip trailing comma + state abbreviation ──
+  normalized = normalized.replace(/,\s*[a-z]{2}$/i, '');
+
+  // ── STEP 4.5: Strip trailing district/unit numbers ──
+  normalized = normalized.replace(/\s+\d+[a-z]?$/i, '');        // trailing "24j", "299", "48j"
+  normalized = normalized.replace(/\s+#\d+$/i, '');              // trailing "#80", "#271"
+  normalized = normalized.replace(/\s+no\.?\s*\d+$/i, '');       // trailing "no. 5", "no 1"
+  normalized = normalized.replace(/\s+re[-\s]?\d+$/i, '');       // trailing "re-1", "re 1"
+  normalized = normalized.replace(/\s*\(\d{4}\)$/i, '');         // trailing "(4237)", "(4403)"
+  // Strip embedded state names — ", Oregon" at end (after suffix strip)
+  normalized = normalized.replace(/,\s*[a-z]+\s*$/i, '');
+
+  // ── STEP 5: Collapse whitespace ──
+  normalized = normalized.replace(/\s+/g, ' ').trim();
+
+  // ── STEP 6: Normalize common abbreviations ──
+  normalized = normalized.replace(/\bst\.\s*/g, 'saint ');
+  normalized = normalized.replace(/\bdist\.?\b/g, 'district');
+  normalized = normalized.replace(/\bcomm\b/g, 'community');
+  normalized = normalized.replace(/\s+/g, ' ').trim();
+  return normalized;
 }
 
 // Build lookup by name|state
