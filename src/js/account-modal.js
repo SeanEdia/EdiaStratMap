@@ -235,7 +235,7 @@ export function populateInfoTab(d) {
     notes.forEach(n => {
       html += `<div class="modal-note-entry">
         <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
-          <span style="font-size:11px;font-weight:600;color:#FFFF66;">${n.author}</span>
+          <span style="font-size:11px;font-weight:600;color:var(--accent-strat);">${n.author}</span>
           <span style="font-size:10px;color:var(--text-muted);">${formatNoteTime(n.ts)}</span>
         </div>
         <div style="font-size:12px;line-height:1.5;color:var(--text);">${n.text}</div>

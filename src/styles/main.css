@@ -12,6 +12,7 @@
   --accent-cust-glow: rgba(0,184,148,0.25);
   --accent-both: #E8853D;
   --danger: #e17055;
+  --panel-bg: #1e2028;
   --radius: 10px;
   --radius-sm: 6px;
 }
@@ -20,12 +21,17 @@
   --bg: #f0f2f5;
   --panel: #ffffff;
   --panel-border: #dde0e6;
+  --panel-bg: #f8f9fa;
   --surface: #ebedf0;
   --text: #1a1a2e;
   --text-dim: #5a5d6b;
   --text-muted: #9197a3;
-  --accent-strat-glow: rgba(255,255,0,0.18);
-  --accent-cust-glow: rgba(0,184,148,0.18);
+  --accent-strat: #b8860b;
+  --accent-strat-glow: rgba(184,134,11,0.18);
+  --accent-cust: #00896e;
+  --accent-cust-glow: rgba(0,137,110,0.18);
+  --accent-both: #d4722a;
+  --danger: #c0392b;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }

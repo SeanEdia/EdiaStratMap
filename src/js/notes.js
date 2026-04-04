@@ -56,6 +56,8 @@ export function addNote(key, el) {
     const today = new Date();
     const dateStr = (today.getMonth() + 1) + '/' + today.getDate() + '/' + today.getFullYear();
     matchedAccount.opp_last_activity = dateStr;
+    // Persist so the staleness update survives page refresh
+    if (S._saveDataToLocalStorage) S._saveDataToLocalStorage(S.ACCOUNT_DATA, null);
   }
 
   // Update note index cache so marker class updates without full localStorage scan
