@@ -762,12 +762,15 @@ export function generateMeetingPrepByKey(dKey) {
     alert('Error: account data not found. Please try again.');
     return;
   }
-  generateMeetingPrep(encodeURIComponent(JSON.stringify(d)));
+  generateMeetingPrep(d);
 }
 
-export function generateMeetingPrep(encodedData) {
+export function generateMeetingPrep(d) {
   try {
-    const d = JSON.parse(decodeURIComponent(encodedData));
+    // Legacy support: if called with an encoded string, decode it
+    if (typeof d === 'string') {
+      d = JSON.parse(decodeURIComponent(d));
+    }
     const prompt = formatMeetingPrepPrompt(d);
 
     // Copy to clipboard
