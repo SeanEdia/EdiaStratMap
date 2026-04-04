@@ -2,7 +2,7 @@ import S from './state.js';
 import { districtKey, escapeHtml, escapeAttr } from './helpers.js';
 import { STRATEGIC_ENROLLMENT_THRESHOLD, saveConflicts, buildIndices, ensurePopup } from './app.js';
 import { formatCompactNumber } from './account-list.js';
-import { downloadJsonFile } from './multi-opp.js';
+import { downloadJsonFile, stripRuntimeFields, extractOppsFromAccounts } from './multi-opp.js';
 import { openAccountModalWithData } from './account-modal.js';
 
 // ============ CONFLICT MANAGEMENT ============
@@ -379,6 +379,20 @@ async function resolveConflictConfirmed(idx, chosenAE) {
   if (account) {
     const key = districtKey(account);
     window.districtDataCache[key] = account;
+
+    // Invalidate cached popup so it rebuilds with the new AE on next click
+    const mlKey = account.name + '|' + (account.state || '');
+    const poolEntry = S._markerPool && S._markerPool.get('a:' + mlKey);
+    if (poolEntry && poolEntry.marker.getPopup()) {
+      poolEntry.marker.unbindPopup();
+    }
+
+    // If the modal is showing this account, refresh the Info tab
+    if (S.currentModalData && S.currentModalData.name === account.name) {
+      S.currentModalData = account;
+      const { populateInfoTab } = await import('./account-modal.js');
+      populateInfoTab(account);
+    }
   }
 
   // Refresh UI
@@ -390,7 +404,10 @@ async function resolveConflictConfirmed(idx, chosenAE) {
   // Auto-download updated JSON files when all conflicts are resolved
   if (S.CONFLICTS.length === 0) {
     console.log('[Conflicts] All conflicts resolved — downloading updated JSON files');
-    downloadJsonFile(S.ACCOUNT_DATA, 'accounts.json');
+    downloadJsonFile(stripRuntimeFields(S.ACCOUNT_DATA), 'accounts.json');
+    await new Promise(resolve => setTimeout(resolve, 500));
+    const extractedOpps = extractOppsFromAccounts(S.ACCOUNT_DATA);
+    downloadJsonFile(extractedOpps, 'opps.json');
     await new Promise(resolve => setTimeout(resolve, 500));
     downloadJsonFile(S.CUSTOMER_DATA, 'customers.json');
   }

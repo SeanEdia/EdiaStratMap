@@ -49,15 +49,15 @@ export function addNote(key, el) {
     if (label) label.innerHTML = label.innerHTML.replace(/Notes \(\d+\)/, 'Notes (' + notes.length + ')');
   }
 
-  // Update last activity date to today (resets staleness clock)
-  const districtName = key.replace('edia_notes_', '').replace(/_/g, ' ');
+  // Update last activity date in memory (resets staleness for current session only).
+  // We intentionally do NOT save full account data to localStorage here — doing so
+  // would lock this user to a stale data snapshot, preventing them from receiving
+  // future deployed data updates. Notes are already persisted independently.
   const matchedAccount = S.ACCOUNT_DATA.find(d => d.name.replace(/[^a-zA-Z0-9]/g, '_') === key.replace('edia_notes_', ''));
   if (matchedAccount) {
     const today = new Date();
     const dateStr = (today.getMonth() + 1) + '/' + today.getDate() + '/' + today.getFullYear();
     matchedAccount.opp_last_activity = dateStr;
-    // Persist so the staleness update survives page refresh
-    if (S._saveDataToLocalStorage) S._saveDataToLocalStorage(S.ACCOUNT_DATA, null);
   }
 
   // Update note index cache so marker class updates without full localStorage scan
