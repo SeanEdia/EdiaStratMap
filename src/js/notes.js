@@ -36,13 +36,13 @@ export function addNote(key, el) {
     const thread = popup.querySelector('.notes-thread');
     const label = popup.querySelector('.popup-section-label');
     if (thread) {
-      thread.innerHTML += `<div class="note-entry"><div class="note-meta"><span class="note-author">${author}</span><span class="note-time">just now</span></div><div class="note-text">${text}</div></div>`;
+      thread.innerHTML += `<div class="note-entry"><div class="note-meta"><span class="note-author">${escapeHtml(author)}</span><span class="note-time">just now</span></div><div class="note-text">${escapeHtml(text)}</div></div>`;
     } else {
       // First note - insert thread before add-wrap
       const addWrap = popup.querySelector('.note-add-wrap');
       const threadDiv = document.createElement('div');
       threadDiv.className = 'notes-thread';
-      threadDiv.innerHTML = `<div class="note-entry"><div class="note-meta"><span class="note-author">${author}</span><span class="note-time">just now</span></div><div class="note-text">${text}</div></div>`;
+      threadDiv.innerHTML = `<div class="note-entry"><div class="note-meta"><span class="note-author">${escapeHtml(author)}</span><span class="note-time">just now</span></div><div class="note-text">${escapeHtml(text)}</div></div>`;
       addWrap.parentNode.insertBefore(threadDiv, addWrap);
     }
     // Update count in header

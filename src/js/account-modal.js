@@ -156,9 +156,9 @@ export function populateInfoTab(d) {
     ${schoolCount > 0 ? modalRow('Schools', schoolCount.toLocaleString()) : ''}
     ${modalRow('State', d.state)}
     ${modalRow('Region', d.region)}
-    ${modalRow('Account Executive', (() => { if (isManagerHeld(d)) return '<span class="manager-held-badge">Unassigned</span> <span class="ae-role">(held by ' + d.ae + ')</span>'; const tAE = getTerritoryAE(d); const hAE = getHoldoutAE(d); return tAE ? (hAE ? tAE + ' <span class="ae-role">(Assigned)</span><br>' + hAE + ' <span class="ae-role">(Holdout)</span>' : tAE) : '—'; })())}
+    ${modalRow('Account Executive', (() => { if (isManagerHeld(d)) return '<span class="manager-held-badge">Unassigned</span> <span class="ae-role">(held by ' + d.ae + ')</span>'; const tAE = getTerritoryAE(d); const hAE = getHoldoutAE(d); return tAE ? (hAE ? tAE + ' <span class="ae-role">(Assigned)</span><br>' + hAE + ' <span class="ae-role">(Holdout)</span>' : tAE) : '—'; })(), true)}
     ${modalRow('SIS Platform', d.sis || '—')}
-    ${modalRow('Website', d.website ? `<a href="${d.website.startsWith('http') ? d.website : 'https://' + d.website}" target="_blank" style="color:var(--accent-cust);">${d.website}</a>` : '—')}
+    ${modalRow('Website', d.website ? `<a href="${d.website.startsWith('http') ? d.website : 'https://' + d.website}" target="_blank" style="color:var(--accent-cust);">${d.website}</a>` : '—', true)}
     ${modalRow('ADA/ADM', d.ada_adm || '—')}
   </div>`;
 
@@ -214,13 +214,13 @@ export function populateInfoTab(d) {
   html += `<div class="modal-section">
     <div class="modal-section-title"><span class="icon">🔗</span> Resources</div>`;
   if (d.org_chart_url) {
-    html += modalRow('Org Chart', `<a href="${d.org_chart_url}" target="_blank">View →</a>`);
+    html += modalRow('Org Chart', `<a href="${d.org_chart_url}" target="_blank">View →</a>`, true);
   }
   if (d.strategic_plan_url) {
-    html += modalRow('Strategic Plan', `<a href="${d.strategic_plan_url}" target="_blank">View →</a>`);
+    html += modalRow('Strategic Plan', `<a href="${d.strategic_plan_url}" target="_blank">View →</a>`, true);
   }
   if (savedPrepLink) {
-    html += modalRow('Meeting Prep', `<a href="${savedPrepLink}" target="_blank">View →</a>`);
+    html += modalRow('Meeting Prep', `<a href="${savedPrepLink}" target="_blank">View →</a>`, true);
   }
   if (!d.org_chart_url && !d.strategic_plan_url && !savedPrepLink) {
     html += `<div style="color:var(--text-muted);font-size:12px;">No resources linked</div>`;
@@ -579,8 +579,9 @@ export function populateSchoolsTab(d) {
   document.getElementById('tabSchools').innerHTML = html;
 }
 
-export function modalRow(label, value) {
-  return `<div class="modal-row"><span class="label">${label}</span><span class="value">${value}</span></div>`;
+export function modalRow(label, value, raw = false) {
+  const safeValue = raw ? value : escapeHtml(String(value || ''));
+  return `<div class="modal-row"><span class="label">${label}</span><span class="value">${safeValue}</span></div>`;
 }
 
 // Close modal on escape key

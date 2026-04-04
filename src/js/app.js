@@ -3301,9 +3301,13 @@ function closeMobileBottomSheet() {
   });
 }
 
+let _bottomSheetDragSetup = false;
 function setupBottomSheetDrag() {
+  if (_bottomSheetDragSetup) return;
+  _bottomSheetDragSetup = true;
   const handle = document.getElementById('mbsHandle');
   const sheet = document.getElementById('mobileBottomSheet');
+  if (!handle || !sheet) return;
 
   handle.addEventListener('touchstart', function(e) {
     _mbsDragStartY = e.touches[0].clientY;

@@ -1,5 +1,5 @@
 import S from './state.js';
-import { districtKey } from './helpers.js';
+import { districtKey, parseUSDate } from './helpers.js';
 import { openAccountModalWithData } from './account-modal.js';
 
 // ============ ACCOUNT LIST ============
@@ -100,8 +100,8 @@ export function sortAccountListData(items) {
 
 export function parseActivityDate(str) {
   if (!str) return 0;
-  const d = new Date(str);
-  return isNaN(d.getTime()) ? 0 : d.getTime();
+  const d = parseUSDate(str);
+  return d ? d.getTime() : 0;
 }
 
 export function formatCompactNumber(n) {
@@ -249,7 +249,7 @@ export function renderAccountList() {
   // Sort items
   const sortedData = sortAccountListData(items.map(i => i.data));
   const itemTypeMap = {};
-  items.forEach(i => { itemTypeMap[i.data.name] = i.type; });
+  items.forEach(i => { itemTypeMap[i.data.name + '|' + (i.data.state || '')] = i.type; });
 
   // Render body
   if (sortedData.length === 0) {
@@ -268,7 +268,7 @@ export function renderAccountList() {
     let html = '';
     const visible = sortedData.slice(0, displayLimit);
     visible.forEach(d => {
-      html += buildAccountListRow(d, itemTypeMap[d.name] || 'accounts');
+      html += buildAccountListRow(d, itemTypeMap[d.name + '|' + (d.state || '')] || 'accounts');
     });
     if (sortedData.length > displayLimit) {
       html += `<div class="account-list-show-more" onclick="showMoreAccounts()">Show more (${sortedData.length - displayLimit} remaining)</div>`;
@@ -291,7 +291,7 @@ export function renderGroupedList(sortedData, itemTypeMap) {
     if (S.accountListGroupBy === 'state') {
       groupKey = d.state || 'Unknown';
     } else if (S.accountListGroupBy === 'stage') {
-      const type = itemTypeMap[d.name];
+      const type = itemTypeMap[d.name + '|' + (d.state || '')];
       if (type === 'customer') {
         groupKey = 'Customer';
       } else {
@@ -321,7 +321,7 @@ export function renderGroupedList(sortedData, itemTypeMap) {
     </div>`;
     html += `<div class="account-list-group-items ${isCollapsed ? 'collapsed-group' : ''}" id="alg-items-${safeKey}">`;
     items.forEach(d => {
-      html += buildAccountListRow(d, itemTypeMap[d.name] || 'accounts');
+      html += buildAccountListRow(d, itemTypeMap[d.name + '|' + (d.state || '')] || 'accounts');
     });
     html += `</div>`;
   });
