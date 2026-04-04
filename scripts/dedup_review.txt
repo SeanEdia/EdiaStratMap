@@ -1,0 +1,83 @@
+DEDUP ACCOUNTS REVIEW LOG
+============================================================
+
+Total records before: 7411
+Total records after:  7367
+Records removed:      44
+
+Encoding dupes merged:     0
+Name variant dupes merged: 20
+Prefix match dupes merged: 12
+Manual mapping merges:     10
+Orphaned records removed:  2
+Encoding fixes applied:    21
+
+------------------------------------------------------------
+DETAILED LOG
+------------------------------------------------------------
+
+MERGED: 'Allen ISD' → 'Allen Independent School District' (TX, tier=B-name-variant, fields=math_curriculum, math_supplemental, ada_adm, superintendent, asst_supt_ci, asst_supt_ss, asst_supt_tech, dir_ci, dir_math, dir_attendance, org_chart_url, school_type)
+MERGED: 'Spring ISD' → 'Spring Independent School District' (TX, tier=B-name-variant, fields=sis, website, ada_adm, superintendent, asst_supt_ci, asst_supt_ss, asst_supt_tech, dir_ci, dir_math, dir_attendance, org_chart_url, strategic_plan_url, school_type, zip, student_information_system_sis_-_other)
+MERGED: 'San Antonio ISD' → 'San Antonio Independent School District' (TX, tier=B-name-variant, fields=sis, math_curriculum, math_supplemental, attendance_comms, website, ada_adm, superintendent, asst_supt_ci, asst_supt_ss, asst_supt_tech, dir_ci, org_chart_url, strategic_plan_url, student_information_system_sis_-_other)
+MERGED: 'Aurora Joint District No. 28 Of The Counties Of Adams And A' → 'Aurora Joint District No. 28 of the Counties of Adams and Arapahoe' (CO, tier=C-prefix, fields=sis, superintendent, asst_supt_ci, asst_supt_tech, strategic_plan_url)
+MERGED: 'Montgomery County' → 'Clarksville-Montgomery County School System' (TN, tier=D-manual, fields=sis, superintendent, asst_supt_ci, asst_supt_ss, asst_supt_tech, dir_ci, dir_math, strategic_plan_url)
+MERGED: 'Cherry Creek School District No. 5 In The County Of Arapah' → 'Cherry Creek School District No. 5 in the County of Arapahoe' (CO, tier=B-name-variant, fields=sis, superintendent, asst_supt_ci, asst_supt_ss, asst_supt_tech, dir_ci, dir_math, strategic_plan_url)
+MERGED: 'Washington District' → 'Washington County School District' (UT, tier=C-prefix, fields=sis, superintendent, asst_supt_ci, asst_supt_ss, asst_supt_tech, dir_ci, strategic_plan_url)
+MERGED: 'St. Paul Public School District' → 'Saint Paul Public Schools' (MN, tier=B-name-variant, fields=sis, website, superintendent, asst_supt_ci, asst_supt_ss, asst_supt_tech, dir_ci, org_chart_url, strategic_plan_url, school_type, zip, territory_ae)
+MERGED: 'City Of Chicago School District 299' → 'Chicago Public Schools' (IL, tier=D-manual, fields=sis, superintendent, asst_supt_ci, asst_supt_tech, dir_ci, dir_math, org_chart_url, strategic_plan_url)
+MERGED: 'Wake County Schools' → 'Wake County Public School System' (NC, tier=C-prefix, fields=sis, superintendent, asst_supt_ci, asst_supt_ss, asst_supt_tech, strategic_plan_url)
+MERGED: 'Shelby County' → 'Memphis-Shelby County Schools' (TN, tier=D-manual, fields=sis, superintendent, asst_supt_ci, asst_supt_ss, org_chart_url, strategic_plan_url)
+MERGED: 'School District No. 1 In The County Of Denver And State Of C' → 'School District No. 1 in the City and County of Denver and State of CO' (CO, tier=C-prefix, fields=enrollment, sis, superintendent, asst_supt_ci, asst_supt_tech, dir_ci, dir_math, strategic_plan_url)
+MERGED: 'Davidson County' → 'Metro Nashville Public Schools' (TN, tier=D-manual, fields=sis, superintendent, asst_supt_ci, asst_supt_ss, asst_supt_tech, dir_ci, dir_math, dir_attendance, strategic_plan_url)
+MERGED: 'Davis District' → 'Davis School District' (UT, tier=B-name-variant, fields=sis, superintendent, asst_supt_ci, asst_supt_tech, strategic_plan_url)
+MERGED: 'Osceola' → 'The School District of Osceola County, FL' (FL, tier=C-prefix, fields=sis, superintendent, asst_supt_ci, asst_supt_ss, asst_supt_tech, dir_ci, dir_attendance, strategic_plan_url)
+MERGED: 'Va Beach City Public Schools' → 'Virginia Beach City Public Schools' (VA, tier=D-manual, fields=sis, superintendent, asst_supt_ci, asst_supt_ss, asst_supt_tech, dir_ci, dir_attendance, strategic_plan_url)
+MERGED: 'Granite District' → 'Granite School District' (UT, tier=B-name-variant, fields=sis, superintendent, asst_supt_ci, asst_supt_tech, dir_ci, dir_math, dir_attendance, strategic_plan_url)
+MERGED: 'Douglas County School District No. Re 1' → 'Douglas County School District RE-1' (CO, tier=C-prefix, fields=sis, superintendent, asst_supt_ci, asst_supt_ss, asst_supt_tech, dir_ci, dir_attendance, strategic_plan_url)
+MERGED: 'Knox County' → 'Knox County Schools' (TN, tier=C-prefix, fields=sis, superintendent, asst_supt_ci, asst_supt_ss, asst_supt_tech, dir_ci, dir_math, dir_attendance, org_chart_url, strategic_plan_url)
+MERGED: 'Howard County Public Schools' → 'Howard County Public School System' (MD, tier=C-prefix, fields=sis, superintendent, asst_supt_ci, asst_supt_ss, asst_supt_tech, dir_ci, dir_math, dir_attendance, strategic_plan_url)
+MERGED: 'Jordan District' → 'Jordan School District' (UT, tier=B-name-variant, fields=sis, superintendent, asst_supt_ci, asst_supt_ss, asst_supt_tech, dir_math, strategic_plan_url)
+MERGED: 'State-Sponsored Charter Schools' → 'State Sponsored Charter Schools' (NV, tier=D-manual, fields=sis, superintendent)
+MERGED: 'Mobile County' → 'Mobile County Public Schools' (AL, tier=C-prefix, fields=sis, superintendent, asst_supt_ci, asst_supt_ss, asst_supt_tech, dir_ci, dir_math, strategic_plan_url)
+MERGED: 'Winston Salem / Forsyth County Schools' → 'Winston-Salem/Forsyth County Schools' (NC, tier=D-manual, fields=sis, superintendent, asst_supt_ci, asst_supt_ss, asst_supt_tech, strategic_plan_url)
+MERGED: 'Columbus City School District' → 'Columbus City Schools District' (OH, tier=B-name-variant, fields=sis, superintendent, asst_supt_ci, asst_supt_ss, asst_supt_tech, dir_ci, dir_math, strategic_plan_url)
+MERGED: 'Collier' → 'Collier County Public Schools (District School Board of Collier County)' (FL, tier=B-name-variant, fields=sis, superintendent, asst_supt_ci, asst_supt_tech, dir_math, dir_attendance, strategic_plan_url)
+MERGED: 'Hamilton County' → 'Hamilton County Schools (Hamilton County Department of Education)' (TN, tier=C-prefix, fields=ae, sis, superintendent, asst_supt_ci, asst_supt_ss, asst_supt_tech, dir_ci, org_chart_url, strategic_plan_url)
+MERGED: 'Henry County' → 'Henry County Schools (Henry County School District)' (GA, tier=C-prefix, fields=sis, superintendent, asst_supt_ci, asst_supt_ss, asst_supt_tech, dir_ci, dir_math, strategic_plan_url)
+MERGED: 'Tucson Unified District (4403)' → 'Tucson Unified School District' (AZ, tier=B-name-variant, fields=sis, superintendent, asst_supt_ci, asst_supt_ss, asst_supt_tech, dir_ci, strategic_plan_url)
+MERGED: 'Salem-Keizer School District 24J' → 'Salem-Keizer Public Schools, Oregon School District 24J' (OR, tier=D-manual, fields=sis, superintendent, asst_supt_ci, asst_supt_ss, asst_supt_tech, dir_ci, dir_attendance, strategic_plan_url)
+MERGED: 'Beaverton School District 48J' → 'Beaverton School District' (OR, tier=B-name-variant, fields=sis, superintendent, asst_supt_ci, asst_supt_ss, asst_supt_tech, dir_ci, strategic_plan_url)
+MERGED: 'Clay' → 'Clay County District Schools' (FL, tier=B-name-variant, fields=sis, superintendent, asst_supt_ci, strategic_plan_url)
+MERGED: 'Anoka-Hennepin Public School Dist.' → 'Anoka-Hennepin Public School District' (MN, tier=C-prefix, fields=sis, superintendent, asst_supt_ci, asst_supt_ss, asst_supt_tech, dir_ci, dir_attendance)
+MERGED: 'Lamar CISD' → 'Lamar Consolidated Independent School District' (TX, tier=B-name-variant, fields=sis, ada_adm, superintendent, asst_supt_ci, asst_supt_ss, asst_supt_tech, dir_ci, dir_math, dir_attendance, org_chart_url, strategic_plan_url)
+MERGED: 'Sd U-46' → 'School District U-46' (IL, tier=D-manual, fields=sis, superintendent, asst_supt_ci, asst_supt_ss, asst_supt_tech, dir_ci, dir_math, strategic_plan_url)
+MERGED: 'Nebo District' → 'Nebo School District' (UT, tier=B-name-variant, fields=sis, superintendent, asst_supt_ci, asst_supt_ss, dir_math, dir_attendance, strategic_plan_url)
+MERGED: 'Peoria Unified School District (4237)' → 'Peoria Unified School District' (AZ, tier=B-name-variant, fields=sis, superintendent, asst_supt_ci, asst_supt_tech, org_chart_url, strategic_plan_url)
+MERGED: 'Cleveland Municipal' → 'Cleveland Metropolitan School District' (OH, tier=D-manual, fields=sis, superintendent, asst_supt_ci, asst_supt_ss, asst_supt_tech, dir_ci, dir_attendance, strategic_plan_url)
+MERGED: 'Canyons District' → 'Canyons School District' (UT, tier=B-name-variant, fields=sis, superintendent, asst_supt_ci, asst_supt_ss, asst_supt_tech, dir_ci, dir_attendance, org_chart_url, strategic_plan_url)
+MERGED: 'Weber District' → 'Weber School District' (UT, tier=B-name-variant, fields=sis, superintendent, asst_supt_ci, asst_supt_ss, asst_supt_tech, dir_ci, strategic_plan_url)
+MERGED: 'Deer Valley Unified District (4246)' → 'Deer Valley Unified School District' (AZ, tier=B-name-variant, fields=sis, superintendent, asst_supt_ci, asst_supt_tech, dir_ci, strategic_plan_url)
+MERGED: 'Des Moines Independent Comm School District' → 'Des Moines Independent Community School District (Des Moines Public Schools)' (IA, tier=B-name-variant, fields=sis, superintendent, asst_supt_ci, asst_supt_ss, asst_supt_tech, dir_ci, strategic_plan_url)
+REMOVED ORPHAN: 'San Bernardino City Unified' (CA, fields lost: superintendent, asst_supt_ci, asst_supt_ss, asst_supt_tech, dir_ci)
+REMOVED ORPHAN: 'Fontana Unified' (CA, fields lost: superintendent, asst_supt_ci, asst_supt_ss, asst_supt_tech, dir_ci, dir_attendance)
+ENCODING FIX: 'O?Fallon Community Consolidated School District No. 90' → 'O’Fallon Community Consolidated School District No. 90' (IL)
+ENCODING FIX: 'Skokie?Morton Grove School District 69' → 'Skokie–Morton Grove School District 69' (IL)
+ENCODING FIX: 'Lincolnshire?Prairie View School District 103' → 'Lincolnshire–Prairie View School District 103' (IL)
+ENCODING FIX: 'New Kensington?Arnold School District' → 'New Kensington–Arnold School District' (PA)
+ENCODING FIX: 'Regional School Unit 18 (RSU 18) ? China & Messalonskee School District' → 'Regional School Unit 18 (RSU 18) — China & Messalonskee School District' (ME)
+ENCODING FIX: 'MSAD #51 (RSU 51) ? Maine School Administrative District 51' → 'MSAD #51 (RSU 51) — Maine School Administrative District 51' (ME)
+ENCODING FIX: 'Bonner Springs?Edwardsville USD 204' → 'Bonner Springs–Edwardsville USD 204' (KS)
+ENCODING FIX: 'MSD Boone Township (MSD of Boone Township ? Hebron Schools)' → 'MSD Boone Township (MSD of Boone Township — Hebron Schools)' (IN)
+ENCODING FIX: 'Logan?Hocking Local School District' → 'Logan–Hocking Local School District' (OH)
+ENCODING FIX: 'Acton Agua?Dulce Unified School District' → 'Acton Agua–Dulce Unified School District' (CA)
+ENCODING FIX: 'North Callaway R-1 School District (North Callaway Co. R?I)' → 'North Callaway R-1 School District (North Callaway Co. R–I)' (MO)
+ENCODING FIX: 'Center Point?Urbana Community School District' → 'Center Point–Urbana Community School District' (IA)
+ENCODING FIX: 'Howard?Winneshiek Community School District' → 'Howard–Winneshiek Community School District' (IA)
+ENCODING FIX: 'Jasper County Reorganized School District R?VII (Webb City R?7 School District)' → 'Jasper County Reorganized School District R–VII (Webb City R–7 School District)' (MO)
+ENCODING FIX: 'Auburn?Washburn USD 437' → 'Auburn–Washburn USD 437' (KS)
+ENCODING FIX: 'Unified School District #232 (USD 232) ? De Soto' → 'Unified School District #232 (USD 232) — De Soto' (KS)
+ENCODING FIX: 'Santa Monica?Malibu Unified School District' → 'Santa Monica–Malibu Unified School District' (CA)
+ENCODING FIX: 'South Washington County Schools (SoWashCo Schools) ? Independent School District No. 833' → 'South Washington County Schools (SoWashCo Schools) — Independent School District No. 833' (MN)
+ENCODING FIX: 'Independent School District No. 834 ? Stillwater Area Public Schools' → 'Independent School District No. 834 — Stillwater Area Public Schools' (MN)
+ENCODING FIX: 'Bend?La Pine Schools' → 'Bend–La Pine Schools' (OR)
+ENCODING FIX: 'Coeur D?Alene Public Schools (Coeur D'Alene School District #271)' → 'Coeur D’Alene Public Schools (Coeur D'Alene School District #271)' (ID)

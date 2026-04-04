@@ -42,6 +42,14 @@ export function precomputeSearchFields(records) {
 export function normalizeDistrictName(name) {
   let normalized = name.toLowerCase().trim();
 
+  // ── STEP 0: Normalize encoding artifacts ──
+  // CSV imports sometimes corrupt Unicode dashes/quotes to '?'
+  normalized = normalized.replace(/\?/g, '');  // Strip stray ?
+  // Normalize Unicode dashes (en-dash, em-dash, etc.) to ASCII hyphen
+  normalized = normalized.replace(/[\u2010-\u2015\u2212\u00AD]/g, '-');
+  // Normalize smart quotes to ASCII
+  normalized = normalized.replace(/[\u2018\u2019\u201C\u201D]/g, "'");
+
   // ── STEP 1: Strip leading articles ──
   normalized = normalized.replace(/^the\s+/i, '');
 
@@ -63,6 +71,8 @@ export function normalizeDistrictName(name) {
     /\s+sau\s*#?\d+$/i,
     /\s+independent school district$/i,
     /\s+union free school district$/i,
+    /\s+public school system$/i,
+    /\s+public school district$/i,
     /\s+school district$/i,
     /\s+county public schools$/i,
     /\s+county schools$/i,
@@ -91,7 +101,22 @@ export function normalizeDistrictName(name) {
   // ── STEP 4: Strip trailing comma + state abbreviation ──
   normalized = normalized.replace(/,\s*[a-z]{2}$/i, '');
 
+  // ── STEP 4.5: Strip trailing district/unit numbers ──
+  normalized = normalized.replace(/\s+\d+[a-z]?$/i, '');        // trailing "24j", "299", "48j"
+  normalized = normalized.replace(/\s+#\d+$/i, '');              // trailing "#80", "#271"
+  normalized = normalized.replace(/\s+no\.?\s*\d+$/i, '');       // trailing "no. 5", "no 1"
+  normalized = normalized.replace(/\s+re[-\s]?\d+$/i, '');       // trailing "re-1", "re 1"
+  normalized = normalized.replace(/\s*\(\d{4}\)$/i, '');         // trailing "(4237)", "(4403)"
+  // Strip embedded state names — ", Oregon" at end (after suffix strip)
+  normalized = normalized.replace(/,\s*[a-z]+\s*$/i, '');
+
   // ── STEP 5: Collapse whitespace ──
+  normalized = normalized.replace(/\s+/g, ' ').trim();
+
+  // ── STEP 6: Normalize common abbreviations ──
+  normalized = normalized.replace(/\bst\.\s*/g, 'saint ');
+  normalized = normalized.replace(/\bdist\.?\b/g, 'district');
+  normalized = normalized.replace(/\bcomm\b/g, 'community');
   normalized = normalized.replace(/\s+/g, ' ').trim();
   return normalized;
 }
