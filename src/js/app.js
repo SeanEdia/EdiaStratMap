@@ -214,10 +214,10 @@ if (_persisted) {
   // Repair enrollment values corrupted by CSV comma formatting (e.g. "30,210" → 30).
   // Bundled accounts.json is the enrollment source of truth.
   const _bundledEnrollment = new Map();
-  accountData.forEach(d => { if (d.enrollment) _bundledEnrollment.set(d.name, d.enrollment); });
+  accountData.forEach(d => { if (d.enrollment) _bundledEnrollment.set(d.name + '|' + (d.state || ''), d.enrollment); });
   let _repaired = 0;
   S.ACCOUNT_DATA.forEach(d => {
-    const bundled = _bundledEnrollment.get(d.name);
+    const bundled = _bundledEnrollment.get(d.name + '|' + (d.state || ''));
     if (bundled && (!d.enrollment || d.enrollment < bundled)) {
       d.enrollment = bundled;
       _repaired++;
@@ -1646,7 +1646,8 @@ function buildFilterGroup(label, key, options, type, isCust) {
     html += `<div class="filter-chips">`;
     options.forEach(o => {
       const active = (S.filters[key] === o) ? (isCust ? 'cust-active' : 'active') : '';
-      html += `<div class="filter-chip ${active}" onclick="toggleChip('${key}','${o}', event)">${o}</div>`;
+      const escaped = o.replace(/'/g, "\\'");
+      html += `<div class="filter-chip ${active}" onclick="toggleChip('${key}','${escaped}', event)">${o}</div>`;
     });
     html += `</div>`;
   }
