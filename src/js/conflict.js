@@ -281,7 +281,17 @@ export function navigateToConflict(idx) {
 }
 
 /** Resolve a conflict — password-protected (independent from data refresh). */
-const CONFLICT_RESOLVE_PASSWORD = 'EdiaManager26';
+// SHA-256 hash of the conflict resolve password (security-by-obscurity — not true auth)
+const CONFLICT_RESOLVE_HASH = '0209e5c7143f384b4c12195eebc80b7d4aa513292bbd3e650fa3b43af51bacf3';
+
+async function hashPassword(password) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(password);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
 S.conflictResolveAuthed = false;
 
 export function promptConflictPassword() {
@@ -306,8 +316,9 @@ export function promptConflictPassword() {
     const confirmBtn = backdrop.querySelector('#pwConfirmBtn');
     const errorEl = backdrop.querySelector('#pwError');
 
-    function tryPassword() {
-      if (input.value === CONFLICT_RESOLVE_PASSWORD) {
+    async function tryPassword() {
+      const hashed = await hashPassword(input.value);
+      if (hashed === CONFLICT_RESOLVE_HASH) {
         S.conflictResolveAuthed = true;
         backdrop.remove();
         resolve(true);
