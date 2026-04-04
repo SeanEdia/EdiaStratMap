@@ -29,8 +29,8 @@ export function setConfRange(mode) {
 }
 
 export function applyConfDateFilter() {
-  const fromEl = document.getElementById('S.confDateFrom');
-  const toEl = document.getElementById('S.confDateTo');
+  const fromEl = document.getElementById('confDateFrom');
+  const toEl = document.getElementById('confDateTo');
   S.confDateFrom = fromEl.value ? new Date(fromEl.value + 'T00:00:00') : null;
   S.confDateTo = toEl.value ? new Date(toEl.value + 'T23:59:59') : null;
   renderConferences();
