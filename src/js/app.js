@@ -87,14 +87,28 @@ const LS_OPPS_KEY = 'edia_opp_data';
 
 /** Save account and/or customer data to localStorage. */
 function saveDataToLocalStorage(accounts, customers) {
-  try {
-    if (accounts) localStorage.setItem(LS_ACCOUNTS_KEY, JSON.stringify(accounts));
-    if (customers) localStorage.setItem(LS_CUSTOMERS_KEY, JSON.stringify(customers));
-    localStorage.setItem(LS_DATA_SAVED_KEY, new Date().toISOString());
+  let savedAny = false;
+  if (accounts) {
+    try {
+      localStorage.setItem(LS_ACCOUNTS_KEY, JSON.stringify(accounts));
+      savedAny = true;
+    } catch (e) {
+      console.warn('[Persist] Could not save accounts to localStorage:', e.message);
+      alert('Warning: Could not save account data — browser storage may be full.');
+    }
+  }
+  if (customers) {
+    try {
+      localStorage.setItem(LS_CUSTOMERS_KEY, JSON.stringify(customers));
+      savedAny = true;
+    } catch (e) {
+      console.warn('[Persist] Could not save customers to localStorage:', e.message);
+      alert('Warning: Could not save customer data — browser storage may be full.');
+    }
+  }
+  if (savedAny) {
+    try { localStorage.setItem(LS_DATA_SAVED_KEY, new Date().toISOString()); } catch(e) { /* non-critical */ }
     console.log('[Persist] Data saved to localStorage');
-  } catch (e) {
-    console.warn('[Persist] Could not save to localStorage:', e.message);
-    alert('Warning: Could not save data to browser storage. Your browser storage may be full. Recent changes may be lost on refresh.');
   }
 }
 
@@ -1395,6 +1409,11 @@ function setView(view) {
   }
   closePipelineOverlay();
 
+  // Clear proximity when switching views — circles were computed for the previous view's dataset
+  if (S.proximityOn) {
+    S.proxLayer.clearLayers();
+  }
+
   invalidateCaches();
   renderTeamRepSelectors();
   renderFilters();
@@ -1791,6 +1810,27 @@ function resetFilters() {
   S.custLayer.clearLayers();
   S.proxLayer.clearLayers();
 
+  // Reset proximity state
+  S.proximityOn = false;
+  S.proxShowAll = false;
+  const proxCheck = document.getElementById('proxCheck');
+  if (proxCheck) proxCheck.checked = false;
+  const proxShowAllCheck = document.getElementById('proxShowAllCheck');
+  if (proxShowAllCheck) proxShowAllCheck.checked = false;
+  const proxWrap = document.getElementById('proxRadiusWrap');
+  if (proxWrap) proxWrap.style.display = 'none';
+
+  // Reset Near Me
+  clearNearMe();
+  const nearMeCheck = document.getElementById('nearMeCheck');
+  if (nearMeCheck) nearMeCheck.checked = false;
+  const nearMeWrap = document.getElementById('nearMeRadiusWrap');
+  if (nearMeWrap) nearMeWrap.style.display = 'none';
+
+  // Clear conference layers (markers + proximity circles)
+  if (S.confLayer) S.confLayer.clearLayers();
+  if (S.confProxLayer) S.confProxLayer.clearLayers();
+
   renderTeamRepSelectors();
   renderFilters();
 }
@@ -1828,6 +1868,9 @@ function resetMapView() {
   if (nearMeCheck) nearMeCheck.checked = false;
   const nearMeWrap = document.getElementById('nearMeRadiusWrap');
   if (nearMeWrap) nearMeWrap.style.display = 'none';
+  // Clear conference layers
+  if (S.confLayer) S.confLayer.clearLayers();
+  if (S.confProxLayer) S.confProxLayer.clearLayers();
   S.adaFilterOn = false;
   const adaCheck = document.getElementById('adaCheck');
   if (adaCheck) adaCheck.checked = false;
@@ -3027,7 +3070,7 @@ function buildStratPopup(d) {
     ['Enrollment', d.enrollment ? parseInt(d.enrollment).toLocaleString() : '—'],
     ['Account Exec', aeDisplay],
     ['SIS Platform', escapeHtml(d.sis)],
-    ['Website', d.website ? `<a href="${escapeAttr(d.website.startsWith('http') ? d.website : 'https://' + d.website)}" target="_blank" style="color:#FFFF66;text-decoration:none;">${escapeHtml(d.website)}</a>` : null],
+    ['Website', d.website ? `<a href="${escapeAttr(d.website.startsWith('http') ? d.website : 'https://' + d.website)}" target="_blank" style="color:var(--accent-strat);text-decoration:none;">${escapeHtml(d.website)}</a>` : null],
     ['SFDC Type', escapeHtml(d.type || 'Prospect')],
   ];
 
@@ -3126,8 +3169,8 @@ function buildStratPopup(d) {
   const savedPrepLink = localStorage.getItem(prepLinkKey) || d.prep_doc_url || '';
 
   const links = [];
-  if (d.org_chart_url) links.push(`<a href="${escapeAttr(d.org_chart_url)}" target="_blank" style="color:#FFFF66;text-decoration:none;font-size:11px;margin-right:12px;">📋 Org Chart</a>`);
-  if (d.strategic_plan_url) links.push(`<a href="${escapeAttr(d.strategic_plan_url)}" target="_blank" style="color:#FFFF66;text-decoration:none;font-size:11px;margin-right:12px;">📄 Strategic Plan</a>`);
+  if (d.org_chart_url) links.push(`<a href="${escapeAttr(d.org_chart_url)}" target="_blank" style="color:var(--accent-strat);text-decoration:none;font-size:11px;margin-right:12px;">📋 Org Chart</a>`);
+  if (d.strategic_plan_url) links.push(`<a href="${escapeAttr(d.strategic_plan_url)}" target="_blank" style="color:var(--accent-strat);text-decoration:none;font-size:11px;margin-right:12px;">📄 Strategic Plan</a>`);
 
   // Meeting Prep link - from localStorage or data
   if (savedPrepLink) {
