@@ -17,7 +17,12 @@ export function upsertOpp(record, oppEntry) {
   if (!record.opps) record.opps = [];
   if (!oppEntry.area && !oppEntry.stage) return; // nothing to add
   const areaKey = (oppEntry.area || 'Unknown').toLowerCase();
-  const existingIdx = record.opps.findIndex(o => (o.area || '').toLowerCase() === areaKey);
+  const schoolKey = (oppEntry.school_name || '').toLowerCase();
+  const existingIdx = record.opps.findIndex(o => {
+    const oArea = (o.area || '').toLowerCase();
+    const oSchool = (o.school_name || '').toLowerCase();
+    return oArea === areaKey && oSchool === schoolKey;
+  });
   if (existingIdx >= 0) {
     record.opps[existingIdx] = oppEntry;
   } else {

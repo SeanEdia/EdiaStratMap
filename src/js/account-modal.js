@@ -126,7 +126,7 @@ export function closeAccountModal() {
   document.getElementById('accountModal').classList.remove('show');
   document.body.style.overflow = '';
   S.currentModalData = null;
-  S.map.setView([39.5, -98.5], 5, { animate: true });
+  // Don't reset map position — user should return to where they were
 }
 
 export function switchTab(tabId, btnEl) {
