@@ -356,8 +356,9 @@ async function resolveConflictConfirmed(idx, chosenAE) {
     console.log('[Conflicts] Resolved:', c.name, '→', chosenAE);
   }
 
-  // Remove from conflicts
-  S.CONFLICTS.splice(idx, 1);
+  // Remove by name (not index) to prevent stale-index bugs when resolving out of order
+  const spliceIdx = S.CONFLICTS.findIndex(x => x.name === c.name);
+  if (spliceIdx !== -1) S.CONFLICTS.splice(spliceIdx, 1);
   saveConflicts(S.CONFLICTS);
 
   // Persist updated account data

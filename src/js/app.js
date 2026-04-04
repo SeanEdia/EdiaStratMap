@@ -53,7 +53,9 @@ export function formatProbability(val) {
   const num = Number(val);
   if (isNaN(num)) return '';
   // If value is > 0 and ≤ 1, treat as decimal (SFDC format) and multiply by 100
-  const pct = (num > 0 && num <= 1) ? Math.round(num * 100) : Math.round(num);
+  // SFDC exports probability as decimal (0.35 = 35%). Values >= 1 are already whole-number percentages.
+  // Edge case: 1.0 is ambiguous (100% or 1%?). SFDC convention: 1.0 = 100%, so num < 1 is the threshold.
+  const pct = (num > 0 && num < 1) ? Math.round(num * 100) : Math.round(num);
   return pct + '%';
 }
 
@@ -1207,11 +1209,11 @@ function initMap() {
   const mobileSearchInput = document.getElementById('mobileSearchInput');
   if (mobileSearchInput) {
     mobileSearchInput.addEventListener('focus', () => {
-      document.getElementById('mobileSearchWrap').classList.add('focused');
+      document.getElementById('mobileSearchWrap')?.classList.add('focused');
     });
     mobileSearchInput.addEventListener('blur', () => {
       setTimeout(() => {
-        document.getElementById('mobileSearchWrap').classList.remove('focused');
+        document.getElementById('mobileSearchWrap')?.classList.remove('focused');
         closeMobileSearchResults();
       }, 200);
     });
@@ -2142,11 +2144,22 @@ function applyFilters() {
   const custEl = document.getElementById('stat-cust-count');
   const overlapEl = document.getElementById('stat-overlap-count');
   const overlapLabel = document.getElementById('stat-overlap-label');
+  if (!stratEl || !custEl || !overlapEl || !overlapLabel) {
+    // DOM not ready — skip stats update, still render pins
+    updateCountBadge(stratCount, custCount);
+    updateLegend();
+    updatePipeline();
+    updateActionDashboard();
+    renderAccountList();
+    updateFiltersActiveCount();
+    updateExportButtonVisibility();
+    return;
+  }
   const stratCard = stratEl.parentElement;
   const custCard = custEl.parentElement;
   const overlapCard = document.getElementById('stat-card-overlap');
-  overlapCard.style.cursor = 'pointer';
-  overlapCard.onclick = () => {
+  if (overlapCard) overlapCard.style.cursor = 'pointer';
+  if (overlapCard) overlapCard.onclick = () => {
     if (S.currentView === 'customers') openPipelineOverlay();
   };
 
@@ -2960,6 +2973,7 @@ function drawProximity() {
 
 
 function buildStratPopup(d) {
+  if (!d || !d.name) return '<div class="popup-card"><p>Error: missing account data</p></div>';
   // Store data in global S.map for safe retrieval (avoids escaping issues in onclick)
   const dKey = districtKey(d);
   window.districtDataCache = window.districtDataCache || {};
@@ -3176,6 +3190,7 @@ function buildStratPopup(d) {
 }
 
 function buildCustPopup(d) {
+  if (!d || !d.name) return '<div class="popup-card"><p>Error: missing account data</p></div>';
   let html = `<div class="popup-card">`;
   if (d.also_account) {
     html += `<div class="popup-type both">Active Customer + Account</div>`;
@@ -3249,6 +3264,7 @@ function flyToForBottomSheet(lat, lng) {
 }
 
 /* ── Mobile bottom sheet ── */
+let _sidebarTransitionHandler = null;
 let _mbsDragStartY = 0;
 let _mbsDragCurrentY = 0;
 
@@ -3620,10 +3636,13 @@ function toggleMobileSidebar() {
     if (window.innerWidth <= 1024) window.history.pushState({ overlay: true }, '');
   }
   // Tell Leaflet the viewport context may have changed
-  sidebar.addEventListener('transitionend', function handler() {
+  if (_sidebarTransitionHandler) sidebar.removeEventListener('transitionend', _sidebarTransitionHandler);
+  _sidebarTransitionHandler = function handler() {
     sidebar.removeEventListener('transitionend', handler);
+    _sidebarTransitionHandler = null;
     if (S.map) S.map.invalidateSize();
-  });
+  };
+  sidebar.addEventListener('transitionend', _sidebarTransitionHandler);
 }
 
 function closeMobileSidebar() {
@@ -3632,10 +3651,13 @@ function closeMobileSidebar() {
   if (sidebar.classList.contains('mobile-open')) {
     sidebar.classList.remove('mobile-open');
     backdrop.classList.remove('open');
-    sidebar.addEventListener('transitionend', function handler() {
+    if (_sidebarTransitionHandler) sidebar.removeEventListener('transitionend', _sidebarTransitionHandler);
+    _sidebarTransitionHandler = function handler() {
       sidebar.removeEventListener('transitionend', handler);
+      _sidebarTransitionHandler = null;
       if (S.map) S.map.invalidateSize();
-    });
+    };
+    sidebar.addEventListener('transitionend', _sidebarTransitionHandler);
   }
 }
 
