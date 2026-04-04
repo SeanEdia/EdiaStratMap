@@ -21,7 +21,17 @@ export function toggleTheme() {
 
 
 // ============ DATA REFRESH PASSWORD PROTECTION ============
-const DATA_REFRESH_PASSWORD = 'edia2025';
+// SHA-256 hash of the data refresh password (security-by-obscurity — not true auth)
+const DATA_REFRESH_HASH = '8f9b7266407a6ad6b6930ff6a07005b230bb74c51e0699dcf9fb0ff7200d6b31';
+
+async function hashPassword(password) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(password);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
 S.dataRefreshAuthed = false;
 
 export function promptDataRefreshPassword() {
@@ -46,8 +56,9 @@ export function promptDataRefreshPassword() {
     const confirmBtn = backdrop.querySelector('#pwConfirmBtn');
     const errorEl = backdrop.querySelector('#pwError');
 
-    function tryPassword() {
-      if (input.value === DATA_REFRESH_PASSWORD) {
+    async function tryPassword() {
+      const hashed = await hashPassword(input.value);
+      if (hashed === DATA_REFRESH_HASH) {
         S.dataRefreshAuthed = true;
         backdrop.remove();
         resolve(true);
