@@ -1690,6 +1690,7 @@ function buildEnrollmentFilter() {
   const min = S.filters.strat_enrollment || '';
   const max = S.filters.strat_enrollment_max || '';
   const hasValue = min || max;
+  const sliderVal = min ? parseInt(min) : 0;
 
   let summary = 'All districts';
   if (min && max) summary = `${Number(min).toLocaleString()} \u2013 ${Number(max).toLocaleString()} students`;
@@ -1698,6 +1699,8 @@ function buildEnrollmentFilter() {
 
   return `<div class="filter-group">
     <div class="filter-label"># of Students${hasValue ? '<span class="clear-btn" onclick="clearEnrollment()">clear</span>' : ''}</div>
+    <input type="range" id="enrollSlider" min="0" max="200000" step="1000" value="${sliderVal}"
+      oninput="onEnrollSlider(this.value)">
     <div class="enroll-range-row">
       <input type="text" id="enrollMin" class="enroll-input" inputmode="numeric"
         placeholder="Min" value="${min ? Number(min).toLocaleString() : ''}"
@@ -1712,6 +1715,42 @@ function buildEnrollmentFilter() {
 }
 
 let _enrollDebounce = null;
+function onEnrollSlider(val) {
+  const numVal = parseInt(val) || 0;
+  const elMin = document.getElementById('enrollMin');
+  if (elMin) {
+    elMin.value = numVal > 0 ? Number(numVal).toLocaleString() : '';
+  }
+
+  if (numVal > 0) S.filters.strat_enrollment = String(numVal);
+  else delete S.filters.strat_enrollment;
+
+  // Update summary line
+  const max = S.filters.strat_enrollment_max || '';
+  const filterGroup = document.getElementById('enrollSlider')?.closest('.filter-group');
+  const display = filterGroup?.querySelector('.range-display');
+  if (display) {
+    if (numVal && max) display.textContent = `${numVal.toLocaleString()} \u2013 ${Number(max).toLocaleString()} students`;
+    else if (numVal) display.textContent = `\u2265 ${numVal.toLocaleString()} students`;
+    else if (max) display.textContent = `\u2264 ${Number(max).toLocaleString()} students`;
+    else display.textContent = 'All districts';
+  }
+
+  // Update clear button visibility
+  const label = filterGroup?.querySelector('.filter-label');
+  if (label) {
+    const hasValue = numVal > 0 || max;
+    const clearSpan = label.querySelector('.clear-btn');
+    if (hasValue && !clearSpan) {
+      label.insertAdjacentHTML('beforeend', '<span class="clear-btn" onclick="clearEnrollment()">clear</span>');
+    } else if (!hasValue && clearSpan) {
+      clearSpan.remove();
+    }
+  }
+
+  clearTimeout(_enrollDebounce);
+  _enrollDebounce = setTimeout(() => applyFilters(), 150);
+}
 function onEnrollInput() {
   const elMin = document.getElementById('enrollMin');
   const elMax = document.getElementById('enrollMax');
@@ -1725,6 +1764,11 @@ function onEnrollInput() {
 
   if (rawMin) S.filters.strat_enrollment = rawMin;
   else delete S.filters.strat_enrollment;
+
+  // Sync slider with Min value
+  const slider = document.getElementById('enrollSlider');
+  if (slider) slider.value = rawMin ? Math.min(parseInt(rawMin), 200000) : 0;
+
   if (rawMax) S.filters.strat_enrollment_max = rawMax;
   else delete S.filters.strat_enrollment_max;
 
@@ -3738,6 +3782,7 @@ Object.assign(window, {
   clearFilter,
   resetFilters,
   onEnrollInput,
+  onEnrollSlider,
   clearEnrollment,
   // Proximity & ADA
   toggleProximity,
