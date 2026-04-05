@@ -37,24 +37,24 @@ npm run format         # Prettier auto-fix
 
 ## Map Views
 
-| View | What it shows |
-|------|---------------|
-| **Accounts** | Strategic / prospect school districts, color-coded by opportunity stage |
-| **Active Customers** | Current Edia customers (green pins) |
+| View            | What it shows                                                    |
+| --------------- | ---------------------------------------------------------------- |
+| **Accounts**    | Strategic / prospect school districts, color-coded by opp stage  |
+| **Active Customers** | Current Edia customers (green pins)                         |
 
 Switch views with the toggle buttons at the top of the sidebar. Use **Reset Filters** to clear all active filters without changing the view.
 
 ### Pin Colors
 
-| Color | Meaning |
-|-------|---------|
-| Purple | No opportunity |
-| Yellow | Discovery |
-| Blue | Demo |
-| Red-orange | Scoping |
-| Green (bright) | Validation |
-| Green (standard) | Active customer |
-| Gray | DOE (Department of Education) account |
+| Color            | Meaning                          |
+| ---------------- | -------------------------------- |
+| Purple           | No opportunity                   |
+| Yellow           | Discovery                        |
+| Blue             | Demo                             |
+| Red-orange       | Scoping                          |
+| Green (bright)   | Validation                       |
+| Green (standard) | Active customer                  |
+| Gray             | DOE (Department of Education)    |
 
 A legend is always visible in the bottom-right corner of the map.
 
@@ -93,12 +93,14 @@ Team rosters are configured in `src/data/teams/*.json`.
 ## Account Details
 
 Click any pin to see a popup with:
+
 - District info (enrollment, region, SIS, parent account)
 - Leadership contacts
 - Opportunity details (stage, forecast, next steps) — supports **multiple opportunities** per account, tracked per product area (Math, Attendance, etc.)
 - Links to org chart, strategic plan, meeting prep
 
 Click the **expand button** for a full-screen modal with tabs:
+
 - **Info**: Overview, leadership, all opportunities, resources, notes
 - **Math**: Math products, curriculum, contacts, competition
 - **Attendance**: SIS platform, attendance system, related contacts
@@ -131,11 +133,15 @@ Data refresh is **password-protected**. After authentication:
 5. Preview the merge — see new, updated, and conflicting records
 6. Click **Apply** to merge
 
-### Data separation
+### Data Separation
 
-Opp data changes frequently and is stored separately in `opps.json`. Account data is relatively static in `accounts.json`. At load time, opps are joined into accounts by name + state. After an **Opportunities** upload, both `opps.json` and `accounts.json` are downloaded for committing to the repo. After an **Accounts** upload, only `accounts.json` is downloaded.
+Opp data changes frequently and is stored separately in `opps.json`. Account data is relatively static in `accounts.json`. At build time, `scripts/prebuild-data.js` joins opps into accounts by normalized name + state, producing `accounts-with-opps.json` (a gitignored build artifact). At runtime the app imports this pre-joined file.
 
-### Merge intelligence
+After an **Opportunities** upload, both `opps.json` and `accounts.json` are downloaded for committing to the repo. After an **Accounts** upload, only `accounts.json` is downloaded. Downloaded JSON files have internal runtime fields stripped (`_nameLc`, `_stateLc`, `_regionLc`, `_schools`, etc.) via `stripRuntimeFields()` before download — committed data stays clean.
+
+The app tracks its data source (`S._dataSource`: `'bundled'` vs `'localStorage'`) to know whether the user is running from the deployed baseline or from locally-persisted merged data.
+
+### Merge Intelligence
 
 - **Smart name matching** normalizes district names ("Dallas Independent School District" ↔ "Dallas ISD")
 - **State + enrollment disambiguation** for same-name districts in different states
@@ -147,9 +153,10 @@ Opp data changes frequently and is stored separately in `opps.json`. Account dat
 - **Conflict detection** — when two reps claim the same account, conflicts are stored for manual resolution
 - Notes and meeting prep links are preserved across merges
 
-### Post-upload summary
+### Post-Upload Summary
 
 After a merge, a detailed summary modal shows:
+
 - Records processed, new, updated
 - Geocoding results and failures
 - Records hidden by current filters
@@ -162,9 +169,13 @@ After a merge, a detailed summary modal shows:
 When an SFDC upload creates ownership conflicts (two reps assigned to the same account):
 
 - A **Conflicts** badge appears in the sidebar
-- Open the conflicts overlay to see each disputed account
-- Choose which rep should own the account
-- Resolved conflicts are removed from the list
+- Conflict resolution is **independently password-protected** (separate from Data Refresh)
+- Each conflict card shows rich context: enrollment, strategic badge, account type (Customer/Account/Inactive Customer with ARR), and a conflict type label (Competing Opportunities / New Opp vs Existing Owner / Account Owner Change / Account Ownership)
+- Existing opp details are shown for both reps (product area, stage, ACV)
+- Choose which rep should own the account; resolved conflicts are removed from the list
+- **CSV export**: Download all conflicts as a detailed CSV from the conflicts overlay
+- **Auto-download**: When the last conflict is resolved, `accounts.json`, `opps.json`, and `customers.json` are automatically downloaded for committing to the repo
+- **Navigate-to-conflict**: Clicking an account in the conflict list flies the map to that pin, or opens the modal directly if the pin isn't visible under current filters
 
 ---
 
@@ -182,6 +193,7 @@ Toggle **Conferences** in the sidebar to overlay education conferences on the ma
 ## Proximity Mode
 
 Toggle proximity overlays in the sidebar:
+
 - **Strategic proximity**: Show strategic accounts near existing customers
 - **ADA accounts**: Show ADA-related account proximity
 - Adjustable radius slider
@@ -199,9 +211,10 @@ Toggle proximity overlays in the sidebar:
 
 ## Notes
 
-- Add notes to any account via the detail modal
-- Notes persist in localStorage across browser sessions
-- Copy / Export / Import functionality available
+- Add notes to any account via the detail modal or popup
+- Notes are tagged with the author's name (prompted on first use, stored as `User Name` in localStorage)
+- Notes persist in localStorage across browser sessions — multi-user safe (adding a note does **not** save full account data to localStorage, preventing stale data snapshots)
+- Copy / Export / Import functionality available (import merges by deduplicating on timestamp + author)
 
 ---
 
@@ -213,37 +226,141 @@ Toggle between **dark mode** and **light mode** using the sun/moon button in the
 
 ## Keyboard Shortcuts
 
-| Key | Action |
-|-----|--------|
-| **Enter** | Zoom to searched district |
-| **Escape** | Close full-screen modal |
+| Key        | Action                      |
+| ---------- | --------------------------- |
+| **Enter**  | Zoom to searched district   |
+| **Escape** | Close full-screen modal     |
 
 ---
 
 ## Project Structure
 
 ```
-index.html              Entry point (loads Vite app)
+index.html                Entry point (loads Vite app)
 src/
-  main.js               App bootstrap — imports CSS + initializes map
+  main.js                 App bootstrap — imports CSS, inits map, registers SW
   js/
-    app.js              Core application (~7k lines)
+    state.js              Shared mutable state object S
+    helpers.js            Pure utilities (escapeHtml, escapeAttr, haversine, etc.)
+    features.js           Theme toggle, SHA-256 password-protected data refresh
+    app.js                Core: map, rendering, sidebar, filters, search, dashboard,
+                            popups, welcome overlay, marker pool, mobile features
+    account-modal.js      Full-screen account detail modal (Info/Math/Attendance/Schools)
+    account-list.js       Sortable/groupable account list sidebar panel
+    data-merge.js         SFDC CSV/Excel import, merge logic, geocoding
+    data-export.js        Account list export to Excel
+    multi-opp.js          Multi-opp rendering, opp upsert, stripRuntimeFields, JSON downloads
+    conflict.js           Conflict detection, resolution UI, CSV export, auto-download
+    conference.js         Conference tracker overlay — CSV upload, date filtering, proximity
+    notes.js              Per-account threaded notes — add, copy, export/import
   styles/
-    main.css            All styles (~3k lines)
+    main.css              All styles (~3,853 lines)
   data/
-    accounts.json       Strategic account dataset (no opp fields)
-    opps.json           Opportunity data (joined into accounts at load time)
-    customers.json      Active customer dataset
+    accounts.json         Strategic account dataset (no opp fields)
+    opps.json             Opportunity data (joined into accounts at build time)
+    customers.json        Active customer dataset
+    accounts-with-opps.json   (gitignored) Build artifact — opps joined into accounts
+    school-map.json           (gitignored) Build artifact — school data by district
     teams/
-      ent-east.json     ENT East team roster
-      ent-west.json     ENT West team roster
-      smb.json          SMB team roster
-      strategic.json    Strategic team roster
-vite.config.js          Vite dev/build config
-netlify.toml            Netlify build settings
-eslint.config.js        ESLint config (ES2022, Prettier integration)
-package.json            Dependencies + scripts
+      ent-east.json       ENT East team roster
+      ent-west.json       ENT West team roster
+      smb.json            SMB team roster
+      strategic.json      Strategic team roster
+scripts/
+  prebuild-data.js        Build-time opp join + school extraction
+  extract-opps.js         Standalone utility to extract opp data from accounts
+  merge-duplicates.cjs    Node script for account deduplication
+  dedup_accounts.py       Python dedup script
+  dedup_review.txt        Dedup review notes
+public/
+  sw.js                   Minimal service worker (cache cleanup only)
+  favicon.png             App icon
+.claude/                  Claude Code project configuration
+vite.config.js            Vite dev/build config + prebuild plugin + manual chunks
+netlify.toml              Netlify build settings
+eslint.config.js          ESLint config (ES2022, Prettier integration)
+package.json              Dependencies + scripts
 ```
+
+---
+
+## Module Architecture
+
+The app is split into 12 ES modules under `src/js/`. All modules import the shared state object `S` from `state.js`.
+
+| Module             | Lines | Purpose                                                                                      |
+| ------------------ | ----: | -------------------------------------------------------------------------------------------- |
+| `state.js`         |   123 | Shared mutable state object `S` — imported by all modules                                    |
+| `helpers.js`       |   217 | Pure utilities: name normalization, date parsing, haversine distance, XSS escaping (`escapeHtml`, `escapeAttr`), search field precomputation |
+| `features.js`      |   112 | Theme toggle (dark/light), SHA-256 password-protected data refresh and SFDC modal access      |
+| `app.js`           | 3,842 | Core: map init, Leaflet rendering, sidebar, filters, search/autocomplete, dashboard, popups, welcome overlay, marker pool, performance indices, mobile features (bottom sheet, Near Me, long-press, swipe gestures) |
+| `account-modal.js` | 1,051 | Full-screen account detail modal (Info, Math, Attendance, Schools tabs), data refresh panel toggle |
+| `account-list.js`  |   359 | Sortable/groupable account list sidebar panel with compact number formatting                  |
+| `data-merge.js`    | 2,063 | SFDC CSV/Excel import, merge logic, owner resolution, geocoding, holdout detection            |
+| `data-export.js`   |   337 | Account list export to Excel (filtered by current team/rep/stage context) for downstream AI outreach tools |
+| `multi-opp.js`     | 1,281 | Multi-opportunity rendering, product area tabs, opp upsert, `stripRuntimeFields()`, JSON file download helpers |
+| `conflict.js`      |   432 | Conflict detection, resolution UI (independently password-protected), rich context display, CSV export, auto-download when all resolved |
+| `conference.js`    |   542 | Conference tracker overlay — CSV upload, date filtering, proximity to strategic accounts      |
+| `notes.js`         |   188 | Per-account threaded notes — add, copy, export/import, multi-user safe (no full-data localStorage writes) |
+| **Total**          | **10,547** | |
+
+Key architectural patterns:
+
+- All modules import `S` from `state.js` for shared mutable state
+- `app.js` exposes callback refs on `S` (e.g., `S._applyFilters`, `S._rebuildMarkerPool`) so other modules can trigger core operations without circular imports
+- `src/main.js` bootstraps the app: imports CSS, calls `initMap()` from `app.js`, and registers the service worker
+
+---
+
+## Prebuild Pipeline
+
+`scripts/prebuild-data.js` runs before both `npm run dev` and `npm run build` (configured in `package.json` scripts **and** as a Vite plugin in `vite.config.js`):
+
+1. Reads `src/data/accounts.json` + `src/data/opps.json`
+2. Joins opp fields onto accounts by normalized district name + state → writes `src/data/accounts-with-opps.json`
+3. Extracts school-level data into `src/data/school-map.json` (keyed by district name + state)
+
+Both generated files are in `.gitignore` — they are build artifacts, not committed source.
+
+Vite config uses `manualChunks` to code-split these data files into separate bundles: `data-accounts`, `data-schools`, `data-customers`. At runtime, `app.js` imports `accounts-with-opps.json` and `school-map.json` and re-hydrates `_schools` onto account records.
+
+---
+
+## Security
+
+- **Password protection**: Data Refresh and Conflict Resolution are **independently** password-protected — each has its own SHA-256 hash
+- **SHA-256 hashing**: Passwords are verified against SHA-256 hashes using `crypto.subtle.digest()` — no plaintext passwords in the codebase
+- **XSS prevention**: All user-supplied data rendered in popups, modals, and the conflict overlay is escaped via `escapeHtml()` and `escapeAttr()` in `helpers.js`
+
+> **Note**: This is client-side security-by-obscurity, not true authentication — the hashes are visible in source. It's a guardrail against accidental changes, not a security boundary.
+
+---
+
+## Mobile Support
+
+The app is fully responsive with phone (<=768px), tablet (769-1024px), and desktop (>1024px) breakpoints:
+
+- **Bottom sheet** replaces the sidebar on mobile for account details
+- **Floating search bar** makes map search accessible on mobile
+- **Swipe gestures**: Swipe-to-close on bottom sheet and modals; pull-down dismiss for modals
+- **Near Me**: Uses browser geolocation to show the user's location on the map with a configurable radius circle highlighting nearby accounts
+- **Long-press context menu** on map pins (mobile alternative to hover)
+- **Smart map zoom**: Map auto-fits to visible accounts when changing team, rep, or closing an account card
+
+---
+
+## Service Worker
+
+`public/sw.js` is a minimal service worker that only cleans up caches from a previous version. It has no fetch handler — all caching is delegated to Netlify CDN. Registered on load in `src/main.js`. Not critical — the app works fully without it.
+
+---
+
+## Performance
+
+- **Marker pool**: All map markers are pre-built once and shown/hidden via layer operations instead of being recreated on every filter change
+- **O(1) lookup indices**: `buildIndices()` creates `_repToTeam`, `_teamRepsSet`, `_repToAccounts`, `_teamToAccounts`, and `_custByName` maps for instant team/rep/customer lookups
+- **Note index cache**: `_accountsWithNotes` Set avoids scanning all localStorage keys on every filter pass
+- **Autocomplete cache**: Search results are cached and invalidated only on data changes
 
 ---
 
@@ -252,9 +369,22 @@ package.json            Dependencies + scripts
 - **[Vite](https://vite.dev/)** — dev server + production bundler
 - **[Leaflet.js](https://leafletjs.com/)** — interactive map rendering (via CDN)
 - **[SheetJS](https://sheetjs.com/)** — CSV and Excel file parsing (via CDN)
-- **Vanilla JavaScript** (ES modules) — no framework
+- **Vanilla JavaScript** (ES modules) — no framework, ~10,547 lines across 12 modules
+- **[DM Sans](https://fonts.google.com/specimen/DM+Sans)** — UI text font (Google Fonts)
+- **[JetBrains Mono](https://fonts.google.com/specimen/JetBrains+Mono)** — data/code values font (Google Fonts)
 - **localStorage** — client-side persistence for accounts, customers, notes, links, conflicts, and refresh timestamps
 - **Netlify** — hosting and continuous deployment
+
+---
+
+## Scripts
+
+| Script                   | Description                                                |
+| ------------------------ | ---------------------------------------------------------- |
+| `prebuild-data.js`       | Build-time opp join + school data extraction (see above)   |
+| `extract-opps.js`        | Standalone utility to extract opp data from accounts       |
+| `merge-duplicates.cjs`   | Node script for account deduplication                      |
+| `dedup_accounts.py`      | Python dedup script                                        |
 
 ---
 
@@ -262,13 +392,15 @@ package.json            Dependencies + scripts
 
 All user data is stored in the browser's localStorage:
 
-| Key | Contents |
-|-----|----------|
-| Account / Customer data | Full datasets after SFDC merge |
-| Notes | Per-account notes |
-| Meeting Prep Links | Google Drive links per account |
-| Conflicts | Unresolved ownership conflicts |
-| SFDC Refresh | Last refresh timestamp |
-| Theme | Dark/light mode preference |
+| Key                      | Contents                                      |
+| ------------------------ | --------------------------------------------- |
+| Account / Customer data  | Full datasets after SFDC merge                |
+| Notes                    | Per-account notes (keyed by district)         |
+| Meeting Prep Links       | Google Drive links per account                |
+| Conflicts                | Unresolved ownership conflicts                |
+| SFDC Refresh             | Last refresh timestamp                        |
+| Theme                    | Dark/light mode preference                    |
+| Data Source              | `'bundled'` vs `'localStorage'` origin        |
+| User Name                | Author name for note tagging                  |
 
 Data persists across sessions but is local to the browser. Use **Reset to Baseline** (in the Data Refresh panel) to clear persisted data and revert to the bundled JSON.
