@@ -235,3 +235,17 @@ export function isDOE(name) {
   const n = name.toLowerCase();
   return n.includes('department of education') || /\bdoe\b/.test(n);
 }
+
+// Helper: returns true if an opp's forecast starts with "Closed" (case-insensitive).
+// This is the reliable closed indicator — NOT the stage field.
+export function isOppClosed(opp) {
+  if (!opp) return false;
+  const forecast = (opp.forecast || '').trim().toLowerCase();
+  return forecast.startsWith('closed');
+}
+
+// Helper: inverse of isOppClosed for readability.
+export function isOppOpen(opp) {
+  if (!opp) return false;
+  return !isOppClosed(opp);
+}
