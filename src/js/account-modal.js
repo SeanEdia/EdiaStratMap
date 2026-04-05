@@ -1,5 +1,5 @@
 import S from './state.js';
-import { districtKey, haversine, escapeHtml, escapeAttr, formatLastActivity, isDOE, sfdc15to18 } from './helpers.js';
+import { districtKey, haversine, escapeHtml, escapeAttr, formatLastActivity, isDOE, sfdc15to18, isOppOpen } from './helpers.js';
 import { buildOppEntry, isManagerHeld, getTerritoryAE, getHoldoutAE, formatProbability } from './app.js';
 import { getConflictForAccount, getConflictTypeLabel } from './conflict.js';
 import { getAccountNotes, formatNoteTime } from './notes.js';
@@ -74,7 +74,7 @@ export function openAccountModalWithData(d) {
 
     // Collect district-level opps
     const allOpps = d.opps && d.opps.length > 0 ? d.opps : (d.opp_stage ? [buildOppEntry(d)] : []);
-    const districtOpps = allOpps.filter(o => !o.school_name);
+    const districtOpps = allOpps.filter(o => !o.school_name && isOppOpen(o));
 
     districtOpps.forEach(opp => {
       // Parse semicolon-delimited areas for this single opp
@@ -223,7 +223,7 @@ export function populateInfoTab(d) {
 
   // Opportunity Section — render one card per opp (district-level only)
   const allInfoOpps = d.opps && d.opps.length > 0 ? d.opps : (d.opp_stage ? [buildOppEntry(d)] : []);
-  const districtInfoOpps = allInfoOpps.filter(o => !o.school_name);
+  const districtInfoOpps = allInfoOpps.filter(o => !o.school_name && isOppOpen(o));
   const hasSchoolInfoOpp = allInfoOpps.some(o => o.school_name);
   if (hasSchoolInfoOpp) {
     html += `<div style="font-size:11px;color:#e17055;margin:8px 0;font-weight:600;">🏫 This account has school-level opp(s) — see Schools tab for details</div>`;
@@ -278,7 +278,7 @@ export function populateInfoTab(d) {
 
   // SFDC Opportunity links (one per district-level opp)
   const resOpps = d.opps && d.opps.length > 0 ? d.opps : (d.opp_stage ? [buildOppEntry(d)] : []);
-  const districtResOpps = resOpps.filter(o => !o.school_name && o.opportunity_id);
+  const districtResOpps = resOpps.filter(o => !o.school_name && o.opportunity_id && isOppOpen(o));
   districtResOpps.forEach(opp => {
     const sfdcOppUrl = `${SFDC_BASE}/Opportunity/${opp.opportunity_id}/view`;
     const label = opp.area ? `SFDC Opp — ${opp.area}` : 'SFDC Opp';
@@ -347,7 +347,7 @@ export function populateMathTab(d) {
   }
 
   // Math-related opportunity info — find Math opp from opps array
-  const mathOpp = (d.opps || []).find(o => !o.school_name && (o.area || '').toLowerCase().includes('math'));
+  const mathOpp = (d.opps || []).find(o => !o.school_name && isOppOpen(o) && (o.area || '').toLowerCase().includes('math'));
   if (mathOpp) {
     html += `<div class="product-highlight math" style="border-color:#55efc4;">
       <div class="label">Active Math Opportunity</div>
@@ -426,7 +426,7 @@ export function populateAttendanceTab(d) {
   }
 
   // Attendance opportunity info — find Attendance opp from opps array
-  const attendanceOpp = (d.opps || []).find(o => !o.school_name && (o.area || '').toLowerCase().includes('attendance'));
+  const attendanceOpp = (d.opps || []).find(o => !o.school_name && isOppOpen(o) && (o.area || '').toLowerCase().includes('attendance'));
   if (attendanceOpp) {
     html += `<div class="product-highlight attendance" style="border-color:#55efc4;margin-top:12px;">
       <div class="label">Active Attendance Opportunity</div>
@@ -490,7 +490,7 @@ export function populateDipTab(d) {
   let html = `<div class="modal-grid">`;
 
   // DIP opp from opps array
-  const diOpp = (d.opps || []).find(o => !o.school_name && (o.area || '').toLowerCase().includes('district intelligence'));
+  const diOpp = (d.opps || []).find(o => !o.school_name && isOppOpen(o) && (o.area || '').toLowerCase().includes('district intelligence'));
 
   html += `<div class="modal-section">
     <div class="modal-section-title"><span class="icon">🔮</span> DIP Opportunity</div>`;

@@ -17,7 +17,7 @@ import S from './state.js';
 
 // Import pure helpers
 import { districtKey, haversine, escapeHtml, escapeAttr, parseUSDate, normalizeDistrictName, precomputeSearchFields,
-  daysAgo, extractDatesFromText, isThisWeek, formatLastActivity, clampFutureLastActivity, normalizeOppArea, isDOE, sfdc15to18 } from './helpers.js';
+  daysAgo, extractDatesFromText, isThisWeek, formatLastActivity, clampFutureLastActivity, normalizeOppArea, isDOE, sfdc15to18, isOppOpen } from './helpers.js';
 
 // Import extracted modules
 import { getUserName, getAccountNotes, addNote, handleNoteKey, formatNoteTime, copyAccountNotes,
@@ -749,19 +749,7 @@ function parseEnrollment(val) {
   return parseInt(String(val).replace(/,/g, '')) || 0;
 }
 
-// Helper: returns true if an opp's forecast starts with "Closed" (case-insensitive).
-// This is the reliable closed indicator — NOT the stage field.
-function isOppClosed(opp) {
-  if (!opp) return false;
-  const forecast = (opp.forecast || '').trim().toLowerCase();
-  return forecast.startsWith('closed');
-}
-
-// Helper: inverse of isOppClosed for readability.
-function isOppOpen(opp) {
-  if (!opp) return false;
-  return !isOppClosed(opp);
-}
+// isOppClosed / isOppOpen — moved to helpers.js (imported at top of file)
 
 // Helper: returns true if account d has at least one OPEN opp attributable to repName.
 // opp_owner is stored at the account level (d.opp_owner), not per-opp.
