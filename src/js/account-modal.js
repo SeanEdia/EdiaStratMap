@@ -1,5 +1,5 @@
 import S from './state.js';
-import { districtKey, escapeHtml, escapeAttr, formatLastActivity, isDOE } from './helpers.js';
+import { districtKey, haversine, escapeHtml, escapeAttr, formatLastActivity, isDOE } from './helpers.js';
 import { buildOppEntry, isManagerHeld, getTerritoryAE, getHoldoutAE, formatProbability } from './app.js';
 import { getConflictForAccount, getConflictTypeLabel } from './conflict.js';
 import { getAccountNotes, formatNoteTime } from './notes.js';
@@ -85,7 +85,7 @@ export function openAccountModalWithData(d) {
       const SHORT_LABELS = {
         'math': 'Math',
         'attendance': 'Attendance',
-        'district intelligence': 'DI',
+        'district intelligence': 'DIP',
         'district bundle (all 3)': 'Bundle'
       };
       const label = areas.map(a => SHORT_LABELS[a.toLowerCase()] || a).join(' + ');
@@ -148,6 +148,7 @@ export function openAccountModalWithData(d) {
   populateSchoolsTab(d);
   populateMathTab(d);
   populateAttendanceTab(d);
+  populateDipTab(d);
   populateDistrictIntelTab(d);
 
   // Reset to Info tab
@@ -283,6 +284,12 @@ export function populateInfoTab(d) {
     const label = opp.area ? `SFDC Opp — ${opp.area}` : 'SFDC Opp';
     html += modalRow(label, `<a href="${escapeAttr(sfdcOppUrl)}" target="_blank" class="sfdc-resource-link">View →</a>`, true);
   });
+
+  // Gong Contacts link (keyed off SFDC Account ID, same as SFDC Account link)
+  if (d.account_id && d.account_id !== '000000000000000') {
+    const gongContactsUrl = `https://app.gong.io/engage/accounts/CRM/${d.account_id}/contacts`;
+    html += modalRow('Gong Contacts', `<a href="${escapeAttr(gongContactsUrl)}" target="_blank" class="sfdc-resource-link">View →</a>`, true);
+  }
 
   if (savedPrepLink) {
     html += modalRow('Meeting Prep', `<a href="${savedPrepLink}" target="_blank">View →</a>`, true);
@@ -479,14 +486,14 @@ export function populateAttendanceTab(d) {
   document.getElementById('tabAttendance').innerHTML = html;
 }
 
-export function populateDistrictIntelTab(d) {
+export function populateDipTab(d) {
   let html = `<div class="modal-grid">`;
 
-  // District Intelligence opp from opps array
+  // DIP opp from opps array
   const diOpp = (d.opps || []).find(o => !o.school_name && (o.area || '').toLowerCase().includes('district intelligence'));
 
   html += `<div class="modal-section">
-    <div class="modal-section-title"><span class="icon">📊</span> District Intelligence</div>`;
+    <div class="modal-section-title"><span class="icon">🔮</span> DIP Opportunity</div>`;
 
   if (diOpp) {
     let stageClass = 'discovery';
@@ -496,8 +503,8 @@ export function populateDistrictIntelTab(d) {
     else if (diOpp.stage.includes('Validation')) stageClass = 'validation';
     else if (diOpp.stage.includes('Procurement')) stageClass = 'procurement';
 
-    html += `<div class="product-highlight" style="border-color:#a29bfe;">
-      <div class="label">Active District Intelligence Opportunity</div>
+    html += `<div class="product-highlight dip">
+      <div class="label">Active DIP Opportunity</div>
       <div class="value"><span class="opp-stage-badge ${stageClass}">${diOpp.stage || 'In Progress'}</span></div>
     </div>`;
     html += modalRow('Forecast', diOpp.forecast || '—');
@@ -506,14 +513,14 @@ export function populateDistrictIntelTab(d) {
     html += modalRow('Next Step', diOpp.next_step || '—');
     html += modalRow('Last Activity', formatLastActivity(diOpp.last_activity));
   } else {
-    html += `<div style="color:var(--text-muted);font-size:12px;">No District Intelligence opportunity recorded</div>`;
+    html += `<div style="color:var(--text-muted);font-size:12px;">No DIP opportunity recorded</div>`;
   }
   html += `</div>`;
 
-  // DI Contacts
+  // DIP Contacts
   if (diOpp && diOpp.contact) {
     html += `<div class="modal-section">
-      <div class="modal-section-title"><span class="icon">👤</span> DI Contacts</div>`;
+      <div class="modal-section-title"><span class="icon">👤</span> DIP Contacts</div>`;
     html += `<div class="contact-card" style="border-left:3px solid #a29bfe;">
       <div class="name">${diOpp.contact}</div>
       <div class="title">${diOpp.contact_title || 'Opportunity Contact'}</div>
@@ -521,15 +528,244 @@ export function populateDistrictIntelTab(d) {
     html += `</div>`;
   }
 
-  // DI Opp Intel
+  // DIP Opp Intel
   if (diOpp && (diOpp.competition || diOpp.economic_buyer || diOpp.champion)) {
     html += `<div class="modal-section">
-      <div class="modal-section-title"><span class="icon">🎯</span> DI Opp Intel</div>
+      <div class="modal-section-title"><span class="icon">🎯</span> DIP Opp Intel</div>
       ${modalRow('Competition', diOpp.competition || '—')}
       ${modalRow('Economic Buyer', diOpp.economic_buyer || '—')}
       ${modalRow('Champion', diOpp.champion || '—')}
       ${diOpp.sdr ? modalRow('SDR', diOpp.sdr) : ''}
     </div>`;
+  }
+
+  html += `</div>`;
+  document.getElementById('tabDip').innerHTML = html;
+}
+
+export function populateDistrictIntelTab(d) {
+  let html = `<div class="modal-grid">`;
+
+  // ── SECTION 1: Cross-Product Snapshot ──
+  html += `<div class="modal-section" style="grid-column: 1 / -1;">
+    <div class="modal-section-title"><span class="icon">📊</span> Cross-Product Snapshot</div>
+    <div class="cross-product-grid">`;
+
+  const productAreas = [
+    { key: 'math', label: 'Math', icon: '📐', color: '#FFFF66' },
+    { key: 'attendance', label: 'Attendance', icon: '📅', color: '#74b9ff' },
+    { key: 'district intelligence', label: 'DIP', icon: '🔮', color: '#a29bfe' },
+  ];
+
+  const allOpps = d.opps && d.opps.length > 0 ? d.opps : [];
+  const districtOpps = allOpps.filter(o => !o.school_name);
+
+  productAreas.forEach(p => {
+    const opp = districtOpps.find(o => (o.area || '').toLowerCase().includes(p.key));
+    let status, statusClass;
+    if (d.is_customer && p.key === 'math') {
+      status = 'Customer';
+      statusClass = 'cust';
+    }
+    if (opp) {
+      status = opp.stage || 'In Progress';
+      statusClass = 'active';
+    }
+    if (!status) {
+      status = 'No opp';
+      statusClass = 'none';
+    }
+
+    html += `<div class="cross-product-card">
+      <div class="cross-product-icon" style="border-color:${p.color};">${p.icon}</div>
+      <div class="cross-product-label">${p.label}</div>
+      <div class="cross-product-status ${statusClass}">${status}</div>
+    </div>`;
+  });
+
+  // Bundle check
+  const bundleOpp = districtOpps.find(o => (o.area || '').toLowerCase().includes('bundle'));
+  if (bundleOpp) {
+    html += `<div class="cross-product-card">
+      <div class="cross-product-icon" style="border-color:#fd79a8;">🎁</div>
+      <div class="cross-product-label">Bundle</div>
+      <div class="cross-product-status active">${bundleOpp.stage || 'In Progress'}</div>
+    </div>`;
+  }
+
+  html += `</div></div>`;
+
+  // ── SECTION 2: Active Next Steps (across all opps) ──
+  const oppsWithNextSteps = districtOpps.filter(o => o.next_step && o.next_step.trim());
+  if (oppsWithNextSteps.length) {
+    html += `<div class="modal-section" style="grid-column: 1 / -1;">
+      <div class="modal-section-title"><span class="icon">⚡</span> Active Next Steps</div>`;
+    oppsWithNextSteps.forEach(opp => {
+      const areaLabel = opp.area || 'Opportunity';
+      const areaColor = areaLabel.toLowerCase().includes('math') ? '#FFFF66' :
+                         areaLabel.toLowerCase().includes('attendance') ? '#74b9ff' :
+                         areaLabel.toLowerCase().includes('district intelligence') ? '#a29bfe' :
+                         areaLabel.toLowerCase().includes('bundle') ? '#fd79a8' : '#55efc4';
+      html += `<div class="next-step-card" style="border-left:3px solid ${areaColor};">
+        <div class="next-step-area">${escapeHtml(areaLabel)}</div>
+        <div class="next-step-text">${escapeHtml(opp.next_step)}</div>
+        ${opp.last_activity ? `<div class="next-step-meta">Last activity: ${formatLastActivity(opp.last_activity)}</div>` : ''}
+      </div>`;
+    });
+    html += `</div>`;
+  }
+
+  // ── SECTION 3: MEDDPIC Intelligence ──
+  const meddpicFields = [
+    ['Metric / Improvement Goal', d.metric_improvement_goal],
+    ['Implication of Pain', d.implication_of_pain],
+    ['Decision Criteria', d.decision_criteria],
+    ['Decision Process', d.decision_process],
+    ['Paper Process', d.paper_process],
+  ];
+  const populatedMeddpic = meddpicFields.filter(([_, v]) => v && v.trim());
+
+  if (populatedMeddpic.length) {
+    html += `<div class="modal-section" style="grid-column: 1 / -1;">
+      <div class="modal-section-title"><span class="icon">🧠</span> MEDDPIC Intelligence</div>`;
+    populatedMeddpic.forEach(([label, value]) => {
+      const formatted = escapeHtml(value).replace(/\n/g, '<br>');
+      html += `<div class="meddpic-field">
+        <div class="meddpic-label">${label}</div>
+        <div class="meddpic-value">${formatted}</div>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+
+  // ── SECTION 4: Full Contact Map ──
+  const allContacts = [];
+
+  const leadershipRoles = [
+    ['Superintendent', d.superintendent],
+    ['Asst Supt C&I', d.asst_supt_ci],
+    ['Asst Supt Student Svcs', d.asst_supt_ss],
+    ['Asst Supt Technology', d.asst_supt_tech],
+    ['Director C&I', d.dir_ci],
+    ['Director Math', d.dir_math],
+    ['Director Attendance', d.dir_attendance],
+  ];
+  leadershipRoles.forEach(([title, name]) => {
+    if (name) allContacts.push({ name, title, source: 'leadership', color: 'var(--accent-strat)' });
+  });
+
+  const seenContactNames = new Set(allContacts.map(c => c.name.toLowerCase()));
+  districtOpps.forEach(opp => {
+    if (opp.contact && !seenContactNames.has(opp.contact.toLowerCase())) {
+      const areaLabel = opp.area || 'Opportunity';
+      const areaColor = areaLabel.toLowerCase().includes('math') ? '#FFFF66' :
+                         areaLabel.toLowerCase().includes('attendance') ? '#74b9ff' :
+                         areaLabel.toLowerCase().includes('district intelligence') ? '#a29bfe' : '#55efc4';
+      allContacts.push({
+        name: opp.contact,
+        title: opp.contact_title || `${areaLabel} Contact`,
+        source: areaLabel,
+        color: areaColor,
+      });
+      seenContactNames.add(opp.contact.toLowerCase());
+    }
+    if (opp.champion && !seenContactNames.has(opp.champion.toLowerCase())) {
+      allContacts.push({ name: opp.champion, title: `Champion (${opp.area || 'Opp'})`, source: 'opp-intel', color: '#55efc4' });
+      seenContactNames.add(opp.champion.toLowerCase());
+    }
+    if (opp.economic_buyer && !seenContactNames.has(opp.economic_buyer.toLowerCase())) {
+      allContacts.push({ name: opp.economic_buyer, title: `Economic Buyer (${opp.area || 'Opp'})`, source: 'opp-intel', color: '#fdcb6e' });
+      seenContactNames.add(opp.economic_buyer.toLowerCase());
+    }
+  });
+
+  if (allContacts.length) {
+    html += `<div class="modal-section">
+      <div class="modal-section-title"><span class="icon">👥</span> Full Contact Map (${allContacts.length})</div>`;
+    allContacts.forEach(c => {
+      html += `<div class="contact-card" style="border-left:3px solid ${c.color};">
+        <div class="name">${escapeHtml(c.name)}</div>
+        <div class="title">${escapeHtml(c.title)}</div>
+      </div>`;
+    });
+    html += `</div>`;
+  } else {
+    html += `<div class="modal-section">
+      <div class="modal-section-title"><span class="icon">👥</span> Full Contact Map</div>
+      <div style="color:var(--text-muted);font-size:12px;">No contacts recorded</div>
+    </div>`;
+  }
+
+  // ── SECTION 5: Engagement Summary ──
+  const noteKey = 'edia_notes_' + d.name.replace(/[^a-zA-Z0-9]/g, '_');
+  const notes = getAccountNotes(noteKey);
+  const prepLinkKey = 'edia_prep_' + d.name.replace(/[^a-zA-Z0-9]/g, '_');
+  const savedPrepLink = localStorage.getItem(prepLinkKey) || d.prep_doc_url || '';
+
+  html += `<div class="modal-section">
+    <div class="modal-section-title"><span class="icon">📈</span> Engagement Summary</div>`;
+
+  if (notes.length) {
+    const lastNote = notes[notes.length - 1];
+    const lastNoteDate = lastNote.ts ? new Date(lastNote.ts).toLocaleDateString() : '—';
+    html += modalRow('Notes', `${notes.length} note${notes.length !== 1 ? 's' : ''}`, false);
+    html += modalRow('Last Note', lastNoteDate, false);
+  } else {
+    html += modalRow('Notes', '<span style="color:var(--text-muted);">None</span>', true);
+  }
+
+  if (d.created_date) html += modalRow('Opp Created', d.created_date);
+  if (d.intro_meeting_date) html += modalRow('Intro Meeting', d.intro_meeting_date);
+  if (d.age) html += modalRow('Opp Age', d.age + ' days');
+
+  if (savedPrepLink) {
+    html += modalRow('Meeting Prep', `<a href="${savedPrepLink}" target="_blank" style="color:var(--accent-cust);">View →</a>`, true);
+  }
+  if (d.org_chart_url) {
+    html += modalRow('Org Chart', `<a href="${d.org_chart_url}" target="_blank" style="color:var(--accent-cust);">View →</a>`, true);
+  }
+  if (d.strategic_plan_url) {
+    html += modalRow('Strategic Plan', `<a href="${d.strategic_plan_url}" target="_blank" style="color:var(--accent-cust);">View →</a>`, true);
+  }
+
+  if (!notes.length && !d.created_date && !savedPrepLink && !d.org_chart_url && !d.strategic_plan_url) {
+    html += `<div style="color:var(--text-muted);font-size:12px;">No engagement data recorded</div>`;
+  }
+  html += `</div>`;
+
+  // ── SECTION 6: Nearby Customers ──
+  if (d.lat && d.lng && S.CUSTOMER_DATA && S.CUSTOMER_DATA.length > 0) {
+    const nearby = [];
+    for (let i = 0; i < S.CUSTOMER_DATA.length; i++) {
+      const c = S.CUSTOMER_DATA[i];
+      if (!c.lat || !c.lng) continue;
+      if (c.name === d.name && c.state === d.state) continue;
+      const dist = haversine(d.lat, d.lng, c.lat, c.lng);
+      if (dist <= 100) {
+        nearby.push({ ...c, _distance: dist });
+      }
+    }
+    nearby.sort((a, b) => a._distance - b._distance);
+    const top5 = nearby.slice(0, 5);
+
+    if (top5.length) {
+      html += `<div class="modal-section">
+        <div class="modal-section-title"><span class="icon">📍</span> Nearby Customers (within 100 mi)</div>`;
+      top5.forEach(c => {
+        const distMi = Math.round(c._distance);
+        const arrDisplay = c.arr ? '$' + Number(c.arr).toLocaleString(undefined, { maximumFractionDigits: 0 }) + ' ARR' : '';
+        const enrollDisplay = c.enrollment || c.students ? (c.enrollment || c.students).toLocaleString() + ' students' : '';
+        const details = [enrollDisplay, arrDisplay].filter(Boolean).join(' · ');
+        html += `<div class="nearby-customer-card">
+          <div class="nearby-customer-name">${escapeHtml(c.name)}</div>
+          <div class="nearby-customer-meta">
+            <span class="nearby-distance">${distMi} mi</span>
+            ${details ? `<span class="nearby-details">${details}</span>` : ''}
+          </div>
+        </div>`;
+      });
+      html += `</div>`;
+    }
   }
 
   html += `</div>`;
