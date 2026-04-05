@@ -604,12 +604,50 @@ body {
   color: #fff;
 }
 
-/* Enrollment slider */
+/* Enrollment filter */
 .range-display {
   font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
   color: var(--text);
   margin-bottom: 6px;
+}
+
+/* Enrollment range inputs */
+.enroll-range-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.enroll-input {
+  flex: 1;
+  background: var(--bg);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-sm);
+  padding: 7px 10px;
+  color: var(--text);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  outline: none;
+  min-width: 0;
+  text-align: center;
+}
+
+.enroll-input:focus {
+  border-color: var(--accent-strat);
+}
+
+.enroll-input::placeholder {
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: 11px;
+}
+
+.enroll-dash {
+  color: var(--text-muted);
+  font-size: 12px;
+  flex-shrink: 0;
 }
 
 input[type="range"] {
@@ -3803,6 +3841,19 @@ input:checked + .nearme-slider {
   .notes-btn {
     font-size: 9px;
     padding: 3px 6px;
+  }
+
+  /* Enrollment range inputs — phone */
+  .enroll-input {
+    padding: 9px 8px;
+    font-size: 13px;
+    min-height: 38px;
+  }
+  .enroll-range-row {
+    gap: 4px;
+  }
+  .enroll-dash {
+    font-size: 11px;
   }
 
   /* Larger tap targets for map pins */
