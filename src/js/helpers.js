@@ -32,6 +32,26 @@ export function escapeAttr(str) {
     .replace(/\\/g, '\\\\');
 }
 
+/**
+ * Convert a 15-character Salesforce ID to its 18-character case-safe equivalent.
+ * The suffix is a 3-character checksum encoding the uppercase/lowercase pattern.
+ * If the input is already 18 chars or not a valid 15-char ID, return as-is.
+ */
+export function sfdc15to18(id) {
+  if (!id || id.length !== 15) return id;
+  const CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ012345';
+  let suffix = '';
+  for (let chunk = 0; chunk < 3; chunk++) {
+    let flags = 0;
+    for (let i = 0; i < 5; i++) {
+      const c = id.charAt(chunk * 5 + i);
+      if (c >= 'A' && c <= 'Z') flags += 1 << i;
+    }
+    suffix += CHARS[flags];
+  }
+  return id + suffix;
+}
+
 export function parseUSDate(str) {
   if (!str) return null;
   const parts = str.trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);

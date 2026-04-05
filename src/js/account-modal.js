@@ -1,5 +1,5 @@
 import S from './state.js';
-import { districtKey, haversine, escapeHtml, escapeAttr, formatLastActivity, isDOE } from './helpers.js';
+import { districtKey, haversine, escapeHtml, escapeAttr, formatLastActivity, isDOE, sfdc15to18 } from './helpers.js';
 import { buildOppEntry, isManagerHeld, getTerritoryAE, getHoldoutAE, formatProbability } from './app.js';
 import { getConflictForAccount, getConflictTypeLabel } from './conflict.js';
 import { getAccountNotes, formatNoteTime } from './notes.js';
@@ -287,7 +287,7 @@ export function populateInfoTab(d) {
 
   // Gong Contacts link (keyed off SFDC Account ID, same as SFDC Account link)
   if (d.account_id && d.account_id !== '000000000000000') {
-    const gongContactsUrl = `https://app.gong.io/engage/accounts/CRM/${d.account_id}/contacts`;
+    const gongContactsUrl = `https://app.gong.io/engage/accounts/CRM/${sfdc15to18(d.account_id)}/contacts`;
     html += modalRow('Gong Contacts', `<a href="${escapeAttr(gongContactsUrl)}" target="_blank" class="sfdc-resource-link">View →</a>`, true);
   }
 

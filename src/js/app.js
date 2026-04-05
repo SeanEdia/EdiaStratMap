@@ -17,7 +17,7 @@ import S from './state.js';
 
 // Import pure helpers
 import { districtKey, haversine, escapeHtml, escapeAttr, parseUSDate, normalizeDistrictName, precomputeSearchFields,
-  daysAgo, extractDatesFromText, isThisWeek, formatLastActivity, clampFutureLastActivity, normalizeOppArea, isDOE } from './helpers.js';
+  daysAgo, extractDatesFromText, isThisWeek, formatLastActivity, clampFutureLastActivity, normalizeOppArea, isDOE, sfdc15to18 } from './helpers.js';
 
 // Import extracted modules
 import { getUserName, getAccountNotes, addNote, handleNoteKey, formatNoteTime, copyAccountNotes,
@@ -60,7 +60,7 @@ export function formatProbability(val) {
 }
 
 export { districtKey, normalizeDistrictName, escapeHtml, escapeAttr, parseUSDate, haversine,
-  daysAgo, extractDatesFromText, isThisWeek, formatLastActivity, clampFutureLastActivity, normalizeOppArea, isDOE };
+  daysAgo, extractDatesFromText, isThisWeek, formatLastActivity, clampFutureLastActivity, normalizeOppArea, isDOE, sfdc15to18 };
 
 // Re-hydrate _schools from the separate school-map.json onto account records
 function hydrateSchools(accounts) {
