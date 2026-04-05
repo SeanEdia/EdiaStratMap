@@ -268,6 +268,13 @@ export function populateInfoTab(d) {
     html += modalRow('SFDC Account', `<a href="${escapeAttr(sfdcAcctUrl)}" target="_blank" class="sfdc-resource-link">View →</a>`, true);
   }
 
+  // SFDC Parent Account link
+  if (d.parent_account_id && d.parent_account_id.trim() !== '' && d.parent_account_id.trim() !== '000000000000000') {
+    const parentLabel = d.parent_account ? `SFDC Parent — ${d.parent_account}` : 'SFDC Parent Account';
+    const sfdcParentUrl = `${SFDC_BASE}/Account/${d.parent_account_id.trim()}/view`;
+    html += modalRow(parentLabel, `<a href="${escapeAttr(sfdcParentUrl)}" target="_blank" class="sfdc-resource-link">View →</a>`, true);
+  }
+
   // SFDC Opportunity links (one per district-level opp)
   const resOpps = d.opps && d.opps.length > 0 ? d.opps : (d.opp_stage ? [buildOppEntry(d)] : []);
   const districtResOpps = resOpps.filter(o => !o.school_name && o.opportunity_id);
@@ -280,7 +287,7 @@ export function populateInfoTab(d) {
   if (savedPrepLink) {
     html += modalRow('Meeting Prep', `<a href="${savedPrepLink}" target="_blank">View →</a>`, true);
   }
-  if (!d.org_chart_url && !d.strategic_plan_url && !savedPrepLink && districtResOpps.length === 0 && !(d.account_id && d.account_id !== '000000000000000')) {
+  if (!d.org_chart_url && !d.strategic_plan_url && !savedPrepLink && districtResOpps.length === 0 && !(d.account_id && d.account_id !== '000000000000000') && !(d.parent_account_id && d.parent_account_id.trim() !== '' && d.parent_account_id.trim() !== '000000000000000')) {
     html += `<div style="color:var(--text-muted);font-size:12px;">No resources linked</div>`;
   }
   html += `</div>`;
