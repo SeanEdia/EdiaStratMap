@@ -1613,6 +1613,9 @@ export function renderFilters() {
   let html = '';
 
   if (S.currentView === 'accounts' || S.currentView === 'all') {
+    // Enrollment range filter (first)
+    html += buildEnrollmentFilter();
+
     // Stage pills (multi-select)
     html += `<div class="filter-group"><div class="filter-label">Opp Stage`;
     if (S.selectedStages.size > 0) html += `<span class="clear-btn" onclick="clearStages()">clear</span>`;
@@ -1628,7 +1631,6 @@ export function renderFilters() {
     html += buildFilterGroup('Region', 'strat_region', getUnique(scopedStrat, 'region'), 'chips');
     html += buildFilterGroup('State', 'strat_state', getUnique(scopedStrat, 'state'), 'multiselect');
     html += buildFilterGroup('SIS Platform', 'strat_sis', getUnique(scopedStrat, 'sis'), 'multiselect');
-    html += buildSliderGroup('Min Enrollment', 'strat_enrollment', 0, 1100000);
   }
 
   if (S.currentView === 'customers' || S.currentView === 'all') {
@@ -1684,14 +1686,74 @@ function buildFilterGroup(label, key, options, type, isCust) {
   return html;
 }
 
-function buildSliderGroup(label, key, min, max) {
-  const val = S.filters[key] || min;
+function buildEnrollmentFilter() {
+  const min = S.filters.strat_enrollment || '';
+  const max = S.filters.strat_enrollment_max || '';
+  const hasValue = min || max;
+
+  let summary = 'All districts';
+  if (min && max) summary = `${Number(min).toLocaleString()} \u2013 ${Number(max).toLocaleString()} students`;
+  else if (min) summary = `\u2265 ${Number(min).toLocaleString()} students`;
+  else if (max) summary = `\u2264 ${Number(max).toLocaleString()} students`;
+
   return `<div class="filter-group">
-    <div class="filter-label">${label}</div>
-    <div class="range-display">${Number(val).toLocaleString()}+ students</div>
-    <input type="range" min="${min}" max="${max}" step="5000" value="${val}"
-      oninput="setFilter('${key}', this.value); this.previousElementSibling.textContent = Number(this.value).toLocaleString() + '+ students'">
+    <div class="filter-label"># of Students${hasValue ? '<span class="clear-btn" onclick="clearEnrollment()">clear</span>' : ''}</div>
+    <div class="enroll-range-row">
+      <input type="text" id="enrollMin" class="enroll-input" inputmode="numeric"
+        placeholder="Min" value="${min ? Number(min).toLocaleString() : ''}"
+        oninput="onEnrollInput()">
+      <span class="enroll-dash">\u2013</span>
+      <input type="text" id="enrollMax" class="enroll-input" inputmode="numeric"
+        placeholder="Max" value="${max ? Number(max).toLocaleString() : ''}"
+        oninput="onEnrollInput()">
+    </div>
+    <div class="range-display">${summary}</div>
   </div>`;
+}
+
+let _enrollDebounce = null;
+function onEnrollInput() {
+  const elMin = document.getElementById('enrollMin');
+  const elMax = document.getElementById('enrollMax');
+  if (!elMin || !elMax) return;
+
+  const rawMin = elMin.value.replace(/\D/g, '');
+  const rawMax = elMax.value.replace(/\D/g, '');
+
+  formatEnrollInput(elMin, rawMin);
+  formatEnrollInput(elMax, rawMax);
+
+  if (rawMin) S.filters.strat_enrollment = rawMin;
+  else delete S.filters.strat_enrollment;
+  if (rawMax) S.filters.strat_enrollment_max = rawMax;
+  else delete S.filters.strat_enrollment_max;
+
+  const display = elMin.closest('.filter-group')?.querySelector('.range-display');
+  if (display) {
+    if (rawMin && rawMax) display.textContent = `${Number(rawMin).toLocaleString()} \u2013 ${Number(rawMax).toLocaleString()} students`;
+    else if (rawMin) display.textContent = `\u2265 ${Number(rawMin).toLocaleString()} students`;
+    else if (rawMax) display.textContent = `\u2264 ${Number(rawMax).toLocaleString()} students`;
+    else display.textContent = 'All districts';
+  }
+
+  clearTimeout(_enrollDebounce);
+  _enrollDebounce = setTimeout(() => applyFilters(), 300);
+}
+
+function formatEnrollInput(el, raw) {
+  if (!raw) { el.value = ''; return; }
+  const formatted = Number(raw).toLocaleString();
+  const cursorFromEnd = el.value.length - el.selectionStart;
+  el.value = formatted;
+  const newPos = Math.max(0, formatted.length - cursorFromEnd);
+  el.setSelectionRange(newPos, newPos);
+}
+
+function clearEnrollment() {
+  delete S.filters.strat_enrollment;
+  delete S.filters.strat_enrollment_max;
+  renderFilters();
+  applyFilters();
 }
 
 // ============ FILTER LOGIC ============
@@ -2031,7 +2093,8 @@ function applyFilters() {
       if (S.filters.strat_region && d.region !== S.filters.strat_region) return false;
       if (S.filters.strat_state && !S.filters.strat_state.has(d.state)) return false;
       if (S.filters.strat_sis && !S.filters.strat_sis.has(d.sis)) return false;
-      if (S.filters.strat_enrollment && parseInt(d.enrollment) < parseInt(S.filters.strat_enrollment)) return false;
+      if (S.filters.strat_enrollment && (parseInt(d.enrollment) || 0) < parseInt(S.filters.strat_enrollment)) return false;
+      if (S.filters.strat_enrollment_max && (parseInt(d.enrollment) || 0) > parseInt(S.filters.strat_enrollment_max)) return false;
       if (S.adaFilterOn && !isAdaAccount(d)) return false;
       return true;
     });
@@ -3742,6 +3805,8 @@ Object.assign(window, {
   toggleMultiFilter,
   clearFilter,
   resetFilters,
+  onEnrollInput,
+  clearEnrollment,
   // Proximity & ADA
   toggleProximity,
   toggleProxShowAll,
