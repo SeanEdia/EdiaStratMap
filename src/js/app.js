@@ -3160,7 +3160,7 @@ function buildStratPopup(d) {
 
   // Opportunity section — render one card per opp in the opps array
   const allOpps = d.opps && d.opps.length > 0 ? d.opps : (d.opp_stage ? [buildOppEntry(d)] : []);
-  const districtOpps = allOpps.filter(o => !o.school_name);
+  const districtOpps = allOpps.filter(o => !o.school_name && isOppOpen(o));
   const hasSchoolOpp = allOpps.some(o => o.school_name);
   if (hasSchoolOpp) {
     html += `<div style="font-size:10px;color:#e17055;margin:6px 0 2px;font-weight:600;">🏫 School-level opp(s) — expand for details</div>`;

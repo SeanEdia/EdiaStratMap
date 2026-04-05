@@ -1,5 +1,5 @@
 import S from './state.js';
-import { districtKey, normalizeDistrictName, parseUSDate, normalizeOppArea, precomputeSearchFields } from './helpers.js';
+import { districtKey, normalizeDistrictName, parseUSDate, normalizeOppArea, precomputeSearchFields, isOppOpen } from './helpers.js';
 import { saveOppsToLocalStorage, OPP_ENTRY_FIELDS, buildOppEntry, migrateToOppsArray,
   crossLinkCustomers, joinOppsToAccounts, buildIndices, TEAM_REP_DATA,
   getTerritoryAE, getHoldoutAE, hideWelcomeOverlay, updateDataSourceIndicator,
@@ -47,6 +47,7 @@ export function deriveOppSummary(record) {
   // Separate district-level and school-level opps
   const districtOpps = opps.filter(o => !o.school_name);
   const schoolOpps = opps.filter(o => o.school_name);
+  const openDistrictOpps = districtOpps.filter(isOppOpen);
 
   // Totals include ALL opps (district + school) — these are real pipeline numbers
   record.opp_count = opps.length;
@@ -54,11 +55,11 @@ export function deriveOppSummary(record) {
   record.opp_acv = opps.reduce((sum, o) => sum + (Number(o.acv) || 0), 0);
   record.has_school_opps = schoolOpps.length > 0;
 
-  // Pin color and summary fields driven by DISTRICT-LEVEL opps only
-  if (districtOpps.length > 0) {
+  // Pin color and summary fields driven by OPEN district-level opps only
+  if (openDistrictOpps.length > 0) {
     let maxStageNum = 0;
-    let primaryOpp = districtOpps[0];
-    districtOpps.forEach(o => {
+    let primaryOpp = openDistrictOpps[0];
+    openDistrictOpps.forEach(o => {
       const num = parseInt(o.stage) || 0;
       if (num > maxStageNum) {
         maxStageNum = num;
