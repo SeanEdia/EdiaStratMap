@@ -629,6 +629,11 @@ body {
   font-size: 11px;
 }
 
+/* Enrollment slider spacing */
+#enrollSlider {
+  margin-bottom: 8px;
+}
+
 .enroll-dash {
   color: var(--text-muted);
   font-size: 12px;
@@ -3832,6 +3837,14 @@ input:checked + .nearme-slider {
   }
   .enroll-dash {
     font-size: 11px;
+  }
+  #enrollSlider {
+    margin-bottom: 6px;
+    height: 6px;
+  }
+  #enrollSlider::-webkit-slider-thumb {
+    width: 20px;
+    height: 20px;
   }
 
   /* Larger tap targets for map pins */
