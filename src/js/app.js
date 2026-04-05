@@ -1895,75 +1895,8 @@ function resetFilters() {
 
   renderTeamRepSelectors();
   renderFilters();
-}
 
-function resetMapView() {
-  if (window.innerWidth <= 1024) closeMobileSidebar();
-  // Reset view to Accounts (keeps team/rep selection)
-  S.currentView = 'accounts';
-  document.querySelectorAll('.view-btn').forEach(btn => {
-    btn.className = 'view-btn';
-    if (btn.dataset.view === 'accounts') btn.classList.add('active-strat');
-  });
-
-  // Clear all S.filters and stages but keep team/rep
-  S.filters = {};
-  S.selectedStages = new Set();
-  S._elSearchInput.value = '';
-  S.accountListSort = 'enrollment_desc';
-  S.accountListGroupBy = null;
-  S.collapsedGroups = {};
-  S.savedViewState = {}; // Clear all saved view state
-
-  // Reset proximity toggles
-  S.proximityOn = false;
-  S.proxShowAll = false;
-  const proxShowAllCheck = document.getElementById('proxShowAllCheck');
-  if (proxShowAllCheck) proxShowAllCheck.checked = false;
-  const proxCheck = document.getElementById('proxCheck');
-  if (proxCheck) proxCheck.checked = false;
-  const proxWrap = document.getElementById('proxRadiusWrap');
-  if (proxWrap) proxWrap.style.display = 'none';
-  S.proxLayer.clearLayers();
-  clearNearMe();
-  const nearMeCheck = document.getElementById('nearMeCheck');
-  if (nearMeCheck) nearMeCheck.checked = false;
-  const nearMeWrap = document.getElementById('nearMeRadiusWrap');
-  if (nearMeWrap) nearMeWrap.style.display = 'none';
-  // Clear conference layers
-  if (S.confLayer) S.confLayer.clearLayers();
-  if (S.confProxLayer) S.confProxLayer.clearLayers();
-  S.adaFilterOn = false;
-  const adaCheck = document.getElementById('adaCheck');
-  if (adaCheck) adaCheck.checked = false;
-
-  // Collapse all panels
-  const filtersWrap = document.getElementById('filtersWrap');
-  if (filtersWrap) filtersWrap.classList.add('collapsed');
-  if (S._elPipelinePanel) S._elPipelinePanel.classList.add('pl-collapsed');
-  const pipelineDetail = document.getElementById('pipelineDetail');
-  if (pipelineDetail) pipelineDetail.classList.add('collapsed');
-
-  // Close overlays
-  if (S.accountListOpen) {
-    S.accountListOpen = false;
-    const alOverlay = document.getElementById('alOverlay');
-    if (alOverlay) alOverlay.classList.remove('open');
-    if (S._elCountBadge) S._elCountBadge.classList.remove('active');
-  }
-  if (S.actionDashboardOpen) {
-    S.actionDashboardOpen = false;
-    if (S._elAdOverlay) S._elAdOverlay.classList.remove('open');
-    if (S._elAdTrigger) S._elAdTrigger.classList.remove('active');
-  }
-  closePipelineOverlay();
-
-  invalidateCaches();
-  renderTeamRepSelectors();
-  renderFilters();
-  applyFilters();
-
-  // Reset S.map to lower 48 US view
+  // Zoom back to US home view
   S.map.setView([39.5, -98.5], getHomeZoom(), { animate: true });
 }
 
@@ -3786,7 +3719,6 @@ Object.assign(window, {
   quickFilterOpps,
   // Views
   setView,
-  resetMapView,
   // Team / Rep selectors
   onTeamChange,
   onRepChange,
