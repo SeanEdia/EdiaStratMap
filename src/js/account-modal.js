@@ -67,6 +67,46 @@ export function openAccountModalWithData(d) {
     holdoutEl.style.display = 'none';
   }
 
+  // === OPP TYPE BADGES (one per opp) ===
+  const oppBadgeContainer = document.getElementById('modalOppTypeBadges');
+  if (oppBadgeContainer) {
+    oppBadgeContainer.innerHTML = '';
+
+    // Collect district-level opps
+    const allOpps = d.opps && d.opps.length > 0 ? d.opps : (d.opp_stage ? [buildOppEntry(d)] : []);
+    const districtOpps = allOpps.filter(o => !o.school_name);
+
+    districtOpps.forEach(opp => {
+      // Parse semicolon-delimited areas for this single opp
+      const raw = opp.area || 'Opportunity';
+      const areas = raw.split(';').map(a => a.trim()).filter(Boolean);
+
+      // Build short label for this opp
+      const SHORT_LABELS = {
+        'math': 'Math',
+        'attendance': 'Attendance',
+        'district intelligence': 'DI',
+        'district bundle (all 3)': 'Bundle'
+      };
+      const label = areas.map(a => SHORT_LABELS[a.toLowerCase()] || a).join(' + ');
+
+      // Determine color class based on primary area
+      const primary = areas[0] ? areas[0].toLowerCase() : '';
+      let colorClass = 'multi';
+      if (areas.length === 1) {
+        if (primary.includes('math')) colorClass = 'math';
+        else if (primary.includes('attendance')) colorClass = 'attendance';
+        else if (primary.includes('district intelligence')) colorClass = 'di';
+        else if (primary.includes('bundle')) colorClass = 'multi';
+      }
+
+      const pill = document.createElement('span');
+      pill.className = `opp-type-badge ${colorClass}`;
+      pill.textContent = label;
+      oppBadgeContainer.appendChild(pill);
+    });
+  }
+
   // Show conflict banner if this account has an active conflict
   let conflictBanner = document.getElementById('modalConflictBanner');
   if (!conflictBanner) {
@@ -219,10 +259,28 @@ export function populateInfoTab(d) {
   if (d.strategic_plan_url) {
     html += modalRow('Strategic Plan', `<a href="${d.strategic_plan_url}" target="_blank">View →</a>`, true);
   }
+  // SFDC base URL
+  const SFDC_BASE = 'https://edialearninginc.lightning.force.com/lightning/r';
+
+  // SFDC Account link
+  if (d.account_id && d.account_id !== '000000000000000') {
+    const sfdcAcctUrl = `${SFDC_BASE}/Account/${d.account_id}/view`;
+    html += modalRow('SFDC Account', `<a href="${escapeAttr(sfdcAcctUrl)}" target="_blank" class="sfdc-resource-link">View →</a>`, true);
+  }
+
+  // SFDC Opportunity links (one per district-level opp)
+  const resOpps = d.opps && d.opps.length > 0 ? d.opps : (d.opp_stage ? [buildOppEntry(d)] : []);
+  const districtResOpps = resOpps.filter(o => !o.school_name && o.opportunity_id);
+  districtResOpps.forEach(opp => {
+    const sfdcOppUrl = `${SFDC_BASE}/Opportunity/${opp.opportunity_id}/view`;
+    const label = opp.area ? `SFDC Opp — ${opp.area}` : 'SFDC Opp';
+    html += modalRow(label, `<a href="${escapeAttr(sfdcOppUrl)}" target="_blank" class="sfdc-resource-link">View →</a>`, true);
+  });
+
   if (savedPrepLink) {
     html += modalRow('Meeting Prep', `<a href="${savedPrepLink}" target="_blank">View →</a>`, true);
   }
-  if (!d.org_chart_url && !d.strategic_plan_url && !savedPrepLink) {
+  if (!d.org_chart_url && !d.strategic_plan_url && !savedPrepLink && districtResOpps.length === 0 && !(d.account_id && d.account_id !== '000000000000000')) {
     html += `<div style="color:var(--text-muted);font-size:12px;">No resources linked</div>`;
   }
   html += `</div>`;
