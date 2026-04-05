@@ -2827,6 +2827,9 @@ input[type="range"]::-webkit-slider-thumb {
 .product-highlight.attendance {
   border-color: #74b9ff;
 }
+.product-highlight.dip {
+  border-color: #a29bfe;
+}
 .product-highlight .label {
   font-size: 10px;
   color: var(--text-muted);
@@ -2837,6 +2840,137 @@ input[type="range"]::-webkit-slider-thumb {
 .product-highlight .value {
   font-size: 13px;
   color: var(--text);
+}
+
+/* ============ DISTRICT INTEL TAB ============ */
+
+/* Cross-product snapshot grid */
+.cross-product-grid {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.cross-product-card {
+  flex: 1;
+  min-width: 100px;
+  background: var(--bg);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  text-align: center;
+}
+.cross-product-icon {
+  font-size: 20px;
+  margin-bottom: 4px;
+  width: 36px;
+  height: 36px;
+  line-height: 36px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  display: inline-block;
+}
+.cross-product-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 4px 0;
+}
+.cross-product-status {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 8px;
+  display: inline-block;
+}
+.cross-product-status.active {
+  background: rgba(85, 239, 196, 0.15);
+  color: #55efc4;
+}
+.cross-product-status.cust {
+  background: rgba(85, 239, 196, 0.25);
+  color: #55efc4;
+  font-weight: 600;
+}
+.cross-product-status.none {
+  background: rgba(255,255,255,0.05);
+  color: var(--text-muted);
+}
+
+/* Active Next Steps */
+.next-step-card {
+  background: var(--bg);
+  padding: 10px 14px;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  margin-bottom: 8px;
+}
+.next-step-area {
+  font-size: 10px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+.next-step-text {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text);
+}
+.next-step-meta {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+/* MEDDPIC fields */
+.meddpic-field {
+  background: var(--bg);
+  border-left: 3px solid #a29bfe;
+  padding: 10px 14px;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  margin-bottom: 8px;
+}
+.meddpic-label {
+  font-size: 10px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+.meddpic-value {
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--text);
+}
+
+/* Nearby customer cards */
+.nearby-customer-card {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+.nearby-customer-card:last-child {
+  border-bottom: none;
+}
+.nearby-customer-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+}
+.nearby-customer-meta {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 2px;
+}
+.nearby-distance {
+  font-size: 11px;
+  color: var(--accent-cust);
+  font-weight: 600;
+}
+.nearby-details {
+  font-size: 11px;
+  color: var(--text-muted);
 }
 
 /* ============ ACCOUNT LIST OVERLAY ============ */
@@ -3359,6 +3493,26 @@ input[type="range"]::-webkit-slider-thumb {
 [data-theme="light"] .opp-stage-badge.procurement {
   color: #8a2050;
 }
+[data-theme="light"] .product-highlight.dip {
+  border-color: #6c5ce7;
+}
+[data-theme="light"] .cross-product-status.active {
+  background: rgba(0, 184, 148, 0.1);
+  color: #00b894;
+}
+[data-theme="light"] .cross-product-status.cust {
+  background: rgba(0, 184, 148, 0.15);
+  color: #00b894;
+}
+[data-theme="light"] .cross-product-status.none {
+  background: rgba(0,0,0,0.04);
+}
+[data-theme="light"] .meddpic-field {
+  border-color: #6c5ce7;
+}
+[data-theme="light"] .nearby-distance {
+  color: #00b894;
+}
 
 /* Password modal */
 .pw-modal-backdrop {
@@ -3748,6 +3902,13 @@ input:checked + .nearme-slider {
   .modal-grid {
     grid-template-columns: 1fr;
     gap: 12px;
+  }
+  .cross-product-grid {
+    gap: 6px;
+  }
+  .cross-product-card {
+    min-width: 80px;
+    padding: 8px;
   }
 
   /* Pipeline overlay */
