@@ -41,7 +41,7 @@ import { toggleConferences, setConfRange, applyConfDateFilter, renderConferences
   geocodeConferences } from './conference.js';
 import { toggleConflictsOverlay, refreshModalConflictBanner, navigateToConflict,
   resolveConflict, updateConflictsBadge, exportConflicts } from './conflict.js';
-import { exportData, updateExportButtonVisibility } from './data-export.js';
+import { exportData, updateExportButtonVisibility, launchOutreachAssistant } from './data-export.js';
 import { toggleTheme, protectedToggleDataRefreshPanel, protectedOpenSfdcModal } from './features.js';
 
 // Re-export districtKey so extracted modules can import it
@@ -3757,6 +3757,7 @@ Object.assign(window, {
   toggleActionDashboard,
   // Data export
   exportData,
+  launchOutreachAssistant,
   // Conflicts
   toggleConflictsOverlay,
   navigateToConflict,

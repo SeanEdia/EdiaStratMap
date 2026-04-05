@@ -1,21 +1,11 @@
 import S from './state.js';
 import { districtKey, parseUSDate, daysAgo, extractDatesFromText, isThisWeek, haversine } from './helpers.js';
-import { buildOppEntry, getTerritoryAE } from './app.js';
+import { buildOppEntry, getTerritoryAE, getHoldoutAE } from './app.js';
 import { formatCompactNumber } from './account-list.js';
 
 // ============ DATA EXPORT ============
 
-export function exportData() {
-  if (!S.selectedTeam) {
-    alert('Select a team first to export data.');
-    return;
-  }
-
-  const scopeLabel = S.selectedRep && S.selectedRep !== '__unassigned__'
-    ? S.selectedRep
-    : S.selectedTeam;
-
-  // Use the already-filtered arrays (respects team, rep, stage, and sidebar filters)
+function buildExportWorkbook(scopeLabel) {
   const accounts = S.filteredAccountData || [];
   const customers = S.filteredCustData || [];
 
@@ -298,18 +288,31 @@ export function exportData() {
 
   if (sheetCount === 0) {
     alert('No data to export for the current selection.');
-    return;
+    return null;
   }
 
-  // Generate filename
   const safeName = scopeLabel.replace(/[^a-zA-Z0-9]/g, '_');
   const dateStr = new Date().toISOString().slice(0, 10);
   const filename = 'edia_export_' + safeName + '_' + dateStr + '.xlsx';
 
-  XLSX.writeFile(wb, filename);
+  return { wb, sheetCount, filename };
+}
 
-  // Show confirmation toast
-  showExportToast(sheetCount, scopeLabel);
+export function exportData() {
+  if (!S.selectedTeam) {
+    alert('Select a team first to export data.');
+    return;
+  }
+
+  const scopeLabel = S.selectedRep && S.selectedRep !== '__unassigned__'
+    ? S.selectedRep
+    : S.selectedTeam;
+
+  const result = buildExportWorkbook(scopeLabel);
+  if (!result) return;
+
+  XLSX.writeFile(result.wb, result.filename);
+  showExportToast(result.sheetCount, scopeLabel);
 }
 
 export function showExportToast(sheetCount, scopeLabel) {
@@ -333,5 +336,139 @@ export function updateExportButtonVisibility() {
   if (exportBtn) exportBtn.style.display = S.selectedTeam ? '' : 'none';
   const outreachBtn = document.getElementById('outreachTrigger');
   if (outreachBtn) outreachBtn.style.display = S.selectedTeam ? '' : 'none';
+}
+
+// ============ OUTREACH ASSISTANT ============
+
+const OUTREACH_PROJECT_URL = 'https://claude.ai/project/019d1854-256b-778e-9d97-9ea53b38cff8';
+
+export function launchOutreachAssistant() {
+  if (!S.selectedTeam) {
+    alert('Select a team first to use the Outreach Assistant.');
+    return;
+  }
+
+  const scopeLabel = S.selectedRep && S.selectedRep !== '__unassigned__'
+    ? S.selectedRep
+    : S.selectedTeam;
+
+  const result = buildExportWorkbook(scopeLabel);
+  if (!result) return;
+
+  // 1. Download the XLSX
+  XLSX.writeFile(result.wb, result.filename);
+
+  // 2. Build and copy the clipboard prompt
+  const prompt = buildOutreachPrompt(scopeLabel, result.filename);
+
+  navigator.clipboard.writeText(prompt).then(() => {
+    showOutreachToast(S.filteredAccountData.length, result.filename);
+    setTimeout(() => {
+      window.open(OUTREACH_PROJECT_URL, '_blank');
+    }, 800);
+  }).catch(err => {
+    console.error('Clipboard failed:', err);
+    const ta = document.createElement('textarea');
+    ta.value = prompt;
+    ta.style.position = 'fixed';
+    ta.style.left = '-9999px';
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    showOutreachToast(S.filteredAccountData.length, result.filename);
+    setTimeout(() => {
+      window.open(OUTREACH_PROJECT_URL, '_blank');
+    }, 800);
+  });
+}
+
+function buildOutreachPrompt(scopeLabel, filename) {
+  const accounts = S.filteredAccountData || [];
+  const customers = S.filteredCustData || S.CUSTOMER_DATA || [];
+
+  // --- Quick stats ---
+  let withOpps = 0;
+  let withoutOpps = 0;
+  accounts.forEach(d => {
+    const opps = d.opps && d.opps.length > 0 ? d.opps : (d.opp_stage ? [buildOppEntry(d)] : []);
+    if (opps.some(o => o.stage)) withOpps++;
+    else withoutOpps++;
+  });
+
+  let prompt = '=== OUTREACH ASSISTANT ===\n';
+  prompt += 'Scope: ' + scopeLabel + '\n';
+  prompt += 'Date: ' + new Date().toLocaleDateString() + '\n';
+  prompt += 'Districts: ' + accounts.length + ' (' + withOpps + ' with active opps, ' + withoutOpps + ' without)\n';
+  prompt += 'Spreadsheet: ' + filename + '\n\n';
+
+  prompt += 'I\'ve uploaded a spreadsheet with ' + accounts.length + ' districts for outreach research.\n\n';
+
+  prompt += '=== WHAT\'S IN THE SPREADSHEET ===\n';
+  prompt += '\u2022 "Accounts" tab \u2014 district info: name, state, region, enrollment, AE, SIS, contacts (superintendent, directors), website, strategic plan URL, org chart URL\n';
+  prompt += '\u2022 "Pipeline" tab \u2014 full opp detail per opportunity: product area, stage, forecast, ACV, probability, contact, next step, last activity, SDR, champion, economic buyer, competition\n';
+  prompt += '\u2022 "Action Items" tab \u2014 stalest accounts, due this week, untouched\n';
+  if (S.filteredCustData && S.filteredCustData.length > 0) {
+    prompt += '\u2022 "Customers" tab \u2014 active customer book for the territory\n';
+  }
+  prompt += '\n';
+
+  // --- Customer list for social proof ---
+  const customerNames = customers.map(c => c.name).filter(Boolean);
+  if (customerNames.length > 0) {
+    prompt += '=== EDIA CUSTOMERS IN TERRITORY (for social proof in emails) ===\n';
+    customerNames.forEach(name => {
+      prompt += '- ' + name + '\n';
+    });
+    prompt += '\n';
+  }
+
+  // --- Internal notes (from localStorage — not in the spreadsheet) ---
+  const accountsWithNotes = [];
+  accounts.forEach(d => {
+    const noteKey = 'edia_notes_' + d.name.replace(/[^a-zA-Z0-9]/g, '_');
+    if (!S._accountsWithNotes.has(noteKey)) return;
+    try {
+      const notes = JSON.parse(localStorage.getItem(noteKey) || '[]');
+      if (notes.length > 0) {
+        accountsWithNotes.push({ name: d.name, notes: notes });
+      }
+    } catch(e) { /* ignored */ }
+  });
+
+  if (accountsWithNotes.length > 0) {
+    prompt += '=== INTERNAL NOTES (not in spreadsheet \u2014 from CRM notes) ===\n';
+    accountsWithNotes.forEach(({ name, notes }) => {
+      prompt += '\n' + name + ':\n';
+      notes.slice(-5).forEach(n => {
+        const date = new Date(n.ts).toLocaleDateString();
+        prompt += '  [' + date + '] ' + n.author + ': ' + n.text + '\n';
+      });
+    });
+    prompt += '\n';
+  }
+
+  prompt += '=== INSTRUCTIONS ===\n';
+  prompt += 'Process these districts using the standard outreach workflow. The spreadsheet has all the data \u2014 read it first before starting research.\n\n';
+  prompt += 'For districts WITH active opportunities (see Pipeline tab): draft outreach that complements the current deal motion. Reference the Champion, Economic Buyer, and Competition columns to avoid contradicting existing relationships.\n\n';
+  prompt += 'For districts WITHOUT opportunities: these are cold outreach targets \u2014 run the full research and email workflow.\n\n';
+  prompt += 'Use the customer list above for social proof in emails. Prioritize geographically nearby customers when possible.\n';
+
+  return prompt;
+}
+
+function showOutreachToast(count, filename) {
+  const existing = document.querySelector('.outreach-toast');
+  if (existing) existing.remove();
+
+  const toast = document.createElement('div');
+  toast.className = 'outreach-toast';
+  toast.innerHTML = '<span class="toast-icon">\uD83D\uDCCB</span> ' + count + ' districts exported \u2014 drag <strong>' + filename + '</strong> into chat and paste';
+  document.body.appendChild(toast);
+  requestAnimationFrame(() => toast.classList.add('show'));
+  setTimeout(() => {
+    toast.classList.remove('show');
+    setTimeout(() => toast.remove(), 300);
+  }, 5000);
 }
 
