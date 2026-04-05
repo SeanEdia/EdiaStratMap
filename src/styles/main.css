@@ -2541,6 +2541,42 @@ input[type="range"]::-webkit-slider-thumb {
 .account-modal-badge.both { background: rgba(232,133,61,0.2); color: var(--accent-both); }
 .account-modal-badge.inactive { background: rgba(255,100,100,0.2); color: #ff6b6b; }
 .account-modal-badge.doe { background: rgba(9,132,227,0.2); color: #0984e3; }
+
+/* Opp Type Badges Container */
+.opp-type-badges {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.opp-type-badges:empty {
+  display: none;
+}
+
+/* Opp Type Badge */
+.opp-type-badge {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+.opp-type-badge.math { background: rgba(108,92,231,0.2); color: #a29bfe; }
+.opp-type-badge.attendance { background: rgba(0,206,209,0.2); color: #00cec9; }
+.opp-type-badge.di { background: rgba(253,203,110,0.2); color: #fdcb6e; }
+.opp-type-badge.multi { background: rgba(232,133,61,0.2); color: #e8853d; }
+
+/* SFDC Resource Links */
+.sfdc-resource-link {
+  color: var(--accent-strat);
+  text-decoration: none;
+  font-size: 12px;
+}
+.sfdc-resource-link:hover {
+  text-decoration: underline;
+}
+
 .account-modal-close {
   background: var(--surface);
   border: 1px solid var(--panel-border);
@@ -3298,6 +3334,10 @@ input[type="range"]::-webkit-slider-thumb {
   color: #1a1a1a;
   border: 1px solid var(--accent-strat);
 }
+[data-theme="light"] .opp-type-badge.math { color: #6c5ce7; border: 1px solid #6c5ce7; background: rgba(108,92,231,0.1); }
+[data-theme="light"] .opp-type-badge.attendance { color: #00a8a8; border: 1px solid #00a8a8; background: rgba(0,206,209,0.1); }
+[data-theme="light"] .opp-type-badge.di { color: #b8860b; border: 1px solid #b8860b; background: rgba(253,203,110,0.1); }
+[data-theme="light"] .opp-type-badge.multi { color: #c0651e; border: 1px solid #c0651e; background: rgba(232,133,61,0.1); }
 [data-theme="light"] .contact-card .title {
   color: #1a1a1a;
 }
