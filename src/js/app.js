@@ -22,9 +22,9 @@ import { districtKey, haversine, escapeHtml, escapeAttr, parseUSDate, normalizeD
 // Import extracted modules
 import { getAccountNotes, addNote, handleNoteKey, formatNoteTime, copyAccountNotes,
   updateNoteCount, exportNotes, importNotes, copyAllNotes, copyText } from './notes.js';
-import { toggleAccountListOverlay, renderAccountList, updateCountBadge, updateLegend,
+import { toggleAccountListOverlay, renderAccountList, updateCountBadge, updateProxBadge, updateLegend,
   highlightAccountMarker, unhighlightAccountMarker, flyToAccount, openAccountFromList,
-  toggleAccountListGroup, setAccountListSort, toggleGroupCollapse, showMoreAccounts } from './account-list.js';
+  toggleAccountListGroup, setAccountListSort, toggleGroupCollapse, showMoreAccounts, toggleProxNearbyList } from './account-list.js';
 import { openAccountModalByKey, openAccountModal, closeAccountModal, switchTab,
   generateMeetingPrepByKey, generateMeetingPrep,
   handleDataRefreshDrop, handleDataRefreshFile,
@@ -1183,6 +1183,7 @@ function initMap() {
   S._elAdTrigger = document.getElementById('adTrigger');
   S._elSearchAutocomplete = document.getElementById('searchAutocomplete');
   S._elCountBadge = document.getElementById('countBadge');
+  S._elProxBadge = document.getElementById('proxBadge');
   S._elAdOverlay = document.getElementById('adOverlay');
 
   // ---- Wire function refs so extracted modules can call back into app.js ----
@@ -1885,7 +1886,10 @@ function resetFilters() {
   S.proxShowAll = false;
   S.proxSelectedCustomer = null;
   S.proxLastClickedCustomer = null;
+  S.proxNearbyListMode = false;
   S.proxSelectedAccount = null;
+  const proxBadgeEl = document.getElementById('proxBadge');
+  if (proxBadgeEl) { proxBadgeEl.style.display = 'none'; proxBadgeEl.classList.remove('active'); }
   const proxCheck = document.getElementById('proxCheck');
   if (proxCheck) proxCheck.checked = false;
   const proxShowAllCheck = document.getElementById('proxShowAllCheck');
@@ -2804,10 +2808,15 @@ document.addEventListener('click', function(e) {
   // Skip close if a sort/group action just re-rendered (target removed from DOM)
   if (!document.body.contains(e.target)) return;
   const overlay = document.getElementById('alOverlay');
-  if (overlay && S._elCountBadge && !overlay.contains(e.target) && !S._elCountBadge.contains(e.target)) {
+  const proxBadge = S._elProxBadge;
+  if (overlay && S._elCountBadge && !overlay.contains(e.target)
+      && !S._elCountBadge.contains(e.target)
+      && !(proxBadge && proxBadge.contains(e.target))) {
     S.accountListOpen = false;
+    S.proxNearbyListMode = false;
     overlay.classList.remove('open');
     S._elCountBadge.classList.remove('active');
+    if (proxBadge) proxBadge.classList.remove('active');
   }
 });
 
@@ -2997,6 +3006,7 @@ function clearProxSelection() {
     renderAccountList();
     updateCountBadge(0, S.filteredCustData ? S.filteredCustData.length : 0);
     updateExportButtonVisibility();
+    updateProxBadge();
   }
 }
 
@@ -3119,6 +3129,7 @@ function drawProximity() {
       S.filteredAccountData = [];
       renderAccountList();
       updateCountBadge(0, S.filteredCustData ? S.filteredCustData.length : 0);
+      updateProxBadge();
       return;
     }
 
@@ -3174,6 +3185,7 @@ function drawProximity() {
     renderAccountList();
     updateCountBadge(nearbyAccounts.length, S.filteredCustData ? S.filteredCustData.length : 0);
     updateExportButtonVisibility();
+    updateProxBadge();
     return;
   }
 
@@ -4001,6 +4013,7 @@ Object.assign(window, {
   closeUploadSummary,
   // Account List
   toggleAccountListOverlay,
+  toggleProxNearbyList,
   highlightAccountMarker,
   unhighlightAccountMarker,
   toggleAccountListGroup,

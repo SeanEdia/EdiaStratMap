@@ -1167,6 +1167,9 @@ input[type="range"]::-webkit-slider-thumb {
 }
 .count-badge:hover { border-color: var(--accent-strat); color: var(--text); }
 .count-badge.active { border-color: var(--accent-strat); background: var(--surface); }
+.prox-badge { border-color: rgba(108,92,231,0.3); }
+.prox-badge:hover { border-color: #6c5ce7; color: var(--text); }
+.prox-badge.active { border-color: #6c5ce7; background: var(--surface); }
 .ad-overlay {
   position: absolute;
   top: 56px;

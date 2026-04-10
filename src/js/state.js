@@ -23,6 +23,7 @@ const S = {
   proxShowAll: false,
   proxSelectedCustomer: null,
   proxLastClickedCustomer: null,
+  proxNearbyListMode: false,
   proxSelectedAccount: null,
   PROXIMITY_MILES: 50,
   adaFilterOn: false,
@@ -53,6 +54,7 @@ const S = {
   _elAdTrigger: null,
   _elSearchAutocomplete: null,
   _elCountBadge: null,
+  _elProxBadge: null,
   _elAdOverlay: null,
 
   // Marker pool
