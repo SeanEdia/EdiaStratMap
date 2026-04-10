@@ -718,6 +718,24 @@ const CONDITIONAL_REASSIGN = new Set([
   'Nicholas Watson',  // SFDC Admin
 ]);
 
+// ── Temporary account suppression ──────────────────────────────────
+// Daniel Way's SFDC territory isn't fully updated — he has both SMB and ENT
+// accounts. Until cleanup is complete, hide his sub-5,000 enrollment accounts
+// entirely. They should not appear on the map, in filters, in dashboards,
+// or under "Unassigned". Remove this block once SFDC is corrected.
+const SUPPRESSED_AE_ENROLLMENT_RULES = [
+  { ae: 'Daniel Way', maxEnrollment: 4999 },
+];
+
+function isSuppressedAccount(d) {
+  for (const rule of SUPPRESSED_AE_ENROLLMENT_RULES) {
+    if (d.ae === rule.ae && (parseInt(d.enrollment) || 0) <= rule.maxEnrollment) {
+      return true;
+    }
+  }
+  return false;
+}
+
 // isOppClosed / isOppOpen — moved to helpers.js (imported at top of file)
 
 // Helper: returns true if account d has at least one OPEN opp attributable to repName.
@@ -1084,6 +1102,13 @@ function initMap() {
     });
     // Re-hydrate _schools from separate school-map.json (extracted at build time)
     hydrateSchools(S.ACCOUNT_DATA);
+  }
+
+  // Suppress accounts per temporary SFDC cleanup rules (see SUPPRESSED_AE_ENROLLMENT_RULES)
+  const _suppressedCount = S.ACCOUNT_DATA.length;
+  S.ACCOUNT_DATA = S.ACCOUNT_DATA.filter(d => !isSuppressedAccount(d));
+  if (S.ACCOUNT_DATA.length < _suppressedCount) {
+    console.log(`[Suppress] Removed ${_suppressedCount - S.ACCOUNT_DATA.length} account(s) per SFDC cleanup rules`);
   }
 
   // Cross-link customer ↔ account flags before building indices
