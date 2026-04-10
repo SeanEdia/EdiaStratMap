@@ -4,6 +4,9 @@ import { openAccountModalWithData } from './account-modal.js';
 
 // ============ ACCOUNT LIST ============
 export function toggleAccountListOverlay() {
+  // Clear nearby-only mode when using the main badge
+  S.proxNearbyListMode = false;
+  if (S._elProxBadge) S._elProxBadge.classList.remove('active');
   S.accountListOpen = !S.accountListOpen;
   const overlay = document.getElementById('alOverlay');
   if (overlay) overlay.classList.toggle('open', S.accountListOpen);
@@ -188,11 +191,19 @@ export function renderAccountList() {
   const sortBar = document.getElementById('accountListSortBar');
   // Count badge is updated by updateCountBadge, no separate trigger
 
+  const headerTitle = document.querySelector('#alOverlay .al-overlay-header h3');
+  if (headerTitle) {
+    headerTitle.textContent = (S.proxNearbyListMode && S.proxSelectedCustomer)
+      ? 'Accounts Near ' + S.proxSelectedCustomer.name
+      : 'Account List';
+  }
+
   // Build unified list of items to show
   const items = [];
+  const isNearbyMode = S.proxNearbyListMode && S.currentView === 'customers' && S.proximityOn && S.proxSelectedCustomer;
   const showStrat = S.currentView === 'accounts' || S.currentView === 'all'
     || (S.currentView === 'customers' && S.proximityOn && S.proxSelectedCustomer);
-  const showCust = S.currentView === 'customers' || S.currentView === 'all';
+  const showCust = !isNearbyMode && (S.currentView === 'customers' || S.currentView === 'all');
 
   if (showStrat) {
     S.filteredAccountData.forEach(d => {
@@ -336,13 +347,58 @@ export function updateCountBadge(strat, cust) {
   if (S.currentView === 'accounts') {
     badge.innerHTML = `<span class="cb-num cb-strat">${strat}</span> accounts`;
   } else if (S.currentView === 'customers') {
-    let html = `<span class="cb-num cb-cust">${cust}</span> customers`;
-    if (S.proximityOn && S.proxSelectedCustomer && S.filteredAccountData && S.filteredAccountData.length > 0) {
-      html += ` · <span class="cb-num cb-prox">${S.filteredAccountData.length}</span> nearby`;
-    }
-    badge.innerHTML = html;
+    badge.innerHTML = `<span class="cb-num cb-cust">${cust}</span> customers`;
   } else {
     badge.innerHTML = `<span class="cb-num cb-strat">${strat}</span> accounts · <span class="cb-num cb-cust">${cust}</span> customers`;
+  }
+}
+
+export function updateProxBadge() {
+  const badge = S._elProxBadge;
+  if (!badge) return;
+  if (S.currentView === 'customers' && S.proximityOn && S.proxSelectedCustomer
+      && S.filteredAccountData && S.filteredAccountData.length > 0) {
+    badge.style.display = '';
+    badge.innerHTML = `<span class="cb-num cb-prox">${S.filteredAccountData.length}</span> nearby`;
+  } else {
+    badge.style.display = 'none';
+    badge.innerHTML = '';
+    // If the nearby list was open, close it
+    if (S.proxNearbyListMode && S.accountListOpen) {
+      S.accountListOpen = false;
+      S.proxNearbyListMode = false;
+      const overlay = document.getElementById('alOverlay');
+      if (overlay) overlay.classList.remove('open');
+      badge.classList.remove('active');
+    }
+  }
+}
+
+export function toggleProxNearbyList() {
+  if (S.proxNearbyListMode && S.accountListOpen) {
+    // Close
+    S.accountListOpen = false;
+    S.proxNearbyListMode = false;
+    const overlay = document.getElementById('alOverlay');
+    if (overlay) overlay.classList.remove('open');
+    if (S._elProxBadge) S._elProxBadge.classList.remove('active');
+    if (S._elCountBadge) S._elCountBadge.classList.remove('active');
+  } else {
+    // Open in nearby-only mode
+    // Close action dashboard if open
+    if (S.actionDashboardOpen) {
+      S.actionDashboardOpen = false;
+      if (S._elAdOverlay) S._elAdOverlay.classList.remove('open');
+      if (S._elAdTrigger) S._elAdTrigger.classList.remove('active');
+    }
+    S.proxNearbyListMode = true;
+    S.accountListOpen = true;
+    const overlay = document.getElementById('alOverlay');
+    if (overlay) overlay.classList.add('open');
+    if (S._elProxBadge) S._elProxBadge.classList.add('active');
+    if (S._elCountBadge) S._elCountBadge.classList.remove('active');
+    if (window.innerWidth <= 1024) window.history.pushState({ overlay: true }, '');
+    renderAccountList();
   }
 }
 
