@@ -766,11 +766,19 @@ export function getTerritoryAE(d) {
 // d.ae is the holdout (Opp Owner) while territory_ae is the assigned territory owner.
 export function getHoldoutAE(d) {
   if (!d.ae || isDOE(d.name)) return null;
-  // territory_ae set (Opp Owner fallback) — d.ae is the holdout (Opp Owner)
+  // Case 1: territory_ae explicitly set during merge (Opp Owner fallback) —
+  // d.ae is the holdout (Opp Owner) while territory_ae is the assigned territory owner.
   if (d.territory_ae && d.territory_ae !== d.ae) {
     // Only show holdout while the holdout rep has at least one OPEN opp
     if (!hasOpenOppByRep(d, d.ae)) return null;
     return d.ae;
+  }
+  // Case 2: opp_owner differs from account ae (natural holdout from bundled/merged data).
+  // d.ae is the territory owner, opp_owner is the holdout.
+  const oppOwner = (d.opp_owner || '').trim();
+  if (oppOwner && oppOwner !== d.ae && ALL_ACTIVE_REPS.has(oppOwner)) {
+    if (!hasOpenOppByRep(d, oppOwner)) return null;
+    return oppOwner;
   }
   return null;
 }
@@ -2549,6 +2557,20 @@ function updatePipeline() {
   const scopedData = getScopedStratData();
   const allOpps = [];
   scopedData.forEach(d => {
+    // Holdout opps belong to the opp owner's pipeline only — not the territory owner's.
+    // Skip opps when the current scope (rep or team) doesn't include the opp owner.
+    const holdoutAE = getHoldoutAE(d);
+    if (holdoutAE) {
+      if (S.selectedRep && S.selectedRep !== '__unassigned__' && !MANAGERS.has(S.selectedRep)) {
+        // Rep-level: skip if selected rep isn't the opp owner (holdout AE)
+        if (holdoutAE !== S.selectedRep) return;
+      } else if (S.selectedTeam) {
+        // Team-level (manager selected or team without specific rep):
+        // skip if the opp owner isn't on the selected team
+        const teamReps = S._teamRepsSet[S.selectedTeam];
+        if (teamReps && !teamReps.has(holdoutAE)) return;
+      }
+    }
     const opps = d.opps && d.opps.length > 0 ? d.opps : (d.opp_stage ? [buildOppEntry(d)] : []);
     opps.forEach(opp => {
       if (opp.stage && isOppOpen(opp)) allOpps.push({ account: d, opp });
@@ -2603,6 +2625,15 @@ function openPipelineOverlay() {
   const overlapAccounts = S.ACCOUNT_DATA.filter(d => d.is_customer);
   const allOpps = [];
   overlapAccounts.forEach(d => {
+    const holdoutAE = getHoldoutAE(d);
+    if (holdoutAE) {
+      if (S.selectedRep && S.selectedRep !== '__unassigned__' && !MANAGERS.has(S.selectedRep)) {
+        if (holdoutAE !== S.selectedRep) return;
+      } else if (S.selectedTeam) {
+        const teamReps = S._teamRepsSet[S.selectedTeam];
+        if (teamReps && !teamReps.has(holdoutAE)) return;
+      }
+    }
     const opps = d.opps && d.opps.length > 0 ? d.opps : (d.opp_stage ? [buildOppEntry(d)] : []);
     opps.forEach(opp => {
       if (opp.stage && isOppOpen(opp)) allOpps.push({ account: d, opp });
