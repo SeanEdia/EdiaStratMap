@@ -705,6 +705,7 @@ const INACTIVE_REASSIGN = new Map([
   ['Marixza Acuna', 'Christina Ceballos'],
   ['Zac Otwell', 'Christina Ceballos'],
   ['Wesley Yarber', 'Christina Ceballos'],
+  ['Ally McCready', 'Samantha Santucci'],
 ]);
 
 
