@@ -2,12 +2,13 @@
   "team": "ENT East",
   "manager": "Samantha Santucci",
   "reps": [
-    "Andy Graham",
     "David Thomas",
     "Susan Speiser",
     "Hannah O'Brien",
-    "Ally McCready",
-    "Victoria Macoul",
     "Brittney Hall"
+  ],
+  "sdrs": [
+    { "name": "Megan O'Hare", "states": ["GA", "TN", "AL", "IL", "AR"] },
+    { "name": "Boback Kalantarian", "states": ["FL", "SC", "NY", "MA", "VA"] }
   ]
 }

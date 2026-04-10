@@ -5,7 +5,10 @@
     "Aric Walden",
     "Lance Baretz",
     "Sydney Smith",
-    "Ben Skillman",
     "Jimmy Koerner"
+  ],
+  "sdrs": [
+    { "name": "Samantha Brokaw", "states": ["CA", "WA", "CO", "UT"] },
+    { "name": "Rachael Joseph", "states": ["TX", "MO", "NM"] }
   ]
 }
