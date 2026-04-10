@@ -643,10 +643,9 @@ TEAM_CONFIGS.forEach(cfg => {
 });
 
 // ============ ACCOUNT ASSIGNMENT RULES ============
-// Rule 1: Districts with 30,000+ students → Strategic (Sean Johnson territory), holdout = actual AE
-// Rule 2: Districts with <30,000 students → assigned to account owner from data
+// Accounts are assigned to their account owner from the data.
+// Sean Johnson (Strategic) only owns accounts explicitly assigned to him — no enrollment-based auto-routing.
 export const ACCOUNT_PRIMARY_AE = 'Sean Johnson';
-export const STRATEGIC_ENROLLMENT_THRESHOLD = 30000;
 
 // Build holdout AEs dynamically from all non-Strategic teams
 const ACCOUNT_HOLDOUT_AES = new Set();
@@ -693,9 +692,9 @@ const INACTIVE_OWNERS = new Set([
   // Former reps
   'John Tyrrell', 'Zac Otwell', 'Brittany Garrison', 'Bill Lloyd',
   'Jacqueline Layreau', 'Marixza Acuna', 'Sydney Levenfeld', 'Jose Puyol',
-  'Wesley Yarber',
+  'Wesley Yarber', 'Andy Graham', 'Ben Skillman', 'Ally McCready',
   // Still with company but no longer in sales
-  'Bella Duffey', 'Scott Walters',
+  'Bella Duffey', 'Scott Walters', 'Ben Foley',
 ]);
 
 // Specific reassignment overrides for departing reps.
@@ -708,10 +707,6 @@ const INACTIVE_REASSIGN = new Map([
   ['Wesley Yarber', 'Christina Ceballos'],
 ]);
 
-// Ben Foley: still with company, NOT an account holder.
-// Accounts with >30k students → hard override to Sean Johnson (no holdout).
-// Accounts with ≤30k students or missing enrollment → treat as inactive (holdout logic).
-const BEN_FOLEY = 'Ben Foley';
 
 // CTO and SFDC Admin — not account holders.
 // Only reassign their accounts when the uploaded CSV contains opp data for the account.
@@ -766,37 +761,21 @@ function hasOpenOppByRep(d, repName) {
 }
 
 // Helper: returns the territory (assigned) AE for an account.
-// 30k+ enrollment → Strategic (Sean Johnson). <30k → account owner.
+// Returns the account owner. If a territory_ae override exists (e.g. Opp Owner
+// fallback during partial merge), that takes priority.
 export function getTerritoryAE(d) {
   if (isDOE(d.name)) return null;
-  // Check strategic enrollment BEFORE bailing on empty ae —
-  // unassigned 30k+ accounts still belong to Sean Johnson.
-  const enrollment = parseEnrollment(d.enrollment);
-  if (enrollment >= STRATEGIC_ENROLLMENT_THRESHOLD) {
-    return ACCOUNT_PRIMARY_AE; // strategic account
-  }
-  // If the account fell through to Opp Owner because the territory rep's data
-  // isn't loaded yet, territory_ae holds the original Account Owner from the CSV.
   if (d.territory_ae) return d.territory_ae;
-  if (!d.ae) return d.ae;
-  return d.ae; // <30k — assigned to account owner
+  return d.ae || null;
 }
 
 // Helper: returns the holdout AE when there's a dual-assignment scenario.
-// Two cases: (1) 30k+ strategic account whose AE is not the default (Sean Johnson),
-// (2) Opp Owner fallback — territory rep's data isn't loaded yet, so the account is
-//     temporarily under the Opp Owner while the territory rep remains the assigned owner.
+// This only applies when territory_ae is set (Opp Owner fallback during partial merge) —
+// d.ae is the holdout (Opp Owner) while territory_ae is the assigned territory owner.
 export function getHoldoutAE(d) {
   if (!d.ae || isDOE(d.name)) return null;
-  // Case 2: territory_ae set (Opp Owner fallback) — d.ae is the holdout (Opp Owner)
+  // territory_ae set (Opp Owner fallback) — d.ae is the holdout (Opp Owner)
   if (d.territory_ae && d.territory_ae !== d.ae) {
-    // Only show holdout while the holdout rep has at least one OPEN opp
-    if (!hasOpenOppByRep(d, d.ae)) return null;
-    return d.ae;
-  }
-  // Case 1: strategic account holdout
-  const enrollment = parseEnrollment(d.enrollment);
-  if (enrollment >= STRATEGIC_ENROLLMENT_THRESHOLD && d.ae !== ACCOUNT_PRIMARY_AE) {
     // Only show holdout while the holdout rep has at least one OPEN opp
     if (!hasOpenOppByRep(d, d.ae)) return null;
     return d.ae;
@@ -805,17 +784,15 @@ export function getHoldoutAE(d) {
 }
 
 // Resolve the account owner from a CSV value against an existing owner.
-// Optional ctx: { enrollment, hasUploadedOpp, oppOwner, loadedReps, accountName } for conditional reassignment.
+// Optional ctx: { hasUploadedOpp, oppOwner, loadedReps, accountName } for conditional reassignment.
 // Evaluation order (Opp Owner used as fallback when Account Owner is invalid):
 //   1. Blank CSV → Opp Owner if active → existing if active → unassigned
-//   2. Ben Foley → enrollment > 30k → Sean Johnson; else → Opp Owner / existing / unassigned
-//   3. CONDITIONAL_REASSIGN (Iain/Nicholas) → has opp → Opp Owner / existing / unassigned;
+//   2. CONDITIONAL_REASSIGN (Iain/Nicholas) → has opp → Opp Owner / existing / unassigned;
 //      no opp → keep existing if active, else leave as-is
-//   4. INACTIVE_OWNERS → Opp Owner if active → existing if active → unassigned
-//   5. (Removed — managers now hold accounts like reps; they flow to step 6)
-//   6. Active rep WITH data loaded → assign (unless existing differs → conflict, keep existing)
+//   3. INACTIVE_OWNERS → specific reassignment (if mapped) → Opp Owner → existing → unassigned
+//   4. Active rep WITH data loaded → assign (unless existing differs → conflict, keep existing)
 //      Active rep WITHOUT data loaded → Opp Owner fallback (until their data is uploaded)
-//   7. Unrecognized → Opp Owner if active → existing if active → unassigned
+//   5. Unrecognized → Opp Owner if active → existing if active → unassigned
 // Returns { ae, reason } where ae is the resolved string and reason describes the resolution path.
 export function resolveOwner(csvAE, existingAE, ctx) {
   const csv = (csvAE || '').trim();
@@ -834,24 +811,7 @@ export function resolveOwner(csvAE, existingAE, ctx) {
     return { ae: fallback(), reason: 'blank_owner' };
   }
 
-  // 2. Ben Foley: >30k students → hard override to Sean Johnson (no holdout).
-  //    NYC Public Schools exception: use holdout logic (Opp Owner) instead of hard override,
-  //    so uploaded opps stay with the opp owner rather than being reassigned to territory.
-  //    ≤30k or missing enrollment → fallback (Opp Owner → existing → unassigned).
-  if (csv === BEN_FOLEY) {
-    const enrollment = ctx ? parseEnrollment(ctx.enrollment) : 0;
-    const accountName = ctx && ctx.accountName || '';
-    if (enrollment > STRATEGIC_ENROLLMENT_THRESHOLD) {
-      // NYC accounts: apply holdout logic — opp owner keeps the account, Sean Johnson is territory
-      if (isNYCAccount(accountName)) {
-        return { ae: fallback(), reason: 'ben_foley_nyc_holdout' };
-      }
-      return { ae: ACCOUNT_PRIMARY_AE, reason: 'ben_foley_strategic' }; // Sean Johnson — direct assignment
-    }
-    return { ae: fallback(), reason: 'ben_foley_fallback' };
-  }
-
-  // 3. CONDITIONAL_REASSIGN (Iain Proctor / Nicholas Watson):
+  // 2. CONDITIONAL_REASSIGN (Iain Proctor / Nicholas Watson):
   //    Only reassign when the uploaded CSV has opp data for this account.
   //    Has opp → fallback (Opp Owner → existing → unassigned). No opp → leave as-is.
   if (CONDITIONAL_REASSIGN.has(csv)) {
@@ -862,7 +822,7 @@ export function resolveOwner(csvAE, existingAE, ctx) {
     return { ae: (existing && ALL_ACTIVE_REPS.has(existing)) ? existing : csv, reason: 'conditional_no_opp' };
   }
 
-  // 4. CSV AE is a known inactive/former owner
+  // 3. CSV AE is a known inactive/former owner
   if (INACTIVE_OWNERS.has(csv)) {
     // Check for specific reassignment override first
     const reassignTo = INACTIVE_REASSIGN.get(csv);
@@ -872,10 +832,7 @@ export function resolveOwner(csvAE, existingAE, ctx) {
     return { ae: fallback(), reason: 'inactive_owner' };
   }
 
-  // 5. (Removed — managers now hold accounts; they are in ALL_ACTIVE_REPS
-  //    and fall through to step 6 like any active rep.)
-
-  // 6. CSV AE is a current, active rep (includes managers)
+  // 4. CSV AE is a current, active rep (includes managers)
   if (ALL_ACTIVE_REPS.has(csv)) {
     // Active rep but no data loaded yet → fall through to Opp Owner.
     // When this rep's data is uploaded later, holdout/conflict logic will reconcile.
@@ -891,7 +848,7 @@ export function resolveOwner(csvAE, existingAE, ctx) {
     return { ae: csv, reason: 'direct_assign' };
   }
 
-  // 7. CSV AE is an unrecognized name (not active, not in inactive list, not a manager)
+  // 5. CSV AE is an unrecognized name (not active, not in inactive list, not a manager)
   // → fallback (Opp Owner → existing → unassigned)
   return { ae: fallback(), reason: 'unrecognized' };
 }

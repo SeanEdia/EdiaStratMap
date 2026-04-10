@@ -1,6 +1,6 @@
 import S from './state.js';
 import { districtKey, escapeHtml, escapeAttr } from './helpers.js';
-import { STRATEGIC_ENROLLMENT_THRESHOLD, saveConflicts, buildIndices, ensurePopup } from './app.js';
+import { saveConflicts, buildIndices, ensurePopup } from './app.js';
 import { formatCompactNumber } from './account-list.js';
 import { downloadJsonFile, stripRuntimeFields, extractOppsFromAccounts } from './multi-opp.js';
 import { openAccountModalWithData } from './account-modal.js';
@@ -111,8 +111,7 @@ export function renderConflictsOverlay() {
   </div>`;
   S.CONFLICTS.forEach((c, idx) => {
     const enrollment = c.enrollment ? parseInt(c.enrollment).toLocaleString() : '—';
-    const isStrategic = (parseInt(c.enrollment) || 0) >= STRATEGIC_ENROLLMENT_THRESHOLD;
-    const stratBadge = isStrategic ? '<span class="conflict-strategic-badge">Strategic</span>' : '';
+    const stratBadge = '';
     const accountType = getConflictAccountType(c);
     const conflictType = getConflictTypeLabel(c);
 
@@ -189,7 +188,7 @@ export function exportConflicts() {
   }
 
   const headers = [
-    'Account Name', 'State', 'Enrollment', 'Strategic', 'Account Type',
+    'Account Name', 'State', 'Enrollment', 'Account Type',
     'Conflict Type', 'Conflict Description', 'Current Owner (Kept)',
     'Current Owner Team', 'Conflicting Owner (From CSV)', 'Conflicting Owner Team',
     'Opp Owner (SFDC)', 'Existing Opps', 'CSV Opp Area', 'CSV Opp Stage',
@@ -208,7 +207,6 @@ export function exportConflicts() {
 
   S.CONFLICTS.forEach(c => {
     const acct = S.ACCOUNT_DATA.find(a => a.name === c.name);
-    const isStrategic = (parseInt(c.enrollment) || 0) >= STRATEGIC_ENROLLMENT_THRESHOLD;
     const conflictType = getConflictTypeLabel(c);
     const existingOpps = (c.existingOpps || []).length > 0
       ? c.existingOpps.map(o => (o.area || 'Unknown') + ' \u2014 ' + (o.stage || 'No stage')).join(', ')
@@ -218,7 +216,6 @@ export function exportConflicts() {
       c.name,
       c.state,
       c.enrollment,
-      isStrategic ? 'Yes' : 'No',
       getConflictAccountType(c),
       conflictType.label,
       conflictType.description,
