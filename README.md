@@ -74,8 +74,9 @@ The sidebar includes **Team** and **Rep** dropdowns that scope the entire view:
 - Drill into a specific rep within the team
 - Managers are displayed but not assignable as account owners
 - When a team has only one rep, that rep is auto-selected
+- Rep dropdowns are sorted alphabetically by first name
 
-Team rosters are configured in `src/data/teams/*.json`.
+Team rosters are configured in `src/data/teams/*.json`. Roster files also support an `sdrs` array with per-SDR state assignments for outreach planning.
 
 ---
 
@@ -96,22 +97,29 @@ Click any pin to see a popup with:
 
 - District info (enrollment, region, SIS, parent account)
 - Leadership contacts
-- Opportunity details (stage, forecast, next steps) — supports **multiple opportunities** per account, tracked per product area (Math, Attendance, etc.)
+- Opportunity details (stage, forecast, next steps) — supports **multiple opportunities** per account, tracked per product area (Math, Attendance, DIP, etc.)
 - Links to org chart, strategic plan, meeting prep
+- Gong contacts link (uses client-side SFDC 15→18 character ID conversion)
 
-Click the **expand button** for a full-screen modal with tabs:
+Click the **expand button** for a full-screen modal with six tabs:
 
 - **Info**: Overview, leadership, all opportunities, resources, notes
 - **Math**: Math products, curriculum, contacts, competition
 - **Attendance**: SIS platform, attendance system, related contacts
+- **🔮 DIP**: District Intelligence Platform opportunity, DIP-specific contacts, DIP opp intel
+- **📊 District Intel**: Cross-product snapshot, active next steps, MEDDPIC intelligence, full contact map, engagement summary, nearby customers
 - **Schools**: List of individual schools within the district
+
+Swipe left/right to navigate between tabs on mobile.
 
 ---
 
 ## Dashboard & Stats
 
 - **Stats bar**: Accounts count, Customers count, Overlap, States covered
+  - **W/ Pipeline badge** on the Overlap stat shows how many overlap customers have active open opportunities (scoped by current team/rep selection, with holdout-aware filtering)
 - **Pipeline panel**: Opportunity values grouped by stage, expandable per stage
+  - Pipeline overlay header shows unique customer count with open opps
 - **Actions panel** (floating workload dashboard):
   - Stalest accounts (days since last touch)
   - Due this week (accounts with next steps due soon)
@@ -148,7 +156,9 @@ The app tracks its data source (`S._dataSource`: `'bundled'` vs `'localStorage'`
 - **Parent account consolidation** — child accounts roll up under their parent
 - **Separate account and opportunity imports** — upload account lists and opp lists independently
 - **Multi-opp merging** — new opportunities are upserted per product area without overwriting existing opps
+- **MEDDPIC field merging** — MEDDPIC/MEDDPICC fields are merged from opp data and rendered in the District Intel tab
 - **Owner resolution logic**: inactive owners fall back to opp owner, managers are bypassed, holdout accounts are preserved, special-case reps are handled
+- **Account suppression rules** — configurable per-rep rules to suppress low-enrollment accounts from map rendering
 - **Automatic geocoding** with rate limiting, retry logic, and state-aware validation
 - **Conflict detection** — when two reps claim the same account, conflicts are stored for manual resolution
 - Notes and meeting prep links are preserved across merges
@@ -192,11 +202,36 @@ Toggle **Conferences** in the sidebar to overlay education conferences on the ma
 
 ## Proximity Mode
 
-Toggle proximity overlays in the sidebar:
+Toggle proximity overlays in the sidebar to explore geographic relationships between accounts and customers:
 
-- **Strategic proximity**: Show strategic accounts near existing customers
+- **Bidirectional proximity**: Works in both Accounts and Customers views
+  - In **Accounts view**: Click an account to see nearby customers within the radius
+  - In **Customers view**: Click a customer to see nearby prospect accounts within the radius
+- **Adjustable radius** slider (default 50 miles)
+- **Nearby accounts badge** on pins showing count of nearby related accounts/customers
+- **Account list integration**: The account list panel filters to show only nearby accounts when proximity is active
+- **Export integration**: Exports respect the current proximity scope
 - **ADA accounts**: Show ADA-related account proximity
-- Adjustable radius slider
+
+---
+
+## Data Export & Outreach Assistant
+
+### Export
+
+Export the current filtered account list as an Excel workbook. The export respects the active team/rep/stage filters and includes leadership contacts, opportunity details, and strategic context. Exports are designed to serve both human planning and downstream AI workflows.
+
+### Outreach Assistant
+
+A single-click workflow that bridges EdiaStratMap with the AI Outreach Assistant:
+
+1. Click the **Outreach Assistant** button (visible when a team is selected)
+2. An XLSX export is automatically downloaded with the current filtered accounts
+3. A structured prompt with supplementary context (customer list, notes, opp stats) is copied to clipboard
+4. The Outreach Assistant Claude project opens in a new tab
+5. Paste the prompt and upload the XLSX to generate personalized outreach plans
+
+The Export and Outreach Assistant share `buildExportWorkbook()` so both produce identical XLSX schemas.
 
 ---
 
@@ -204,7 +239,7 @@ Toggle proximity overlays in the sidebar:
 
 - Click **"Generate Meeting Prep"** in any account popup
 - Copies a structured prompt with all account data to the clipboard
-- Opens ChatGPT for AI-assisted meeting preparation
+- Opens the Meeting Prep Claude project for AI-assisted meeting preparation
 - Save Google Drive meeting prep links per account (inline, from the popup)
 
 ---
@@ -245,16 +280,16 @@ src/
     features.js           Theme toggle, SHA-256 password-protected data refresh
     app.js                Core: map, rendering, sidebar, filters, search, dashboard,
                             popups, welcome overlay, marker pool, mobile features
-    account-modal.js      Full-screen account detail modal (Info/Math/Attendance/Schools)
+    account-modal.js      Full-screen account detail modal (Info/Math/Attendance/DIP/District Intel/Schools)
     account-list.js       Sortable/groupable account list sidebar panel
     data-merge.js         SFDC CSV/Excel import, merge logic, geocoding
-    data-export.js        Account list export to Excel
+    data-export.js        Account list export to Excel + Outreach Assistant launcher
     multi-opp.js          Multi-opp rendering, opp upsert, stripRuntimeFields, JSON downloads
     conflict.js           Conflict detection, resolution UI, CSV export, auto-download
     conference.js         Conference tracker overlay — CSV upload, date filtering, proximity
     notes.js              Per-account threaded notes — add, copy, export/import
   styles/
-    main.css              All styles (~3,853 lines)
+    main.css              All styles (~4,200 lines)
   data/
     accounts.json         Strategic account dataset (no opp fields)
     opps.json             Opportunity data (joined into accounts at build time)
@@ -290,19 +325,19 @@ The app is split into 12 ES modules under `src/js/`. All modules import the shar
 
 | Module             | Lines | Purpose                                                                                      |
 | ------------------ | ----: | -------------------------------------------------------------------------------------------- |
-| `state.js`         |   123 | Shared mutable state object `S` — imported by all modules                                    |
-| `helpers.js`       |   217 | Pure utilities: name normalization, date parsing, haversine distance, XSS escaping (`escapeHtml`, `escapeAttr`), search field precomputation |
+| `state.js`         |   128 | Shared mutable state object `S` — imported by all modules                                    |
+| `helpers.js`       |   251 | Pure utilities: name normalization, date parsing, haversine distance, XSS escaping (`escapeHtml`, `escapeAttr`), SFDC 15→18 ID conversion (`sfdc15to18`), opp-state helpers (`isOppOpen`), search field precomputation |
 | `features.js`      |   112 | Theme toggle (dark/light), SHA-256 password-protected data refresh and SFDC modal access      |
-| `app.js`           | 3,842 | Core: map init, Leaflet rendering, sidebar, filters, search/autocomplete, dashboard, popups, welcome overlay, marker pool, performance indices, mobile features (bottom sheet, Near Me, long-press, swipe gestures) |
-| `account-modal.js` | 1,051 | Full-screen account detail modal (Info, Math, Attendance, Schools tabs), data refresh panel toggle |
-| `account-list.js`  |   359 | Sortable/groupable account list sidebar panel with compact number formatting                  |
-| `data-merge.js`    | 2,063 | SFDC CSV/Excel import, merge logic, owner resolution, geocoding, holdout detection            |
-| `data-export.js`   |   337 | Account list export to Excel (filtered by current team/rep/stage context) for downstream AI outreach tools |
-| `multi-opp.js`     | 1,281 | Multi-opportunity rendering, product area tabs, opp upsert, `stripRuntimeFields()`, JSON file download helpers |
-| `conflict.js`      |   432 | Conflict detection, resolution UI (independently password-protected), rich context display, CSV export, auto-download when all resolved |
+| `app.js`           | 4,084 | Core: map init, Leaflet rendering, sidebar, filters, search/autocomplete, dashboard, popups, welcome overlay, marker pool, performance indices, proximity mode (bidirectional), account suppression, mobile features (bottom sheet, Near Me, long-press, swipe gestures) |
+| `account-modal.js` | 1,352 | Full-screen account detail modal (Info, Math, Attendance, DIP, District Intel, Schools tabs), MEDDPIC intelligence rendering, data refresh panel toggle, tab swipe navigation |
+| `account-list.js`  |   420 | Sortable/groupable account list sidebar panel with compact number formatting                  |
+| `data-merge.js`    | 2,125 | SFDC CSV/Excel import, merge logic, owner resolution, geocoding, holdout detection, MEDDPIC field merging |
+| `data-export.js`   |   477 | Account list export to Excel (filtered by current team/rep/stage context), Outreach Assistant launcher (auto-download + clipboard prompt + project open) |
+| `multi-opp.js`     | 1,280 | Multi-opportunity rendering, product area tabs, opp upsert, `stripRuntimeFields()`, JSON file download helpers |
+| `conflict.js`      |   429 | Conflict detection, resolution UI (independently password-protected), rich context display, CSV export, auto-download when all resolved |
 | `conference.js`    |   542 | Conference tracker overlay — CSV upload, date filtering, proximity to strategic accounts      |
-| `notes.js`         |   188 | Per-account threaded notes — add, copy, export/import, multi-user safe (no full-data localStorage writes) |
-| **Total**          | **10,547** | |
+| `notes.js`         |   187 | Per-account threaded notes — add, copy, export/import, multi-user safe (no full-data localStorage writes) |
+| **Total**          | **11,387** | |
 
 Key architectural patterns:
 
@@ -342,7 +377,7 @@ The app is fully responsive with phone (<=768px), tablet (769-1024px), and deskt
 
 - **Bottom sheet** replaces the sidebar on mobile for account details
 - **Floating search bar** makes map search accessible on mobile
-- **Swipe gestures**: Swipe-to-close on bottom sheet and modals; pull-down dismiss for modals
+- **Swipe gestures**: Swipe-to-close on bottom sheet and modals; pull-down dismiss for modals; swipe left/right to navigate modal tabs
 - **Near Me**: Uses browser geolocation to show the user's location on the map with a configurable radius circle highlighting nearby accounts
 - **Long-press context menu** on map pins (mobile alternative to hover)
 - **Smart map zoom**: Map auto-fits to visible accounts when changing team, rep, or closing an account card
@@ -359,6 +394,7 @@ The app is fully responsive with phone (<=768px), tablet (769-1024px), and deskt
 
 - **Marker pool**: All map markers are pre-built once and shown/hidden via layer operations instead of being recreated on every filter change
 - **O(1) lookup indices**: `buildIndices()` creates `_repToTeam`, `_teamRepsSet`, `_repToAccounts`, `_teamToAccounts`, and `_custByName` maps for instant team/rep/customer lookups
+- **Customer grid cache**: Spatial grid (`_custGrid`) for fast proximity calculations without scanning all customers
 - **Note index cache**: `_accountsWithNotes` Set avoids scanning all localStorage keys on every filter pass
 - **Autocomplete cache**: Search results are cached and invalidated only on data changes
 
@@ -369,7 +405,7 @@ The app is fully responsive with phone (<=768px), tablet (769-1024px), and deskt
 - **[Vite](https://vite.dev/)** — dev server + production bundler
 - **[Leaflet.js](https://leafletjs.com/)** — interactive map rendering (via CDN)
 - **[SheetJS](https://sheetjs.com/)** — CSV and Excel file parsing (via CDN)
-- **Vanilla JavaScript** (ES modules) — no framework, ~10,547 lines across 12 modules
+- **Vanilla JavaScript** (ES modules) — no framework, ~11,387 lines across 12 modules
 - **[DM Sans](https://fonts.google.com/specimen/DM+Sans)** — UI text font (Google Fonts)
 - **[JetBrains Mono](https://fonts.google.com/specimen/JetBrains+Mono)** — data/code values font (Google Fonts)
 - **localStorage** — client-side persistence for accounts, customers, notes, links, conflicts, and refresh timestamps
