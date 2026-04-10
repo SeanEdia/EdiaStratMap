@@ -1699,6 +1699,53 @@ input[type="range"]::-webkit-slider-thumb {
   white-space: nowrap;
 }
 
+/* Reverse proximity (Account Proximity on Customers view) */
+.prox-reverse-status {
+  width: 100%;
+  margin-top: 6px;
+  padding-left: 44px;
+}
+.prox-reverse-hint {
+  font-size: 10px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+.prox-reverse-selected {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #6c5ce7;
+  max-width: 100%;
+}
+.prox-reverse-selected #proxSelectedName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.prox-clear-btn {
+  background: none;
+  border: 1px solid rgba(108,92,231,0.3);
+  color: var(--text-muted);
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  font-size: 10px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  line-height: 1;
+  flex-shrink: 0;
+  transition: border-color 0.15s, color 0.15s;
+}
+.prox-clear-btn:hover {
+  border-color: #6c5ce7;
+  color: #6c5ce7;
+}
+
 .prox-show-all-toggle {
   display: flex;
   align-items: center;

@@ -21,6 +21,7 @@ const S = {
   filters: {},
   proximityOn: false,
   proxShowAll: false,
+  proxSelectedCustomer: null,
   PROXIMITY_MILES: 50,
   adaFilterOn: false,
   welcomeActive: true,
