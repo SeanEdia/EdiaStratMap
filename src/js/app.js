@@ -948,6 +948,11 @@ function buildMarkerPool() {
     });
     const marker = L.marker([d.lat, d.lng], { icon });
     marker.on('click', function() {
+      // Reverse proximity: intercept click to select this customer
+      if (S.proximityOn && S.currentView === 'customers') {
+        selectCustomerForProximity(d);
+        return;
+      }
       if (window.innerWidth <= 1024) closeMobileSidebar();
       if (window.innerWidth <= 1024) {
         if (_longPressTriggered) { _longPressTriggered = false; return; }
@@ -1371,8 +1376,9 @@ function setView(view) {
 
   // Clear proximity when switching views — circles were computed for the previous view's dataset
   if (S.proximityOn) {
-    S.proxLayer.clearLayers();
+    clearProxSelection();
   }
+  updateProxLabel();
 
   invalidateCaches();
   renderTeamRepSelectors();
@@ -1867,12 +1873,19 @@ function resetFilters() {
   // Reset proximity state
   S.proximityOn = false;
   S.proxShowAll = false;
+  S.proxSelectedCustomer = null;
   const proxCheck = document.getElementById('proxCheck');
   if (proxCheck) proxCheck.checked = false;
   const proxShowAllCheck = document.getElementById('proxShowAllCheck');
   if (proxShowAllCheck) proxShowAllCheck.checked = false;
   const proxWrap = document.getElementById('proxRadiusWrap');
   if (proxWrap) proxWrap.style.display = 'none';
+  const proxReverseStatus = document.getElementById('proxReverseStatus');
+  if (proxReverseStatus) proxReverseStatus.style.display = 'none';
+  const proxReverseHint = document.getElementById('proxReverseHint');
+  if (proxReverseHint) proxReverseHint.style.display = '';
+  const proxReverseSelected = document.getElementById('proxReverseSelected');
+  if (proxReverseSelected) proxReverseSelected.style.display = 'none';
 
   // Reset Near Me
   clearNearMe();
@@ -1942,7 +1955,7 @@ function applyFilters() {
     S.stratLayer.clearLayers();
     S.custLayer.clearLayers();
   }
-  if (S.proximityOn) drawProximity();
+  if (S.proximityOn && S.currentView !== 'customers') drawProximity();
   S.accountListDisplayLimit = 200; // Reset pagination on filter change
 
   let stratCount = 0, custCount = 0;
@@ -2136,6 +2149,11 @@ function applyFilters() {
         });
         const marker = L.marker([d.lat, d.lng], { icon }).addTo(S.custLayer);
         marker.on('click', function() {
+          // Reverse proximity: intercept click to select this customer
+          if (S.proximityOn && S.currentView === 'customers') {
+            selectCustomerForProximity(d);
+            return;
+          }
           if (window.innerWidth <= 1024) closeMobileSidebar();
           if (window.innerWidth <= 1024) {
             if (_longPressTriggered) { _longPressTriggered = false; return; }
@@ -2909,7 +2927,43 @@ function updateActionDashboard() {
 function toggleProximity(on) {
   S.proximityOn = on;
   document.getElementById('proxRadiusWrap').style.display = on ? 'flex' : 'none';
+  updateProxLabel();
+  if (!on) {
+    clearProxSelection();
+  }
   drawProximity();
+}
+
+function clearProxSelection() {
+  S.proxSelectedCustomer = null;
+  S.proxLayer.clearLayers();
+  const hint = document.getElementById('proxReverseHint');
+  const selected = document.getElementById('proxReverseSelected');
+  const nearbyEl = document.getElementById('proxNearbyCount');
+  if (hint) hint.style.display = '';
+  if (selected) selected.style.display = 'none';
+  if (nearbyEl) nearbyEl.textContent = '';
+}
+
+function selectCustomerForProximity(d) {
+  S.proxSelectedCustomer = d;
+  const hint = document.getElementById('proxReverseHint');
+  const selected = document.getElementById('proxReverseSelected');
+  const nameEl = document.getElementById('proxSelectedName');
+  if (hint) hint.style.display = 'none';
+  if (selected) selected.style.display = '';
+  if (nameEl) nameEl.textContent = d.name;
+  drawProximity();
+}
+
+function updateProxLabel() {
+  const label = document.getElementById('proxLabel');
+  const reverseStatus = document.getElementById('proxReverseStatus');
+  const showAllToggle = document.querySelector('.prox-show-all-toggle');
+  const isReverse = S.currentView === 'customers';
+  if (label) label.textContent = isReverse ? 'Account Proximity' : 'Customer Proximity';
+  if (reverseStatus) reverseStatus.style.display = (isReverse && S.proximityOn) ? '' : 'none';
+  if (showAllToggle) showAllToggle.style.display = isReverse ? 'none' : '';
 }
 
 function toggleProxShowAll(on) {
@@ -2983,27 +3037,77 @@ function drawProximity() {
   const milesToMeters = S.PROXIMITY_MILES * 1609.34;
   S._custGrid = null; // Invalidate grid when radius changes
 
-  // Determine which accounts to scope proximity to
+  // ── REVERSE MODE (Customers view): Show account pins near selected customer ──
+  if (S.currentView === 'customers') {
+    const cust = S.proxSelectedCustomer;
+    if (!cust || !cust.lat || !cust.lng) {
+      const nearbyEl = document.getElementById('proxNearbyCount');
+      if (nearbyEl) nearbyEl.textContent = '';
+      return;
+    }
+
+    // Draw radius circle around selected customer
+    L.circle([cust.lat, cust.lng], {
+      radius: milesToMeters,
+      color: '#6c5ce7',
+      weight: 2,
+      opacity: 0.45,
+      fillColor: '#6c5ce7',
+      fillOpacity: 0.07,
+      interactive: false,
+    }).addTo(S.proxLayer);
+
+    // Find and render nearby account pins as overlay markers on proxLayer
+    let nearby = 0;
+    S.ACCOUNT_DATA.forEach(a => {
+      if (!a.lat || !a.lng) return;
+      if (haversine(cust.lat, cust.lng, a.lat, a.lng) > S.PROXIMITY_MILES) return;
+      nearby++;
+
+      const cls = computeStratIconClass(a);
+      const icon = L.divIcon({
+        className: cls,
+        iconSize: getIconSize(a, 'accounts'),
+        iconAnchor: getIconAnchor(a, 'accounts'),
+      });
+      const marker = L.marker([a.lat, a.lng], { icon }).addTo(S.proxLayer);
+      marker.on('click', function() {
+        if (window.innerWidth <= 1024) {
+          closeMobileSidebar();
+          closeMobileBottomSheet();
+          flyToForBottomSheet(a.lat, a.lng);
+          setTimeout(() => { openMobileBottomSheet(a, 'accounts'); }, 350);
+        } else {
+          ensurePopup(marker, a, 'accounts');
+          S.map.flyTo([a.lat + 2.5, a.lng], 7, { duration: 0.6 });
+          setTimeout(() => { marker.openPopup(); }, 50);
+        }
+      });
+    });
+
+    const nearbyEl = document.getElementById('proxNearbyCount');
+    if (nearbyEl) nearbyEl.textContent = nearby + ' accounts nearby';
+    return;
+  }
+
+  // ── ORIGINAL MODE (Accounts view): Customers near Accounts — unchanged ──
   const scopeAccounts = S.proxShowAll
     ? S.ACCOUNT_DATA
     : (S.filteredAccountData && S.filteredAccountData.length > 0
         ? S.filteredAccountData
         : S.ACCOUNT_DATA);
 
-  // Build a set of accounts with valid coords for fast lookup
   const accountCoords = [];
   scopeAccounts.forEach(a => {
     if (a.lat && a.lng) accountCoords.push(a);
   });
 
-  // If filters produced zero accounts (and not in "show all" mode), show nothing
   if (!S.proxShowAll && S.filteredAccountData && S.filteredAccountData.length === 0) {
     const nearbyEl = document.getElementById('proxNearbyCount');
     if (nearbyEl) nearbyEl.textContent = '0 nearby';
     return;
   }
 
-  // Only draw circles for customers near at least one scoped account
   S.CUSTOMER_DATA.forEach(c => {
     if (!c.lat || !c.lng) return;
     let nearScoped = false;
@@ -3025,7 +3129,6 @@ function drawProximity() {
     }).addTo(S.proxLayer);
   });
 
-  // Count how many scoped accounts are inside any customer radius
   let nearby = 0;
   accountCoords.forEach(s => {
     if (isNearAnyCustomer(s.lat, s.lng, S.PROXIMITY_MILES)) nearby++;
@@ -3761,6 +3864,7 @@ Object.assign(window, {
   clearEnrollment,
   // Proximity & ADA
   toggleProximity,
+  clearProxSelection,
   toggleProxShowAll,
   updateProxRadius,
   setProxRadiusFromInput,

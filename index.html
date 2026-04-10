@@ -86,7 +86,7 @@
     <label class="prox-toggle">
       <input type="checkbox" id="proxCheck" onchange="toggleProximity(this.checked)">
       <span class="prox-slider"></span>
-      <span class="prox-label">Customer Proximity</span>
+      <span class="prox-label" id="proxLabel">Customer Proximity</span>
     </label>
     <div class="prox-radius-wrap" id="proxRadiusWrap" style="display:none;">
       <input type="range" id="proxRadius" min="10" max="150" value="50" step="1" class="prox-range" oninput="updateProxRadius(this.value)">
@@ -98,6 +98,13 @@
         <span class="prox-slider"></span>
         <span class="prox-label">Show all customers</span>
       </label>
+      <div class="prox-reverse-status" id="proxReverseStatus" style="display:none;">
+        <span class="prox-reverse-hint" id="proxReverseHint">Click a customer to see nearby accounts</span>
+        <span class="prox-reverse-selected" id="proxReverseSelected" style="display:none;">
+          <span id="proxSelectedName"></span>
+          <button class="prox-clear-btn" onclick="clearProxSelection()">✕</button>
+        </span>
+      </div>
     </div>
   </div>
 
