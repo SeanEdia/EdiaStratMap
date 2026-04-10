@@ -1676,7 +1676,8 @@ export function runOppMerge(csvData) {
     // Owner resolution (only on first row per account — subsequent rows skip)
     if (isFirstTouch) {
       if (!isDOE(acct.name)) {
-        const priorAE = (S.ACCOUNT_DATA[match.idx].ae || '').trim();
+        const priorRecord = S.ACCOUNT_DATA[match.idx];
+        const priorAE = (priorRecord ? priorRecord.ae || '' : '').trim();
         const ownerResult = resolveOwner(csvAE, priorAE, {
           enrollment: acct.enrollment, // Use account's existing enrollment
           hasUploadedOpp: true,
