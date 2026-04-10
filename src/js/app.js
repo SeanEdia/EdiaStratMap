@@ -2302,23 +2302,27 @@ function buildAutocompleteList(query) {
     }
   });
 
-  // Match districts (accounts)
-  S.ACCOUNT_DATA.forEach(d => {
-    const nameMatch = d.name && d.name.toLowerCase().includes(q);
-    if (nameMatch && !seen.has('strat:' + d.name)) {
-      seen.add('strat:' + d.name);
-      results.push({ type: 'strat', label: d.name, meta: d.state || '', data: d });
-    }
-  });
+  // Match districts (accounts) — only in accounts or all view
+  if (S.currentView === 'accounts' || S.currentView === 'all') {
+    S.ACCOUNT_DATA.forEach(d => {
+      const nameMatch = d.name && d.name.toLowerCase().includes(q);
+      if (nameMatch && !seen.has('strat:' + d.name)) {
+        seen.add('strat:' + d.name);
+        results.push({ type: 'strat', label: d.name, meta: d.state || '', data: d });
+      }
+    });
+  }
 
-  // Match districts (customers)
-  S.CUSTOMER_DATA.forEach(d => {
-    const nameMatch = d.name && d.name.toLowerCase().includes(q);
-    if (nameMatch && !seen.has('cust:' + d.name) && !seen.has('strat:' + d.name)) {
-      seen.add('cust:' + d.name);
-      results.push({ type: 'cust', label: d.name, meta: d.state || '', data: d });
-    }
-  });
+  // Match districts (customers) — only in customers or all view
+  if (S.currentView === 'customers' || S.currentView === 'all') {
+    S.CUSTOMER_DATA.forEach(d => {
+      const nameMatch = d.name && d.name.toLowerCase().includes(q);
+      if (nameMatch && !seen.has('cust:' + d.name) && !seen.has('strat:' + d.name)) {
+        seen.add('cust:' + d.name);
+        results.push({ type: 'cust', label: d.name, meta: d.state || '', data: d });
+      }
+    });
+  }
 
   // Sort: prioritize starts-with matches, then alphabetical
   results.sort((a, b) => {
