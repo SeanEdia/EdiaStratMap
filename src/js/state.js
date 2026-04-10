@@ -22,6 +22,7 @@ const S = {
   proximityOn: false,
   proxShowAll: false,
   proxSelectedCustomer: null,
+  proxLastClickedCustomer: null,
   proxSelectedAccount: null,
   PROXIMITY_MILES: 50,
   adaFilterOn: false,

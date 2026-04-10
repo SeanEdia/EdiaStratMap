@@ -190,7 +190,8 @@ export function renderAccountList() {
 
   // Build unified list of items to show
   const items = [];
-  const showStrat = S.currentView === 'accounts' || S.currentView === 'all';
+  const showStrat = S.currentView === 'accounts' || S.currentView === 'all'
+    || (S.currentView === 'customers' && S.proximityOn && S.proxSelectedCustomer);
   const showCust = S.currentView === 'customers' || S.currentView === 'all';
 
   if (showStrat) {
@@ -335,7 +336,11 @@ export function updateCountBadge(strat, cust) {
   if (S.currentView === 'accounts') {
     badge.innerHTML = `<span class="cb-num cb-strat">${strat}</span> accounts`;
   } else if (S.currentView === 'customers') {
-    badge.innerHTML = `<span class="cb-num cb-cust">${cust}</span> customers`;
+    let html = `<span class="cb-num cb-cust">${cust}</span> customers`;
+    if (S.proximityOn && S.proxSelectedCustomer && S.filteredAccountData && S.filteredAccountData.length > 0) {
+      html += ` · <span class="cb-num cb-prox">${S.filteredAccountData.length}</span> nearby`;
+    }
+    badge.innerHTML = html;
   } else {
     badge.innerHTML = `<span class="cb-num cb-strat">${strat}</span> accounts · <span class="cb-num cb-cust">${cust}</span> customers`;
   }
