@@ -20,24 +20,24 @@ import { districtKey, haversine, escapeHtml, escapeAttr, parseUSDate, normalizeD
   daysAgo, extractDatesFromText, isThisWeek, formatLastActivity, clampFutureLastActivity, normalizeOppArea, isDOE, sfdc15to18, isOppOpen } from './helpers.js';
 
 // Import extracted modules
-import { getUserName, getAccountNotes, addNote, handleNoteKey, formatNoteTime, copyAccountNotes,
+import { getAccountNotes, addNote, handleNoteKey, formatNoteTime, copyAccountNotes,
   updateNoteCount, exportNotes, importNotes, copyAllNotes, copyText } from './notes.js';
 import { toggleAccountListOverlay, renderAccountList, updateCountBadge, updateLegend,
   highlightAccountMarker, unhighlightAccountMarker, flyToAccount, openAccountFromList,
   toggleAccountListGroup, setAccountListSort, toggleGroupCollapse, showMoreAccounts } from './account-list.js';
 import { openAccountModalByKey, openAccountModal, closeAccountModal, switchTab,
-  toggleDataRefreshPanel, generateMeetingPrepByKey, generateMeetingPrep,
+  generateMeetingPrepByKey, generateMeetingPrep,
   handleDataRefreshDrop, handleDataRefreshFile,
   showPrepInput, hidePrepInput, showEditPrepInput, hideEditPrepInput,
   savePrepLinkInline, removePrepLinkInline } from './account-modal.js';
-import { isExcelFile, readSpreadsheetFile, openSfdcModal, closeSfdcModal, setSfdcType,
+import { readSpreadsheetFile, closeSfdcModal, setSfdcType,
   handleSfdcFile } from './data-merge.js';
-import { upsertOpp, deriveOppSummary, parseNumericFields,
-  findPartialMatch, showMergeModal, closeMergeModal, buildLocationIndex, inheritLocationData,
-  geocodeDistrict, geocodeMissingRecords, postMergeRefresh, focusOnAccount,
+import { deriveOppSummary,
+  closeMergeModal,
+  geocodeMissingRecords, focusOnAccount,
   closeUploadSummary, confirmMerge } from './multi-opp.js';
-import { toggleConferences, setConfRange, applyConfDateFilter, renderConferences,
-  handleConfFile, showGeocodeProgress, updateGeocodeProgress, hideGeocodeProgress,
+import { toggleConferences, setConfRange, applyConfDateFilter,
+  handleConfFile,
   geocodeConferences } from './conference.js';
 import { toggleConflictsOverlay, refreshModalConflictBanner, navigateToConflict,
   resolveConflict, updateConflictsBadge, exportConflicts } from './conflict.js';
@@ -107,7 +107,7 @@ function saveDataToLocalStorage(accounts, customers) {
     }
   }
   if (savedAny) {
-    try { localStorage.setItem(LS_DATA_SAVED_KEY, new Date().toISOString()); } catch(e) { /* non-critical */ }
+    try { localStorage.setItem(LS_DATA_SAVED_KEY, new Date().toISOString()); } catch(_e) { /* non-critical */ }
     console.log('[Persist] Data saved to localStorage');
   }
 }
@@ -153,7 +153,7 @@ function loadConflicts() {
   try {
     const data = localStorage.getItem(LS_CONFLICTS_KEY);
     return data ? JSON.parse(data) : [];
-  } catch (e) { return []; }
+  } catch (_e) { return []; }
 }
 
 /** Save conflict records to localStorage. */
@@ -718,33 +718,6 @@ const CONDITIONAL_REASSIGN = new Set([
   'Nicholas Watson',  // SFDC Admin
 ]);
 
-function getAccountReps() {
-  if (!S._accountRepsCache) {
-    S._accountRepsCache = getAllRepsForTeam('Strategic');
-  }
-  return S._accountRepsCache;
-}
-
-// Helper: detect NYC Public Schools and sub-districts/schools within NYC.
-// NYC is unique: the mega-district (1M+ students) is subdivided into geographic
-// districts (e.g. "New York City Geographic District #16") which contain individual
-// schools. These accounts use holdout logic (opp owner) instead of a hard territory
-// override, so that uploaded opps remain assigned to the opp owner.
-function isNYCAccount(name) {
-  if (!name) return false;
-  const n = name.toLowerCase();
-  return n.includes('new york city public schools') || n.includes('nyc public schools')
-    || n.includes('new york city geographic district')
-    || n.startsWith('nyc ');
-}
-
-// Helper: robustly parse enrollment (handles comma-formatted strings like "30,210")
-function parseEnrollment(val) {
-  if (typeof val === 'number') return val;
-  if (!val) return 0;
-  return parseInt(String(val).replace(/,/g, '')) || 0;
-}
-
 // isOppClosed / isOppOpen — moved to helpers.js (imported at top of file)
 
 // Helper: returns true if account d has at least one OPEN opp attributable to repName.
@@ -864,7 +837,6 @@ export function resolveOwner(csvAE, existingAE, ctx) {
 
 // ============ STATE ============
 // All state variables are stored on S (see state.js). Accessed via S.xxx throughout.
-const MULTI_SELECT_FILTERS = new Set(['strat_state', 'strat_sis', 'cust_state']);
 
 // ============ STATE SYNC ============
 
@@ -1001,7 +973,7 @@ function rebuildNoteIndex() {
     const key = localStorage.key(i);
     if (key && key.startsWith('edia_notes_')) {
       try { if (JSON.parse(localStorage.getItem(key)).length > 0) S._accountsWithNotes.add(key); }
-      catch(e) { /* ignore corrupt notes entries */ }
+      catch(_e) { /* ignore corrupt notes entries */ }
     }
   }
 }
@@ -1769,18 +1741,6 @@ function getUnique(data, field) {
   return result;
 }
 
-// Collect unique AE names — resolves territory AEs and includes holdout reps in dropdown
-function getUniqueAEs(data) {
-  const s = new Set();
-  data.forEach(d => {
-    const tAE = getTerritoryAE(d);
-    const hAE = getHoldoutAE(d);
-    if (tAE) s.add(tAE);
-    if (hAE) s.add(hAE);
-  });
-  return [...s].sort();
-}
-
 function setFilter(key, val) {
   if (!val || val === '') delete S.filters[key];
   else S.filters[key] = val;
@@ -1952,7 +1912,7 @@ function applyFilters() {
   S.accountListDisplayLimit = 200; // Reset pagination on filter change
 
   let stratCount = 0, custCount = 0;
-  let statesSet = new Set();
+  const statesSet = new Set();
   S.lastSearchResults = []; // Reset search results
   S.markerLookup = {};            // Reset marker lookup
   S.filteredAccountData = [];       // Reset filtered data
@@ -2762,7 +2722,7 @@ function updateActionDashboard() {
   const body = document.getElementById('actionDashboardBody');
   if (!body) return;
 
-  let allAccounts = [];
+  const allAccounts = [];
   window.districtDataCache = window.districtDataCache || {};
 
   // Gather accounts based on current view, filtered by sidebar selections
@@ -3214,7 +3174,7 @@ function buildStratPopup(d) {
   html += `<div class="popup-section-label" style="display:flex;justify-content:space-between;align-items:center;">Notes (${notes.length})<span class="note-actions"><button class="note-copy-btn" onclick="copyAccountNotes('${noteKey}', '${d.name.replace(/'/g, "\\'")}')">📋 Copy All</button></span></div>`;
   if (notes.length) {
     html += `<div class="notes-thread">`;
-    notes.forEach((n, i) => {
+    notes.forEach((n, _i) => {
       html += `<div class="note-entry"><div class="note-meta"><span class="note-author">${n.author}</span><span class="note-time">${formatNoteTime(n.ts)}</span></div><div class="note-text">${n.text}</div></div>`;
     });
     html += `</div>`;

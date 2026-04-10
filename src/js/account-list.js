@@ -171,7 +171,7 @@ export function openAccountFromList(dKey) {
   let d = window.districtDataCache && window.districtDataCache[dKey];
   if (!d) {
     // Fallback: search S.markerLookup using districtKey for correct name+state matching
-    const match = Object.entries(S.markerLookup).find(([k, v]) => districtKey(v.data) === dKey);
+    const match = Object.entries(S.markerLookup).find(([_k, v]) => districtKey(v.data) === dKey);
     if (match) d = match[1].data;
   }
   if (d) {
@@ -189,7 +189,7 @@ export function renderAccountList() {
   // Count badge is updated by updateCountBadge, no separate trigger
 
   // Build unified list of items to show
-  let items = [];
+  const items = [];
   const showStrat = S.currentView === 'accounts' || S.currentView === 'all';
   const showCust = S.currentView === 'customers' || S.currentView === 'all';
 
