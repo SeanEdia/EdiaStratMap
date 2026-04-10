@@ -298,14 +298,16 @@ function buildExportWorkbook(scopeLabel) {
 }
 
 export function exportData() {
-  if (!S.selectedTeam) {
+  // In reverse proximity mode, allow export without team selection
+  const isReverseProx = S.currentView === 'customers' && S.proximityOn && S.proxSelectedCustomer;
+  if (!S.selectedTeam && !isReverseProx) {
     alert('Select a team first to export data.');
     return;
   }
 
   const scopeLabel = S.selectedRep && S.selectedRep !== '__unassigned__'
     ? S.selectedRep
-    : S.selectedTeam;
+    : (S.selectedTeam || (S.proxSelectedCustomer ? 'Near ' + S.proxSelectedCustomer.name : 'Export'));
 
   const result = buildExportWorkbook(scopeLabel);
   if (!result) return;
@@ -331,8 +333,10 @@ export function showExportToast(sheetCount, scopeLabel) {
 
 /** Show/hide the export button based on whether a team is selected. */
 export function updateExportButtonVisibility() {
+  const isReverseProx = S.currentView === 'customers' && S.proximityOn && S.proxSelectedCustomer;
+  const showExport = S.selectedTeam || isReverseProx;
   const exportBtn = document.getElementById('exportTrigger');
-  if (exportBtn) exportBtn.style.display = S.selectedTeam ? '' : 'none';
+  if (exportBtn) exportBtn.style.display = showExport ? '' : 'none';
   const outreachBtn = document.getElementById('outreachTrigger');
   if (outreachBtn) outreachBtn.style.display = S.selectedTeam ? '' : 'none';
 }

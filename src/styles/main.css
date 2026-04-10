@@ -1746,6 +1746,34 @@ input[type="range"]::-webkit-slider-thumb {
   color: #6c5ce7;
 }
 
+/* Account proximity selection badge (Accounts view) */
+.prox-acct-status {
+  width: 100%;
+  margin-top: 4px;
+  padding-left: 44px;
+}
+.prox-acct-selected {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #00b894;
+  max-width: 100%;
+}
+.prox-acct-selected #proxAcctName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.prox-clear-acct {
+  border-color: rgba(0,184,148,0.3);
+}
+.prox-clear-acct:hover {
+  border-color: #00b894;
+  color: #00b894;
+}
+
 .prox-show-all-toggle {
   display: flex;
   align-items: center;
