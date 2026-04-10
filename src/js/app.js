@@ -785,7 +785,9 @@ export function getHoldoutAE(d) {
 }
 
 // Resolve the account owner from a CSV value against an existing owner.
-// Optional ctx: { hasUploadedOpp, oppOwner, loadedReps, accountName } for conditional reassignment.
+// Optional ctx: { hasUploadedOpp, oppOwner, loadedReps, accountName, source } for conditional reassignment.
+// When ctx.source is 'opps', active-vs-active AE conflicts keep the existing owner.
+// For all other sources (account uploads), CSV is treated as the source of truth.
 // Evaluation order (Opp Owner used as fallback when Account Owner is invalid):
 //   1. Blank CSV → Opp Owner if active → existing if active → unassigned
 //   2. CONDITIONAL_REASSIGN (Iain/Nicholas) → has opp → Opp Owner / existing / unassigned;
@@ -841,9 +843,15 @@ export function resolveOwner(csvAE, existingAE, ctx) {
       return { ae: fallback(), reason: 'no_data_loaded' };
     }
     // If existing is also a different active rep (and not the Strategic primary default)
-    // → conflict: keep existing owner, conflict is logged separately in the merge
+    // → for opp uploads: conflict — keep existing owner, conflict is logged separately.
+    // → for account uploads: CSV is source of truth — accept the new assignment.
     if (existing && ALL_ACTIVE_REPS.has(existing) && existing !== csv && existing !== ACCOUNT_PRIMARY_AE) {
-      return { ae: existing, reason: 'conflict_kept_existing' };
+      const mergeSource = ctx && ctx.source;
+      if (mergeSource === 'opps') {
+        return { ae: existing, reason: 'conflict_kept_existing' };
+      }
+      // Account uploads: accept CSV as definitive territory assignment
+      return { ae: csv, reason: 'direct_assign' };
     }
     // Otherwise assign the CSV rep (new account, same rep, or existing was the Strategic default)
     return { ae: csv, reason: 'direct_assign' };

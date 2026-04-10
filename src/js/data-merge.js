@@ -816,6 +816,7 @@ export function runMerge(csvData, existingData, source) {
               oppOwner: rowOppOwner,
               loadedReps,
               accountName: alreadyMerged.name || '',
+              source: source || 'accounts',
             });
             if (result.ae) alreadyMerged.ae = result.ae;
             // Tag source team from the CSV AE
@@ -990,6 +991,7 @@ export function runMerge(csvData, existingData, source) {
           oppOwner: (merged.opp_owner || '').trim(),
           loadedReps,
           accountName: merged.name || '',
+          source: source || 'accounts',
         });
         merged.ae = ownerResult.ae;
         if (hasUploadedOpp) merged._hasUploadedOpp = true;
@@ -1025,8 +1027,9 @@ export function runMerge(csvData, existingData, source) {
           }
         }
 
-        // Conflict: CSV brings a different active rep than the current active rep
-        if (csvAE && priorAE && csvAE !== priorAE
+        // Conflict: CSV brings a different active rep than the current active rep.
+        // Only flag conflicts for opp uploads — account uploads are source of truth.
+        if (source === 'opps' && csvAE && priorAE && csvAE !== priorAE
             && ALL_ACTIVE_REPS.has(csvAE) && ALL_ACTIVE_REPS.has(priorAE)
             && !MANAGER_REPS.get(priorAE)?.has(csvAE)) {
           console.log('[SFDC Merge] CONFLICT:', merged.name, '- was', priorAE, ', CSV says', csvAE);
@@ -1240,6 +1243,7 @@ export function runMerge(csvData, existingData, source) {
           oppOwner: (newRecord.opp_owner || '').trim(),
           loadedReps,
           accountName: newRecord.name || '',
+          source: source || 'accounts',
         });
         newRecord.ae = ownerResult.ae;
         if (hasUploadedOpp) newRecord._hasUploadedOpp = true;
@@ -1646,6 +1650,7 @@ export function runOppMerge(csvData) {
           oppOwner: oppOwner,
           loadedReps,
           accountName: acct.name || '',
+          source: 'opps',
         });
         acct.ae = ownerResult.ae;
         // Tag source team
