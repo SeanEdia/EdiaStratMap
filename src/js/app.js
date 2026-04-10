@@ -2224,8 +2224,18 @@ function applyFilters() {
   // Update stats - context-aware
   // For accounts view, compute overlap dynamically from the filtered set
   const dynamicOverlapCount = S.filteredAccountData.filter(d => d.is_customer).length;
-  const dynamicCustPipelineCount = S.filteredAccountData.filter(d => {
+  const dynamicCustPipelineCount = S.ACCOUNT_DATA.filter(d => {
     if (!d.is_customer) return false;
+    // Apply team/rep scoping (mirrors openPipelineOverlay logic)
+    const holdoutAE = getHoldoutAE(d);
+    if (holdoutAE) {
+      if (S.selectedRep && S.selectedRep !== '__unassigned__' && !MANAGERS.has(S.selectedRep)) {
+        if (holdoutAE !== S.selectedRep) return false;
+      } else if (S.selectedTeam) {
+        const teamReps = S._teamRepsSet[S.selectedTeam];
+        if (teamReps && !teamReps.has(holdoutAE)) return false;
+      }
+    }
     const opps = d.opps && d.opps.length > 0 ? d.opps : (d.opp_stage ? [buildOppEntry(d)] : []);
     return opps.some(opp => opp.stage && isOppOpen(opp));
   }).length;
@@ -2751,7 +2761,8 @@ function openPipelineOverlay() {
   });
   h += `<div class="pipeline-total"><span class="label">${totalCount} Open Opps</span><span class="value">$${totalACV.toLocaleString()}</span></div>`;
   document.getElementById('pipelineOverlayBody').innerHTML = h;
-  document.getElementById('pipelineOverlayCount').textContent = `${totalCount} opps across ${overlapAccounts.length} customers`;
+  const uniqueCustWithOpps = new Set(allOpps.map(item => item.account.name)).size;
+  document.getElementById('pipelineOverlayCount').textContent = `${totalCount} opps across ${uniqueCustWithOpps} customers`;
   document.getElementById('pipelineOverlay').classList.add('open');
   document.getElementById('pipelineOverlayBackdrop').classList.add('open');
 }
