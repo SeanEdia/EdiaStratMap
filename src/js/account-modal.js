@@ -1,5 +1,5 @@
 import S from './state.js';
-import { districtKey, haversine, escapeHtml, escapeAttr, formatLastActivity, isDOE, sfdc15to18, isOppOpen } from './helpers.js';
+import { haversine, escapeHtml, escapeAttr, formatLastActivity, isDOE, sfdc15to18, isOppOpen } from './helpers.js';
 import { buildOppEntry, isManagerHeld, getTerritoryAE, getHoldoutAE, formatProbability } from './app.js';
 import { getConflictForAccount, getConflictTypeLabel } from './conflict.js';
 import { getAccountNotes, formatNoteTime } from './notes.js';
@@ -1102,7 +1102,7 @@ export function formatMeetingPrepPrompt(d) {
   let notes = [];
   try {
     notes = JSON.parse(localStorage.getItem(noteKey) || '[]');
-  } catch(e) { /* ignored */ }
+  } catch(_e) { /* ignored */ }
 
   // Check if also a customer and get that data
   let customerData = null;

@@ -1,7 +1,7 @@
 import S from './state.js';
-import { districtKey, normalizeDistrictName, parseUSDate, normalizeOppArea, precomputeSearchFields, isOppOpen } from './helpers.js';
-import { saveOppsToLocalStorage, OPP_ENTRY_FIELDS, buildOppEntry, migrateToOppsArray,
-  crossLinkCustomers, joinOppsToAccounts, buildIndices, TEAM_REP_DATA,
+import { districtKey, normalizeDistrictName, parseUSDate, precomputeSearchFields, isOppOpen } from './helpers.js';
+import { saveOppsToLocalStorage,
+  crossLinkCustomers, buildIndices, TEAM_REP_DATA,
   getTerritoryAE, getHoldoutAE, hideWelcomeOverlay, updateDataSourceIndicator,
   renderTeamRepSelectors, renderFilters } from './app.js';
 import { showGeocodeProgress, updateGeocodeProgress, hideGeocodeProgress } from './conference.js';
@@ -520,7 +520,7 @@ export async function geocodeDistrict(name, state, record) {
             const extractedState = best.address.state;
             // Reverse-lookup state abbreviation
             const stateAbbr = Object.entries(STATE_FULL_NAMES).find(
-              ([abbr, full]) => full.toLowerCase() === extractedState.toLowerCase()
+              ([_abbr, full]) => full.toLowerCase() === extractedState.toLowerCase()
             );
             if (stateAbbr) {
               record.state = stateAbbr[0];
@@ -737,7 +737,7 @@ export async function geocodePendingRecords(records, confirmBtn) {
       } else {
         failedRecords.push(record);
       }
-    } catch (e) {
+    } catch (_e) {
       failedRecords.push(record);
     }
   }
@@ -1150,7 +1150,6 @@ export async function confirmMerge() {
       localStorage.setItem('edia_sfdc_last_refresh', new Date().toISOString());
 
       // Store detected conflicts (append to existing, deduplicate by name)
-      const mergeConflicts = S.pendingMergeStats && S.pendingMergeStats.conflicts ? S.pendingMergeStats.conflicts : [];
       storeNewConflicts(S.pendingMergeStats);
 
       // Capture stats before closeMergeModal() nulls S.pendingMergeStats
@@ -1227,7 +1226,6 @@ export async function confirmMerge() {
       localStorage.setItem('edia_sfdc_last_refresh', new Date().toISOString());
 
       // Store detected conflicts (append to existing, deduplicate by name)
-      const mergeConflicts2 = S.pendingMergeStats && S.pendingMergeStats.conflicts ? S.pendingMergeStats.conflicts : [];
       storeNewConflicts(S.pendingMergeStats);
 
       // Capture stats before closeMergeModal() nulls S.pendingMergeStats

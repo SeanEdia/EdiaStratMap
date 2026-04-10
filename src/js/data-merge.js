@@ -1,7 +1,7 @@
 import S from './state.js';
-import { districtKey, normalizeDistrictName, clampFutureLastActivity, isDOE } from './helpers.js';
+import { normalizeDistrictName, clampFutureLastActivity, isDOE } from './helpers.js';
 import { OPP_ENTRY_FIELDS, OPP_WRAPPER_FIELDS, buildOppEntry, migrateToOppsArray,
-  getTeamForRep, ACCOUNT_PRIMARY_AE, ALL_ACTIVE_REPS, MANAGER_REPS, resolveOwner } from './app.js';
+  getTeamForRep, ALL_ACTIVE_REPS, MANAGER_REPS, resolveOwner } from './app.js';
 import { upsertOpp, deriveOppSummary, parseNumericFields, findPartialMatch, showMergeModal } from './multi-opp.js';
 
 // ============ SPREADSHEET FILE READER (CSV + Excel) ============
@@ -185,7 +185,7 @@ export function parseCSV(text) {
   const headers = parseCSVLine(rows[0]);
   const data = [];
 
-  let skippedRows = [];
+  const skippedRows = [];
   for (let i = 1; i < rows.length; i++) {
     const values = parseCSVLine(rows[i]);
     if (values.length === headers.length) {
@@ -443,11 +443,6 @@ export function runMerge(csvData, existingData, source) {
   // exact matches, prefix-related, or share significant words with a prefix relationship.
   // Returns false for clearly different entities ("Bedford" vs "New Bedford",
   // "Hampton" vs "Southampton", "Clarke Elementary" vs "Swampscott Public Schools").
-  const _genericWords = new Set(['school', 'schools', 'high', 'middle', 'elementary',
-    'academy', 'the', 'and', 'for', 'public', 'district', 'charter', 'preparatory',
-    'regional', 'county', 'city', 'unified', 'independent', 'consolidated', 'free',
-    'union', 'area', 'community', 'central', 'joint', 'vocational', 'technical',
-    'career', 'education', 'learning', 'international', 'national', 'state', 'local']);
   function namesArePlausiblyRelated(name1, name2) {
     const a = normalizeDistrictName(name1);
     const b = normalizeDistrictName(name2);
@@ -618,7 +613,7 @@ export function runMerge(csvData, existingData, source) {
     try {
       const notes = JSON.parse(localStorage.getItem(noteKey) || '[]');
       if (notes.length > 0) notesCount++;
-    } catch(e) { /* ignored */ }
+    } catch(_e) { /* ignored */ }
   });
 
   // Analyze merge impact
@@ -1070,7 +1065,6 @@ export function runMerge(csvData, existingData, source) {
       }
 
       // Check if anything actually changed - compare key opp fields
-      const keyFields = ['opp_stage', 'opp_acv', 'opp_probability', 'opp_forecast', 'opp_next_step'];
       const changedFields = [];
 
       const hasChanges = Object.keys(csvRow).some(key => {
@@ -1414,7 +1408,7 @@ export function runOppMerge(csvData) {
     }
   });
 
-  csvData.forEach((csvRow, rowIdx) => {
+  csvData.forEach((csvRow, _rowIdx) => {
     // Extract account name from the raw CSV row (before mapFieldName, which maps it to 'name')
     const rawName = (csvRow.account_name || csvRow.name || '').trim();
     if (!rawName) return;

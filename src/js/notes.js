@@ -1,5 +1,5 @@
 import S from './state.js';
-import { districtKey, escapeHtml } from './helpers.js';
+import { escapeHtml } from './helpers.js';
 
 // ============ NOTES SYSTEM ============
 export function getUserName() {
@@ -18,7 +18,7 @@ export function getUserName() {
 
 export function getAccountNotes(key) {
   try { return JSON.parse(localStorage.getItem(key) || '[]'); }
-  catch(e) { return []; }
+  catch(_e) { return []; }
 }
 
 export function addNote(key, el) {
@@ -99,7 +99,7 @@ export function updateNoteCount() {
       try {
         const notes = JSON.parse(localStorage.getItem(key));
         if (notes.length) count++;
-      } catch(e) { /* ignored */ }
+      } catch(_e) { /* ignored */ }
     }
   }
   const el = document.getElementById('notesCount');
@@ -141,20 +141,20 @@ export function importNotes(event) {
           });
           existing.sort((a, b) => new Date(a.ts) - new Date(b.ts));
           localStorage.setItem(key, JSON.stringify(existing));
-        } catch(e2) { /* ignored */ }
+        } catch(_e2) { /* ignored */ }
       });
       updateNoteCount();
       S._rebuildNoteIndex();
       S._applyFilters();
       alert('Merged ' + merged + ' new note' + (merged !== 1 ? 's' : '') + '.');
-    } catch(err) { alert('Invalid file format.'); }
+    } catch(_err) { alert('Invalid file format.'); }
   };
   reader.readAsText(file);
   event.target.value = '';
 }
 
 export function copyAllNotes() {
-  let lines = [];
+  const lines = [];
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i);
     if (!key.startsWith('edia_notes_')) continue;
@@ -167,7 +167,7 @@ export function copyAllNotes() {
         lines.push(`  [${n.author} · ${new Date(n.ts).toLocaleDateString('en-US', {month:'short',day:'numeric'})}] ${n.text}`);
       });
       lines.push('');
-    } catch(e) { /* ignored */ }
+    } catch(_e) { /* ignored */ }
   }
   if (lines.length) {
     navigator.clipboard.writeText(lines.join('\n'));
@@ -180,7 +180,6 @@ export function copyAllNotes() {
 
 export function copyText(text, el) {
   navigator.clipboard.writeText(text).then(() => {
-    const orig = el.innerHTML;
     el.classList.add('copied');
     el.setAttribute('data-tooltip', 'Copied!');
     setTimeout(() => { el.classList.remove('copied'); el.setAttribute('data-tooltip', 'Click to copy'); }, 1200);

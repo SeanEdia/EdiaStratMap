@@ -34,6 +34,8 @@ export default [
         requestAnimationFrame: 'readonly',
         DOMParser: 'readonly',
         MutationObserver: 'readonly',
+        TextEncoder: 'readonly',
+        crypto: 'readonly',
         // Libraries loaded via CDN
         L: 'readonly',
         XLSX: 'readonly',
@@ -41,7 +43,7 @@ export default [
     },
     rules: {
       // Relaxed rules suitable for this project
-      'no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+      'no-unused-vars': ['warn', { argsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_' }],
       'no-console': 'off',
       'prefer-const': 'warn',
     },

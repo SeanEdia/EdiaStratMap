@@ -1,7 +1,6 @@
 import S from './state.js';
-import { districtKey, parseUSDate, daysAgo, extractDatesFromText, isThisWeek, haversine } from './helpers.js';
-import { buildOppEntry, getTerritoryAE, getHoldoutAE } from './app.js';
-import { formatCompactNumber } from './account-list.js';
+import { parseUSDate, daysAgo, extractDatesFromText, isThisWeek, haversine } from './helpers.js';
+import { buildOppEntry, getTerritoryAE } from './app.js';
 
 // ============ DATA EXPORT ============
 
@@ -433,7 +432,7 @@ function buildOutreachPrompt(scopeLabel, filename) {
       if (notes.length > 0) {
         accountsWithNotes.push({ name: d.name, notes: notes });
       }
-    } catch(e) { /* ignored */ }
+    } catch(_e) { /* ignored */ }
   });
 
   if (accountsWithNotes.length > 0) {
