@@ -1490,11 +1490,50 @@ export function runOppMerge(csvData) {
     }
 
     if (!match) {
-      if (!stats.orphans.includes(rawName)) {
-        stats.orphans.push(rawName);
-        console.log('[Opp Merge] ORPHAN (no matching account):', rawName, csvState);
+      // ── SYNTHETIC ACCOUNT CREATION FOR ORPHANED OPPS ──
+      // Instead of dropping the opp, create a minimal account record from the CSV data.
+      // This handles school-level records, IU/AEA/ESC service centers, and small districts
+      // that have opps but aren't in any account upload file.
+      const syntheticKey = rawName.toLowerCase().trim() + '|' + csvState;
+      const normSynKey = normalizeDistrictName(rawName) + '|' + csvState;
+
+      // Check if we already created a synthetic for this name (multiple opps per account)
+      let synthEntry = clonedByKey.get(syntheticKey) || clonedByKey.get(normSynKey);
+      if (!synthEntry) {
+        const synthetic = {
+          name: rawName,
+          state: csvState,
+          ae: (csvRow.account_owner || csvRow.opportunity_owner || '').trim(),
+          opp_owner: (csvRow.opportunity_owner || '').trim(),
+          enrollment: csvRow.students_in_district || csvRow.enrollment || '',
+          address: csvRow.billing_address_line_1 || csvRow.address || '',
+          city: csvRow.billing_city || csvRow.city || '',
+          zip: csvRow.billing_zip_postal_code || csvRow.zip || '',
+          account_id: lookupId || '',
+          parent_account_id: csvRow.parent_account_id || '',
+          opps: [],
+          _synthetic_from_opp: true,
+          _nameLc: rawName.toLowerCase().trim(),
+          _stateLc: (csvState || '').toLowerCase().trim(),
+          _regionLc: '',
+        };
+
+        const newIdx = mergedAccounts.length;
+        mergedAccounts.push(synthetic);
+        synthEntry = { item: synthetic, idx: newIdx };
+        clonedByKey.set(syntheticKey, synthEntry);
+        clonedByKey.set(normSynKey, synthEntry);
+        if (lookupId) clonedById.set(lookupId, synthEntry);
+
+        if (!stats.orphans.includes(rawName)) {
+          stats.orphans.push(rawName);
+        }
+        stats.newRecords++;
+        console.log('[Opp Merge] Created synthetic account for orphaned opp:', rawName, csvState);
       }
-      return;
+
+      // Fall through to merge the opp data into the synthetic account
+      match = synthEntry;
     }
 
     const acct = match.item;
@@ -1823,6 +1862,28 @@ export function previewMerge(csvData) {
     S.pendingCustomerMerge = customerResult.mergedData;
     S.pendingMergeData = null; // Clear single-mode state
 
+    // ── CUSTOMER → ACCOUNT PROMOTION ──
+    // Promote customer records that have no matching account record into the account
+    // dataset. This ensures existing customers with active expansion opps are visible
+    // in the Accounts view, Pipeline Summary, and territory map.
+    const _acctNormSet = new Set();
+    S.pendingAccountMerge.forEach(a => {
+      _acctNormSet.add(normalizeDistrictName(a.name));
+    });
+    let _promotedCount = 0;
+    S.pendingCustomerMerge.forEach(c => {
+      const norm = normalizeDistrictName(c.name);
+      if (!_acctNormSet.has(norm)) {
+        const promoted = { ...c, is_customer: true, _promoted_from_customer: true };
+        S.pendingAccountMerge.push(promoted);
+        _acctNormSet.add(norm);
+        _promotedCount++;
+      }
+    });
+    if (_promotedCount > 0) {
+      console.log(`[SFDC Merge] Promoted ${_promotedCount} customer-only record(s) into account dataset`);
+    }
+
     // Combined stats for the modal
     const combinedStats = {
       total: csvData.length,
@@ -1830,6 +1891,7 @@ export function previewMerge(csvData) {
       updatedRecords: accountResult.stats.updatedRecords + customerResult.stats.updatedRecords,
       notesPreserved: accountResult.stats.notesPreserved + customerResult.stats.notesPreserved,
       consolidatedRecords: consolidation.consolidatedCount + (accountResult.stats.duplicateRows || 0) + (customerResult.stats.duplicateRows || 0),
+      promotedRecords: _promotedCount,
       changes: [...accountResult.stats.changes, ...customerResult.stats.changes],
       conflicts: [...(accountResult.stats.conflicts || []), ...(customerResult.stats.conflicts || [])],
       resolutions: [...(accountResult.stats.resolutions || []), ...(customerResult.stats.resolutions || [])],
