@@ -923,6 +923,11 @@ function buildMarkerPool() {
     });
     const marker = L.marker([d.lat, d.lng], { icon });
     marker.on('click', function() {
+      // Proximity: scope to this account when proximity is on
+      if (S.proximityOn && S.currentView === 'accounts') {
+        selectAccountForProximity(d);
+        // Fall through to open popup/modal
+      }
       if (window.innerWidth <= 1024) closeMobileSidebar();
       if (window.innerWidth <= 1024) {
         if (_longPressTriggered) { _longPressTriggered = false; return; }
@@ -1874,6 +1879,7 @@ function resetFilters() {
   S.proximityOn = false;
   S.proxShowAll = false;
   S.proxSelectedCustomer = null;
+  S.proxSelectedAccount = null;
   const proxCheck = document.getElementById('proxCheck');
   if (proxCheck) proxCheck.checked = false;
   const proxShowAllCheck = document.getElementById('proxShowAllCheck');
@@ -1886,6 +1892,8 @@ function resetFilters() {
   if (proxReverseHint) proxReverseHint.style.display = '';
   const proxReverseSelected = document.getElementById('proxReverseSelected');
   if (proxReverseSelected) proxReverseSelected.style.display = 'none';
+  const proxAcctStatus = document.getElementById('proxAcctStatus');
+  if (proxAcctStatus) proxAcctStatus.style.display = 'none';
 
   // Reset Near Me
   clearNearMe();
@@ -2069,6 +2077,11 @@ function applyFilters() {
         });
         const marker = L.marker([d.lat, d.lng], { icon }).addTo(S.stratLayer);
         marker.on('click', function() {
+          // Proximity: scope to this account when proximity is on
+          if (S.proximityOn && S.currentView === 'accounts') {
+            selectAccountForProximity(d);
+            // Fall through to open popup/modal
+          }
           if (window.innerWidth <= 1024) closeMobileSidebar();
           if (window.innerWidth <= 1024) {
             if (_longPressTriggered) { _longPressTriggered = false; return; }
@@ -2935,6 +2948,9 @@ function toggleProximity(on) {
 }
 
 function clearProxSelection() {
+  S.proxSelectedAccount = null;
+  const acctStatus = document.getElementById('proxAcctStatus');
+  if (acctStatus) acctStatus.style.display = 'none';
   S.proxSelectedCustomer = null;
   S.proxLayer.clearLayers();
   const hint = document.getElementById('proxReverseHint');
@@ -2943,6 +2959,13 @@ function clearProxSelection() {
   if (hint) hint.style.display = '';
   if (selected) selected.style.display = 'none';
   if (nearbyEl) nearbyEl.textContent = '';
+  // Clear the nearby-accounts list from filteredAccountData
+  if (S.currentView === 'customers') {
+    S.filteredAccountData = [];
+    renderAccountList();
+    updateCountBadge(0, S.filteredCustData ? S.filteredCustData.length : 0);
+    updateExportButtonVisibility();
+  }
 }
 
 function selectCustomerForProximity(d) {
@@ -2956,6 +2979,22 @@ function selectCustomerForProximity(d) {
   drawProximity();
 }
 
+function selectAccountForProximity(d) {
+  S.proxSelectedAccount = d;
+  const status = document.getElementById('proxAcctStatus');
+  const nameEl = document.getElementById('proxAcctName');
+  if (status) status.style.display = '';
+  if (nameEl) nameEl.textContent = d.name;
+  drawProximity();
+}
+
+function clearProxAcctSelection() {
+  S.proxSelectedAccount = null;
+  const status = document.getElementById('proxAcctStatus');
+  if (status) status.style.display = 'none';
+  if (S.proximityOn) drawProximity();
+}
+
 function updateProxLabel() {
   const label = document.getElementById('proxLabel');
   const reverseStatus = document.getElementById('proxReverseStatus');
@@ -2964,6 +3003,8 @@ function updateProxLabel() {
   if (label) label.textContent = isReverse ? 'Account Proximity' : 'Customer Proximity';
   if (reverseStatus) reverseStatus.style.display = (isReverse && S.proximityOn) ? '' : 'none';
   if (showAllToggle) showAllToggle.style.display = isReverse ? 'none' : '';
+  const acctStatus = document.getElementById('proxAcctStatus');
+  if (acctStatus) acctStatus.style.display = (!isReverse && S.proximityOn && S.proxSelectedAccount) ? '' : 'none';
 }
 
 function toggleProxShowAll(on) {
@@ -3043,6 +3084,9 @@ function drawProximity() {
     if (!cust || !cust.lat || !cust.lng) {
       const nearbyEl = document.getElementById('proxNearbyCount');
       if (nearbyEl) nearbyEl.textContent = '';
+      S.filteredAccountData = [];
+      renderAccountList();
+      updateCountBadge(0, S.filteredCustData ? S.filteredCustData.length : 0);
       return;
     }
 
@@ -3058,11 +3102,11 @@ function drawProximity() {
     }).addTo(S.proxLayer);
 
     // Find and render nearby account pins as overlay markers on proxLayer
-    let nearby = 0;
+    const nearbyAccounts = [];
     S.ACCOUNT_DATA.forEach(a => {
       if (!a.lat || !a.lng) return;
       if (haversine(cust.lat, cust.lng, a.lat, a.lng) > S.PROXIMITY_MILES) return;
-      nearby++;
+      nearbyAccounts.push(a);
 
       const cls = computeStratIconClass(a);
       const icon = L.divIcon({
@@ -3083,19 +3127,33 @@ function drawProximity() {
           setTimeout(() => { marker.openPopup(); }, 50);
         }
       });
+      // Register in markerLookup so account list clicks can zoom to the pin
+      const mlKey = a.name + '|' + (a.state || '');
+      S.markerLookup[mlKey] = { marker, data: a, type: 'accounts' };
     });
 
+    // Populate filteredAccountData so account list + export see these accounts
+    S.filteredAccountData = nearbyAccounts;
+
     const nearbyEl = document.getElementById('proxNearbyCount');
-    if (nearbyEl) nearbyEl.textContent = nearby + ' accounts nearby';
+    if (nearbyEl) nearbyEl.textContent = nearbyAccounts.length + ' accounts nearby';
+
+    // Update the account list and count badge to reflect nearby accounts
+    renderAccountList();
+    updateCountBadge(nearbyAccounts.length, S.filteredCustData ? S.filteredCustData.length : 0);
+    updateExportButtonVisibility();
     return;
   }
 
-  // ── ORIGINAL MODE (Accounts view): Customers near Accounts — unchanged ──
-  const scopeAccounts = S.proxShowAll
-    ? S.ACCOUNT_DATA
-    : (S.filteredAccountData && S.filteredAccountData.length > 0
-        ? S.filteredAccountData
-        : S.ACCOUNT_DATA);
+  // ── ORIGINAL MODE (Accounts view): Customers near Accounts ──
+  // If user clicked a specific account, scope to just that account
+  const scopeAccounts = S.proxSelectedAccount
+    ? [S.proxSelectedAccount]
+    : S.proxShowAll
+      ? S.ACCOUNT_DATA
+      : (S.filteredAccountData && S.filteredAccountData.length > 0
+          ? S.filteredAccountData
+          : S.ACCOUNT_DATA);
 
   const accountCoords = [];
   scopeAccounts.forEach(a => {
@@ -3865,6 +3923,7 @@ Object.assign(window, {
   // Proximity & ADA
   toggleProximity,
   clearProxSelection,
+  clearProxAcctSelection,
   toggleProxShowAll,
   updateProxRadius,
   setProxRadiusFromInput,
