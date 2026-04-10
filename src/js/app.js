@@ -2224,6 +2224,11 @@ function applyFilters() {
   // Update stats - context-aware
   // For accounts view, compute overlap dynamically from the filtered set
   const dynamicOverlapCount = S.filteredAccountData.filter(d => d.is_customer).length;
+  const dynamicCustPipelineCount = S.filteredAccountData.filter(d => {
+    if (!d.is_customer) return false;
+    const opps = d.opps && d.opps.length > 0 ? d.opps : (d.opp_stage ? [buildOppEntry(d)] : []);
+    return opps.some(opp => opp.stage && isOppOpen(opp));
+  }).length;
   const stratEl = document.getElementById('stat-strat-count');
   const custEl = document.getElementById('stat-cust-count');
   const overlapEl = document.getElementById('stat-overlap-count');
@@ -2261,7 +2266,7 @@ function applyFilters() {
     custEl.textContent = custCount;
     custCard.style.display = '';
     stratCard.style.display = 'none';
-    overlapEl.textContent = S._overlapCount;
+    overlapEl.textContent = dynamicCustPipelineCount;
     overlapEl.style.color = '#E8853D';
     overlapLabel.textContent = 'W/ Pipeline';
     overlapCard.style.display = '';
