@@ -1414,8 +1414,8 @@ export function renderTeamRepSelectors() {
       const mgrSel = (!S.selectedRep || S.selectedRep === info.manager) ? ' selected' : '';
       repSel.innerHTML += `<option value="${info.manager}"${mgrSel}>${info.manager} (Manager)</option>`;
     }
-    // Individual reps
-    info.reps.forEach(rep => {
+    // Individual reps (alphabetical by first name)
+    [...info.reps].sort().forEach(rep => {
       const sel = S.selectedRep === rep ? ' selected' : '';
       repSel.innerHTML += `<option value="${rep}"${sel}>${rep}</option>`;
     });
