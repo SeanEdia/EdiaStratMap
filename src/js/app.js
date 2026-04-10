@@ -953,6 +953,10 @@ function buildMarkerPool() {
     });
     const marker = L.marker([d.lat, d.lng], { icon });
     marker.on('click', function() {
+      // Track last-clicked customer for auto-select when proximity toggles on
+      if (S.currentView === 'customers') {
+        S.proxLastClickedCustomer = d;
+      }
       // Reverse proximity: intercept click to select this customer
       if (S.proximityOn && S.currentView === 'customers') {
         selectCustomerForProximity(d);
@@ -1384,6 +1388,7 @@ function setView(view) {
     clearProxSelection();
   }
   updateProxLabel();
+  S.proxLastClickedCustomer = null;
 
   invalidateCaches();
   renderTeamRepSelectors();
@@ -1879,6 +1884,7 @@ function resetFilters() {
   S.proximityOn = false;
   S.proxShowAll = false;
   S.proxSelectedCustomer = null;
+  S.proxLastClickedCustomer = null;
   S.proxSelectedAccount = null;
   const proxCheck = document.getElementById('proxCheck');
   if (proxCheck) proxCheck.checked = false;
@@ -2162,6 +2168,10 @@ function applyFilters() {
         });
         const marker = L.marker([d.lat, d.lng], { icon }).addTo(S.custLayer);
         marker.on('click', function() {
+          // Track last-clicked customer for auto-select when proximity toggles on
+          if (S.currentView === 'customers') {
+            S.proxLastClickedCustomer = d;
+          }
           // Reverse proximity: intercept click to select this customer
           if (S.proximityOn && S.currentView === 'customers') {
             selectCustomerForProximity(d);
@@ -2514,6 +2524,16 @@ function selectAutocomplete(index) {
       S.map.setView([item.data.lat + 2.5, item.data.lng], 7, { animate: true });
     }
   }
+
+  // Auto-select for proximity if the selected item is a customer
+  const selectedData = item.data || (S.markerLookup[item.label + '|' + (item.data ? item.data.state || '' : '')]||{}).data;
+  const selectedType = item.type || (S.markerLookup[item.label + '|' + (item.data ? item.data.state || '' : '')]||{}).type;
+  if (selectedData && S.currentView === 'customers') {
+    S.proxLastClickedCustomer = selectedData;
+    if (S.proximityOn && (selectedType === 'customer' || S.currentView === 'customers')) {
+      selectCustomerForProximity(selectedData);
+    }
+  }
 }
 
 function closeAutocomplete() {
@@ -2563,6 +2583,14 @@ function zoomToSearchResult() {
     // Still open best match popup
     ensurePopup(bestMatch.marker, bestMatch.data, bestMatch.type);
     setTimeout(() => { bestMatch.marker.openPopup(); }, 50);
+  }
+
+  // Auto-select for proximity if the best match is a customer
+  if (bestMatch && bestMatch.data && S.currentView === 'customers') {
+    S.proxLastClickedCustomer = bestMatch.data;
+    if (S.proximityOn) {
+      selectCustomerForProximity(bestMatch.data);
+    }
   }
 }
 
@@ -2943,6 +2971,10 @@ function toggleProximity(on) {
   updateProxLabel();
   if (!on) {
     clearProxSelection();
+  } else if (S.currentView === 'customers' && S.proxLastClickedCustomer) {
+    // Auto-select the last-clicked customer when toggling on
+    selectCustomerForProximity(S.proxLastClickedCustomer);
+    return; // selectCustomerForProximity calls drawProximity
   }
   drawProximity();
 }

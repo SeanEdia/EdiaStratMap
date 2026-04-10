@@ -1016,6 +1016,7 @@ input[type="range"]::-webkit-slider-thumb {
 .count-badge .cb-num { font-weight: 600; }
 .count-badge .cb-strat { color: var(--accent-strat); }
 .count-badge .cb-cust { color: var(--accent-cust); }
+.count-badge .cb-prox { color: #6c5ce7; }
 
 /* Animations */
 @keyframes fadeIn {
@@ -1637,6 +1638,7 @@ input[type="range"]::-webkit-slider-thumb {
 .prox-radius-wrap {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 10px;
   margin-top: 8px;
   padding-left: 44px;
@@ -1702,8 +1704,7 @@ input[type="range"]::-webkit-slider-thumb {
 /* Reverse proximity (Account Proximity on Customers view) */
 .prox-reverse-status {
   width: 100%;
-  margin-top: 6px;
-  padding-left: 44px;
+  margin-top: 2px;
 }
 .prox-reverse-hint {
   font-size: 10px;
@@ -1749,8 +1750,7 @@ input[type="range"]::-webkit-slider-thumb {
 /* Account proximity selection badge (Accounts view) */
 .prox-acct-status {
   width: 100%;
-  margin-top: 4px;
-  padding-left: 44px;
+  margin-top: 2px;
 }
 .prox-acct-selected {
   display: inline-flex;
