@@ -79,9 +79,12 @@ function isAdaAccount(d) {
 
 // ============ SMB PROSPECT STATES ============
 // SMB is licensed to prospect in these states only. Applied at the individual
-// rep level via isSmbIndividualRepView(). Customers are exempt (SMB services
-// existing customers in any state). Does NOT apply at SMB team level —
-// that stays governed by the existing opps-only filter.
+// rep level via isSmbIndividualRepView(). Exemptions:
+//   1. Customers (SMB services existing customers in any state).
+//   2. Accounts with an open opp in the selected rep's name (active deals
+//      always show regardless of state).
+// Does NOT apply at SMB team level — that stays governed by the existing
+// opps-only filter.
 const SMB_PROSPECT_STATES = new Set([
   'AL', 'FL', 'GA', 'MA', 'TN', 'NY', 'NM', 'CA', 'TX', 'UT',
 ]);
@@ -1478,7 +1481,8 @@ function isSmbTeamLevelView() {
 
 // Returns true when SMB is selected AND a specific individual rep is drilled in
 // (not the team manager, not "Unassigned"). Companion to isSmbTeamLevelView.
-// Used to restrict the rep's view to licensed prospect states.
+// Used to restrict the rep's view to licensed prospect states, with exemptions
+// for customers and accounts with an open opp in the rep's name.
 function isSmbIndividualRepView() {
   return S.selectedTeam === 'SMB' &&
     !!S.selectedRep &&
@@ -1594,9 +1598,12 @@ function getScopedStratData() {
   if (S.selectedRep) {
     const indices = S._repToAccounts[S.selectedRep];
     const data = indices ? indices.map(i => S.ACCOUNT_DATA[i]) : [];
-    // SMB individual rep view: restrict to licensed prospect states (customers exempt)
+    // SMB individual rep view: restrict to licensed prospect states.
+    // Exemptions: customers (any state), and accounts with an open opp in
+    // this rep's name (active deals show regardless of state).
     return isSmbIndividualRepView()
       ? data.filter(d => d.is_customer ||
+          hasOpenOppByRep(d, S.selectedRep) ||
           SMB_PROSPECT_STATES.has((d.state || '').toUpperCase().trim()))
       : data;
   }
@@ -2071,9 +2078,12 @@ function applyFilters() {
       // SMB team-level view: only show accounts with open opportunities
       if (isSmbTeamLevelView() && !d.opp_stage) return false;
       // SMB individual rep view: restrict to licensed prospect states.
-      // Customers are exempt (SMB services existing customers in any state).
+      // Exemptions: customer-flagged accounts (any state), and accounts with
+      // an open opp in the selected rep's name (active deals show regardless
+      // of state). Uses the existing hasOpenOppByRep helper.
       if (isSmbIndividualRepView() &&
           !d.is_customer &&
+          !hasOpenOppByRep(d, S.selectedRep) &&
           !SMB_PROSPECT_STATES.has((d.state || '').toUpperCase().trim())) {
         return false;
       }
