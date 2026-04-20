@@ -27,6 +27,7 @@ const S = {
   proxSelectedAccount: null,
   PROXIMITY_MILES: 50,
   adaFilterOn: false,
+  focusStatesOn: true,   // Focus States filter — default ON for SMB/ENT accounts view
   welcomeActive: true,
   savedViewState: {},
 

@@ -77,15 +77,14 @@ function isAdaAccount(d) {
   return !!d.ada_adm || ADA_STATES.has(d.state);
 }
 
-// ============ SMB PROSPECT STATES ============
-// SMB is licensed to prospect in these states only. Applied at the individual
-// rep level via isSmbIndividualRepView(). Exemptions:
-//   1. Customers (SMB services existing customers in any state).
-//   2. Accounts with an open opp in the selected rep's name (active deals
-//      always show regardless of state).
-// Does NOT apply at SMB team level — that stays governed by the existing
-// opps-only filter.
-const SMB_PROSPECT_STATES = new Set([
+// ============ FOCUS STATES ============
+// The 10 states SMB and ENT are licensed to prospect in. When the "Focus States"
+// toggle is on (default), Accounts view for SMB and ENT teams shows only
+// prospects in these states. Two exemptions always apply (regardless of state):
+//   1. Customer-flagged accounts (serviced in any state).
+//   2. Accounts with any open opp — active pipeline shows no matter the state.
+// Does not apply to Strategic, Customers view, or Unassigned Accounts view.
+const FOCUS_STATES = new Set([
   'AL', 'FL', 'GA', 'MA', 'TN', 'NY', 'NM', 'CA', 'TX', 'UT',
 ]);
 
@@ -1334,6 +1333,7 @@ function setView(view) {
     accountListGroupBy: S.accountListGroupBy,
     collapsedGroups: { ...S.collapsedGroups },
     adaFilterOn: S.adaFilterOn,
+    focusStatesOn: S.focusStatesOn,
   };
 
   const previousView = S.currentView;
@@ -1365,6 +1365,11 @@ function setView(view) {
     S.adaFilterOn = saved.adaFilterOn;
     const adaCheck = document.getElementById('adaCheck');
     if (adaCheck) adaCheck.checked = S.adaFilterOn;
+    // Restore Focus States toggle. Default to true if the saved state predates
+    // this feature (key missing from pre-v6 localStorage-style saves).
+    S.focusStatesOn = saved.focusStatesOn !== undefined ? saved.focusStatesOn : true;
+    const focusStatesCheck = document.getElementById('focusStatesCheck');
+    if (focusStatesCheck) focusStatesCheck.checked = S.focusStatesOn;
   } else {
     // No saved state — carry over applicable S.filters from the previous view.
     // Region and state S.filters S.map between accounts (strat_*) and customers (cust_*).
@@ -1479,15 +1484,26 @@ function isSmbTeamLevelView() {
     (!S.selectedRep || MANAGERS.has(S.selectedRep));
 }
 
-// Returns true when SMB is selected AND a specific individual rep is drilled in
-// (not the team manager, not "Unassigned"). Companion to isSmbTeamLevelView.
-// Used to restrict the rep's view to licensed prospect states, with exemptions
-// for customers and accounts with an open opp in the rep's name.
-function isSmbIndividualRepView() {
-  return S.selectedTeam === 'SMB' &&
-    !!S.selectedRep &&
-    S.selectedRep !== '__unassigned__' &&
-    !MANAGERS.has(S.selectedRep);
+// Returns true when the Focus States filter is currently active.
+// Active means: toggle is on + Accounts view + SMB/ENT team selected +
+// not Unassigned view. Strategic is never affected.
+function isFocusStatesActive() {
+  if (!S.focusStatesOn) return false;
+  if (S.currentView !== 'accounts' && S.currentView !== 'all') return false;
+  if (S.selectedRep === '__unassigned__') return false;
+  const team = S.selectedTeam;
+  return team === 'SMB' || team === 'ENT East' || team === 'ENT West';
+}
+
+// Returns true when an account passes the Focus States filter.
+// Rule (when filter is active): show if customer OR has any open opp OR
+// is in a licensed prospect state. Pure prospects (no opp, not a customer)
+// outside the 10 states are hidden.
+function passesFocusStatesFilter(d) {
+  if (!isFocusStatesActive()) return true;
+  if (d.is_customer) return true;
+  if (d.opp_stage) return true;
+  return FOCUS_STATES.has((d.state || '').toUpperCase().trim());
 }
 
 function getDefaultRepForTeam(team) {
@@ -1582,38 +1598,36 @@ function onStageChange(stage) {
 // When the selected rep is the team manager, show all team accounts (team-level view).
 function getScopedStratData() {
   if (S.selectedRep === '__unassigned__') {
-    // Unassigned accounts (including manager-held) scoped to the selected team
+    // Unassigned accounts (including manager-held) scoped to the selected team.
+    // Explicitly NOT subject to Focus States — audit workflow needs every state.
     return S.ACCOUNT_DATA.filter(d =>
       (isManagerHeld(d) || (!getTerritoryAE(d) && !getHoldoutAE(d))) &&
       (!S.selectedTeam || d._source_team === S.selectedTeam)
     );
   }
+
+  let data;
   if (S.selectedRep && MANAGERS.has(S.selectedRep)) {
     // Manager selected → team-level view (all accounts for this team)
     const indices = S.selectedTeam && S._teamToAccounts[S.selectedTeam];
-    const data = indices ? indices.map(i => S.ACCOUNT_DATA[i]) : [];
-    // SMB team-level: only accounts with open opps
-    return isSmbTeamLevelView() ? data.filter(d => d.opp_stage) : data;
-  }
-  if (S.selectedRep) {
+    data = indices ? indices.map(i => S.ACCOUNT_DATA[i]) : [];
+    // SMB team-level: only accounts with open opps (existing behavior — unchanged)
+    if (isSmbTeamLevelView()) data = data.filter(d => d.opp_stage);
+  } else if (S.selectedRep) {
     const indices = S._repToAccounts[S.selectedRep];
-    const data = indices ? indices.map(i => S.ACCOUNT_DATA[i]) : [];
-    // SMB individual rep view: restrict to licensed prospect states.
-    // Exemptions: customers (any state), and accounts with an open opp in
-    // this rep's name (active deals show regardless of state).
-    return isSmbIndividualRepView()
-      ? data.filter(d => d.is_customer ||
-          hasOpenOppByRep(d, S.selectedRep) ||
-          SMB_PROSPECT_STATES.has((d.state || '').toUpperCase().trim()))
-      : data;
-  }
-  if (S.selectedTeam) {
+    data = indices ? indices.map(i => S.ACCOUNT_DATA[i]) : [];
+  } else if (S.selectedTeam) {
     const indices = S._teamToAccounts[S.selectedTeam];
-    const data = indices ? indices.map(i => S.ACCOUNT_DATA[i]) : [];
-    // SMB team-level: only accounts with open opps
-    return isSmbTeamLevelView() ? data.filter(d => d.opp_stage) : data;
+    data = indices ? indices.map(i => S.ACCOUNT_DATA[i]) : [];
+    // SMB team-level: only accounts with open opps (existing behavior — unchanged)
+    if (isSmbTeamLevelView()) data = data.filter(d => d.opp_stage);
+  } else {
+    return S.ACCOUNT_DATA;
   }
-  return S.ACCOUNT_DATA;
+
+  // Focus States filter — applied last so exemption/state logic runs over the
+  // already team/rep-scoped set. No-op when filter isn't active.
+  return data.filter(passesFocusStatesFilter);
 }
 
 export function renderFilters() {
@@ -1621,6 +1635,25 @@ export function renderFilters() {
   let html = '';
 
   if (S.currentView === 'accounts' || S.currentView === 'all') {
+    // Focus States toggle — only shown for SMB / ENT East / ENT West.
+    // Individual rep, manager, and team-level views all show it.
+    // Unassigned view does not.
+    const showFocusToggle =
+      (S.selectedTeam === 'SMB' || S.selectedTeam === 'ENT East' || S.selectedTeam === 'ENT West') &&
+      S.selectedRep !== '__unassigned__';
+    if (showFocusToggle) {
+      html += `<div class="filter-group">
+        <label class="prox-toggle" style="padding:2px 0;">
+          <input type="checkbox" id="focusStatesCheck"${S.focusStatesOn ? ' checked' : ''} onchange="toggleFocusStates(this.checked)">
+          <span class="prox-slider"></span>
+          <span class="prox-label">Focus States</span>
+        </label>
+        <div style="font-size:10px;color:var(--text-muted);margin-top:4px;line-height:1.4;">
+          Shows prospects only in AL, FL, GA, MA, TN, NY, NM, CA, TX, UT. Customers and accounts with open opps always show.
+        </div>
+      </div>`;
+    }
+
     // Enrollment range filter (first)
     html += buildEnrollmentFilter();
 
@@ -1890,6 +1923,10 @@ function resetFilters() {
   S.adaFilterOn = false;
   const adaCheck = document.getElementById('adaCheck');
   if (adaCheck) adaCheck.checked = false;
+  // Reset Focus States back to its default (ON).
+  S.focusStatesOn = true;
+  const focusStatesCheck = document.getElementById('focusStatesCheck');
+  if (focusStatesCheck) focusStatesCheck.checked = true;
   S.savedViewState = {}; // Clear all saved view state
 
   // Reset view to Accounts so the welcome overlay works correctly
@@ -2077,16 +2114,9 @@ function applyFilters() {
       }
       // SMB team-level view: only show accounts with open opportunities
       if (isSmbTeamLevelView() && !d.opp_stage) return false;
-      // SMB individual rep view: restrict to licensed prospect states.
-      // Exemptions: customer-flagged accounts (any state), and accounts with
-      // an open opp in the selected rep's name (active deals show regardless
-      // of state). Uses the existing hasOpenOppByRep helper.
-      if (isSmbIndividualRepView() &&
-          !d.is_customer &&
-          !hasOpenOppByRep(d, S.selectedRep) &&
-          !SMB_PROSPECT_STATES.has((d.state || '').toUpperCase().trim())) {
-        return false;
-      }
+      // Focus States filter — restricts SMB + ENT to licensed prospect states.
+      // Customers and any-open-opp accounts are exempt. See passesFocusStatesFilter.
+      if (!passesFocusStatesFilter(d)) return false;
       if (S.filters.strat_region && d.region !== S.filters.strat_region) return false;
       if (S.filters.strat_state && !S.filters.strat_state.has(d.state)) return false;
       if (S.filters.strat_sis && !S.filters.strat_sis.has(d.sis)) return false;
@@ -3116,6 +3146,12 @@ function toggleAdaFilter(on) {
   applyFilters();
 }
 
+function toggleFocusStates(checked) {
+  S.focusStatesOn = checked;
+  invalidateCaches(); // scoped unique values (state dropdown etc.) change
+  applyFilters();
+}
+
 function updateProxRadius(val) {
   S.PROXIMITY_MILES = parseInt(val);
   const miInput = document.getElementById('proxMilesInput');
@@ -4029,6 +4065,7 @@ Object.assign(window, {
   updateProxRadius,
   setProxRadiusFromInput,
   toggleAdaFilter,
+  toggleFocusStates,
   // Pipeline
   togglePipelinePanel,
   toggleStageDropdown,
